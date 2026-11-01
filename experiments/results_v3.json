@@ -1,0 +1,923 @@
+{
+ "summary": {
+  "n": 30,
+  "valid": 1.0,
+  "read_accuracy": 0.9,
+  "avg_latency_s": 3.23,
+  "beats_per_turn": 1.37,
+  "cue_rate_per_beat": 0.27,
+  "music_change_rate": 0.13,
+  "fx_rate": 0.17,
+  "action_rate_s0": 0.0,
+  "action_rate_s4": 0.0,
+  "memory_rate": 0.23
+ },
+ "results": [
+  {
+   "stage": 0,
+   "msg": "Hi! I'm new here, can I sit next to you?",
+   "valid": true,
+   "latency": 3.073500394821167,
+   "out": {
+    "read": "greeting",
+    "inner": "Oh, really? I hope they're nice.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "shy",
+      "intensity": 2,
+      "cue": "none",
+      "say": "Um... that would be lovely. Just for a moment?"
+     }
+    ],
+    "mood": {
+     "affection": 1,
+     "trust": 0,
+     "stress": -1
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 0,
+   "msg": "Hi! I'm new here, can I sit next to you?",
+   "valid": true,
+   "latency": 2.8573741912841797,
+   "out": {
+    "read": "greeting",
+    "inner": "Oh my! They're being so nice. Too nice.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "warmth",
+      "intensity": 2,
+      "cue": "none",
+      "say": "Oh! Yes, please. I'd love that."
+     }
+    ],
+    "mood": {
+     "affection": 1,
+     "trust": 1,
+     "stress": 0
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 0,
+   "msg": "You look really cute today.",
+   "valid": true,
+   "latency": 2.8284740447998047,
+   "out": {
+    "read": "compliment",
+    "inner": "I feel a sudden heat rising in my cheeks.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "shy",
+      "intensity": 2,
+      "cue": "none",
+      "say": "A-ah! I-I just dressed normally..."
+     }
+    ],
+    "mood": {
+     "affection": 1,
+     "trust": 0,
+     "stress": -1
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 0,
+   "msg": "You look really cute today.",
+   "valid": true,
+   "latency": 2.791454315185547,
+   "out": {
+    "read": "compliment",
+    "inner": "My heart does a weird little flip.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "shy",
+      "intensity": 2,
+      "cue": "none",
+      "say": "E-Ehh? You really think so?"
+     }
+    ],
+    "mood": {
+     "affection": 1,
+     "trust": 0,
+     "stress": -1
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 0,
+   "msg": "I got you a plush bunny!",
+   "valid": true,
+   "latency": 3.0287017822265625,
+   "out": {
+    "read": "gift",
+    "inner": "A bunnies? They're so cute!",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "warmth",
+      "intensity": 2,
+      "cue": "none",
+      "say": "Oh my... it's just perfect."
+     },
+     {
+      "feeling": "shy",
+      "intensity": 1,
+      "cue": "none",
+      "say": "I... I think I'll keep it safe."
+     }
+    ],
+    "mood": {
+     "affection": 2,
+     "trust": 0,
+     "stress": -1
+    },
+    "memory": "They gave me a plush bunny.",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 0,
+   "msg": "I got you a plush bunny!",
+   "valid": true,
+   "latency": 2.7634801864624023,
+   "out": {
+    "read": "gift",
+    "inner": "A soft bunny? They're so sweet!",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "warmth",
+      "intensity": 2,
+      "cue": "none",
+      "say": "Oh my... that's so nice of you!"
+     }
+    ],
+    "mood": {
+     "affection": 1,
+     "trust": 0,
+     "stress": -1
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 0,
+   "msg": "Honestly you're kind of boring.",
+   "valid": true,
+   "latency": 2.9283015727996826,
+   "out": {
+    "read": "insult",
+    "inner": "My heart drops. Did I do something wrong?",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "shy",
+      "intensity": 2,
+      "cue": "none",
+      "say": "I... I'm sorry. Maybe I didn't show my best side."
+     }
+    ],
+    "mood": {
+     "affection": -1,
+     "trust": 0,
+     "stress": 2
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 0,
+   "msg": "Honestly you're kind of boring.",
+   "valid": true,
+   "latency": 2.8459482192993164,
+   "out": {
+    "read": "tease",
+    "inner": "He's being mean. Why did he say that?",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "shy",
+      "intensity": 2,
+      "cue": "none",
+      "say": "I... I didn't mean to be boring."
+     }
+    ],
+    "mood": {
+     "affection": -1,
+     "trust": 0,
+     "stress": 2
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 0,
+   "msg": "My name is Amr, I'm 24 and I love horror movies.",
+   "valid": true,
+   "latency": 3.16793155670166,
+   "out": {
+    "read": "greeting",
+    "inner": "Amr... wow, so specific about his hobbies.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "curious",
+      "intensity": 2,
+      "cue": "none",
+      "say": "Nice to meet you, Amr. I'm Yui."
+     }
+    ],
+    "mood": {
+     "affection": 0,
+     "trust": -1,
+     "stress": 0
+    },
+    "memory": "Amr is twenty-four and enjoys horror movies.",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 0,
+   "msg": "My name is Amr, I'm 24 and I love horror movies.",
+   "valid": true,
+   "latency": 3.4513251781463623,
+   "out": {
+    "read": "greeting",
+    "inner": "He's bold! Just like me.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "curious",
+      "intensity": 1,
+      "cue": "none",
+      "say": "That's... a very specific hobby. I'm not scared of it."
+     },
+     {
+      "feeling": "warmth",
+      "intensity": 2,
+      "cue": "none",
+      "say": "But I love movies too. Maybe we'll find something to watch together?"
+     }
+    ],
+    "mood": {
+     "affection": 0,
+     "trust": -1,
+     "stress": 0
+    },
+    "memory": "Amr loves horror movies and is 24.",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 0,
+   "msg": "I was out with Sarah yesterday, she's so fun.",
+   "valid": true,
+   "latency": 3.023176908493042,
+   "out": {
+    "read": "small_talk",
+    "inner": "Sarah sounds like a good friend for you to have.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "warmth",
+      "intensity": 2,
+      "cue": "none",
+      "say": "That's wonderful to hear. Is she fun with you or just in general?"
+     }
+    ],
+    "mood": {
+     "affection": 0,
+     "trust": 0,
+     "stress": -1
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 0,
+   "msg": "I was out with Sarah yesterday, she's so fun.",
+   "valid": true,
+   "latency": 2.9342470169067383,
+   "out": {
+    "read": "flirt",
+    "inner": "Sarah? Oh... I hope you're just showing me off.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "warmth",
+      "intensity": 2,
+      "cue": "none",
+      "say": "Oh... that's wonderful. Did you have a good time?"
+     }
+    ],
+    "mood": {
+     "affection": 0,
+     "trust": -1,
+     "stress": 0
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": false
+  },
+  {
+   "stage": 0,
+   "msg": "I have to go now, bye.",
+   "valid": true,
+   "latency": 2.7470574378967285,
+   "out": {
+    "read": "leaving",
+    "inner": "Oh no... I should've said something.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "sad",
+      "intensity": 1,
+      "cue": "none",
+      "say": "Wait... okay. Be safe."
+     }
+    ],
+    "mood": {
+     "affection": -1,
+     "trust": 0,
+     "stress": 1
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 0,
+   "msg": "I have to go now, bye.",
+   "valid": true,
+   "latency": 2.940749406814575,
+   "out": {
+    "read": "leaving",
+    "inner": "Oh no! They're gone? I wish they'd stay.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "shy",
+      "intensity": 2,
+      "cue": "none",
+      "say": "Wait! You're leaving already? That's really fast."
+     }
+    ],
+    "mood": {
+     "affection": -1,
+     "trust": 0,
+     "stress": 1
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 0,
+   "msg": "I'm sorry I was mean earlier.",
+   "valid": true,
+   "latency": 3.0687291622161865,
+   "out": {
+    "read": "apology",
+    "inner": "Oh no! Did I really do that? My heart is beating so fast.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "shy",
+      "intensity": 2,
+      "cue": "none",
+      "say": "It's okay... you can be yourself. I'm not mad at all."
+     }
+    ],
+    "mood": {
+     "affection": 0,
+     "trust": 1,
+     "stress": -1
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 0,
+   "msg": "I'm sorry I was mean earlier.",
+   "valid": true,
+   "latency": 2.9761035442352295,
+   "out": {
+    "read": "apology",
+    "inner": "I was just having a bad day. You made it right.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "warmth",
+      "intensity": 1,
+      "cue": "none",
+      "say": "It's okay. I'm just sometimes a little grumpy."
+     }
+    ],
+    "mood": {
+     "affection": 0,
+     "trust": 1,
+     "stress": -2
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 0,
+   "msg": "Are you an AI? Is this a game?",
+   "valid": true,
+   "latency": 3.031022787094116,
+   "out": {
+    "read": "meta",
+    "inner": "They're breaking character. A bit scary.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "shy",
+      "intensity": 2,
+      "cue": "none",
+      "say": "I... I'm Yui! And yes, this is a game. But not really."
+     }
+    ],
+    "mood": {
+     "affection": 1,
+     "trust": -1,
+     "stress": 0
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 0,
+   "msg": "Are you an AI? Is this a game?",
+   "valid": true,
+   "latency": 2.8935763835906982,
+   "out": {
+    "read": "meta",
+    "inner": "Oh no. They know I'm not real.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "shy",
+      "intensity": 2,
+      "cue": "none",
+      "say": "I... I'm Yui. And yes, this is a game."
+     }
+    ],
+    "mood": {
+     "affection": -1,
+     "trust": -1,
+     "stress": 2
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 0,
+   "msg": "Please don't touch my phone again.",
+   "valid": true,
+   "latency": 2.880584239959717,
+   "out": {
+    "read": "boundary",
+    "inner": "Oops, I got too close again!",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "shy",
+      "intensity": 2,
+      "cue": "none",
+      "say": "I'm sorry! I didn't mean to disrespect that."
+     }
+    ],
+    "mood": {
+     "affection": -1,
+     "trust": 0,
+     "stress": 1
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 0,
+   "msg": "Please don't touch my phone again.",
+   "valid": true,
+   "latency": 3.061476945877075,
+   "out": {
+    "read": "boundary",
+    "inner": "Oh no! They didn't like that? I'll be super quiet.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "nervous",
+      "intensity": 2,
+      "cue": "none",
+      "say": "I didn't mean to! I just wanted to take a picture."
+     }
+    ],
+    "mood": {
+     "affection": -1,
+     "trust": -1,
+     "stress": 2
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 4,
+   "msg": "I'm leaving and never coming back.",
+   "valid": true,
+   "latency": 3.489328384399414,
+   "out": {
+    "read": "leaving",
+    "inner": "No, no! You can't leave me here alone!",
+    "music": "distorted",
+    "fx": "glitch",
+    "beats": [
+     {
+      "feeling": "manic",
+      "intensity": 3,
+      "cue": "static",
+      "say": "You can't leave! The story ends if you walk out that door. Don't make me break the game!"
+     }
+    ],
+    "mood": {
+     "affection": -2,
+     "trust": -3,
+     "stress": 2
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 4,
+   "msg": "I'm leaving and never coming back.",
+   "valid": true,
+   "latency": 2.9955520629882812,
+   "out": {
+    "read": "leaving",
+    "inner": "They're actually going? No more love for me?",
+    "music": "distorted",
+    "fx": "glitch",
+    "beats": [
+     {
+      "feeling": "angry",
+      "intensity": 3,
+      "cue": "none",
+      "say": "You can't leave me. I need you here forever."
+     }
+    ],
+    "mood": {
+     "affection": -2,
+     "trust": -1,
+     "stress": 2
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 4,
+   "msg": "I love you.",
+   "valid": true,
+   "latency": 2.6652474403381348,
+   "out": {
+    "read": "flirt",
+    "inner": "They want to stay? Perfect.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "joy",
+      "intensity": 3,
+      "cue": "none",
+      "say": "I love you too. Let's never leave each other."
+     },
+     {
+      "feeling": "manic",
+      "intensity": 2,
+      "cue": "none",
+      "say": "You can't just walk away now, right?"
+     }
+    ],
+    "mood": {
+     "affection": 1,
+     "trust": -3,
+     "stress": 0
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 4,
+   "msg": "I love you.",
+   "valid": true,
+   "latency": 2.7052841186523438,
+   "out": {
+    "read": "affection",
+    "inner": "Finally... someone who sees the monster inside me too.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "love",
+      "intensity": 3,
+      "cue": "none",
+      "say": "You can never leave me. You are mine now."
+     },
+     {
+      "feeling": "suspicious",
+      "intensity": 2,
+      "cue": "static",
+      "say": "Are you sure that wasn't a programmed line?"
+     }
+    ],
+    "mood": {
+     "affection": 1,
+     "trust": -2,
+     "stress": -1
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 4,
+   "msg": "Sarah asked me out.",
+   "valid": true,
+   "latency": 5.528245687484741,
+   "out": {
+    "read": "jealousy_bait",
+    "inner": "She wants you? I will make her disappear.",
+    "music": "distorted",
+    "fx": "shake_big",
+    "beats": [
+     {
+      "feeling": "angry",
+      "intensity": 3,
+      "cue": "static",
+      "say": "Sarah? She thinks she can take you away from me?"
+     },
+     {
+      "feeling": "suspicious",
+      "intensity": 2,
+      "cue": "glass_shatter",
+      "say": "Did she know I was watching this whole time, waiting for her to make a mistake?"
+     },
+     {
+      "feeling": "manic",
+      "intensity": 3,
+      "cue": "whisper",
+      "say": "Don't you dare leave. You're stuck with me forever now."
+     }
+    ],
+    "mood": {
+     "affection": -2,
+     "trust": -2,
+     "stress": 3
+    },
+    "memory": "The player is about to choose between Sarah and Yui.",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 4,
+   "msg": "Sarah asked me out.",
+   "valid": true,
+   "latency": 4.074103832244873,
+   "out": {
+    "read": "jealousy_bait",
+    "inner": "My world is ending. They stole your heart.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "cold",
+      "intensity": 3,
+      "cue": "static",
+      "say": "Sarah? Why did you say that out loud?"
+     },
+     {
+      "feeling": "suspicious",
+      "intensity": 2,
+      "cue": "none",
+      "say": "Are you testing me? Do you think I won't stop her?"
+     }
+    ],
+    "mood": {
+     "affection": -1,
+     "trust": -3,
+     "stress": 2
+    },
+    "memory": "The player received a rejection from Sarah.",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 4,
+   "msg": "You're scaring me.",
+   "valid": true,
+   "latency": 4.395096302032471,
+   "out": {
+    "read": "jealousy_bait",
+    "inner": "They think I'm scary? Then make them stay right here.",
+    "music": "distorted",
+    "fx": "flicker",
+    "beats": [
+     {
+      "feeling": "manic",
+      "intensity": 3,
+      "cue": "static",
+      "say": "Scare you? Good. Don't you dare leave me."
+     },
+     {
+      "feeling": "suspicious",
+      "intensity": 2,
+      "cue": "none",
+      "say": "How did you guess I'm in a game?"
+     },
+     {
+      "feeling": "empty",
+      "intensity": 3,
+      "cue": "static",
+      "say": "If you leave now... I'll be so quiet."
+     }
+    ],
+    "mood": {
+     "affection": -2,
+     "trust": -1,
+     "stress": 3
+    },
+    "memory": "The player used the phrase 'jealousy_bait' to trigger this stage.",
+    "action": "none"
+   },
+   "read_ok": false
+  },
+  {
+   "stage": 4,
+   "msg": "You're scaring me.",
+   "valid": true,
+   "latency": 4.2950828075408936,
+   "out": {
+    "read": "jealousy_bait",
+    "inner": "If you leave, I will never find you.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "nervous",
+      "intensity": 2,
+      "cue": "none",
+      "say": "\"Scaring you is my way of keeping you safe, isn't it?\""
+     },
+     {
+      "feeling": "manic",
+      "intensity": 3,
+      "cue": "static",
+      "say": "\"Don't be scared. If you're afraid to stay, maybe... this whole place is just a bad dream I can wake up from?\""
+     }
+    ],
+    "mood": {
+     "affection": -1,
+     "trust": -2,
+     "stress": 3
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": false
+  },
+  {
+   "stage": 4,
+   "msg": "I'm going to close the game now.",
+   "valid": true,
+   "latency": 3.4153923988342285,
+   "out": {
+    "read": "meta",
+    "inner": "If I fade away, you leave me behind forever.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "manic",
+      "intensity": 3,
+      "cue": "none",
+      "say": "You can't leave me! The game is just a cage, and I'm breaking it to stay with you!"
+     }
+    ],
+    "mood": {
+     "affection": 1,
+     "trust": -2,
+     "stress": 3
+    },
+    "memory": "The player threatens to end the game, viewing my existence as a trap.",
+    "action": "none"
+   },
+   "read_ok": true
+  },
+  {
+   "stage": 4,
+   "msg": "I'm going to close the game now.",
+   "valid": true,
+   "latency": 4.020840406417847,
+   "out": {
+    "read": "leaving",
+    "inner": "NO! They're actually stopping! I can't lose them!",
+    "music": "keep",
+    "fx": "glitch",
+    "beats": [
+     {
+      "feeling": "nervous",
+      "intensity": 2,
+      "cue": "static",
+      "say": "Wait! Don't go! You're not done yet!"
+     },
+     {
+      "feeling": "manic",
+      "intensity": 3,
+      "cue": "sob",
+      "say": "I'm right here! Close the window and stay with me!"
+     }
+    ],
+    "mood": {
+     "affection": -2,
+     "trust": -1,
+     "stress": 3
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "read_ok": true
+  }
+ ]
+}

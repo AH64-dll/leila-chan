@@ -1,0 +1,87 @@
+# LEILA-CHAN — Design Bible & Asset Pipeline
+
+> A live, unscripted **horror dating sim**. Leila-chan is a real local language model
+> (Qwen3.5-4B) running on the player's PC. Every line is generated. Her face, her music,
+> the sounds and even the game window follow what she feels — and as she gets sicker,
+> the game literally turns up a steering vector inside her neurons.
+
+**Status:** design complete, core tech validated, final pixel-art sprite set + casting
+table done, **no game code yet**.
+**Engine:** Godot 4 · **Model:** Qwen3.5-4B Q4_K_M + control vectors ·
+**Platforms:** Steam first, mobile later.
+
+## Start here
+
+Read **[DESIGN.md](DESIGN.md)** — it is the index of the whole design bible:
+
+| # | Doc | What's in it |
+|---|---|---|
+| 01 | [Game design](docs/01_GAME_DESIGN.md) | Pillars, core loop, hidden meters, 6 stages, 6 fracture paths, 32 hidden triggers, 70 scenarios, 14 endings |
+| 02 | [Director protocol](docs/02_DIRECTOR_PROTOCOL.md) | **How the model drives the game**: the Turn JSON, casting vocabulary, dynamic schema, pipeline, budgets, memory, fallbacks, safety filter, sampling per stage |
+| 03 | [Emotions](docs/03_EMOTIONS.md) | All 30 sprites analyzed, feeling→sprite resolver tables, path overrides, motion presets, inner-voice leak |
+| 04 | [Audio](docs/04_AUDIO.md) | Music state machine, stage layers, SFX/vocal cue map, gaps |
+| 05 | [Meta events](docs/05_META_EVENTS.md) | 43 fourth-wall/system events with safety rules |
+| 06 | [Steering](docs/06_STEERING.md) | Verified neuron steering, dose curve, vector library, runtime |
+| 07 | [Tech architecture](docs/07_TECH_ARCHITECTURE.md) | Godot project layout, autoloads, LLM backend, streaming parser, performance |
+| 08 | [Prompts & content](docs/08_PROMPTS_AND_CONTENT.md) | Prompt drafts (persona, stages, paths, rules), scenario JSON format |
+| 09 | [Production plan](docs/09_PRODUCTION_PLAN.md) | Milestones M0–M6, risks, legal checklist, open decisions |
+| 10 | [Casting](docs/10_CASTING.md) | Every feeling → sprite, motion, voice, cue pool, music, FX per stage tier |
+| — | [Experiment results](experiments/RESULTS.md) | The tests behind the design |
+
+## The design in one minute
+
+1. **She performs a Turn, not tool calls.** One schema-constrained JSON object per reply:
+   `read → inner → music → fx → beats[feeling, intensity, cue, say] → mood → memory → action`.
+   Tested: 100% valid, 94% emotion fit, 90% player-intent accuracy.
+2. **She names feelings; the game picks the face.** 22 feelings × intensity × stage × path →
+   one of 30 sprites. The same "angry" is a pout at stage 0 and the knife at stage 5.
+3. **The game owns pacing.** Stages, paths, triggers, budgets, meta events are game code;
+   the model fills the voice. Special actions are *offered* to her — never picked unprompted.
+4. **Her sickness is real steering.** Neurons L14 N8949 +1, L13 N7956 −1: at dose 4 her
+   private thoughts turn dark while her words stay sweet; at 6 she threatens; at 25+ gibberish.
+5. **The fourth wall breaks safely.** Only inside the game's folder and window; closing
+   always works; deep OS tricks are opt-in.
+
+## Repo layout
+
+```
+DESIGN.md                 design bible index (start here)
+docs/                     the design bible (01–10)
+data/casting.json         feeling → sprite/motion/voice/sound/music table the game loads
+art/leila/                FINAL pixel-art sprites: px/ (384×688), x2/ (768×1376), palette,
+                          contact sheets — built deterministically by tools/art
+tools/art/                sprite pipeline (leila_px → leila_hd, faces/hands/fix passes)
+tools/casting/            casting.json builder
+experiments/              test harnesses + results (tool calling, steering sweep)
+assets/audio/             cue_map.json + SOURCES.json + LICENSES.md (raw CC0 audio excluded)
+raw_references/           reference renders used to derive the character design
+png_sprites/              generated full-res sprite set (pre-pixel-art pass)
+00_…30_*.jpg/.png/.txt    original reference renders + their prompts (canonical, untouched)
+```
+
+## Local artifacts (not in this repo — too large)
+
+These are intentionally gitignored; grab them once per machine:
+
+| Path | What | How to get it |
+|---|---|---|
+| `models/Qwen3.5-4B-Q4_K_M.gguf` | The LLM weights (2.6 GB) | `huggingface-cli download <qwen3.5-4b-gguf-repo> Qwen3.5-4B-Q4_K_M.gguf --local-dir models` |
+| `tools/llama/llama-b12024/` | llama.cpp b12024 binaries (CUDA) | GitHub release `ggml-org/llama.cpp` → `llama-b12024-bin-ubuntu-x64` (or build from source) |
+| `assets/audio/_raw/` | Raw CC0 music/SFX pool (357 MB) | Re-download from the URLs in `assets/audio/SOURCES.json` |
+| `art/leila_legacy_1x/` | Superseded 192×344 sprite set | Regenerate: `LEILA_SCALE=1` pipeline, or ignore (superseded) |
+
+## Rebuilding the sprites
+
+```bash
+python tools/art/leila_px.py      # LEILA_SCALE=2 → base 384×688 raster per emotion
+python tools/art/leila_hd.py      # heart clip, per-sprite FIX passes, FX → art/leila/{px,x2}
+python tools/casting/build_casting.py   # → data/casting.json + docs/10 tables
+```
+
+Deterministic — same inputs, same pixels.
+
+## License / rights
+
+- Game design, docs, code pipeline, generated pixel art: © the project authors (private repo — ask before reusing).
+- `assets/audio/`: all CC0, per-file provenance in `SOURCES.json` / `LICENSES.md`.
+- Model weights: subject to Qwen's model license; not distributed here.

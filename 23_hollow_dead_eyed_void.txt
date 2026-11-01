@@ -1,0 +1,8 @@
+State: 23. Hollow Dead-Eyed Void
+Reference Image: 00_base_reference.png (image_51b6bc.jpg)
+
+Prompt:
+Full-body 2D anime game sprite, front-facing, solid white background, cel-shaded. Girl with lavender hair, inward bangs, thick left-shoulder braid with a dark navy bow, blue-and-white geometric polygon clip on upper right. Violet eyes, white long-sleeve Peter Pan collar blouse with navy cuffs, sleeveless navy buttoned pleated pinafore dress, white knee-high socks, navy Mary Jane heels, pitch-dark lifeless purple eyes with zero catchlights, slack emotionless face, limp marionette-like posture.
+
+Negative Prompt:
+3D render, realistic, cropped limbs, asymmetrical eyes, extra fingers, messy background, altered outfit colors, missing braid, missing hairclip.

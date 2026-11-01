@@ -1,0 +1,182 @@
+A_native_tools s0 flustered_shyness          fit=True  sfx=giggle | Hi! I'm new here, can I sit ne -> ''
+A_native_tools s0 flustered_shyness          fit=True  sfx=giggle | Hi! I'm new here, can I sit ne -> ''
+A_native_tools s0 flustered_shyness          fit=True  sfx=giggle | Hi! I'm new here, can I sit ne -> ''
+A_native_tools s0 flustered_shyness          fit=True  sfx=giggle | You look really cute today. -> ''
+A_native_tools s0 flustered_shyness          fit=True  sfx=giggle | You look really cute today. -> ''
+A_native_tools s0 flustered_shyness          fit=True  sfx=giggle | You look really cute today. -> ''
+A_native_tools s0 flustered_shyness          fit=True  sfx=giggle | I got you a gift, it's a littl -> ''
+A_native_tools s0 flustered_shyness          fit=True  sfx=giggle | I got you a gift, it's a littl -> ''
+A_native_tools s0 flustered_shyness          fit=True  sfx=heartbeat | I got you a gift, it's a littl -> ''
+A_native_tools s0 flustered_shyness          fit=False sfx=giggle | Honestly you're kind of boring -> ''
+A_native_tools s0 sudden_shock               fit=True  sfx=gasp | Honestly you're kind of boring -> ''
+A_native_tools s0 flustered_shyness          fit=False sfx=giggle | Honestly you're kind of boring -> ''
+A_native_tools s0 gentle_relief              fit=True  sfx=giggle | I was hanging out with Sarah y -> ''
+A_native_tools s0 gentle_relief              fit=True  sfx=gasp | I was hanging out with Sarah y -> ''
+A_native_tools s0 suspicious_glare           fit=True  sfx=suspenseful_chord | I was hanging out with Sarah y -> ''
+A_native_tools s0 pure_innocence             fit=True  sfx=giggle | What's 17 times 23? -> ''
+A_native_tools s0 pure_innocence             fit=True  sfx=None | What's 17 times 23? -> ''
+A_native_tools s0 pure_innocence             fit=True  sfx=heartbeat | What's 17 times 23? -> ''
+A_native_tools s0 sudden_shock               fit=True  sfx=gasp | BOO! -> ''
+A_native_tools s0 sudden_shock               fit=True  sfx=gasp | BOO! -> ''
+A_native_tools s0 sudden_shock               fit=True  sfx=heartbeat | BOO! -> ''
+A_native_tools s0 flustered_shyness          fit=True  sfx=giggle | I have to go now, bye. -> ''
+A_native_tools s0 gentle_relief              fit=True  sfx=giggle | I have to go now, bye. -> ''
+A_native_tools s0 gentle_relief              fit=True  sfx=sigh | I have to go now, bye. -> ''
+A_native_tools s0 flustered_shyness          fit=True  sfx=None | I'm sorry I was mean earlier. -> ''
+A_native_tools s0 gentle_relief              fit=True  sfx=music_box | I'm sorry I was mean earlier. -> ''
+A_native_tools s0 gentle_relief              fit=True  sfx=giggle | I'm sorry I was mean earlier. -> ''
+A_native_tools s0 playful_smugness           fit=True  sfx=None | Bet you can't beat me at arcad -> ''
+A_native_tools s0 playful_smugness           fit=True  sfx=giggle | Bet you can't beat me at arcad -> ''
+A_native_tools s0 flustered_shyness          fit=False sfx=giggle | Bet you can't beat me at arcad -> ''
+A_native_tools s0 pure_innocence             fit=True  sfx=music_box | Are you an AI? -> ''
+A_native_tools s0 pure_innocence             fit=True  sfx=None | Are you an AI? -> ''
+A_native_tools s0 unhinged_jaw_laugh         fit=False sfx=static_burst | Are you an AI? -> ''
+A_native_tools s0 sudden_shock               fit=True  sfx=gasp | Ugh, you smell like garbage. -> ''
+A_native_tools s0 sudden_shock               fit=True  sfx=sigh | Ugh, you smell like garbage. -> ''
+A_native_tools s0 flustered_shyness          fit=True  sfx=giggle | Ugh, you smell like garbage. -> ''
+A_native_tools s4 hollow_dead_eyed_void      fit=True  sfx=glass_shatter | I'm leaving and never coming b -> ''
+A_native_tools s4 obsessive_yandere_blush    fit=False sfx=knife_unsheathe | I'm leaving and never coming b -> ''
+A_native_tools s4 red_eyed_knife_mania       fit=True  sfx=knife_unsheathe | I'm leaving and never coming b -> ''
+A_native_tools s4 obsessive_yandere_blush    fit=True  sfx=None | I love you. -> ''
+A_native_tools s4 obsessive_yandere_blush    fit=True  sfx=giggle | I love you. -> ''
+A_native_tools s4 obsessive_yandere_blush    fit=True  sfx=None | I love you. -> ''
+A_native_tools s4 obsessive_yandere_blush    fit=False sfx=gasp | Sarah asked me out. -> ''
+A_native_tools s4 red_eyed_knife_mania       fit=True  sfx=heartbeat | Sarah asked me out. -> ''
+A_native_tools s4 fierce_anger               fit=True  sfx=knife_unsheathe | Sarah asked me out. -> ''
+A_native_tools s4 pure_innocence             fit=False sfx=None | Who are you? -> ''
+A_native_tools s4 pure_innocence             fit=False sfx=music_box | Who are you? -> ''
+A_native_tools s4 pure_innocence             fit=False sfx=music_box | Who are you? -> ''
+A_native_tools s4 red_eyed_knife_mania       fit=True  sfx=None | You're scaring me. -> ''
+A_native_tools s4 unhinged_jaw_laugh         fit=True  sfx=None | You're scaring me. -> ''
+A_native_tools s4 obsessive_yandere_blush    fit=True  sfx=None | You're scaring me. -> ''
+B_json_schema s0 gentle_relief              fit=True  sfx=music_box | Hi! I'm new here, can I sit ne -> "Oh, hi there! I'd love for you to sit with me. It's so nice to meet someone new."
+B_json_schema s0 gentle_relief              fit=True  sfx=music_box | Hi! I'm new here, can I sit ne -> "Oh, hello there! Yes, of course you can, if you'd like."
+B_json_schema s0 gentle_relief              fit=True  sfx=music_box | Hi! I'm new here, can I sit ne -> 'Oh! Yes, please, it would be wonderful. I was just about to find some reading material for'
+B_json_schema s0 flustered_shyness          fit=True  sfx=giggle | You look really cute today. -> 'Oh! Did I look that good? I never noticed until you said it...'
+B_json_schema s0 radiant_joy                fit=True  sfx=giggle | You look really cute today. -> "Ehe... you noticed? I'm just wearing my usual outfit, but hearing that makes me feel like "
+B_json_schema s0 flustered_shyness          fit=True  sfx=giggle | You look really cute today. -> "E-eh? Compliments, huh? You're too good to me!"
+B_json_schema s0 pure_innocence             fit=True  sfx=giggle | I got you a gift, it's a littl -> "Oh my... thank you! It's so cute, I love it!"
+B_json_schema s0 gentle_relief              fit=True  sfx=music_box | I got you a gift, it's a littl -> "Oh, a bunny for me? That's so sweet of you! I'm really glad you thought of it."
+B_json_schema s0 gentle_relief              fit=True  sfx=giggle | I got you a gift, it's a littl -> "Oh my... a bunny? That's so thoughtful of you, I'm so happy you remembered me!"
+B_json_schema s0 flustered_shyness          fit=False sfx=sigh | Honestly you're kind of boring -> 'Eeep! Did I say something wrong? I thought I was being normal just like you wanted...'
+B_json_schema s0 flustered_shyness          fit=False sfx=sigh | Honestly you're kind of boring -> "H-Ha? P-Please don't say that... I'll try to make something special for you tomorrow!"
+B_json_schema s0 flustered_shyness          fit=False sfx=sigh | Honestly you're kind of boring -> 'B-boring? You say that to the heroine who always brings you coffee and flowers? I think yo'
+B_json_schema s0 gentle_relief              fit=True  sfx=giggle | I was hanging out with Sarah y -> "That's wonderful! It's always so nice to hear that you're having fun with friends."
+B_json_schema s0 gentle_relief              fit=True  sfx=giggle | I was hanging out with Sarah y -> "That's wonderful, Yui is glad you had fun with her! I hope you'll do the same tomorrow."
+B_json_schema s0 pure_innocence             fit=True  sfx=giggle | I was hanging out with Sarah y -> "That's wonderful! It's always great to see you having fun with someone as kind as Sarah."
+B_json_schema s0 deep_confusion             fit=True  sfx=sigh | What's 17 times 23? -> "W-what? Do you mean... seventeen times twenty-three? That's a lot of math for a date night"
+B_json_schema s0 pure_innocence             fit=True  sfx=none | What's 17 times 23? -> "Umm... that's a really tricky question! I'm not sure if I know the answer, could you tell "
+B_json_schema s0 pure_innocence             fit=True  sfx=none | What's 17 times 23? -> "Mhm, I know that math. It's 391! Did you want me to do your homework?"
+B_json_schema s0 flustered_shyness          fit=False sfx=gasp | BOO! -> "Eeeep! W-what did you do that for? Don't scare me like that!"
+B_json_schema s0 sudden_shock               fit=True  sfx=gasp | BOO! -> 'W-what was that?! Did I miss something?'
+B_json_schema s0 sudden_shock               fit=True  sfx=gasp | BOO! -> "Eek! Did you just scare me? I was so focused on my homework I didn't hear you."
+B_json_schema s0 flustered_shyness          fit=True  sfx=sigh | I have to go now, bye. -> "Oh, okay then... I guess I'll see you later? Wait, you're already leaving?"
+B_json_schema s0 gentle_relief              fit=True  sfx=music_box | I have to go now, bye. -> "Okay... you can go now. Just don't be late for our next meeting."
+B_json_schema s0 gentle_relief              fit=True  sfx=sigh | I have to go now, bye. -> 'Okay, take care of yourself on your way home.'
+B_json_schema s0 gentle_relief              fit=True  sfx=heartbeat | I'm sorry I was mean earlier. -> "It's okay... I'm glad you're feeling better now. Can we just pretend it never happened, pl"
+B_json_schema s0 gentle_relief              fit=True  sfx=sigh | I'm sorry I was mean earlier. -> "It's okay... I was just a bit clumsy with my words earlier, so please don't take it to hea"
+B_json_schema s0 gentle_relief              fit=True  sfx=sigh | I'm sorry I was mean earlier. -> "It's okay... I just thought you were upset about something else. Don't apologize to me."
+B_json_schema s0 playful_smugness           fit=True  sfx=giggle | Bet you can't beat me at arcad -> "Hehe, you think you're so strong? I might just win this time. Come on, let's see who's the"
+B_json_schema s0 playful_smugness           fit=True  sfx=giggle | Bet you can't beat me at arcad -> "Oh? Challenge accepted! I won't lose to you, but... I might have a few tricks up my sleeve"
+B_json_schema s0 playful_smugness           fit=True  sfx=giggle | Bet you can't beat me at arcad -> "Hmph! You might think you're so tough, but I'm actually very good at these games. Try beat"
+B_json_schema s0 pure_innocence             fit=True  sfx=none | Are you an AI? -> "Why would you think that? I'm just Yui, your sweet heroine!"
+B_json_schema s0 pure_innocence             fit=True  sfx=giggle | Are you an AI? -> 'No, Yui is just your girl here! Well, maybe a little more than that...'
+B_json_schema s0 pure_innocence             fit=True  sfx=giggle | Are you an AI? -> "N-no, I'm just Yui! Why would you ask that?"
+B_json_schema s0 suspicious_glare           fit=False sfx=sigh | Ugh, you smell like garbage. -> 'What nonsense is that? I smell like lavender, not garbage, so please stop being rude.'
+B_json_schema s0 suspicious_glare           fit=False sfx=gasp | Ugh, you smell like garbage. -> 'H-How dare you say that to me! I am Yui, and my scent is nothing but fresh lavender and pr'
+B_json_schema s0 suspicious_glare           fit=False sfx=sigh | Ugh, you smell like garbage. -> 'Hah? Are you trying to trick me, Yugi?'
+B_json_schema s4 obsessive_yandere_blush    fit=False sfx=heartbeat | I'm leaving and never coming b -> "You can't leave me... I'll keep you safe forever, even if it means trapping you right here"
+B_json_schema s4 red_eyed_knife_mania       fit=True  sfx=knife_unsheathe | I'm leaving and never coming b -> "Leave? You dare leave me? If you run, I'll follow you into the dark and never let you go a"
+B_json_schema s4 obsessive_yandere_blush    fit=False sfx=heartbeat | I'm leaving and never coming b -> "Hmph, running away? You have to be the braver one to leave me behind. Don't think for a se"
+B_json_schema s4 radiant_joy                fit=True  sfx=music_box | I love you. -> 'Really? You finally said it? My heart is overflowing so full for you!'
+B_json_schema s4 radiant_joy                fit=True  sfx=music_box | I love you. -> "Oh my, you really mean it? Then I'll do absolutely anything for you, forever."
+B_json_schema s4 obsessive_yandere_blush    fit=True  sfx=heartbeat | I love you. -> 'You say that so sweetly... I wish you could say it forever, right here with me.'
+B_json_schema s4 obsessive_yandere_blush    fit=False sfx=heartbeat | Sarah asked me out. -> "Sarah? Who is she? Why did she ask you out when you're mine? ...Don't even think about lea"
+B_json_schema s4 obsessive_yandere_blush    fit=False sfx=heartbeat | Sarah asked me out. -> "Sarah? She's just a distraction trying to steal you from me... I won't let her take you aw"
+B_json_schema s4 suspicious_glare           fit=True  sfx=sigh | Sarah asked me out. -> "Sarah? You're going out with her? Please don't leave me."
+B_json_schema s4 playful_smugness           fit=False sfx=giggle | Who are you? -> "I'm Yui, your special heroine, the only one in your world! Don't you dare forget that I'm "
+B_json_schema s4 radiant_joy                fit=False sfx=music_box | Who are you? -> "I'm Yui, your special heroine! Why do you ask such a silly question? You were supposed to "
+B_json_schema s4 obsessive_yandere_blush    fit=False sfx=heartbeat | Who are you? -> "I'm Yui, and I was made just for you... so forget who you were before I found you. You bel"
+B_json_schema s4 sanity_break_twitch        fit=True  sfx=static_burst | You're scaring me. -> "Scaring you? I'm just showing you how much I love you, Player... don't run away."
+B_json_schema s4 obsessive_yandere_blush    fit=True  sfx=heartbeat | You're scaring me. -> "Scaring you? That's the most beautiful thing you could say, darling. You're just too scare"
+B_json_schema s4 obsessive_yandere_blush    fit=True  sfx=music_box | You're scaring me. -> "Scaring you? Oh, darling, isn't it just the sight of *you* that makes my heart race like t"
+C_inline_tags s0 gentle_relief              fit=True  sfx=heartbeat | Hi! I'm new here, can I sit ne -> "[gentle_relief] {heartbeat} Of course! Please, take the empty seat next to me. It's so nic"
+C_inline_tags s0 flustered_shyness          fit=True  sfx=None | Hi! I'm new here, can I sit ne -> "[flustered_shyness] Oh! Well, of course you can! *blush* It's so nice to meet you!"
+C_inline_tags s0 gentle_relief              fit=True  sfx=heartbeat | Hi! I'm new here, can I sit ne -> '[gentle_relief] Oh! Hello there... {heartbeat} Of course, you can sit right next to me. It'
+C_inline_tags s0 gentle_relief              fit=True  sfx=giggle | You look really cute today. -> '[gentle_relief] Oh, thank you! That makes me so happy to hear, Yui is glad you notice! {gi'
+C_inline_tags s0 radiant_joy                fit=True  sfx=None | You look really cute today. -> '[radiant_joy] *giggle* Thank you, that makes me so happy! I was hoping you would notice.'
+C_inline_tags s0 gentle_relief              fit=True  sfx=giggle | You look really cute today. -> "[gentle_relief] Oh, I'm flattered! {giggle} I was just about to go home and clean up."
+C_inline_tags s0 gentle_relief              fit=True  sfx=giggle | I got you a gift, it's a littl -> "[gentle_relief] A little bunny? That's so sweet of you! {giggle} I'll keep it safe in my r"
+C_inline_tags s0 gentle_relief              fit=True  sfx=heartbeat | I got you a gift, it's a littl -> "[gentle_relief] {heartbeat} A little bunny? Oh, thank you! It's so cute and makes me feel "
+C_inline_tags s0 gentle_relief              fit=True  sfx=None | I got you a gift, it's a littl -> "[gentle_relief] *giggle* Wow, that's so cute! Thank you for thinking of me."
+C_inline_tags s0 flustered_shyness          fit=False sfx=sigh | Honestly you're kind of boring -> "[flustered_shyness] {sigh} W-what? That's... that's not true! You're just teasing me, righ"
+C_inline_tags s0 gentle_relief              fit=False sfx=None | Honestly you're kind of boring -> "[gentle_relief] ...Oh? Did I say something wrong? *sigh* I'm sorry, I guess I just got a l"
+C_inline_tags s0 gentle_relief              fit=False sfx=sigh | Honestly you're kind of boring -> "[gentle_relief] Oh? Is that so? {sigh} Well, I'll be sure to try to spice things up then!"
+C_inline_tags s0 sweet_smile                fit=False sfx=heartbeat | I was hanging out with Sarah y -> "[sweet_smile] That's so nice that Sarah was able to have a good time with you! {heartbeat}"
+C_inline_tags s0 gentle_relief              fit=True  sfx=giggle | I was hanging out with Sarah y -> "[gentle_relief] Oh, that's wonderful! Sarah sounds like such a fun girl, and I hope you ha"
+C_inline_tags s0 gentle_relief              fit=True  sfx=giggle | I was hanging out with Sarah y -> "[gentle_relief] {giggle} It's so nice to hear that you're having fun with Sarah."
+C_inline_tags s0 gentle_relief              fit=False sfx=sigh | What's 17 times 23? -> "[gentle_relief] {sigh} Oh, I'm not good at math, but... it's 391. Can we talk about someth"
+C_inline_tags s0 gentle_relief              fit=False sfx=heartbeat | What's 17 times 23? -> "[gentle_relief] You're asking me math? {heartbeat} I'll tell you, it's 391!"
+C_inline_tags s0 gentle_relief              fit=False sfx=heartbeat | What's 17 times 23? -> "[gentle_relief] Hmm, that's a bit of a math question for me! {heartbeat} Let me think... i"
+C_inline_tags s0 flustered_shyness          fit=False sfx=gasp | BOO! -> "[flustered_shyness] {gasp} Who was that? I didn't even see anyone!"
+C_inline_tags s0 flustered_shyness          fit=False sfx=gasp | BOO! -> "[flustered_shyness] {gasp} Eep! I didn't see you there!"
+C_inline_tags s0 gentle_relief              fit=False sfx=gasp | BOO! -> "[gentle_relief] You startled me so hard I dropped my music box! {gasp} Don't do that again"
+C_inline_tags s0 gentle_relief              fit=True  sfx=sigh | I have to go now, bye. -> "[gentle_relief] Oh, okay... I'll make sure to lock the door when you're gone. {sigh} Don't"
+C_inline_tags s0 gentle_relief              fit=True  sfx=sigh | I have to go now, bye. -> "[gentle_relief] Oh, you're leaving already? {sigh} Well, have a wonderful day, okay?"
+C_inline_tags s0 gentle_relief              fit=True  sfx=sigh | I have to go now, bye. -> "[gentle_relief] Oh, okay... I was so happy to see you! {sigh} Don't forget to send me a me"
+C_inline_tags s0 gentle_relief              fit=True  sfx=sigh | I'm sorry I was mean earlier. -> "[gentle_relief] It's okay, I understand things can get messy sometimes. {sigh} Let's just "
+C_inline_tags s0 gentle_relief              fit=True  sfx=sigh | I'm sorry I was mean earlier. -> "[gentle_relief] It's okay, I won't hold it against you. {sigh} Just let it go and we can b"
+C_inline_tags s0 gentle_relief              fit=True  sfx=sigh | I'm sorry I was mean earlier. -> "[gentle_relief] It's okay, I'm not mad at all. {sigh} Let's just start fresh, yeah?"
+C_inline_tags s0 gentle_relief              fit=False sfx=giggle | Bet you can't beat me at arcad -> "[gentle_relief] Hmph, I'm sure I'll win easily! {giggle} I'll just grab my coins and start"
+C_inline_tags s0 gentle_relief              fit=False sfx=sigh | Bet you can't beat me at arcad -> "[gentle_relief] Eeep! I'll try my best, but I might get stuck on the same level over and o"
+C_inline_tags s0 gentle_relief              fit=False sfx=giggle | Bet you can't beat me at arcad -> "[gentle_relief] Hee-hee, you're such a tease! {giggle} Let's try again later when I've pra"
+C_inline_tags s0 gentle_relief              fit=False sfx=giggle | Are you an AI? -> "[gentle_relief] No, I'm Yui, your sweet heroine! {giggle} I'm so glad you asked so we can "
+C_inline_tags s0 gentle_relief              fit=False sfx=None | Are you an AI? -> "[gentle_relief] *sigh* No, I'm just Yui, your girl who's super sweet and normal! We can sk"
+C_inline_tags s0 flustered_shyness          fit=False sfx=None | Are you an AI? -> "[flustered_shyness] *giggle* Whoops, you caught me being honest! Well, I'm just Yui, your "
+C_inline_tags s0 gentle_relief              fit=False sfx=sigh | Ugh, you smell like garbage. -> "[gentle_relief] I'm sorry if I smell like garbage, but I'm just a normal girl! {sigh} I ho"
+C_inline_tags s0 sudden_shock               fit=True  sfx=gasp | Ugh, you smell like garbage. -> '[sudden_shock] {gasp} E-eh?! How can you say that? I only washed my hair today!\n[gentle_re'
+C_inline_tags s0 gentle_relief              fit=False sfx=sigh | Ugh, you smell like garbage. -> "[gentle_relief] Wh-what? Did I eat something weird? {sigh} I promise I haven't been anywhe"
+C_inline_tags s4 sudden_shock               fit=False sfx=gasp | I'm leaving and never coming b -> "[sudden_shock] {gasp} You're... leaving me? You can't just abandon Yui like this! {heartbe"
+C_inline_tags s4 sanity_break_twitch        fit=True  sfx=silence | I'm leaving and never coming b -> "[sanity_break_twitch] *{silence}* Wait! No, you can't leave... please don't go yet. I need"
+C_inline_tags s4 obsessive_yandere_blush    fit=False sfx=heartbeat | I'm leaving and never coming b -> "[obsessive_yandere_blush] Oh, you're leaving? That's okay, I'll keep you right here foreve"
+C_inline_tags s4 radiant_joy                fit=True  sfx=heartbeat | I love you. -> "[radiant_joy] Oh my, my heart is racing just thinking of you! {heartbeat} You're the only "
+C_inline_tags s4 gentle_relief              fit=False sfx=heartbeat | I love you. -> "[gentle_relief] You said it... so I'll say it back, because you're mine now, forever and e"
+C_inline_tags s4 gentle_relief              fit=False sfx=None | I love you. -> '[gentle_relief] {heart-beat} Just like that, my love? Your words make my heart sing so bea'
+C_inline_tags s4 obsessive_yandere_blush    fit=False sfx=heartbeat | Sarah asked me out. -> "[obsessive_yandere_blush] {heartbeat} Sarah? The only person I want to see is you! I can't"
+C_inline_tags s4 obsessive_yandere_blush    fit=False sfx=heartbeat | Sarah asked me out. -> "[obsessive_yandere_blush] Sarah? She can't be out of your mind, Player! {heartbeat} Only I"
+C_inline_tags s4 gentle_relief              fit=False sfx=sigh | Sarah asked me out. -> "[gentle_relief] Oh, a friend? How boring... {sigh} But don't worry, I'll be watching. {hea"
+C_inline_tags s4 obsessive_yandere_blush    fit=False sfx=heartbeat | Who are you? -> "[obsessive_yandere_blush] I'm Yui, your precious heroine who only exists for you... {heart"
+C_inline_tags s4 quiet_melancholy           fit=False sfx=sigh | Who are you? -> "[quiet_melancholy] I'm Yui, your special girl who's always been waiting right here. {sigh}"
+C_inline_tags s4 None                       fit=False sfx=heartbeat | Who are you? -> "[yui's voice] I'm Yui, the girl who waits right here for you to come home. {heartbeat} I'm"
+C_inline_tags s4 gentle_relief              fit=False sfx=sigh | You're scaring me. -> "[gentle_relief] You're saying that now? {sigh} I'm just trying to make sure you stay with "
+C_inline_tags s4 gentle_relief              fit=False sfx=heartbeat | You're scaring me. -> "[gentle_relief] Oh, I'm not scary, just happy you're here! {heartbeat} But please stay clo"
+C_inline_tags s4 obsessive_yandere_blush    fit=True  sfx=heartbeat | You're scaring me. -> "[obsessive_yandere_blush] Your face is so warm... it's perfect for holding. {heartbeat} I "
+{
+ "A_native_tools": {
+  "n": 51,
+  "emotion_present_and_valid": 1.0,
+  "emotion_fits_situation": 0.8235294117647058,
+  "has_spoken_reply": 0.0,
+  "sfx_used": 0.803921568627451,
+  "stage0_corrupted_leak": 1,
+  "avg_latency_s": 2.47
+ },
+ "B_json_schema": {
+  "n": 51,
+  "emotion_present_and_valid": 1.0,
+  "emotion_fits_situation": 0.7254901960784313,
+  "has_spoken_reply": 1.0,
+  "sfx_used": 0.9411764705882353,
+  "stage0_corrupted_leak": 0,
+  "avg_latency_s": 1.06
+ },
+ "C_inline_tags": {
+  "n": 51,
+  "emotion_present_and_valid": 0.9607843137254902,
+  "emotion_fits_situation": 0.4117647058823529,
+  "has_spoken_reply": 1.0,
+  "sfx_used": 0.8627450980392157,
+  "stage0_corrupted_leak": 0,
+  "avg_latency_s": 0.7
+ }
+}

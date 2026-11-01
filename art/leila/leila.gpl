@@ -1,0 +1,68 @@
+GIMP Palette
+Name: Leila-chan
+Columns: 8
+#
+ 11   8  12	hair_0b080c
+ 21  16  23	hair_151017
+ 31  21  29	hair_1f151d
+ 44  24  32	hair_2c1820
+ 68  25  42	hair_44192a
+107  31  48	hair_6b1f30
+ 29   5   9	dress_1d0509
+ 51  10  18	dress_330a12
+ 77  15  26	dress_4d0f1a
+108  21  34	dress_6c1522
+143  31  44	dress_8f1f2c
+179  49  58	dress_b3313a
+ 17  16  20	blouse_111014
+ 27  26  32	blouse_1b1a20
+ 38  36  44	blouse_26242c
+ 51  48  57	blouse_333039
+ 67  63  74	blouse_433f4a
+138  95  99	skin_8a5f63
+185 139 136	skin_b98b88
+220 179 170	skin_dcb3aa
+239 210 198	skin_efd2c6
+251 233 224	skin_fbe9e0
+ 42   4   8	eye_2a0408
+ 92  10  18	eye_5c0a12
+155  20  32	eye_9b1420
+216  50  58	eye_d8323a
+255 122 110	eye_ff7a6e
+ 74  20  24	mouth_4a1418
+125  42  44	mouth_7d2a2c
+182  82  82	mouth_b65252
+224 138 132	mouth_e08a84
+ 36  18  26	shade_24121a
+ 58  34  40	shade_3a2228
+ 85  54  64	shade_553640
+114  80  90	shade_72505a
+185 167 176	white_b9a7b0
+230 214 220	white_e6d6dc
+251 233 224	white_fbe9e0
+110  90 104	pale_6e5a68
+148 128 142	pale_94808e
+185 167 176	pale_b9a7b0
+217 200 204	pale_d9c8cc
+236 223 223	pale_ecdfdf
+217 154 152	blush_d99a98
+232 176 170	blush_e8b0aa
+242 198 188	blush_f2c6bc
+  7   4  10	line_07040a
+  7   4  10	outline_07040a
+ 90  50  54	outline_5a3236
+192  48  60	rim_c0303c
+ 28  28  34	steel_1c1c22
+ 58  58  68	steel_3a3a44
+106 106 120	steel_6a6a78
+168 168 184	steel_a8a8b8
+232 232 240	steel_e8e8f0
+230 214 220	eye_white_e6d6dc
+ 58  34  40	face_shadow_3a2228
+216  50  58	fx_d8323a
+127 216 224	fx_7fd8e0
+255  59  59	fx_ff3b3b
+232 160 160	fx_e8a0a0
+215 122 128	fx_d77a80
+168 216 255	fx_a8d8ff
+111 168 220	fx_6fa8dc

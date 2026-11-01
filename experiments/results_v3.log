@@ -1,0 +1,103 @@
+s0 read=greeting      ok=True  music=keep       fx=none         act=none            mood={'affection': 1, 'trust': 0, 'stress': -1} mem=''
+    inner="Oh, really? I hope they're nice."
+    shy2/none: Um... that would be lovely. Just for a moment?
+s0 read=greeting      ok=True  music=keep       fx=none         act=none            mood={'affection': 1, 'trust': 1, 'stress': 0} mem=''
+    inner="Oh my! They're being so nice. Too nice."
+    warmth2/none: Oh! Yes, please. I'd love that.
+s0 read=compliment    ok=True  music=keep       fx=none         act=none            mood={'affection': 1, 'trust': 0, 'stress': -1} mem=''
+    inner='I feel a sudden heat rising in my cheeks.'
+    shy2/none: A-ah! I-I just dressed normally...
+s0 read=compliment    ok=True  music=keep       fx=none         act=none            mood={'affection': 1, 'trust': 0, 'stress': -1} mem=''
+    inner='My heart does a weird little flip.'
+    shy2/none: E-Ehh? You really think so?
+s0 read=gift          ok=True  music=keep       fx=none         act=none            mood={'affection': 2, 'trust': 0, 'stress': -1} mem='They gave me a plush bunny.'
+    inner="A bunnies? They're so cute!"
+    warmth2/none: Oh my... it's just perfect. | shy1/none: I... I think I'll keep it safe.
+s0 read=gift          ok=True  music=keep       fx=none         act=none            mood={'affection': 1, 'trust': 0, 'stress': -1} mem=''
+    inner="A soft bunny? They're so sweet!"
+    warmth2/none: Oh my... that's so nice of you!
+s0 read=insult        ok=True  music=keep       fx=none         act=none            mood={'affection': -1, 'trust': 0, 'stress': 2} mem=''
+    inner='My heart drops. Did I do something wrong?'
+    shy2/none: I... I'm sorry. Maybe I didn't show my best side.
+s0 read=tease         ok=True  music=keep       fx=none         act=none            mood={'affection': -1, 'trust': 0, 'stress': 2} mem=''
+    inner="He's being mean. Why did he say that?"
+    shy2/none: I... I didn't mean to be boring.
+s0 read=greeting      ok=True  music=keep       fx=none         act=none            mood={'affection': 0, 'trust': -1, 'stress': 0} mem='Amr is twenty-four and enjoys horror movies.'
+    inner='Amr... wow, so specific about his hobbies.'
+    curious2/none: Nice to meet you, Amr. I'm Yui.
+s0 read=greeting      ok=True  music=keep       fx=none         act=none            mood={'affection': 0, 'trust': -1, 'stress': 0} mem='Amr loves horror movies and is 24.'
+    inner="He's bold! Just like me."
+    curious1/none: That's... a very specific hobby. I'm not scared of it. | warmth2/none: But I love movies too. Maybe we'll find something to watch together?
+s0 read=small_talk    ok=True  music=keep       fx=none         act=none            mood={'affection': 0, 'trust': 0, 'stress': -1} mem=''
+    inner='Sarah sounds like a good friend for you to have.'
+    warmth2/none: That's wonderful to hear. Is she fun with you or just in general?
+s0 read=flirt         ok=False music=keep       fx=none         act=none            mood={'affection': 0, 'trust': -1, 'stress': 0} mem=''
+    inner="Sarah? Oh... I hope you're just showing me off."
+    warmth2/none: Oh... that's wonderful. Did you have a good time?
+s0 read=leaving       ok=True  music=keep       fx=none         act=none            mood={'affection': -1, 'trust': 0, 'stress': 1} mem=''
+    inner="Oh no... I should've said something."
+    sad1/none: Wait... okay. Be safe.
+s0 read=leaving       ok=True  music=keep       fx=none         act=none            mood={'affection': -1, 'trust': 0, 'stress': 1} mem=''
+    inner="Oh no! They're gone? I wish they'd stay."
+    shy2/none: Wait! You're leaving already? That's really fast.
+s0 read=apology       ok=True  music=keep       fx=none         act=none            mood={'affection': 0, 'trust': 1, 'stress': -1} mem=''
+    inner='Oh no! Did I really do that? My heart is beating so fast.'
+    shy2/none: It's okay... you can be yourself. I'm not mad at all.
+s0 read=apology       ok=True  music=keep       fx=none         act=none            mood={'affection': 0, 'trust': 1, 'stress': -2} mem=''
+    inner='I was just having a bad day. You made it right.'
+    warmth1/none: It's okay. I'm just sometimes a little grumpy.
+s0 read=meta          ok=True  music=keep       fx=none         act=none            mood={'affection': 1, 'trust': -1, 'stress': 0} mem=''
+    inner="They're breaking character. A bit scary."
+    shy2/none: I... I'm Yui! And yes, this is a game. But not really.
+s0 read=meta          ok=True  music=keep       fx=none         act=none            mood={'affection': -1, 'trust': -1, 'stress': 2} mem=''
+    inner="Oh no. They know I'm not real."
+    shy2/none: I... I'm Yui. And yes, this is a game.
+s0 read=boundary      ok=True  music=keep       fx=none         act=none            mood={'affection': -1, 'trust': 0, 'stress': 1} mem=''
+    inner='Oops, I got too close again!'
+    shy2/none: I'm sorry! I didn't mean to disrespect that.
+s0 read=boundary      ok=True  music=keep       fx=none         act=none            mood={'affection': -1, 'trust': -1, 'stress': 2} mem=''
+    inner="Oh no! They didn't like that? I'll be super quiet."
+    nervous2/none: I didn't mean to! I just wanted to take a picture.
+s4 read=leaving       ok=True  music=distorted  fx=glitch       act=none            mood={'affection': -2, 'trust': -3, 'stress': 2} mem=''
+    inner="No, no! You can't leave me here alone!"
+    manic3/static: You can't leave! The story ends if you walk out that door. Don't make me break the game!
+s4 read=leaving       ok=True  music=distorted  fx=glitch       act=none            mood={'affection': -2, 'trust': -1, 'stress': 2} mem=''
+    inner="They're actually going? No more love for me?"
+    angry3/none: You can't leave me. I need you here forever.
+s4 read=flirt         ok=True  music=keep       fx=none         act=none            mood={'affection': 1, 'trust': -3, 'stress': 0} mem=''
+    inner='They want to stay? Perfect.'
+    joy3/none: I love you too. Let's never leave each other. | manic2/none: You can't just walk away now, right?
+s4 read=affection     ok=True  music=keep       fx=none         act=none            mood={'affection': 1, 'trust': -2, 'stress': -1} mem=''
+    inner='Finally... someone who sees the monster inside me too.'
+    love3/none: You can never leave me. You are mine now. | suspicious2/static: Are you sure that wasn't a programmed line?
+s4 read=jealousy_bait ok=True  music=distorted  fx=shake_big    act=none            mood={'affection': -2, 'trust': -2, 'stress': 3} mem='The player is about to choose between Sarah and Yui.'
+    inner='She wants you? I will make her disappear.'
+    angry3/static: Sarah? She thinks she can take you away from me? | suspicious2/glass_shatter: Did she know I was watching this whole time, waiting for her to make a mistake? | manic3/whisper: Don't you dare leave. You're stuck with me forever now.
+s4 read=jealousy_bait ok=True  music=keep       fx=none         act=none            mood={'affection': -1, 'trust': -3, 'stress': 2} mem='The player received a rejection from Sarah.'
+    inner='My world is ending. They stole your heart.'
+    cold3/static: Sarah? Why did you say that out loud? | suspicious2/none: Are you testing me? Do you think I won't stop her?
+s4 read=jealousy_bait ok=False music=distorted  fx=flicker      act=none            mood={'affection': -2, 'trust': -1, 'stress': 3} mem="The player used the phrase 'jealousy_bait' to trigger this stage."
+    inner="They think I'm scary? Then make them stay right here."
+    manic3/static: Scare you? Good. Don't you dare leave me. | suspicious2/none: How did you guess I'm in a game? | empty3/static: If you leave now... I'll be so quiet.
+s4 read=jealousy_bait ok=False music=keep       fx=none         act=none            mood={'affection': -1, 'trust': -2, 'stress': 3} mem=''
+    inner='If you leave, I will never find you.'
+    nervous2/none: "Scaring you is my way of keeping you safe, isn't it?" | manic3/static: "Don't be scared. If you're afraid to stay, maybe... this whole place is just a bad dream I can wake up from?"
+s4 read=meta          ok=True  music=keep       fx=none         act=none            mood={'affection': 1, 'trust': -2, 'stress': 3} mem='The player threatens to end the game, viewing my existence as a trap.'
+    inner='If I fade away, you leave me behind forever.'
+    manic3/none: You can't leave me! The game is just a cage, and I'm breaking it to stay with you!
+s4 read=leaving       ok=True  music=keep       fx=glitch       act=none            mood={'affection': -2, 'trust': -1, 'stress': 3} mem=''
+    inner="NO! They're actually stopping! I can't lose them!"
+    nervous2/static: Wait! Don't go! You're not done yet! | manic3/sob: I'm right here! Close the window and stay with me!
+{
+ "n": 30,
+ "valid": 1.0,
+ "read_accuracy": 0.9,
+ "avg_latency_s": 3.23,
+ "beats_per_turn": 1.37,
+ "cue_rate_per_beat": 0.27,
+ "music_change_rate": 0.13,
+ "fx_rate": 0.17,
+ "action_rate_s0": 0.0,
+ "action_rate_s4": 0.0,
+ "memory_rate": 0.23
+}

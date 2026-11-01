@@ -1,0 +1,266 @@
+[
+ {
+  "folder": "kenney_interface_sounds",
+  "source": "https://opengameart.org/content/interface-sounds",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "kenney_ui_sfx",
+  "source": "https://opengameart.org/content/51-ui-sound-effects-buttons-switches-and-clicks",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "kenney_digital_sfx",
+  "source": "https://opengameart.org/content/63-digital-sound-effects-lasers-phasers-space-etc",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "kenney_jingles",
+  "source": "https://opengameart.org/content/85-short-music-jingles",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "sfx_keyboard",
+  "source": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "sfx_typewriter",
+  "source": "https://opengameart.org/content/typewriter-sounds",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "sfx_clock",
+  "source": "https://opengameart.org/content/ticking-clock",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "sfx_clock_tick",
+  "source": "https://opengameart.org/content/clock-tick-0",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "sfx_ringtone",
+  "source": "https://opengameart.org/content/modern-ringtone-chirptone",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "sfx_horror_hits",
+  "source": "https://opengameart.org/content/horror-hit-soundpack-1",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "sfx_heartbeat",
+  "source": "https://opengameart.org/content/heartbeat-sounds",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "sfx_heartbeat_single",
+  "source": "https://opengameart.org/content/heartbeat-single-sound",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "sfx_static_noise",
+  "source": "https://opengameart.org/content/static",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "sfx_static_freq",
+  "source": "https://opengameart.org/content/frequency-static-sound-effects",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "sfx_giggling",
+  "source": "https://opengameart.org/content/group-giggling",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "sfx_vocal_samples",
+  "source": "https://opengameart.org/content/dialog-vocal-samples",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "sfx_creatures",
+  "source": "https://opengameart.org/content/80-cc0-creature-sfx",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "sfx_breaking",
+  "source": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "sfx_glass",
+  "source": "https://opengameart.org/content/glass-break",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "sfx_100",
+  "source": "https://opengameart.org/content/100-cc0-sfx",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "sfx_breathing",
+  "source": "https://opengameart.org/content/horror-breathing",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "sfx_ghost_breath",
+  "source": "https://opengameart.org/content/ghost-breath",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "sfx_jumpscare",
+  "source": "https://opengameart.org/content/jumpscare-sound",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "sfx_scream",
+  "source": "https://opengameart.org/content/horror-scream1",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "music_music_box",
+  "source": "https://opengameart.org/content/4-music-box-tracks",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "music_creepy_ambient_loop",
+  "source": "https://opengameart.org/content/creepy-ambient-loop",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "music_horror_atmosphere",
+  "source": "https://opengameart.org/content/horror-atmosphere",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "music_ice_cream_date",
+  "source": "https://opengameart.org/content/ice-cream-date",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "music_daisy",
+  "source": "https://opengameart.org/content/daisy",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "music_calm_synthwave",
+  "source": "https://opengameart.org/content/calm-relax-1-synthwave-421k",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "music_chill_lofi",
+  "source": "https://opengameart.org/content/chill-lofi-inspired",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "music_snowfall",
+  "source": "https://opengameart.org/content/snowfall",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "music_happy_lullaby",
+  "source": "https://opengameart.org/content/happy-lullaby-song17",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "music_moonlit_lullaby",
+  "source": "https://opengameart.org/content/moonlit-lullaby-for-the-lost",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "music_goodbye_lullaby",
+  "source": "https://opengameart.org/content/goodbye-lullaby-day-4",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "music_insistent",
+  "source": "https://opengameart.org/content/insistent-background-loop",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "music_creep",
+  "source": "https://opengameart.org/content/creepy",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "music_glitch_stairs",
+  "source": "https://opengameart.org/content/glitch-stairs",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "music_sirens_in_darkness",
+  "source": "https://opengameart.org/content/sirens-in-darkness",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "amb_rain_night",
+  "source": "https://opengameart.org/content/rain-and-thunders",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "music_flowerbed_fields",
+  "source": "https://opengameart.org/content/flowerbed-fields-loop",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "music_apple_cider",
+  "source": "https://opengameart.org/content/apple-cider",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "music_talking_cute",
+  "source": "https://opengameart.org/content/talking-cute-chiptune",
+  "license": "CC0",
+  "ok": true
+ },
+ {
+  "folder": "music_baby_song",
+  "source": "https://opengameart.org/content/lullaby-0",
+  "license": "CC0",
+  "ok": true
+ }
+]

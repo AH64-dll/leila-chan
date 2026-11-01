@@ -1,0 +1,32 @@
+# --- Local-only artifacts (too large / machine-specific; see README "Local artifacts") ---
+
+# LLM model weights (2.6 GB) — download separately, see README
+models/
+*.gguf
+
+# llama.cpp binary distribution — download separately, see README
+tools/llama/
+
+# Raw audio pool (357 MB, re-downloadable from SOURCES.json URLs)
+assets/audio/_raw/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# HuggingFace / misc caches
+.cache/
+*.lock
+
+# Superseded first-generation sprite set (kept locally for reference)
+art/leila_legacy_1x/
+
+# Review scratch sheets
+art/_review/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp

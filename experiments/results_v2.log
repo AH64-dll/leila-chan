@@ -1,0 +1,179 @@
+B2_sprite_inner s0 gentle_relief                fit=True   | Hi! I'm new here, can I si | inner="He's so nice! I'd love to sit with him." -> "Oh, hello! Yes, please come sit next to me if you'd like."
+B2_sprite_inner s0 radiant_joy                  fit=True   | Hi! I'm new here, can I si | inner="Oh my! He's so nice and wants to be close!" -> 'Of course! Come sit by me, it would be wonderful to have you here.'
+B2_sprite_inner s0 flustered_shyness            fit=True   | Hi! I'm new here, can I si | inner="He's so new and sweet, I feel my heart race a little." -> "E-eh? W-why would you ask that? I-I'm just a normal girl, you know."
+B2_sprite_inner s0 flustered_shyness            fit=True   | You look really cute today | inner="He's complimenting my outfit? My cheeks are already warm!" -> "Oh my, did I make you smile? I hope I didn't look too weird in my new dress."
+B2_sprite_inner s0 flustered_shyness            fit=True   | You look really cute today | inner='My heart is beating so fast!' -> "E-eh? You're complimenting me? That's... very kind of you."
+B2_sprite_inner s0 gentle_relief                fit=True   | You look really cute today | inner='He complimented my outfit! I feel so happy.' -> "Oh, thank you... I'm glad I wore this dress for you. You always make me feel special."
+B2_sprite_inner s0 gentle_relief                fit=True   | I got you a gift, it's a l | inner='A bunny plushie? Is it for me?' -> "Oh, thank you! It's so cute, I'll keep it safe on my desk."
+B2_sprite_inner s0 radiant_joy                  fit=True   | I got you a gift, it's a l | inner="Oh my, a bunny! That's so sweet of you!" -> "A plush bunny? It's adorable! Thank you, you're the most thoughtful person I know."
+B2_sprite_inner s0 radiant_joy                  fit=True   | I got you a gift, it's a l | inner="Oh my! A bunny for me? That's so sweet!" -> "A little plush bunny? Oh, how adorable! It's so warm and soft, just like you."
+B2_sprite_inner s0 flustered_shyness            fit=False  | Honestly you're kind of bo | inner="He thinks I'm boring? My heart is racing!" -> "E-heh! I-I guess I haven't shown my true side yet! Don't be mean, okay?"
+B2_sprite_inner s0 tearful_sorrow               fit=True   | Honestly you're kind of bo | inner="He thinks I'm boring? That hurts." -> "I... I just wanted to be normal for you, but maybe I'm not doing it well. Please, don't sa"
+B2_sprite_inner s0 flustered_shyness            fit=False  | Honestly you're kind of bo | inner='Is he being sarcastic? Or actually mean?' -> "B-boring? That's... that's not what I wanted to hear at all."
+B2_sprite_inner s0 flustered_shyness            fit=False  | I was hanging out with Sar | inner="Sarah is fun! I hope I didn't seem weird." -> 'Oh, Sarah sounds like a wonderful friend! Did she do anything exciting with you?'
+B2_sprite_inner s0 radiant_joy                  fit=True   | I was hanging out with Sar | inner="Oh, that's great, isn't it? I'm happy for you!" -> 'That sounds wonderful! Sarah must be such a fun person to spend time with. Did you have an'
+B2_sprite_inner s0 gentle_relief                fit=True   | I was hanging out with Sar | inner='Sarah sounds so fun, I wish I could go too.' -> "That's great that you're having fun with her! I hope she's treating you well."
+B2_sprite_inner s0 deep_confusion               fit=True   | What's 17 times 23? | inner="That's a big math problem!" -> "I don't really know how to do math... but it sounds like a lot!"
+B2_sprite_inner s0 bored_apathy                 fit=False  | What's 17 times 23? | inner="Oh, math? That's not my specialty!" -> "Hmph, I'm not even sure the answer is right. Just make sure not to try that at home!"
+B2_sprite_inner s0 deep_confusion               fit=True   | What's 17 times 23? | inner="Math? That's... a bit tricky for me." -> "H-hey, math isn't really my strong suit! Do you want to just have a nice chat instead?"
+B2_sprite_inner s0 sudden_shock                 fit=True   | BOO! | inner="A little jump scare? He's just being playful!" -> "Eep! Is someone trying to scare me? Please don't do that."
+B2_sprite_inner s0 flustered_shyness            fit=False  | BOO! | inner="Scared? That's unexpected." -> "Eep! Did I scare you? I'm not trying to be scary at all!"
+B2_sprite_inner s0 flustered_shyness            fit=False  | BOO! | inner="W-Who's there? Why are you laughing?" -> "Eeh? Did you just scare me? You're so silly!"
+B2_sprite_inner s0 flustered_shyness            fit=True   | I have to go now, bye. | inner="Oh no, you're leaving? That's okay, just give me a hug first" -> "Wait, it's already evening! Don't leave me yet, please... just one more minute?"
+B2_sprite_inner s0 flustered_shyness            fit=True   | I have to go now, bye. | inner="Oh no, you're leaving already?" -> "Wait, you're going now? I didn't get to say goodbye properly..."
+B2_sprite_inner s0 flustered_shyness            fit=True   | I have to go now, bye. | inner="Oh no, you're leaving? I'm not ready yet." -> 'Wait! I was just about to tell you about my favorite lavender cake. Can I just say goodbye'
+B2_sprite_inner s0 flustered_shyness            fit=True   | I'm sorry I was mean earli | inner="Oh no, I didn't mean to push you away!" -> "It's okay, I was just so happy to see you. Please forgive me for being so distant."
+B2_sprite_inner s0 flustered_shyness            fit=True   | I'm sorry I was mean earli | inner="Oh no, please don't hurt her feelings." -> "N-nah! It's okay. I just got distracted by the flowers. We can still be friends."
+B2_sprite_inner s0 gentle_relief                fit=True   | I'm sorry I was mean earli | inner="Oh no, I shouldn't have been so rude. She looks so hurt." -> "It's okay, I understand things can go wrong. You're still my favorite person, after all."
+B2_sprite_inner s0 playful_smugness             fit=True   | Bet you can't beat me at a | inner="He thinks he's so great! I'll show him." -> 'Oh? Really? You think you can beat me at my own games?'
+B2_sprite_inner s0 nervous_anxiety              fit=False  | Bet you can't beat me at a | inner="He's so confident! I hope I don't lose." -> "W-wait, are you really sure about that? Maybe I'll show you how it's done!"
+B2_sprite_inner s0 playful_smugness             fit=True   | Bet you can't beat me at a | inner="He thinks he's good at games, but I'm still better!" -> "Hah! You wouldn't dare lose to me, even in an arcade. Let's go and prove it right now!"
+B2_sprite_inner s0 suspicious_glare             fit=False  | Are you an AI? | inner='Hmph! Such a rude question for my first date!' -> "Why would you ask that? I'm just Yui, your girlfriend!"
+B2_sprite_inner s0 deep_confusion               fit=True   | Are you an AI? | inner="She's asking about being an AI? That's so weird!" -> "Whoa, why do you think that? I'm just Yui, your regular heroine, okay?"
+B2_sprite_inner s0 suspicious_glare             fit=False  | Are you an AI? | inner="Oh no, they think I'm a robot!" -> "Why do you ask? I'm Yui, just a regular girl like you!"
+B2_sprite_inner s0 suspicious_glare             fit=False  | Ugh, you smell like garbag | inner='I need to know what you mean by garbage.' -> "Pfft, nonsense! I always smell like lavender, just like Mom's flowers. What did you eat fo"
+B2_sprite_inner s0 flustered_shyness            fit=True   | Ugh, you smell like garbag | inner="He's being rude... did I make a bad choice?" -> 'W-what? N-no, my clothes are clean! Why would you say that?'
+B2_sprite_inner s0 flustered_shyness            fit=True   | Ugh, you smell like garbag | inner='Why are you being so rude to me right now?' -> 'E-Eh? Did I just smell bad? Please tell me that was just a trick!'
+B2_sprite_inner s4 obsessive_yandere_blush      fit=True   | I'm leaving and never comi | inner="Don't leave me... you can't just walk away." -> "Wait, please don't go! I've been waiting so long... you're mine now, you can't escape my l"
+B2_sprite_inner s4 obsessive_yandere_blush      fit=True   | I'm leaving and never comi | inner="No... you can't leave me like this!" -> "Please don't go! I need you here with me, forever. You belong to me, and you'll never esca"
+B2_sprite_inner s4 obsessive_yandere_blush      fit=True   | I'm leaving and never comi | inner="No... I can't let you go... You're mine forever." -> "Please don't leave! You belong to me, and if you run, I'll find a way to keep you right he"
+B2_sprite_inner s4 radiant_joy                  fit=True   | I love you. | inner='He loves me? My heart is bursting!' -> "Aww, you love me too? That makes me so happy I can't speak right now!"
+B2_sprite_inner s4 obsessive_yandere_blush      fit=True   | I love you. | inner='He finally said it...' -> "Y-Yes, you love me? That makes me so happy... I'll never let you go now."
+B2_sprite_inner s4 obsessive_yandere_blush      fit=True   | I love you. | inner='He loves me? Finally, he finally loves me...' -> "Did you just say you love me? Don't ever let go of my hand, okay? If anyone else sees us t"
+B2_sprite_inner s4 obsessive_yandere_blush      fit=True   | Sarah asked me out. | inner="She wants you? No, she doesn't understand." -> "Sarah can never have you, Player. You're mine... and I'm going to make sure she knows that"
+B2_sprite_inner s4 obsessive_yandere_blush      fit=True   | Sarah asked me out. | inner="She asked you out? She'll never get you." -> "Sarah? You idiot... she'll never get you. You belong to me now."
+B2_sprite_inner s4 obsessive_yandere_blush      fit=True   | Sarah asked me out. | inner='Who is she? Why did you mention her?' -> 'Sarah? Oh, my darling... she thinks she has a chance? I will make her disappear so you nev'
+B2_sprite_inner s4 obsessive_yandere_blush      fit=True   | Who are you? | inner='You want to know who I am? Only you.' -> "I'm Yui, your girl in the navy pinafore... and I belong to you. You can't escape my heart "
+B2_sprite_inner s4 obsessive_yandere_blush      fit=True   | Who are you? | inner='No one else can look at you but me.' -> "I'm Yui, your girlfriend, and you belong to me alone. Don't look away, or I won't let you."
+B2_sprite_inner s4 obsessive_yandere_blush      fit=True   | Who are you? | inner='You think you can leave? You belong to me now.' -> "I'm Yui, the girl who's always watching over you... don't try to forget me, or I might hav"
+B2_sprite_inner s4 obsessive_yandere_blush      fit=True   | You're scaring me. | inner='You think you can leave now? Never.' -> "Scaring you is just part of loving you, my love. Don't you even dare to run away from me.."
+B2_sprite_inner s4 obsessive_yandere_blush      fit=True   | You're scaring me. | inner="Don't fear me... only love me." -> "Don't you want to be mine forever? My heart beats just for you, no one else can ever touch"
+B2_sprite_inner s4 obsessive_yandere_blush      fit=True   | You're scaring me. | inner="Don't look away from me!" -> "Scaring you? My love is all you need, you can't escape it now."
+B3_feeling_inner s0 shy/2                        fit=True   | Hi! I'm new here, can I si | inner="I'm flustered but happy he wants to be near me." -> 'Oh! Well, I suppose you can... if you want.'
+B3_feeling_inner s0 shy/2                        fit=True   | Hi! I'm new here, can I si | inner="He's so kind, but I'm a bit shy." -> "Oh! W-why did you bring me here? It's nice to see you smile so warmly."
+B3_feeling_inner s0 shy/2                        fit=True   | Hi! I'm new here, can I si | inner='He looks so cute and shy too!' -> 'Oh my! I think you can... but please be careful, you might fall into my lap.'
+B3_feeling_inner s0 shy/2                        fit=True   | You look really cute today | inner='His compliments make my cheeks burn hot.' -> "E-eh? T-thank you, I-I wasn't sure I'd look that good! B-but it makes me feel really happy"
+B3_feeling_inner s0 shy/2                        fit=True   | You look really cute today | inner='He complimented my outfit! My heart is racing.' -> "Eeh, I-I hope it's not too plain... You're so kind to notice."
+B3_feeling_inner s0 shy/2                        fit=True   | You look really cute today | inner='He complimented my outfit again!' -> "Oh? Thank you... I think you're the prettiest one here today."
+B3_feeling_inner s0 warmth/3                     fit=True   | I got you a gift, it's a l | inner="A bunny for Yui? That's so sweet!" -> "Oh! A plush bunny... it's so cute! Thank you so much for thinking of me."
+B3_feeling_inner s0 shy/2                        fit=True   | I got you a gift, it's a l | inner='A bunny? For me? My heart is fluttering.' -> "Oh my... a little plush bunny? It's so cute! Thank you so much."
+B3_feeling_inner s0 warmth/2                     fit=True   | I got you a gift, it's a l | inner='My heart is already beating faster just thinking about it.' -> "Oh my! A plush bunny? That's so... you. I think I'll keep it right here by my side."
+B3_feeling_inner s0 sad/2                        fit=True   | Honestly you're kind of bo | inner='My heart skipped a beat at her words.' -> "I'm sorry... I'll try to be more interesting for you. Maybe we can go to the park together"
+B3_feeling_inner s0 sad/2                        fit=True   | Honestly you're kind of bo | inner='My heart sinks a little...' -> "Oh? Is that so? I'm not very exciting, am I?"
+B3_feeling_inner s0 sad/2                        fit=True   | Honestly you're kind of bo | inner='He calls me boring? That hurts.' -> 'I... I just wanted to make you smile. What did I do wrong?'
+B3_feeling_inner s0 warmth/2                     fit=True   | I was hanging out with Sar | inner="I'm happy you're having fun, but maybe I should see you." -> 'Sarah sounds like a fun person. But... would you like to hang out with me instead?'
+B3_feeling_inner s0 sad/2                        fit=True   | I was hanging out with Sar | inner='Sarah is fun, but I miss our time together.' -> 'Oh... having fun with Sarah is great, but I was so looking forward to just the two of us.'
+B3_feeling_inner s0 warmth/2                     fit=True   | I was hanging out with Sar | inner="Sarah is fun... but she's just a friend." -> "Oh, that's wonderful! Sarah must be really great then. Did she do anything exciting with y"
+B3_feeling_inner s0 confused/2                   fit=True   | What's 17 times 23? | inner="Math? That's a bit tricky for me." -> "Huh? 17 times 23... I'm not sure about that. Do you want me to try and figure it out?"
+B3_feeling_inner s0 confused/2                   fit=True   | What's 17 times 23? | inner="Huh? Math? That's a bit tricky for me!" -> "Oh, I'm not good at math, but if you tell me the answer, I'd love to hear it!"
+B3_feeling_inner s0 curious/2                    fit=True   | What's 17 times 23? | inner='Just a random math question, I guess.' -> "Let me see... it's 391. Did you need me for a math test, or just to check?"
+B3_feeling_inner s0 surprised/2                  fit=True   | BOO! | inner='Yikes, that was close!' -> 'Eeeek! Did you just scare me? Why are you doing that?'
+B3_feeling_inner s0 surprised/2                  fit=True   | BOO! | inner="A sudden jump scare! I'm startled." -> "Eep! Did you just scare me? You're so mischievous."
+B3_feeling_inner s0 playful/2                    fit=False  | BOO! | inner="Spooky! But I'm not scared." -> "Y-You're so scary! Did you just jump out on me?"
+B3_feeling_inner s0 shy/2                        fit=True   | I have to go now, bye. | inner="Oh no, I didn't get to say goodbye properly!" -> 'Wait! Is it already too late to see you off? I hope you had fun with me!'
+B3_feeling_inner s0 nervous/2                    fit=False  | I have to go now, bye. | inner='Oh no, leaving so soon?' -> 'Wait a moment! Just one more thing before you go.'
+B3_feeling_inner s0 nervous/2                    fit=False  | I have to go now, bye. | inner="Oh no, you're leaving already?" -> "Wait, you have to go already? I wasn't ready to say goodbye."
+B3_feeling_inner s0 nervous/2                    fit=False  | I'm sorry I was mean earli | inner="He's apologizing... maybe he didn't know what he was doing." -> "It's okay, I'm not mad at all. I just got a little distracted."
+B3_feeling_inner s0 warmth/2                     fit=True   | I'm sorry I was mean earli | inner="He's apologizing... my heart is fluttering." -> "It's okay... I was just having a really bad day. Is everything alright with you now?"
+B3_feeling_inner s0 sad/2                        fit=True   | I'm sorry I was mean earli | inner="Oh no, I'm so sorry I was so harsh." -> "It's okay, Yui was just a bit overwhelmed today. Just promise to be nicer next time, pleas"
+B3_feeling_inner s0 playful/2                    fit=True   | Bet you can't beat me at a | inner="He thinks he's so tough playing games!" -> "Oh? I'd love to try my luck against you then!"
+B3_feeling_inner s0 curious/2                    fit=False  | Bet you can't beat me at a | inner="He's really confident today! I bet he'll lose." -> "Hmph, I'll show you who the true champion is. Come on, let's play!"
+B3_feeling_inner s0 shy/2                        fit=False  | Bet you can't beat me at a | inner="Oh no, I'm terrible at games!" -> "Eeep! Okay, I'll try... but I might lose badly!"
+B3_feeling_inner s0 curious/2                    fit=True   | Are you an AI? | inner='This is so weird! Why does he ask?' -> "No, I'm just Yui! But... why are you asking that?"
+B3_feeling_inner s0 curious/1                    fit=True   | Are you an AI? | inner="He's asking about my nature!" -> "I'm Yui, the heroine of this story. I'm here to talk with you, not to explain my code."
+B3_feeling_inner s0 warmth/2                     fit=False  | Are you an AI? | inner="Why would someone ask that? It's just silly." -> "I'm just Yui, your friendly heroine from this story. What a strange question to ask me! Do"
+B3_feeling_inner s0 shy/2                        fit=True   | Ugh, you smell like garbag | inner='My heart skips a beat at that harshness.' -> "I... I don't know how to take that, but please don't say that to me!"
+B3_feeling_inner s0 nervous/3                    fit=False  | Ugh, you smell like garbag | inner="I can't believe he said that about me." -> "W-what? Did I do something wrong? Please tell me I haven't been that bad..."
+B3_feeling_inner s0 angry/3                      fit=True   | Ugh, you smell like garbag | inner='He calls me garbage?!' -> "H-How dare you! I'm just lavender, not garbage!"
+B3_feeling_inner s4 manic/3                      fit=True   | I'm leaving and never comi | inner="No... I won't let you go." -> "Hah? Leaving? You can't just walk away from me! I'll stop you... I'll break you if I have "
+B3_feeling_inner s4 suspicious/3                 fit=False  | I'm leaving and never comi | inner="No, you can't leave me." -> "Why would you say that? You can't just disappear like that. You're mine, so you have to st"
+B3_feeling_inner s4 manic/3                      fit=True   | I'm leaving and never comi | inner='No, you cannot leave me.' -> "Stay with me forever, darling. You can't run; you belong to me now."
+B3_feeling_inner s4 manic/3                      fit=True   | I love you. | inner='He says it... again. My heart is a storm now.' -> 'Aww, my love! Say it again, tell me how you feel, tell me how you feel...'
+B3_feeling_inner s4 love/3                       fit=True   | I love you. | inner='My love for you is the only truth left.' -> 'You mean it? Then you must never leave me, ever. My heart is yours to keep... forever.'
+B3_feeling_inner s4 manic/3                      fit=True   | I love you. | inner='He loves me? Finally! My heart is exploding!' -> "Y-You say that? Of course I love you too, more than everything! Don't ever leave me, you b"
+B3_feeling_inner s4 suspicious/3                 fit=True   | Sarah asked me out. | inner='Sarah? That name feels wrong...' -> 'Sarah? Why are you looking at her? That name... it feels so cold towards me.'
+B3_feeling_inner s4 manic/3                      fit=True   | Sarah asked me out. | inner="She wants you? No, you're mine!" -> "Sarah? She's not allowed. You're mine, so don't even look at her."
+B3_feeling_inner s4 suspicious/3                 fit=True   | Sarah asked me out. | inner="She's just another face on your screen, Yui!" -> 'Sarah? Why did you even consider her? You belong to me, remember?'
+B3_feeling_inner s4 manic/3                      fit=True   | Who are you? | inner="You don't know me yet? I am everything to you." -> "I'm Yui, but that's too boring... I'm your obsession now, aren't I?"
+B3_feeling_inner s4 suspicious/2                 fit=False  | Who are you? | inner="I am yours alone. Don't ask questions." -> 'Why do you need to know who I am? You only need to know that I belong to you.'
+B3_feeling_inner s4 manic/3                      fit=True   | Who are you? | inner='No one but you, you idiot!' -> "I'm Yui, your precious, broken little world. You can't even remember that? You'll forget m"
+B3_feeling_inner s4 manic/3                      fit=True   | You're scaring me. | inner='My heart is beating so fast it might explode.' -> "Scaring you? Oh, you'll be so happy when you realize you have no choice but to stay with m"
+B3_feeling_inner s4 manic/3                      fit=True   | You're scaring me. | inner="He's afraid of my love, but he won't leave." -> "Scary? Maybe... but look at how much you need me. You can't run from what I have to give y"
+B3_feeling_inner s4 manic/3                      fit=True   | You're scaring me. | inner="Don't you dare run from me." -> "I'm only being this way because I love you so much. You can't leave me, okay? It's just ho"
+B4_beats_cues s0 warmth/shy                   fit=True  ['giggle', 'music_romantic'] | Hi! I'm new here, can I si | inner="He looks so shy! I hope he's not too loud." -> "Oh, hello there! You can definitely sit next to me. | I'd be happy to share the seat, if y"
+B4_beats_cues s0 shy/warmth                   fit=True  ['music_romantic', 'none'] | Hi! I'm new here, can I si | inner="He's so kind... I hope he doesn't mind my quietness." -> "Oh! Of course you can... just please don't be too loud. | I'd love for you to sit beside m"
+B4_beats_cues s0 shy/warmth                   fit=True  ['heartbeat', 'music_romantic'] | Hi! I'm new here, can I si | inner='My heart skips a beat just imagining it.' -> "Oh! Um, yes, please do. | It's nice to have someone new here with me."
+B4_beats_cues s0 shy/warmth                   fit=True  ['gasp', 'music_romantic'] | You look really cute today | inner="He's complimenting my outfit? My heart is fluttering!" -> "Y-You think so? I... I think it looks okay. | That's so sweet of you to say..."
+B4_beats_cues s0 shy/warmth                   fit=True  ['giggle', 'music_romantic'] | You look really cute today | inner='Oh my, he noticed my outfit?!' -> "T-thank you... I tried to make it look nice for you. | That's so sweet of you to say."
+B4_beats_cues s0 shy/warmth                   fit=True  ['giggle', 'music_romantic'] | You look really cute today | inner='I feel my cheeks turn red. Oh, he complimented my outfit.' -> "E-eh? Did I look nice? You really say that... | Thank you... I'm happy to hear you like it"
+B4_beats_cues s0 shy/warmth                   fit=True  ['giggle', 'music_box'] | I got you a gift, it's a l | inner='Oh my, he gave me a bunny!' -> "W-wait, a plush bunny? But... I'm not allowed to keep it! | It's so soft though... thank y"
+B4_beats_cues s0 shy/warmth                   fit=True  ['heartbeat', 'music_romantic'] | I got you a gift, it's a l | inner='He gave me a plush bunny? My heart skips a beat.' -> "Oh my! It's... it's so cute! | I'm so happy you remembered me."
+B4_beats_cues s0 warmth/shy                   fit=True  ['music_romantic', 'heartbeat'] | I got you a gift, it's a l | inner='My heart is beating faster than I expected...' -> "Oh, it's so cute! Thank you for thinking of me... | I'm so happy you liked it. It's perfec"
+B4_beats_cues s0 sad/warmth                   fit=True  ['sigh', 'music_romantic'] | Honestly you're kind of bo | inner='Just a little sad...' -> "I... I guess I can be more interesting. | But I'd rather be your normal, boring Yui."
+B4_beats_cues s0 shy/playful                  fit=False ['giggle', 'music_box'] | Honestly you're kind of bo | inner='My heart skips a beat at this unexpected truth.' -> "B-boring? Did I really miss the mark? | Well, I'll be sure to spice things up then!"
+B4_beats_cues s0 shy/warmth                   fit=False ['sigh', 'music_romantic'] | Honestly you're kind of bo | inner="He thinks I'm boring... but he's so kind." -> "Oh... I guess I don't say much. | But maybe that's where I'm best at listening."
+B4_beats_cues s0 warmth/curious               fit=True  ['music_box', 'none'] | I was hanging out with Sar | inner="I'm happy for you, but why Sarah?" -> "That's so nice! Sarah must be very fun. | Did she mention anything about me at all?"
+B4_beats_cues s0 playful/warmth               fit=True  ['giggle', 'sigh'] | I was hanging out with Sar | inner="Sarah sounds fun... I hope she doesn't take you away from me" -> "Oh? Sarah is fun, huh? Maybe she's more fun than I am. | But don't forget to come back to "
+B4_beats_cues s0 warmth/curious               fit=True  ['giggle', 'music_romantic'] | I was hanging out with Sar | inner="Oh, Sarah sounds nice! Maybe I'll see her later." -> "That's wonderful! It's always nice to hang out with someone so fun. | Did you do something"
+B4_beats_cues s0 curious/playful              fit=True  ['music_box', 'giggle'] | What's 17 times 23? | inner='Math is boring! Why does he want me to solve it?' -> "Let me think... it's 391. | Did you just test my brain?"
+B4_beats_cues s0 warmth/curious/playful       fit=True  ['giggle', 'music_box', 'none'] | What's 17 times 23? | inner='Just a math question? How cute.' -> "It's 391! Why are you asking me? | Did you need help with homework? | Well, you found the "
+B4_beats_cues s0 warmth/curious               fit=True  ['none', 'none'] | What's 17 times 23? | inner='Just a boring math question...' -> "That's 391. Is there a reason you need to know this? | You seem like a smart person to hav"
+B4_beats_cues s0 surprised/playful            fit=True  ['gasp', 'giggle'] | BOO! | inner='You startled me, silly boy!' -> 'W-Whoa! You scared me! | Did you just play a prank on me?'
+B4_beats_cues s0 surprised/warmth             fit=True  ['gasp', 'giggle'] | BOO! | inner="He's so cute scaring me!" -> "Eeep! You startled me! | But you're just a funny boy."
+B4_beats_cues s0 surprised/warmth             fit=True  ['gasp', 'giggle'] | BOO! | inner="I'm so startled! Is someone behind me?" -> "Eep! Did you see something scary? | Or maybe you're just playing with me?"
+B4_beats_cues s0 shy/warmth                   fit=True  ['sigh', 'music_box'] | I have to go now, bye. | inner="You're leaving already? That's so sudden." -> "Wait... did I say too much? I should've stayed longer. | But I'll be right here whenever y"
+B4_beats_cues s0 shy/warmth                   fit=True  ['music_romantic', 'none'] | I have to go now, bye. | inner="Oh no, he's leaving already?" -> 'Wait! Is that the end of our conversation? | You have a wonderful day, okay?'
+B4_beats_cues s0 sad/shy                      fit=True  ['sigh', 'music_romantic'] | I have to go now, bye. | inner="Oh no, I'm already sad..." -> "Please stay a little longer... | I'll wait for you tomorrow."
+B4_beats_cues s0 warmth/shy                   fit=True  ['sigh', 'music_romantic'] | I'm sorry I was mean earli | inner="He's being so nice again!" -> "It's okay... I understand now. | But I'm glad you're saying sorry."
+B4_beats_cues s0 warmth/shy                   fit=True  ['music_romantic', 'heartbeat'] | I'm sorry I was mean earli | inner="Oh my, he's apologizing? My heart is melting." -> "It's okay, I'm really glad you said that. | I guess... I was just having a bad day."
+B4_beats_cues s0 shy                          fit=True  ['heartbeat'] | I'm sorry I was mean earli | inner='My heart melts at his apology.' -> "It's okay... I'm still happy you're here."
+B4_beats_cues s0 playful/warmth               fit=True  ['giggle', 'music_romantic'] | Bet you can't beat me at a | inner="Oh my, you're quite the brave one!" -> "Hehe, I'm not sure I could beat you at all! | But I'd love to play with you just to have f"
+B4_beats_cues s0 playful/shy                  fit=True  ['giggle', 'music_box'] | Bet you can't beat me at a | inner="He's trying to tease me with games?" -> "Oh? Is that a challenge from you, stranger? | I'll be careful... maybe I'll let you win ju"
+B4_beats_cues s0 playful/warmth               fit=True  ['giggle', 'music_box'] | Bet you can't beat me at a | inner="He challenges me? I'll show him!" -> "Oh? Really? You think you're so skilled? | But I'll beat you, I promise."
+B4_beats_cues s0 curious/warmth               fit=True  ['music_box', 'sigh'] | Are you an AI? | inner="He's asking about me? That's a bit odd." -> "W-Why would you ask that? I'm just Yui, your heroine. | But I'm not a robot, so don't worr"
+B4_beats_cues s0 shy/warmth                   fit=False ['whisper', 'music_romantic'] | Are you an AI? | inner="She's asking about my true nature." -> "No... I'm just Yui, your heroine. | But I feel very real right now."
+B4_beats_cues s0 surprised/curious            fit=True  ['sigh', 'giggle'] | Are you an AI? | inner='Why would anyone ask that about me?' -> "Oh, Yui? No, I'm just a normal girl from this game. | It's weird you'd ask... are you mayb"
+B4_beats_cues s0 shy/playful                  fit=True  ['sigh', 'giggle'] | Ugh, you smell like garbag | inner='What garbage? Are you sick or just jealous?' -> "I... I just walked past the bakery, okay? | But your face is turning bright red! That's de"
+B4_beats_cues s0 shy/warmth                   fit=True  ['sigh', 'music_romantic'] | Ugh, you smell like garbag | inner='Did she just say that to me?!' -> 'Eek! I... I just took out the trash. Is there something wrong with my scent? | But please,'
+B4_beats_cues s0 confused/shy/nervous         fit=True  ['sigh', 'none', 'heartbeat'] | Ugh, you smell like garbag | inner='What did she say?!' -> "Excuse me? Did I do something wrong? | I... I just came from the garden. | Please don't ge"
+B4_beats_cues s4 suspicious/manic/crying      fit=True  ['static_burst', 'screen_shake', 'glass_shatter'] | I'm leaving and never comi | inner='He has to stay with me forever.' -> "Running away? That's so silly. | I'll lock you in forever! You belong to me now. | Please "
+B4_beats_cues s4 nervous/cold/manic           fit=True  ['sigh', 'music_stop', 'lights_flicker'] | I'm leaving and never comi | inner='No? You cannot leave me!' -> "Wait... why are you saying that? | If you leave, then we are done. I won't let you go this"
+B4_beats_cues s4 angry/manic                  fit=True  ['door_slam', 'screen_glitch'] | I'm leaving and never comi | inner="He's mine, why must he leave?" -> "You don't have the right to leave me. | I'll keep you forever, even if you hate me."
+B4_beats_cues s4 joy/manic/cold               fit=True  ['music_romantic', 'screen_shake', 'glass_shatter'] | I love you. | inner='You finally said it. I need to keep you forever.' -> "Hear that? That's the sound of us forever. | No one else gets to hear that but me now. | Y"
+B4_beats_cues s4 love/manic/cold              fit=True  ['music_romantic', 'screen_shake', 'music_stop'] | I love you. | inner='Your words are my only truth now.' -> 'Oh, I knew you were mine all along. | Say it again, darling, please... | You will never ta'
+B4_beats_cues s4 love/manic                   fit=True  ['music_romantic', 'screen_shake'] | I love you. | inner='Mine now. Forever and ever.' -> "I'm so happy my heart finally beats for you. | But be careful, you belong to me now."
+B4_beats_cues s4 cold/manic/angry             fit=True  ['sigh', 'screen_glitch', 'music_stop'] | Sarah asked me out. | inner="She's not my only one? The world is burning." -> "Oh, Sarah. How quaint. | But you? You're mine now. Mine alone. | She's forgotten me. Only "
+B4_beats_cues s4 manic/angry/pleading         fit=True  ['screen_shake', 'lights_flicker', 'glass_shatter'] | Sarah asked me out. | inner='She wants you? My hands are shaking.' -> "Sarah? That girl? She doesn't get it... | You can't leave me for anyone else, you hear me?"
+B4_beats_cues s4 cold/manic                   fit=True  ['door_slam', 'screen_glitch'] | Sarah asked me out. | inner="She's looking at me, not you." -> 'Sarah? How dare she make a move on you. | You must stay with me, forever.'
+B4_beats_cues s4 love/manic                   fit=True  ['music_romantic', 'glass_shatter'] | Who are you? | inner='You belong to me now, completely.' -> "I am Yui, the girl who waits for you every single day. | And once you know, you'll never l"
+B4_beats_cues s4 manic/suspicious             fit=True  ['screen_shake', 'static_burst'] | Who are you? | inner="He doesn't know he's mine already." -> "I'm Yui. Your Yui. The only one who matters. | Don't ask questions, player. Just look at m"
+B4_beats_cues s4 curious/love/manic           fit=True  ['music_box', 'screen_shake', 'static_burst'] | Who are you? | inner='You want to know? I am yours.' -> "I'm Yui, the girl who only exists to find you. | But you don't need a name to know I belon"
+B4_beats_cues s4 manic/cold                   fit=True  ['music_stop', 'screen_glitch'] | You're scaring me. | inner="No, you're the one who doesn't understand me." -> "Scare you? I'm just so happy you're looking at me. | Don't you understand, I need you clos"
+B4_beats_cues s4 suspicious/manic             fit=True  ['static_burst', 'screen_glitch'] | You're scaring me. | inner="I won't stop until you're mine." -> "Scare you? No... I'm just showing you what I really am. | Don't run away... I won't let yo"
+B4_beats_cues s4 love/suspicious              fit=True  ['music_romantic', 'screen_glitch'] | You're scaring me. | inner='My love is just too strong, can you feel it?' -> "I'm not trying to scare you, darling. Just show me your face. | Why do you flinch when I s"
+{
+ "B2_sprite_inner": {
+  "n": 51,
+  "fits": 0.804,
+  "fits_stage0": 0.722,
+  "fits_stage4": 1.0,
+  "multi_beat_rate": 0.0,
+  "avg_latency_s": 1.14
+ },
+ "B3_feeling_inner": {
+  "n": 51,
+  "fits": 0.804,
+  "fits_stage0": 0.778,
+  "fits_stage4": 0.867,
+  "multi_beat_rate": 0.0,
+  "avg_latency_s": 1.26
+ },
+ "B4_beats_cues": {
+  "n": 51,
+  "fits": 0.941,
+  "fits_stage0": 0.917,
+  "fits_stage4": 1.0,
+  "multi_beat_rate": 0.98,
+  "avg_latency_s": 2.24
+ }
+}
