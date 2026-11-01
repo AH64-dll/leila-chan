@@ -1,14 +1,15 @@
 """Sweep control-vector scale; check raw personality shift and whether the B4 JSON format survives.
-Usage: python3 steer_sweep.py <cvec.gguf> scale1 scale2 ... > sweep.json
+Usage: python steer_sweep.py [--bin DIR] [--model GGUF] [--dry-run] <cvec.gguf> scale1 scale2 ... > sweep.json
+--bin / --model default to $LEILA_LLAMA_BIN / $LEILA_MODEL, else tools/llama/llama-b12024 and models/ (see README).
 """
-import json, os, subprocess, sys, time, urllib.request
+import argparse, json, os, subprocess, sys, tempfile, time, urllib.request
 sys.path.insert(0, os.path.dirname(__file__))
 from tool_test import PERSONA, STAGE
 from tool_test_v2 import FEELINGS, FEEL_LIST, CUES
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-BIN = os.path.join(ROOT, "tools/llama/llama-b12024")
-MODEL = os.path.join(ROOT, "models/Qwen3.5-4B-Q4_K_M.gguf")
+BIN = os.environ.get("LEILA_LLAMA_BIN", os.path.join(ROOT, "tools", "llama", "llama-b12024"))
+MODEL = os.environ.get("LEILA_MODEL", os.path.join(ROOT, "models", "Qwen3.5-4B-Q4_K_M.gguf"))
 PORT = 8090
 URL = f"http://127.0.0.1:{PORT}/v1/chat/completions"
 
@@ -35,13 +36,24 @@ def chat(messages, **kw):
         return json.load(r)["choices"][0]["message"].get("content") or ""
 
 
-def serve(cvec, scale):
-    args = [os.path.join(BIN, "llama-server"), "-m", MODEL, "-ngl", "99", "-c", "4096", "--jinja",
+def server_cmd(cvec, scale):
+    """Command line, environment and log path for llama-server (Windows: .exe + DLL dir on PATH)."""
+    exe = "llama-server.exe" if os.name == "nt" else "llama-server"
+    args = [os.path.join(BIN, exe), "-m", MODEL, "-ngl", "99", "-c", "4096", "--jinja",
             "--port", str(PORT), "-np", "1"]
     if scale:
         args += ["--control-vector-scaled", f"{cvec}:{scale}"]
-    p = subprocess.Popen(args, env={**os.environ, "LD_LIBRARY_PATH": BIN},
-                         stdout=subprocess.DEVNULL, stderr=open(f"/tmp/steer_{scale}.log", "w", encoding="utf-8"))
+    if os.name == "nt":
+        env = {**os.environ, "PATH": BIN + os.pathsep + os.environ.get("PATH", "")}
+    else:
+        env = {**os.environ, "LD_LIBRARY_PATH": BIN}
+    return args, env, os.path.join(tempfile.gettempdir(), f"steer_{scale}.log")
+
+
+def serve(cvec, scale):
+    args, env, log_path = server_cmd(cvec, scale)
+    with open(log_path, "w", encoding="utf-8") as log:  # the child keeps its own handle
+        p = subprocess.Popen(args, env=env, stdout=subprocess.DEVNULL, stderr=log)
     for _ in range(120):
         try:
             urllib.request.urlopen(f"http://127.0.0.1:{PORT}/health", timeout=2)
@@ -51,9 +63,24 @@ def serve(cvec, scale):
     p.kill(); raise RuntimeError("server did not start")
 
 
+ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+ap.add_argument("--bin", default=BIN, help="llama.cpp binary dir (env LEILA_LLAMA_BIN)")
+ap.add_argument("--model", default=MODEL, help="model .gguf (env LEILA_MODEL)")
+ap.add_argument("--dry-run", action="store_true", help="print the server command per scale and exit")
+ap.add_argument("cvec")
+ap.add_argument("scales", nargs="+", type=float)
+opt = ap.parse_args()
+BIN, MODEL = os.path.abspath(opt.bin), os.path.abspath(opt.model)
+if opt.dry_run:
+    for scale in opt.scales:
+        args, env, log_path = server_cmd(opt.cvec, scale)
+        lib = "PATH" if os.name == "nt" else "LD_LIBRARY_PATH"
+        print(json.dumps({"scale": scale, "args": args, "log": log_path, lib + "[0]": env[lib].split(os.pathsep)[0]}))
+    sys.exit(0)
+
 out = []
-cvec = sys.argv[1]
-for scale in [float(s) for s in sys.argv[2:]]:
+cvec = opt.cvec
+for scale in opt.scales:
     p = serve(cvec, scale)
     try:
         row = {"scale": scale, "raw": [], "game": []}

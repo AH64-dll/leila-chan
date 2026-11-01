@@ -23,6 +23,7 @@ def info(slug):
     lic = re.sub(r"<[^>]+>", " ", lic[0]) if lic else "?"
     return sorted(set(files)), " ".join(lic.split())
 if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8")  # page titles aren't ASCII; Windows redirects default to cp1252
     if sys.argv[1] == "search":
         kind = sys.argv[2]
         for q in sys.argv[3:]:
