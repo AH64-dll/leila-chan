@@ -75,10 +75,31 @@ These are intentionally gitignored; grab them once per machine:
 Dependencies (pinned, Python 3.12): `pip install -r requirements.txt` (sprite pipeline + casting),
 `pip install -r requirements-experiments.txt` (`experiments/steer_build.py`).
 
+One command, any OS (px → hd → casting; `--out DIR` builds elsewhere and skips casting):
+
 ```bash
-python tools/art/leila_px.py      # LEILA_SCALE=2 → base 384×688 raster per emotion
-python tools/art/leila_hd.py      # heart clip, per-sprite FIX passes, FX → art/leila/{px,x2}
-python tools/casting/build_casting.py   # → data/casting.json + docs/10 tables
+python tools/art/build_all.py
+```
+
+Or step by step. `leila_px.py <src_dir> <out_dir> <names...>` needs `LEILA_SCALE=2` (it defaults to 4, the old
+192×344 set) and file names **with** the extension; it writes `<name>.png` + `<name>.cls.npy` intermediates
+(not in the repo). `leila_hd.py <px_dir> <out_dir>` then writes `px/`, `x2/`, the palette and contact sheets.
+
+```bash
+# bash
+export LEILA_SCALE=2
+python tools/art/leila_px.py png_sprites /tmp/leila_px $(cd png_sprites && ls *.png)
+python tools/art/leila_hd.py /tmp/leila_px art/leila      # heart clip, per-sprite FIX passes, FX
+python tools/casting/build_casting.py                     # → data/casting.json + docs/10 tables
+```
+
+```powershell
+# Windows PowerShell
+$env:LEILA_SCALE = "2"
+$px = Join-Path $env:TEMP "leila_px"
+python tools/art/leila_px.py png_sprites $px (Get-ChildItem png_sprites -Filter *.png).Name
+python tools/art/leila_hd.py $px art/leila
+python tools/casting/build_casting.py
 ```
 
 **Determinism:** with the pinned versions the build is repeatable — same inputs, same pixels on the same
