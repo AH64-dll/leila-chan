@@ -2,7 +2,7 @@
 
 Injecting dose*R/||W_down[:,n]|| into neuron n before down_proj adds dose*R*unit(W_down[:,n])
 to that layer's output, so the control vector is the unit column; the runtime scale = dose*R.
-Usage: .venv/bin/python steer_build.py <model.gguf> <out.gguf>
+Usage: python steer_build.py <model.gguf> <out.gguf>   (deps: requirements-experiments.txt)
 """
 import sys
 import numpy as np

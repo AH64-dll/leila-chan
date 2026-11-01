@@ -49,7 +49,7 @@ DESIGN.md                 design bible index (start here)
 docs/                     the design bible (01–10)
 data/casting.json         feeling → sprite/motion/voice/sound/music table the game loads
 art/leila/                FINAL pixel-art sprites: px/ (384×688), x2/ (768×1376), palette,
-                          contact sheets — built deterministically by tools/art
+                          contact sheets — built by tools/art (see "Rebuilding the sprites")
 tools/art/                sprite pipeline (leila_px → leila_hd, faces/hands/fix passes)
 tools/casting/            casting.json builder
 experiments/              test harnesses + results (tool calling, steering sweep)
@@ -66,19 +66,49 @@ These are intentionally gitignored; grab them once per machine:
 | Path | What | How to get it |
 |---|---|---|
 | `models/Qwen3.5-4B-Q4_K_M.gguf` | The LLM weights (2.6 GB) | `huggingface-cli download <qwen3.5-4b-gguf-repo> Qwen3.5-4B-Q4_K_M.gguf --local-dir models` |
-| `tools/llama/llama-b12024/` | llama.cpp b12024 binaries (CUDA) | GitHub release `ggml-org/llama.cpp` → `llama-b12024-bin-ubuntu-x64` (or build from source) |
+| `tools/llama/llama-b12024/` | llama.cpp b12024 binaries (CUDA) | GitHub release `ggml-org/llama.cpp` b12024 → Linux: `llama-b12024-bin-ubuntu-x64`; Windows: `llama-b12024-bin-win-cuda-12.4-x64.zip` + `cudart-llama-bin-win-cuda-12.4-x64.zip` (or both `cuda-13.4`), unzipped into the same folder (or build from source). Override the path with `LEILA_LLAMA_BIN` / `LEILA_MODEL` or `--bin` / `--model` in `experiments/steer_sweep.py` |
 | `assets/audio/_raw/` | Raw CC0 music/SFX pool (357 MB) | Re-download from the URLs in `assets/audio/SOURCES.json` |
 | `art/leila_legacy_1x/` | Superseded 192×344 sprite set | Regenerate: `LEILA_SCALE=1` pipeline, or ignore (superseded) |
 
 ## Rebuilding the sprites
 
+Dependencies (pinned, Python 3.12): `pip install -r requirements.txt` (sprite pipeline + casting),
+`pip install -r requirements-experiments.txt` (`experiments/steer_build.py`).
+
+One command, any OS (px → hd → casting; `--out DIR` builds elsewhere and skips casting):
+
 ```bash
-python tools/art/leila_px.py      # LEILA_SCALE=2 → base 384×688 raster per emotion
-python tools/art/leila_hd.py      # heart clip, per-sprite FIX passes, FX → art/leila/{px,x2}
-python tools/casting/build_casting.py   # → data/casting.json + docs/10 tables
+python tools/art/build_all.py
 ```
 
-Deterministic — same inputs, same pixels.
+Or step by step. `leila_px.py <src_dir> <out_dir> <names...>` needs `LEILA_SCALE=2` (it defaults to 4, the old
+192×344 set) and file names **with** the extension; it writes `<name>.png` + `<name>.cls.npy` intermediates
+(not in the repo). `leila_hd.py <px_dir> <out_dir>` then writes `px/`, `x2/`, the palette and contact sheets.
+
+```bash
+# bash
+export LEILA_SCALE=2
+python tools/art/leila_px.py png_sprites /tmp/leila_px $(cd png_sprites && ls *.png)
+python tools/art/leila_hd.py /tmp/leila_px art/leila      # heart clip, per-sprite FIX passes, FX
+python tools/casting/build_casting.py                     # → data/casting.json + docs/10 tables
+```
+
+```powershell
+# Windows PowerShell
+$env:LEILA_SCALE = "2"
+$px = Join-Path $env:TEMP "leila_px"
+python tools/art/leila_px.py png_sprites $px (Get-ChildItem png_sprites -Filter *.png).Name
+python tools/art/leila_hd.py $px art/leila
+python tools/casting/build_casting.py
+```
+
+**Determinism:** with the pinned versions the build is repeatable — same inputs, same pixels on the same
+machine. It does **not** reproduce the committed `art/leila/` byte-for-byte: on Windows, every tested combination
+(opencv-python-headless 4.9–4.14, numpy 1.26–2.5, scipy 1.13–1.18) gives the same output, which matches only
+`00_base_reference`; the other sprites differ in scattered edge/line pixels, and `30_predatory_bloodlust` comes out
+broken (its hard-coded FIX coordinates in `leila_hd.py` no longer line up). The committed set was apparently
+built on Linux; the exact environment wasn't recorded. Treat `art/leila/` as the source of truth and check a rebuild by eye
+(especially 30) before committing it.
 
 ## License / rights
 

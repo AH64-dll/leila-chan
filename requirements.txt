@@ -1,0 +1,5 @@
+# Sprite pipeline: tools/art/* and tools/casting/build_casting.py (imports tools/art/leila_finish.py).
+# Tested on Python 3.12. See README "Rebuilding the sprites" for what is and isn't pixel-reproducible.
+opencv-python-headless==4.14.0.94
+numpy==2.5.4
+scipy==1.18.1
