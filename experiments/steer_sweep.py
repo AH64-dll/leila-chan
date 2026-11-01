@@ -41,7 +41,7 @@ def serve(cvec, scale):
     if scale:
         args += ["--control-vector-scaled", f"{cvec}:{scale}"]
     p = subprocess.Popen(args, env={**os.environ, "LD_LIBRARY_PATH": BIN},
-                         stdout=subprocess.DEVNULL, stderr=open(f"/tmp/steer_{scale}.log", "w"))
+                         stdout=subprocess.DEVNULL, stderr=open(f"/tmp/steer_{scale}.log", "w", encoding="utf-8"))
     for _ in range(120):
         try:
             urllib.request.urlopen(f"http://127.0.0.1:{PORT}/health", timeout=2)

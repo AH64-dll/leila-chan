@@ -540,7 +540,8 @@ def draw_knife(img, cls, a, b, handle_frac=0.3):
 
 def redraw_hands(img, cls, name, head_face, spec):
     import json as _json
-    found = _json.load(open(os.path.join(HERE, "hands_found.json")))[name]
+    with open(os.path.join(HERE, "hands_found.json"), encoding="utf-8") as fh:
+        found = _json.load(fh)[name]
     found = sorted(found, key=lambda h: h["bbox"][0])
     PASTED[:] = False
     plan = HAND_PLAN.get(name, ["relaxed"] * len(found))
@@ -1166,8 +1167,9 @@ def write_palette(out_dir):
     pal.update({"outline": [OUTLINE, "5a3236"], "rim": [RIM], "steel": HN.STEEL,
                 "eye_white": ["e6d6dc"], "face_shadow": ["3a2228"],
                 "fx": ["d8323a", "7fd8e0", "ff3b3b", "e8a0a0", "d77a80", "a8d8ff", "6fa8dc"]})
-    json.dump(pal, open(os.path.join(out_dir, "palette.json"), "w"), indent=1)
-    with open(os.path.join(out_dir, "leila.gpl"), "w") as f:
+    with open(os.path.join(out_dir, "palette.json"), "w", encoding="utf-8") as fh:
+        json.dump(pal, fh, indent=1)
+    with open(os.path.join(out_dir, "leila.gpl"), "w", encoding="utf-8") as f:
         f.write("GIMP Palette\nName: Leila-chan\nColumns: 8\n#\n")
         for group, cols in pal.items():
             for c in cols:
