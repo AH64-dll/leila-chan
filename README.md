@@ -49,7 +49,7 @@ DESIGN.md                 design bible index (start here)
 docs/                     the design bible (01–10)
 data/casting.json         feeling → sprite/motion/voice/sound/music table the game loads
 art/leila/                FINAL pixel-art sprites: px/ (384×688), x2/ (768×1376), palette,
-                          contact sheets — built deterministically by tools/art
+                          contact sheets — built by tools/art (see "Rebuilding the sprites")
 tools/art/                sprite pipeline (leila_px → leila_hd, faces/hands/fix passes)
 tools/casting/            casting.json builder
 experiments/              test harnesses + results (tool calling, steering sweep)
@@ -72,13 +72,22 @@ These are intentionally gitignored; grab them once per machine:
 
 ## Rebuilding the sprites
 
+Dependencies (pinned, Python 3.12): `pip install -r requirements.txt` (sprite pipeline + casting),
+`pip install -r requirements-experiments.txt` (`experiments/steer_build.py`).
+
 ```bash
 python tools/art/leila_px.py      # LEILA_SCALE=2 → base 384×688 raster per emotion
 python tools/art/leila_hd.py      # heart clip, per-sprite FIX passes, FX → art/leila/{px,x2}
 python tools/casting/build_casting.py   # → data/casting.json + docs/10 tables
 ```
 
-Deterministic — same inputs, same pixels.
+**Determinism:** with the pinned versions the build is repeatable — same inputs, same pixels on the same
+machine. It does **not** reproduce the committed `art/leila/` byte-for-byte: on Windows, every tested combination
+(opencv-python-headless 4.9–4.14, numpy 1.26–2.5, scipy 1.13–1.18) gives the same output, which matches only
+`00_base_reference`; the other sprites differ in scattered edge/line pixels, and `30_predatory_bloodlust` comes out
+broken (its hard-coded FIX coordinates in `leila_hd.py` no longer line up). The committed set was apparently
+built on Linux; the exact environment wasn't recorded. Treat `art/leila/` as the source of truth and check a rebuild by eye
+(especially 30) before committing it.
 
 ## License / rights
 
