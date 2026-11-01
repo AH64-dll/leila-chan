@@ -1,0 +1,7 @@
+# Generated files: the tools write them with LF, so keep them LF in the working tree too
+# (otherwise core.autocrlf=true checks them out CRLF and every regeneration shows them as modified).
+data/casting.json text eol=lf
+docs/10_CASTING.md text eol=lf
+art/leila/palette.json text eol=lf
+art/leila/leila.gpl text eol=lf
+assets/audio/SOURCES.json text eol=lf

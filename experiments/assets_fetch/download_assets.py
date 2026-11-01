@@ -110,5 +110,5 @@ for folder, slug, files in OGA_ITEMS:
     manifest.append({"folder": folder, "source": f"https://opengameart.org/content/{slug}", "license": "CC0", "ok": ok})
     print(("OK  " if ok else "FAIL"), folder)
 
-with open(os.path.join(ROOT, "assets/audio/SOURCES.json"), "w", encoding="utf-8") as fh:
+with open(os.path.join(ROOT, "assets/audio/SOURCES.json"), "w", encoding="utf-8", newline="\n") as fh:
     json.dump(manifest, fh, indent=1)
