@@ -204,7 +204,8 @@ PATHS = {
 
 
 def main():
-    cue_map = json.load(open(os.path.join(ROOT, "assets/audio/cue_map.json")))
+    with open(os.path.join(ROOT, "assets/audio/cue_map.json"), encoding="utf-8") as fh:
+        cue_map = json.load(fh)
     errors = []
     art = {f[:2]: f for f in os.listdir(os.path.join(ROOT, "art/leila/px")) if f.endswith(".png")}
 
@@ -291,7 +292,8 @@ def main():
                         "textbox_border": "feeling tint"},
         "fallback": {"T0": "00", "T1": "00", "T2": "00", "T3": "29"},
     }
-    json.dump(out, open(os.path.join(ROOT, "data/casting.json"), "w"), indent=1)
+    with open(os.path.join(ROOT, "data/casting.json"), "w", encoding="utf-8") as fh:
+        json.dump(out, fh, indent=1)
     write_doc(out)
     print(f"ok: {len(feelings)} feelings, {len(sprites)} sprites, all cues/music/fx/system groups validated")
 
@@ -361,7 +363,8 @@ def write_doc(c):
         fc = s["face"]
         eyes = fc["eyes"] if isinstance(fc["eyes"], str) else "/".join(fc["eyes"])
         w(f'| {k} | {s["key"]} | {eyes} · {fc.get("mouth", "")} · {", ".join(fc.get("extras", []))} | {", ".join(s["used_by"]) or "special (idle / flag / fallback)"} |')
-    open(os.path.join(ROOT, "docs/10_CASTING.md"), "w").write("\n".join(L) + "\n")
+    with open(os.path.join(ROOT, "docs/10_CASTING.md"), "w", encoding="utf-8") as fh:
+        fh.write("\n".join(L) + "\n")
 
 
 if __name__ == "__main__":
