@@ -1167,9 +1167,9 @@ def write_palette(out_dir):
     pal.update({"outline": [OUTLINE, "5a3236"], "rim": [RIM], "steel": HN.STEEL,
                 "eye_white": ["e6d6dc"], "face_shadow": ["3a2228"],
                 "fx": ["d8323a", "7fd8e0", "ff3b3b", "e8a0a0", "d77a80", "a8d8ff", "6fa8dc"]})
-    with open(os.path.join(out_dir, "palette.json"), "w", encoding="utf-8") as fh:
+    with open(os.path.join(out_dir, "palette.json"), "w", encoding="utf-8", newline="\n") as fh:
         json.dump(pal, fh, indent=1)
-    with open(os.path.join(out_dir, "leila.gpl"), "w", encoding="utf-8") as f:
+    with open(os.path.join(out_dir, "leila.gpl"), "w", encoding="utf-8", newline="\n") as f:
         f.write("GIMP Palette\nName: Leila-chan\nColumns: 8\n#\n")
         for group, cols in pal.items():
             for c in cols:

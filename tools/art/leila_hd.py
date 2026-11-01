@@ -336,6 +336,13 @@ def hands_from(img, cls, px_dir, donor, parts):
         cls[ty[ok], tx[ok]] = dcls[ys[ok], xs[ok]]
 
 
+def leg_edge(img, y0=450, y1=650):
+    """Median outer edge (leftmost opaque column) of the figure's left leg over rows y0..y1: a landmark that is
+    there even when the right side of the figure is lost, used to place the per-sprite FIX coordinates."""
+    a = img[y0:y1, :, 3] > 0
+    return float(np.median(a[a.any(1)].argmax(1)))
+
+
 def mirror_fill(img, cls, y0, y1, axis):
     """Fill what is missing right of axis in rows y0..y1 with the mirrored left side; only empty pixels are
     written, so whatever survived on the right (braid, torso) stays on top."""
@@ -399,8 +406,10 @@ def sock_specks(img, cls):
 FIX = {
     "21_red_eyed_knife_mania": [("knife", (14, 138, 74, 258))],
     # 30: its right sleeve and pale, trembling hands were lit the colour of its aura and left with the background:
-    # the sleeve is the mirrored left one, the hands are 26's claws (same pose)
-    "30_predatory_bloodlust": [("leg", 450, 213.0), ("fill", 160, 360, 213.0),
+    # the sleeve is the mirrored left one, the hands are 26's claws (same pose).
+    # The x values below were tuned with the left leg's outer edge at x=175 ("at"); they are shifted by
+    # wherever leila_px actually put the figure (it centres on the legs, which moves when the right leg is found)
+    "30_predatory_bloodlust": [("at", 175.0), ("leg", 450, 213.0), ("fill", 160, 360, 213.0),
                                ("hands", "26_sanity_break_twitch", [((50, 344, 118, 395), 27, 2), ((262, 344, 318, 395), 25, 7)])],
     # the left iris is lilac in the source and touches the bangs, so it stayed hair: mirror the right eye
     "12_exhausted_fatigue": [("hair", (118, 128, 156, 168))],
@@ -479,19 +488,22 @@ def finish(px_dir, name):
     img, cls = load(px_dir, name)
     replace_clip(img, cls)
     chin = chin_row(cls)
+    dx = 0
     for op, *args in FIX.get(name, []):
-        if op == "knife":
+        if op == "at":
+            dx = int(round(leg_edge(img) - args[0]))
+        elif op == "knife":
             steel_knife(img, cls, *args)
         elif op == "eye":
             mirror_eye(img, cls, *args)
         elif op == "leg":
-            mirror_leg(img, cls, *args)
+            mirror_leg(img, cls, args[0], args[1] + dx)
         elif op == "hair":
             dress_to_hair(img, cls, *args)
         elif op == "fill":
-            mirror_fill(img, cls, *args)
+            mirror_fill(img, cls, args[0], args[1], args[2] + dx)
         elif op == "hands":
-            hands_from(img, cls, px_dir, *args)
+            hands_from(img, cls, px_dir, args[0], [(box, ox + dx, oy) for box, ox, oy in args[1]])
     sock_specks(img, cls)
     head_fabric(img, cls, chin)
     pallor_to_skin(img, cls)
