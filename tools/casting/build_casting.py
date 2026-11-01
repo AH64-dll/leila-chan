@@ -292,7 +292,7 @@ def main():
                         "textbox_border": "feeling tint"},
         "fallback": {"T0": "00", "T1": "00", "T2": "00", "T3": "29"},
     }
-    with open(os.path.join(ROOT, "data/casting.json"), "w", encoding="utf-8") as fh:
+    with open(os.path.join(ROOT, "data/casting.json"), "w", encoding="utf-8", newline="\n") as fh:
         json.dump(out, fh, indent=1)
     write_doc(out)
     print(f"ok: {len(feelings)} feelings, {len(sprites)} sprites, all cues/music/fx/system groups validated")
@@ -363,7 +363,7 @@ def write_doc(c):
         fc = s["face"]
         eyes = fc["eyes"] if isinstance(fc["eyes"], str) else "/".join(fc["eyes"])
         w(f'| {k} | {s["key"]} | {eyes} · {fc.get("mouth", "")} · {", ".join(fc.get("extras", []))} | {", ".join(s["used_by"]) or "special (idle / flag / fallback)"} |')
-    with open(os.path.join(ROOT, "docs/10_CASTING.md"), "w", encoding="utf-8") as fh:
+    with open(os.path.join(ROOT, "docs/10_CASTING.md"), "w", encoding="utf-8", newline="\n") as fh:
         fh.write("\n".join(L) + "\n")
 
 
