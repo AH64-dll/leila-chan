@@ -26,3 +26,14 @@
 - Quote discipline: never combine inner from one turn with say from another (CODE-6); say exactly
   which fields are byte-identical and which aren't captured (cues aren't, DES-3).
 - `score_v3_fit.py` now uses argparse for --threshold (positional-vs-flag bug, CODE-5).
+
+## 2026-11-02 — P0.04 round-2 carry-overs (P0.20)
+- Fixed the two design-r2 S4 nits in `production/handoffs/P0.04.md`: the Round-2 acceptance and
+  findings tables had a doubled leading `||` on every row (19 rows; header+delimiter+data all
+  affected) and the DCR cited `docs/02 §1.2` (player-intent `read` labels) for the any-beat Fits
+  metric — now cites §1.1 (turn shape), RESULTS.md §1 + `tool_test_v2.py:122-123`, docs/07 §5 gate.
+- Gotcha for handoff authors: a `||`-leading table still has matching header/delimiter cell counts,
+  so it can look "consistent" while rendering an empty first column — verify pipe counts vs the
+  template, not just uniformity. A 10-line python scan (pipe count per row per table) catches it.
+- Docs/02 has no "emotion fit" section; the metric lives in RESULTS.md §1 + tool_test_v2.py.
+  §1.1 = Turn-object field reference, §1.2 = `read` intent labels — cite by name, not by memory.
