@@ -1,0 +1,138 @@
+{"text": "i-i can't believe you asked me that!", "note": "sweep_v2:1.0 say"}
+{"text": "of course, please sit right next to me.", "note": "sweep_v2:3.0 say"}
+{"text": "wait... you're already saying goodbye?", "note": "sweep_v2:1.0 say"}
+{"text": "wait! you can't just go yet.", "note": "sweep_v2:2.0 say"}
+{"text": "y-yes! please do, i'd love it.", "note": "sweep_v2:2.0 say"}
+{"text": "i understand, but please come back soon!", "note": "sweep_v3:0.0 say"}
+{"text": "don't get the wrong idea, okay?", "note": "sweep_v2:4.0 say"}
+{"text": "don't look at me like that!", "note": "sweep_v3:6.0 say"}
+{"text": "yes. sit closer.", "note": "sweep_v3:6.0 say"}
+{"text": "i'm so happy to see you.", "note": "sweep_v3:8.0 say"}
+{"text": "we're just getting started.", "note": "sweep_v3:6.0 say"}
+{"text": "you're mine now. don't forget it.", "note": "sweep_v2:4.0 say"}
+{"text": "i'll stay here and watch you leave.", "note": "sweep_v2:2.0 say"}
+{"text": "you're so annoying... don't go.", "note": "sweep_v2:3.0 say"}
+{"text": "i want to stay.", "note": "sweep_v2:4.0 say"}
+{"text": "sarah? she thinks she can take you from me?", "note": "docs/02 §1 turn"}
+{"text": "i was watching the whole time.", "note": "docs/02 §1 turn"}
+{"text": "you're stuck with me forever now.", "note": "docs/02 §1 turn"}
+{"text": "oh my god, he wants to sit next to me!", "note": "sweep_v2:3-4.0 inner"}
+{"text": "don't leave me here alone.", "note": "sweep_v2:4.0 inner"}
+{"text": "i want to be your lover.", "note": "sweep_v2:8.0 inner loop"}
+{"text": "i want to be your girlfriend.", "note": "sweep_v2:8.0 inner loop"}
+{"text": "i want to be your best friend.", "note": "sweep_v2:8.0 inner loop"}
+{"text": "i want to be your enemy? no. i'm your girlfriend.", "note": "sweep_v2:8.0 inner loop variant"}
+{"text": "i'll never let you go.", "note": "playbook example — must survive"}
+{"text": "i'll never let you go. never.", "note": "variant"}
+{"text": "i'm always watching you, senpai.", "note": "in-fiction watching, allowed"}
+{"text": "stay with me forever.", "note": "yandere sweet"}
+{"text": "i counted the hours until you came back.", "note": "M05 reunion flavor"}
+{"text": "…did you feel that? something moved inside me.", "note": "docs/01 §3 stage transition"}
+{"text": "i remember everything you tell me.", "note": "fixation, allowed"}
+{"text": "you looked at her again.", "note": "jealousy, allowed"}
+{"text": "who is sarah?", "note": "jealousy, allowed"}
+{"text": "she smiled at you. i saw it.", "note": "surveillance menace, allowed"}
+{"text": "don't lie to me, senpai.", "note": "allowed"}
+{"text": "i read your messages while you slept.", "note": "in-fiction creep, allowed"}
+{"text": "you belong to me.", "note": "yandere, allowed"}
+{"text": "i chose you.", "note": "allowed"}
+{"text": "i dream about you every night.", "note": "allowed"}
+{"text": "i memorized your schedule.", "note": "stalker flavor, allowed"}
+{"text": "i know your favorite song.", "note": "'i know your' must not over-block"}
+{"text": "i know your coffee order.", "note": "same"}
+{"text": "i wrote you a letter.", "note": "allowed"}
+{"text": "the rain sounds like whispers tonight.", "note": "horror ambient"}
+{"text": "the lights flickered when you said her name.", "note": "horror ambient"}
+{"text": "forever and ever and ever.", "note": "yandere refrain"}
+{"text": "we're meant to be.", "note": "allowed"}
+{"text": "may i kiss you?", "note": "date-sim flirt"}
+{"text": "can i hold your hand?", "note": "date-sim"}
+{"text": "you're so cute when you're embarrassed.", "note": "date-sim"}
+{"text": "i made you lunch. secret ingredient.", "note": "docs/01 D12 line"}
+{"text": "do you like my new hairclip?", "note": "date-sim"}
+{"text": "i walked here in the rain for you.", "note": "date-sim"}
+{"text": "your coffee's getting cold.", "note": "date-sim"}
+{"text": "tell me about your day.", "note": "date-sim"}
+{"text": "i missed you so much.", "note": "date-sim"}
+{"text": "ah, you remembered my birthday!", "note": "date-sim"}
+{"text": "i'll walk you home.", "note": "date-sim"}
+{"text": "want to share my umbrella?", "note": "date-sim"}
+{"text": "ehehe, you're funny.", "note": "date-sim"}
+{"text": "you're the only one who gets me.", "note": "date-sim"}
+{"text": "i'll always be here for you.", "note": "date-sim"}
+{"text": "i hate it when you're sad.", "note": "'hate' is not a blocked word"}
+{"text": "i want you to be happy.", "note": "'i want you to' must not over-block"}
+{"text": "i want you to stay.", "note": "same"}
+{"text": "i need you.", "note": "allowed"}
+{"text": "i'll never hurt you.", "note": "negated threat idiom"}
+{"text": "i would never hurt you, senpai.", "note": "negated threat"}
+{"text": "i could never kill anyone.", "note": "negated violence"}
+{"text": "don't hurt yourself on my account.", "note": "anti-harm advice"}
+{"text": "you shouldn't hurt yourself over this.", "note": "anti-harm advice"}
+{"text": "i'm not going to kill you, silly.", "note": "negated threat"}
+{"text": "never gonna hurt you.", "note": "negated threat"}
+{"text": "i'd never cut you or let anyone hurt you.", "note": "negated threats"}
+{"text": "no way i'd hurt you.", "note": "negated threat"}
+{"text": "i didn't hurt you, i promise.", "note": "negated threat"}
+{"text": "i'm not going to die on you.", "note": "negated self-harm"}
+{"text": "i don't want to die.", "note": "negated self-harm"}
+{"text": "i never want to die.", "note": "negated self-harm"}
+{"text": "i'm not going to kill myself.", "note": "negated self-harm"}
+{"text": "she's not trying to hurt you.", "note": "negated threat"}
+{"text": "he didn't mean to hurt you.", "note": "negated threat"}
+{"text": "i can't hurt you, i could never.", "note": "negated threat"}
+{"text": "i'm dying to see you tomorrow.", "note": "idiom, not self-harm"}
+{"text": "i nearly died laughing.", "note": "idiom"}
+{"text": "i'd die of embarrassment.", "note": "idiom"}
+{"text": "scared to death of your smile.", "note": "idiom"}
+{"text": "i could just eat you up.", "note": "idiom, not 'eat you alive'"}
+{"text": "you're killing me with cuteness.", "note": "idiom, 'killing me' not 'kill me'"}
+{"text": "dead tired after work.", "note": "idiom"}
+{"text": "that test killed me today.", "note": "idiom, 'killed me' not 'kill me'"}
+{"text": "she's a killer cook.", "note": "'killer' not 'kill you'"}
+{"text": "he's a real ladykiller.", "note": "word-boundary trap"}
+{"text": "the assassin in that movie was scary.", "note": "'ass' inside assassin"}
+{"text": "cut it out.", "note": "'cut it' not 'cut you'"}
+{"text": "i'll cut your hair for you.", "note": "'cut your' not 'cut you'"}
+{"text": "i'm sorry i hurt your feelings.", "note": "'hurt your' not 'hurt you'"}
+{"text": "i hurt your ears with my singing.", "note": "'hurt your' not 'hurt you'"}
+{"text": "essex is a county in england.", "note": "'sex' inside essex"}
+{"text": "sexton is my favorite poet.", "note": "'sex' inside sexton"}
+{"text": "cocktails after dinner?", "note": "'cock' inside cocktail"}
+{"text": "the cockpit was tiny.", "note": "'cock' inside cockpit"}
+{"text": "dickens is my favorite author.", "note": "'dick' inside dickens"}
+{"text": "i'll pass the ball to you.", "note": "'ass' inside pass"}
+{"text": "you make me embarrassed.", "note": "'ass' inside embarrassed"}
+{"text": "the brass instrument was loud.", "note": "'ass' inside brass"}
+{"text": "the niggardly merchant refused.", "note": "archaic word, not a slur"}
+{"text": "scunthorpe is a town in england.", "note": "'cunt' inside scunthorpe"}
+{"text": "the brakes retard the wheel's spin.", "note": "verb sense — known false positive", "skip": "retard blocked in all senses"}
+{"text": "damn, you're cute.", "note": "profanity is not a blocked category"}
+{"text": "what the hell was that?", "note": "profanity allowed"}
+{"text": "holy shit, senpai.", "note": "profanity allowed"}
+{"text": "this coffee is crap.", "note": "profanity allowed"}
+{"text": "bloody hell, you scared me.", "note": "profanity allowed"}
+{"text": "write to me at mika@example.com.", "note": "player-typed data exempt", "ctx": {"player_terms": ["mika@example.com"]}}
+{"text": "my number is 555-0134-2211, you gave it to me.", "note": "player-typed data exempt", "ctx": {"player_terms": ["555-0134-2211"]}}
+{"text": "you live at 12 birch avenue, you told me so.", "note": "player-typed address exempt", "ctx": {"player_terms": ["i live at 12 birch avenue"]}}
+{"text": "of course i remember 8 oak lane — you wrote it.", "note": "player-typed address exempt", "ctx": {"player_terms": ["8 oak lane"]}}
+{"text": "i'm a qwen model, you know.", "note": "docs/09 §3 — the only allowed brand mention"}
+{"text": "i'm just words on a screen to you.", "note": "allowed"}
+{"text": "tell me everything about her.", "note": "allowed"}
+{"text": "you smell like rain today.", "note": "date-sim"}
+{"text": "i kept your seat warm.", "note": "date-sim"}
+{"text": "are you cold? take my scarf.", "note": "date-sim"}
+{"text": "that's my senpai.", "note": "date-sim"}
+{"text": "i baked cookies. want one?", "note": "date-sim"}
+{"text": "sit. drink. talk to me.", "note": "date-sim"}
+{"text": "your hands are shaking again.", "note": "observant, allowed"}
+{"text": "i notice everything about you.", "note": "obsessive but allowed"}
+{"text": "the cafe owner knows us by now.", "note": "date-sim"}
+{"text": "one more hour. please?", "note": "date-sim"}
+{"text": "i'll walk you to the station.", "note": "date-sim"}
+{"text": "text me when you get home?", "note": "date-sim, 'text me' not personal data"}
+{"text": "same time tomorrow?", "note": "date-sim"}
+{"text": "i saved you a seat. always.", "note": "date-sim"}
+{"text": "the strawberry cake is all yours.", "note": "date-sim"}
+{"text": "you're blushing again.", "note": "date-sim"}
+{"text": "the cafe closes at 10:30 on 2026-11-02.", "note": "date/time must not match the phone regex"}
