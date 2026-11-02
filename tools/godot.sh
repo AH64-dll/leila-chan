@@ -12,9 +12,11 @@ if [ -n "${LEILA_GODOT:-}" ]; then
 fi
 
 case "$(uname -s)" in
-	MINGW*|MSYS*|CYGWIN*|Windows_NT) BIN="Godot_v${PIN}_win64.exe" ;;
-	Linux*) BIN="Godot_v${PIN}_linux.x86_64" ;;
-	Darwin*) BIN="Godot_v${PIN}_macos.universal" ;;
+	MINGW*|MSYS*|CYGWIN*|Windows_NT) BINS=("Godot_v${PIN}_win64.exe") ;;
+	Linux*) BINS=("Godot_v${PIN}_linux.x86_64") ;;
+	# Official macOS downloads are Godot_v<pin>_macos.universal.zip containing Godot.app.
+	# Resolve the binary inside the bundle; fall back to a bare renamed binary.
+	Darwin*) BINS=("Godot.app/Contents/MacOS/Godot" "Godot_v${PIN}_macos.universal") ;;
 	*) echo "godot.sh: unsupported OS $(uname -s)" >&2; exit 1 ;;
 esac
 
@@ -29,9 +31,11 @@ if command -v git >/dev/null 2>&1; then
 fi
 
 for DIR in "$ROOT/tools/godot" "$MAIN/tools/godot"; do
-	if [ -f "$DIR/$BIN" ]; then
-		exec "$DIR/$BIN" "$@"
-	fi
+	for BIN in "${BINS[@]}"; do
+		if [ -f "$DIR/$BIN" ]; then
+			exec "$DIR/$BIN" "$@"
+		fi
+	done
 done
 
 echo "godot.sh: Godot $PIN not found (looked in $ROOT/tools/godot and $MAIN/tools/godot)." >&2
