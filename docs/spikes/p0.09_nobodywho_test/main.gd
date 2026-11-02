@@ -153,6 +153,15 @@ func check_constraints(tag: String, parsed: Dictionary) -> void:
 		notes.append("inner >90")
 	if String(parsed.get("memory", "")).length() > 80:
 		notes.append("memory >80")
+	for pair in [["read", INTENTS], ["music", MUSIC], ["fx", FX], ["action", ACTIONS]]:
+		if parsed.has(pair[0]) and parsed[pair[0]] not in pair[1]:
+			notes.append("%s '%s' not in enum" % [pair[0], parsed[pair[0]]])
+	for k in ["affection", "trust", "stress"]:
+		var v = parsed.get("mood", {}).get(k)
+		if v == null:
+			notes.append("mood missing '%s'" % k)
+		elif typeof(v) not in [TYPE_INT, TYPE_FLOAT] or v < -3 or v > 3:
+			notes.append("mood.%s out of -3..3" % k)
 	for k in parsed.get("mood", {}).keys():
 		if k not in ["affection", "trust", "stress"]:
 			notes.append("stray mood key '%s'" % k)
@@ -161,6 +170,10 @@ func check_constraints(tag: String, parsed: Dictionary) -> void:
 		for k in b.keys():
 			if k not in ["feeling", "intensity", "cue", "say"]:
 				notes.append("stray beat key '%s'" % k)
+		if b.get("feeling", "") not in FEELINGS:
+			notes.append("feeling '%s' not in enum" % b.get("feeling", ""))
+		if b.get("cue", "") not in CUES:
+			notes.append("cue '%s' not in enum" % b.get("cue", ""))
 		saylens.append(String(b.get("say", "")).length())
 		if String(b.get("say", "")).length() > 200:
 			notes.append("say >200")
