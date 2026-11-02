@@ -471,6 +471,14 @@
           "reviewer": "deepseek",
           "report": "production/reviews/P1.01-design-r1.md",
           "ts": "2026-11-02T23:30:28+02:00"
+        },
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P1.01-code-r1.md",
+          "ts": "2026-11-02T23:31:54+02:00"
         }
       ],
       "started": "2026-11-02T23:10:12+02:00",
@@ -1245,6 +1253,12 @@
       "event": "review:design:approved",
       "ref": "P1.05",
       "note": "production/reviews/P1.05-design-r1.md"
+    },
+    {
+      "ts": "2026-11-02T23:31:54+02:00",
+      "event": "review:code:approved",
+      "ref": "P1.01",
+      "note": "production/reviews/P1.01-code-r1.md"
     }
   ]
 }
