@@ -5,6 +5,7 @@ docs/10_CASTING.md text eol=lf
 art/leila/palette.json text eol=lf
 art/leila/leila.gpl text eol=lf
 assets/audio/SOURCES.json text eol=lf
+assets/audio/cue_map.json text eol=lf
 
 # Shell scripts: CRLF breaks the shebang
 *.sh text eol=lf
