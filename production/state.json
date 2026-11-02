@@ -1,0 +1,31 @@
+{
+  "phases": {
+    "P0": {
+      "status": "active",
+      "started": "2026-11-02T19:12:14+02:00"
+    }
+  },
+  "tasks": {
+    "P0.01": {
+      "status": "in_progress",
+      "agent": "claude",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-02T19:12:23+02:00"
+    }
+  },
+  "history": [
+    {
+      "ts": "2026-11-02T19:12:14+02:00",
+      "event": "phase_start",
+      "ref": "P0",
+      "note": "User approved kickoff 2026-11-02; repo import is P0.01"
+    },
+    {
+      "ts": "2026-11-02T19:12:23+02:00",
+      "event": "todo->in_progress",
+      "ref": "P0.01",
+      "note": ""
+    }
+  ]
+}
