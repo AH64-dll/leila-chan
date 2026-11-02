@@ -460,7 +460,7 @@
       "finished": "2026-11-02T21:46:28+02:00"
     },
     "P1.01": {
-      "status": "in_review",
+      "status": "done",
       "agent": "swe2",
       "round": 1,
       "reviews": [
@@ -482,7 +482,8 @@
         }
       ],
       "started": "2026-11-02T23:10:12+02:00",
-      "handoff": "production/handoffs/P1.01.md"
+      "handoff": "production/handoffs/P1.01.md",
+      "finished": "2026-11-02T23:32:08+02:00"
     },
     "P1.04": {
       "status": "in_review",
@@ -1259,6 +1260,12 @@
       "event": "review:code:approved",
       "ref": "P1.01",
       "note": "production/reviews/P1.01-code-r1.md"
+    },
+    {
+      "ts": "2026-11-02T23:32:08+02:00",
+      "event": "in_review->done",
+      "ref": "P1.01",
+      "note": ""
     }
   ]
 }
