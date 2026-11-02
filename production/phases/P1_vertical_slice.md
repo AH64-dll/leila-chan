@@ -45,6 +45,19 @@ streamed Turn, and her face, sounds, music and screen effects change exactly whe
 | P1.21 | Performance pass: first beat < 1.0 s, full turn 2–3.5 s, Godot VRAM < 800 MB on RTX 4050 | QA | S | P1.16 | code | docs/07_TECH_ARCHITECTURE.md§4 | Measured over 30 turns, median/p95 table in handoff; any miss has an issue with a proposed fix |
 | P1.22 | Playtest round 0: 3 people × 10 min on D02, survey (face/sound match words 1–5, broken turns, creepiness/charm) | QA | M | P1.09, P1.11, P1.12, P1.14, P1.16, P1.19, P1.21 | design | docs/09_PRODUCTION_PLAN.md§1 | Transcripts + survey sheet in production/playtests/P1/; broken-turn count; findings filed as proposed tasks |
 
+| P1.23 | P0 gate C1: document and verify Windows drive-colon handling for control-vector launch paths | LLM | S | P1.02 | code | tools/llm/serve.ps1, tools/llm/serve.sh, production/gates/P0-gate-r1.md | Both launchers document accepted absolute/relative vector paths and normalize ambiguous drive-colon syntax safely; regression tests cover Windows paths and vector scales; no E: writes |
+| P1.24 | P0 gate C3: bound CI job runtime | REL | S | — | code | .github/workflows/ci.yml, production/gates/P0-gate-r1.md | Every CI job has an explicit timeout-minutes appropriate to its workload; local workflow checks pass; no push required |
+| P1.25 | P0 gate C4: disable persisted checkout credentials | REL | S | P1.24 | code | .github/workflows/ci.yml, production/gates/P0-gate-r1.md | Every actions/checkout step sets persist-credentials: false; workflow tests/checks cover this policy; no push required |
+| P1.26 | P0 gate C6: detect implementer/reviewer metadata drift | ENG | S | — | code | production/tools/track.py, production/tests/test_track.py, production/gates/P0-gate-r1.md | Review recording validates backend identity against report metadata or provides an explicit audited override for legacy/mixed-backend evidence; regression tests cover mismatch, valid metadata and legacy reports; existing tracker tests remain green |
+
+## P0 gate carry-over contracts
+- P1.02 and P1.21 own C8: measure first usable `say`, not just TTFT, on CUDA; report misses honestly.
+- P1.07 owns C9: non-empty `inner` and `say` schema constraints with regression tests.
+- P1.10 owns C7: map repo-relative casting asset paths to valid Godot resource paths and test every mapping.
+- P1.16 owns C5: re-evaluate the provisional window height override on the assembled date scene.
+- P1.20 owns C10: consider an explicit first/any-beat scoring selector; retain D10 hand-label evidence and metric definitions.
+- C2 risk wording was restored at the P0 gate. C11 remains deferred to P4 only if Vulkan is reconsidered.
+
 ## Exit criteria (gate)
 1. docs/09 M1 exit: a stranger plays 10 minutes, the face and sound match her words (survey mean ≥ 4/5), **zero broken turns**.
 2. Prompt lab v1 on main: JSON validity ≥ 99%, intent accuracy ≥ 85%, emotion fit ≥ 85%.

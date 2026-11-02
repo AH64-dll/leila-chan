@@ -12,6 +12,10 @@
           "ts": "2026-11-02T22:36:45+02:00"
         }
       ]
+    },
+    "P1": {
+      "status": "active",
+      "started": "2026-11-02T23:10:08+02:00"
     }
   },
   "tasks": {
@@ -1086,6 +1090,12 @@
       "event": "gate:pass",
       "ref": "P0",
       "note": "production/gates/P0-gate-r1.md"
+    },
+    {
+      "ts": "2026-11-02T23:10:08+02:00",
+      "event": "phase_start",
+      "ref": "P1",
+      "note": "User approved: run P1 through implementation, independent reviews and gate"
     }
   ]
 }
