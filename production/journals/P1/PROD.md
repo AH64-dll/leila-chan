@@ -42,3 +42,14 @@
 - User explicitly approved DCR-1 via the safety-policy choice: stage 4/5 AND full content may show fictional threats; hard blocks remain. Recorded D11. This resolves SAF-6 only, not the demonstrated defects.
 - P1.19 supplied benign headline excluded a known FP; include all 138 lines (actual 1/138 = 0.72%, still under 5%).
 - P1.10/P1.19 must be reworked and independently re-reviewed; neither is merged.
+
+## Current dispatch ledger (after user D11 answer)
+- P1.02 completed at c2dacd3 (DeepSeek): real SSE/schema/crash checks green; first usable say median 1855 ms / p95 2418 ms, explicitly misses phase <1 s gate. Native code reviewer f1abfcb0 running; design review still to dispatch.
+- P1.03 r2 completed at 21373db (DeepSeek); native code reviewer c0b2aa00 running; design re-review still to dispatch.
+- P1.30 completed at 6d09567 (DeepSeek), launcher regression 6/6; native code reviewer 11ebee1a running. Its temporary GameState reapplication was removed: merge P1.30, then reverse 38ea118 on main and test before closing P1.04.
+- Implementation slots: P1.19 r2 db4566; P1.10 r2 e35d13; P1.26 r1 f87196 (all launched SWE-2 first after rate reset; inspect wrapper result for fallback).
+- P1.04 remains in_review, both r2 reviews approved; original implementation is not currently integrated due to 38ea118.
+- Closed tasks: P1.01, P1.05, P1.24 only. Do not confuse completed branches with reviewed/merged/done tracker state.
+- Next implementation priorities after slots free: P1.06/P1.07 after P1.04 is restored/closed; P1.12 audio and P1.13 UI are independent ready tasks.
+- Queued follow-ups P1.25 (CI credentials plus P1.24 nits), P1.27 (facade contract/cancel/error), P1.28 (prompt evidence), P1.29 (state r2 hardening). P1.20 promptlab is ready but coordinate GPU ownership with live backend review.
+- Native review reports use devin-native, preserving actual independence from SWE-2 and DeepSeek implementations. Avoid simultaneous full runners in the same worktree; start the next review kind only after the first exits.
