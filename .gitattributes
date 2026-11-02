@@ -5,9 +5,15 @@ docs/10_CASTING.md text eol=lf
 art/leila/palette.json text eol=lf
 art/leila/leila.gpl text eol=lf
 assets/audio/SOURCES.json text eol=lf
+assets/audio/cue_map.json text eol=lf
 
 # Shell scripts: CRLF breaks the shebang
 *.sh text eol=lf
+*.py text eol=lf
+
+# Bridge outputs: byte-identical copies of generated LF sources (determinism)
+game/**/*.json text eol=lf
+*.png binary
 
 # Batch files: LF breaks goto/labels (e.g. vendored addons/gdUnit4/runtest.cmd)
 *.cmd text eol=crlf
@@ -19,3 +25,4 @@ assets/audio/SOURCES.json text eol=lf
 *.gdshader text eol=lf
 *.godot text eol=lf
 *.uid text eol=lf
+*.import text eol=lf
