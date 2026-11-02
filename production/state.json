@@ -281,9 +281,9 @@
       "finished": "2026-11-02T21:21:08+02:00"
     },
     "P0.16": {
-      "status": "in_review",
+      "status": "in_progress",
       "agent": "swe2",
-      "round": 1,
+      "round": 2,
       "reviews": [
         {
           "kind": "design",
@@ -292,6 +292,14 @@
           "reviewer": "deepseek",
           "report": "production/reviews/P0.16-design-r1.md",
           "ts": "2026-11-02T21:15:31+02:00"
+        },
+        {
+          "kind": "code",
+          "verdict": "changes",
+          "round": 1,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P0.16-code-r1.md",
+          "ts": "2026-11-02T21:22:13+02:00"
         }
       ],
       "started": "2026-11-02T20:44:38+02:00",
@@ -712,6 +720,24 @@
       "ts": "2026-11-02T21:21:08+02:00",
       "event": "in_review->done",
       "ref": "P0.15",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T21:22:13+02:00",
+      "event": "review:code:changes",
+      "ref": "P0.16",
+      "note": "production/reviews/P0.16-code-r1.md"
+    },
+    {
+      "ts": "2026-11-02T21:22:13+02:00",
+      "event": "in_review->changes_requested",
+      "ref": "P0.16",
+      "note": "by code review"
+    },
+    {
+      "ts": "2026-11-02T21:22:13+02:00",
+      "event": "changes_requested->in_progress",
+      "ref": "P0.16",
       "note": ""
     }
   ]
