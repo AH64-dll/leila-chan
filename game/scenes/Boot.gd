@@ -32,6 +32,10 @@ func _ready() -> void:
 				% [EXPECTED_AUTOLOADS.size() - missing.size(), EXPECTED_AUTOLOADS.size()]
 			)
 		)
+		# P1.02: the prototype transport attaches to tools/llm/serve.ps1 by
+		# default. A later boot task can pass auto_start=true to own the process.
+		if not LLM.has_backend():
+			LLM.use_default_backend()
 	else:
 		push_error("Boot: missing autoloads: " + ", ".join(missing))
 		get_tree().quit(1)

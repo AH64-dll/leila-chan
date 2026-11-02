@@ -22,6 +22,19 @@ func set_backend(new_backend: LLMBackend) -> void:
 	_backend = new_backend
 
 
+func has_backend() -> bool:
+	return _backend != null
+
+
+## P1.02: install the prototype llama-server transport (attach by default,
+## `auto_start=true` to launch the pinned server). Returns it so the boot flow
+## can start the watchdog or pre-warm. Boot wires this at startup.
+func use_default_backend(config: Dictionary = {}) -> LlamaServerBackend:
+	var backend := LlamaServerBackend.new(config)
+	set_backend(backend)
+	return backend
+
+
 ## docs/07 §3.1: set the current steering dose {"malice": 4.5, ...}. Fills
 ## TurnRequest.dose when a request leaves it empty; the dose bound to a
 ## request is frozen at generate(), so in-flight turns are unaffected.
@@ -172,3 +185,6 @@ func _shutdown() -> void:
 		if t.is_started():
 			t.wait_to_finish()
 	_pending_join.clear()
+	# Only now is no worker alive to read the transport; stop a server we own.
+	if _backend != null and _backend.has_method("shutdown"):
+		_backend.shutdown()
