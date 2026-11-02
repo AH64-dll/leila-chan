@@ -193,18 +193,20 @@
       "finished": "2026-11-02T20:10:53+02:00"
     },
     "P0.04": {
-      "status": "in_progress",
+      "status": "in_review",
       "agent": "swe2",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-02T20:02:15+02:00"
+      "started": "2026-11-02T20:02:15+02:00",
+      "handoff": "production/handoffs/P0.04.md"
     },
     "P0.09": {
-      "status": "in_progress",
+      "status": "in_review",
       "agent": "swe2",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-02T20:11:15+02:00"
+      "started": "2026-11-02T20:11:15+02:00",
+      "handoff": "production/handoffs/P0.09.md"
     },
     "P0.14": {
       "status": "done",
@@ -519,6 +521,18 @@
       "ts": "2026-11-02T20:43:48+02:00",
       "event": "in_review->done",
       "ref": "P0.14",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T20:44:26+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P0.04",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T20:44:26+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P0.09",
       "note": ""
     }
   ]
