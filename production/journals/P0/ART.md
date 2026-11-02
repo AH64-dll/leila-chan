@@ -28,14 +28,11 @@ way. Python tests live next to the tool (`tools/bridge/test_*`), `pytest==9.1.1`
 
 ## P0.16 round 2 (2026-11-02, swe2) — review fixes
 
-CODE-1 (S2): `_resolve_managed` validates every manifest entry — string, relative, no `..`,
-resolved under the sprite dir / game/data / the manifest itself — or the run exits before any
-prune. CODE-2 (S3): manifest moved to `tools/bridge/.bridge_manifest.json` (git rm'd from
-game/data; verified absent from filesystem_cache10 after a fresh --import) — the "invisible
-dotfile" claim was wrong, Godot does scan it. Design DES-1 (S3): `fx_derived` is no longer a
-catch-all — extras must equal floor(listed×0.55) (FX_DERIVED_FACTORS) or write_palette exits;
-regen still byte-identical since all 36 pass. CODE-4: imread None/non-RGBA → named SystemExit.
-DES-2/3: README group list now exhaustive; docs/07 §2 names the `native` fields repo-side.
-Gotcha: Godot scans ALL files under game/ (dotfiles included) — bookkeeping belongs outside;
-Windows consoles mangle non-ASCII (em-dash) in error messages — keep sys.exit text ASCII;
-pytest monkeypatch works on module constants read inside the function, not import-time copies.
+CODE-1 (S2): `_resolve_managed` validates manifest entries (string, relative, no `..`, under the
+sprite dir / game/data / the manifest) or the run exits before any prune. CODE-2 (S3): manifest
+moved to `tools/bridge/.bridge_manifest.json` — Godot scans ALL files under game/, dotfiles
+included, so bookkeeping belongs outside. Design DES-1 (S3): `fx_derived` admits only
+floor(listed×0.55) shades (`FX_DERIVED_FACTORS`) or `write_palette` exits; regen byte-identical.
+CODE-3/4, DES-2/3 done: palette-scan tests, imread guard, exhaustive README list, `native`
+fields documented repo-side in docs/07 §2. Gotcha: Windows consoles mangle non-ASCII — keep
+sys.exit text ASCII; monkeypatch module constants read inside functions, not import-time copies.
