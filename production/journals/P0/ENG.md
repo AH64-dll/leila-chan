@@ -82,3 +82,20 @@
 - Gotcha: `[xml](Get-Content -Raw $f)` in PS 5.1 needs try/catch around the cast; `$LASTEXITCODE`
   survives `| ForEach-Object` passthrough just like `| Tee-Object`.
 - CI already uploads `game/reports/` on failure — the transcript log rides along for free.
+
+## P0.18 (round 2, 2026-11-02)
+- Closed the round-1 S2: the JUnit guard now fails **closed**. Both runners check the pre-run wipe
+  (bash `rm -rf` status; ps1 `Remove-Item -ErrorAction Stop` in try/catch) and additionally require
+  a fresh report — bash `find ... -newer game/reports/.pre_run_marker`, ps1
+  `$_.LastWriteTime -gt $runStart`. Wipe failure is fatal, so a stale readable-but-locked
+  `results.xml` can no longer fake a green (reproduced on both runners → exit 1).
+- Wipe moved above the `game/tests` pre-check so it runs on every call; docs/07 + README now say
+  "start of the gdUnit4 stage", not "start of the run" (CODE-3).
+- Gotcha: Windows sharing violations are the failure mode — a file opened `FileShare.Read` is
+  readable but not deletable. `Remove-Item` without `-ErrorAction Stop` only warns and continues,
+  which is exactly how round 1 failed open.
+- Gotcha: the bash marker and the accepted report must have distinct mtimes. NTFS gives 100 ns
+  resolution, so a normal run is safe; don't move this check to a coarse-timestamp filesystem.
+- Excerpt labels: name every elided category and put `...` inside a trimmed block — review CODE-2
+  treats an incomplete "verbatim" claim as a defect even when the cited lines are named.
+- CI artifact upload still picks up `game/reports/`; `.pre_run_marker` (0 B) rides along harmlessly.

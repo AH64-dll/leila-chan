@@ -34,20 +34,28 @@ echo "== godot --headless --path game --import =="
 ./tools/godot.sh --headless --path game --import || FAILED=1
 
 echo "== gdUnit4 (res://tests) =="
-# Zero-suite guard (P0.15, review CODE-2; reworked P0.18, review CODE-1/2):
+# Zero-suite guard (P0.15, review CODE-2; reworked P0.18, review CODE-1):
 # gdUnit4 exits 0 when it discovers zero test cases, so its exit code alone
 # cannot be trusted. The check asserts on the JUnit report artifact, not on
 # console text: the zero-case path quits before a session starts, so no
-# results.xml is written. game/reports is wiped first so only THIS run's
-# report can match. Upgrade note: if gdUnit4 changes where/whether it writes
+# results.xml is written. The report must also be FRESH — a stale one must
+# never fake a pass (P0.18 round 2, review CODE-1): the wipe runs first, a
+# wipe failure is fatal (a results.xml held open by an editor is readable but
+# not deletable on Windows), and the accepted results.xml must be newer than
+# .pre_run_marker, so freshness never depends on the wipe alone.
+# Upgrade note: if gdUnit4 changes where/whether it writes
 # reports/report_*/results.xml or the <testsuites tests="N"> attribute,
 # re-verify this guard — a missing or unreadable report fails red, never green.
-if [ ! -d game/tests ] || ! find game/tests -name '*.gd' -type f 2>/dev/null | grep -q .; then
+if ! rm -rf game/reports; then
+	echo "test.sh: cannot clear game/reports — close whatever holds it open (a stale report could fake a pass)" >&2
+	FAILED=1
+elif ! mkdir -p game/reports || ! touch game/reports/.pre_run_marker; then
+	echo "test.sh: cannot write to game/reports — refusing to trust any report" >&2
+	FAILED=1
+elif [ ! -d game/tests ] || ! find game/tests -name '*.gd' -type f 2>/dev/null | grep -q .; then
 	echo "test.sh: no test scripts under game/tests/ — refusing to pass with zero tests" >&2
 	FAILED=1
 else
-	rm -rf game/reports
-	mkdir -p game/reports
 	# tee streams the transcript to the console AND captures it in
 	# game/reports/gdunit_console.log (P0.18, review CODE-1): a hung suite no
 	# longer leaves zero output — everything up to the kill is already visible.
@@ -58,7 +66,7 @@ else
 		-s res://addons/gdUnit4/bin/GdUnitCmdTool.gd \
 		-a res://tests -c --ignoreHeadlessMode 2>&1 | tee game/reports/gdunit_console.log
 	GDUNIT_STATUS=${PIPESTATUS[0]}
-	RESULTS_XML="$(find game/reports -name results.xml -type f 2>/dev/null | head -n1)"
+	RESULTS_XML="$(find game/reports -name results.xml -type f -newer game/reports/.pre_run_marker 2>/dev/null | head -n1)"
 	GDUNIT_TESTS="$(sed -n 's/.*<testsuites[^>]*tests="\([0-9][0-9]*\)".*/\1/p' "$RESULTS_XML" 2>/dev/null | head -n1)"
 	if [ "$GDUNIT_STATUS" -ne 0 ] || [ "${GDUNIT_TESTS:-0}" -eq 0 ]; then
 		echo "test.sh: gdUnit4 failed or discovered zero test cases (transcript: game/reports/gdunit_console.log)" >&2

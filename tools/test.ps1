@@ -35,16 +35,30 @@ Write-Host "== godot --headless --path game --import =="
 if ($LASTEXITCODE -ne 0) { $failed = $true }
 
 Write-Host "== gdUnit4 (res://tests) =="
-# Zero-suite guard (P0.15, review CODE-2; reworked P0.18, review CODE-1/2):
+# Zero-suite guard (P0.15, review CODE-2; reworked P0.18, review CODE-1):
 # gdUnit4 exits 0 when it discovers zero test cases, so its exit code alone
 # cannot be trusted. The check asserts on the JUnit report artifact, not on
 # console text: the zero-case path quits before a session starts, so no
-# results.xml is written. game/reports is wiped first so only THIS run's
-# report can match. Upgrade note: if gdUnit4 changes where/whether it writes
+# results.xml is written. The report must also be FRESH - a stale one must
+# never fake a pass (P0.18 round 2, review CODE-1): the wipe runs first, a
+# wipe failure is fatal (a results.xml held open by an editor is readable but
+# not deletable on Windows), and the accepted results.xml must be newer than
+# $runStart, so freshness never depends on the wipe alone.
+# Upgrade note: if gdUnit4 changes where/whether it writes
 # reports/report_*/results.xml or the <testsuites tests="N"> attribute,
 # re-verify this guard - a missing or unreadable report fails red, never green.
+$reportsReady = $true
+try {
+	if (Test-Path game/reports) { Remove-Item -Recurse -Force game/reports -ErrorAction Stop }
+	New-Item -ItemType Directory -Force game/reports -ErrorAction Stop | Out-Null
+} catch {
+	$reportsReady = $false
+}
 $suiteScripts = Get-ChildItem -Recurse -Filter *.gd -File -ErrorAction SilentlyContinue game/tests
-if (-not (Test-Path game/tests) -or -not $suiteScripts) {
+if (-not $reportsReady) {
+	Write-Host "test.ps1: cannot clear/recreate game/reports - close whatever holds it open (a stale report could fake a pass)"
+	$failed = $true
+} elseif (-not (Test-Path game/tests) -or -not $suiteScripts) {
 	Write-Host "test.ps1: no test scripts under game/tests/ - refusing to pass with zero tests"
 	$failed = $true
 } else {
@@ -55,8 +69,7 @@ if (-not (Test-Path game/tests) -or -not $suiteScripts) {
 	# -c: run all tests instead of failing fast; --ignoreHeadlessMode: gdUnit4 v6
 	# refuses headless unless told (UI input events don't work headless - keep
 	# tests logic-only).
-	if (Test-Path game/reports) { Remove-Item -Recurse -Force game/reports }
-	New-Item -ItemType Directory -Force game/reports | Out-Null
+	$runStart = Get-Date
 	$gdunitLog = New-Object System.IO.StreamWriter((Join-Path $repo 'game/reports/gdunit_console.log'))
 	$gdunitLog.AutoFlush = $true
 	& (Join-Path $PSScriptRoot 'godot.ps1') --headless --path game `
@@ -65,6 +78,7 @@ if (-not (Test-Path game/tests) -or -not $suiteScripts) {
 	$gdunitLog.Dispose()
 	$gdunitStatus = $LASTEXITCODE
 	$resultsXml = Get-ChildItem -Recurse -Filter results.xml -File -ErrorAction SilentlyContinue game/reports |
+		Where-Object { $_.LastWriteTime -gt $runStart } |
 		Select-Object -First 1
 	$gdunitTests = 0
 	if ($resultsXml) {

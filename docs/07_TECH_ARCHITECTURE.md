@@ -83,8 +83,10 @@ Everything content-related is **data**, so writers tune scenarios, gates and map
   asserted on the JUnit report the run must write (`<testsuites tests="N">`, N>0), not on
   gdUnit4's console text, because the zero-case path exits 0 without writing a report.
 - `game/reports/` — gdUnit4's report dir (HTML + JUnit XML) plus the runner's streamed
-  console transcript `gdunit_console.log`; gitignored; wiped and regenerated each run;
-  the suite scanner skips it.
+  console transcript `gdunit_console.log`; gitignored; wiped at the start of the
+  gdUnit4 stage on every runner call — a wipe failure fails the run, and only a
+  `results.xml` newer than the stage start counts, so a stale report can never fake
+  a pass; the suite scanner skips it.
 - `tools/test.sh` / `tools/test.ps1` — the single check command: `gdlint` + `gdformat --check`
   (both gate; configs at repo root) → `--import` (class cache, required on fresh checkouts) →
   test stages. Every stage always runs; any failure exits 1.
