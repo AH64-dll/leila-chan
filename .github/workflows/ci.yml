@@ -18,7 +18,9 @@ concurrency:
 jobs:
   checks:
     name: tracker - pytest - gdlint - godot headless
-    runs-on: ubuntu-latest
+    # Image pinned like every other tool; ubuntu-latest is a moving target
+    # (runner-images #14748 migrates it to Ubuntu 26).
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v7
