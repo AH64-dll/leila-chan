@@ -1,8 +1,17 @@
 {
   "phases": {
     "P0": {
-      "status": "active",
-      "started": "2026-11-02T19:12:14+02:00"
+      "status": "closed",
+      "started": "2026-11-02T19:12:14+02:00",
+      "closed": "2026-11-02T22:36:45+02:00",
+      "gate_report": "production/gates/P0-gate-r1.md",
+      "gates": [
+        {
+          "verdict": "pass",
+          "report": "production/gates/P0-gate-r1.md",
+          "ts": "2026-11-02T22:36:45+02:00"
+        }
+      ]
     }
   },
   "tasks": {
@@ -1071,6 +1080,12 @@
       "event": "in_review->done",
       "ref": "P0.18",
       "note": ""
+    },
+    {
+      "ts": "2026-11-02T22:36:45+02:00",
+      "event": "gate:pass",
+      "ref": "P0",
+      "note": "production/gates/P0-gate-r1.md"
     }
   ]
 }

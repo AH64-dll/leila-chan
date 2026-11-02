@@ -23,3 +23,15 @@
 - **New producer rule: declare a stall only after NO filesystem/git activity in the task's work area for ~5+ min AND
   no commits; confirm the old devin.exe is dead (process list) before re-dispatching.**
 - Mixed-backend implementation → split reviews (code→swe2, design→deepseek) and record the rationale for the gate audit.
+
+## P0 gate — PASS (gate r1, 2026-11-02)
+
+- Gate reviewer (swe2) re-verified all 5 exit criteria on main @01831c9: validate 127 tasks 0-err,
+  pytest 56, gdlint/gdformat clean, boot 14/14, test.sh all-green, llama-server /health + smoke +
+  cvec:4 live (42.5 tok/s, 3541 MiB). Review audit 8/26 (31%) all rated good. Verdict PASS.
+- Producer self-audit: re-ran P0.16 hostile-manifest refusal (exit 1) and P0.18 zero-suite guard
+  (fails red) on main — approved verdicts sound.
+- 11 carry-overs recorded in gates/P0-gate-r1.md; C1/C3/C4/C6 have no existing P1 task owner —
+  P1 planning must seed rows for them (serve.ps1 cvec-path doc, ci.yml timeout + persist-credentials,
+  track.py reviewer-field check). C5/C7/C8/C9/C10 map onto existing P1 tasks.
+- Caveat noted: CI proven on PR #6 only; origin/main is ~102 commits behind — push needs user approval.
