@@ -7,6 +7,12 @@ models/
 # llama.cpp binary distribution — download separately, see README
 tools/llama/
 
+# Godot editor/runtime binaries — download separately, see README
+tools/godot/
+
+# Godot editor/import cache inside the project
+game/.godot/
+
 # Raw audio pool (357 MB, re-downloadable from SOURCES.json URLs)
 assets/audio/_raw/
 

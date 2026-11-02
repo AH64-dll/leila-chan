@@ -6,7 +6,7 @@
 > the game literally turns up a steering vector inside her neurons.
 
 **Status:** design complete, core tech validated, final pixel-art sprite set + casting
-table done, **no game code yet**.
+table done, **Godot 4.7.2 project skeleton boots (P0.05)**.
 **Engine:** Godot 4 · **Model:** Qwen3.5-4B Q4_K_M + control vectors ·
 **Platforms:** Steam first, mobile later.
 
@@ -68,6 +68,7 @@ These are intentionally gitignored; grab them once per machine:
 | `models/Qwen3.5-4B-Q4_K_M.gguf` | The LLM weights (2.6 GB) | `huggingface-cli download <qwen3.5-4b-gguf-repo> Qwen3.5-4B-Q4_K_M.gguf --local-dir models` |
 | `experiments/steering/evil_qwen_unit.gguf` | Malice steering vector (20 KB) | Rebuild from the weights: `python experiments/steer_build.py models/Qwen3.5-4B-Q4_K_M.gguf experiments/steering/evil_qwen_unit.gguf` (needs `requirements-experiments.txt`) |
 | `tools/llama/llama-b12024/` | llama.cpp b12024 binaries (CUDA) | GitHub release `ggml-org/llama.cpp` b12024 → Linux: `llama-b12024-bin-ubuntu-cuda-12.8-x64.tar.gz` + `cudart-llama-b12024-bin-ubuntu-cuda-12.8-x64.tar.gz` (or both `cuda-13.4`); Windows: `llama-b12024-bin-win-cuda-12.4-x64.zip` + `cudart-llama-bin-win-cuda-12.4-x64.zip` (or both `cuda-13.4`), each pair extracted into the same folder (or build from source). Override the path with `LEILA_LLAMA_BIN` / `LEILA_MODEL` or `--bin` / `--model` in `experiments/steer_sweep.py` |
+| `tools/godot/Godot_v<pin>_win64.exe` | Godot editor + runtime; `<pin>` = contents of `game/.godot-version` | GitHub release `godotengine/godot` `<pin>` → `Godot_v<pin>_win64.exe.zip`, verify SHA-512 against the release's `SHA512-SUMS.txt`, extract here. Run via `tools/godot.sh` / `tools/godot.ps1` or `LEILA_GODOT` |
 | `assets/audio/_raw/` | Raw CC0 music/SFX pool (357 MB) | Re-download from the URLs in `assets/audio/SOURCES.json` |
 | `art/_review/` | Design-phase review sheets | Archive only — not needed to build; lives on the design machine's `E:` drive |
 | `art/leila_legacy_1x/` | Superseded 192×344 sprite set | Regenerate: `LEILA_SCALE=1` pipeline, or ignore (superseded) |

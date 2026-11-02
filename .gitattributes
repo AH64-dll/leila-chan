@@ -5,3 +5,14 @@ docs/10_CASTING.md text eol=lf
 art/leila/palette.json text eol=lf
 art/leila/leila.gpl text eol=lf
 assets/audio/SOURCES.json text eol=lf
+
+# Shell scripts: CRLF breaks the shebang
+*.sh text eol=lf
+
+# Godot text resources: the engine writes LF; keep the working tree stable
+*.gd text eol=lf
+*.tscn text eol=lf
+*.tres text eol=lf
+*.gdshader text eol=lf
+*.godot text eol=lf
+*.uid text eol=lf
