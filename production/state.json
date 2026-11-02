@@ -401,12 +401,22 @@
       "started": "2026-11-02T21:35:51+02:00"
     },
     "P0.20": {
-      "status": "in_review",
+      "status": "done",
       "agent": null,
       "round": 1,
-      "reviews": [],
+      "reviews": [
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P0.20-code-r1.md",
+          "ts": "2026-11-02T21:46:17+02:00"
+        }
+      ],
       "started": "2026-11-02T21:35:51+02:00",
-      "handoff": "production/handoffs/P0.20.md"
+      "handoff": "production/handoffs/P0.20.md",
+      "finished": "2026-11-02T21:46:28+02:00"
     }
   },
   "history": [
@@ -966,6 +976,18 @@
       "ts": "2026-11-02T21:46:10+02:00",
       "event": "in_review->done",
       "ref": "P0.19",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T21:46:17+02:00",
+      "event": "review:code:approved",
+      "ref": "P0.20",
+      "note": "production/reviews/P0.20-code-r1.md"
+    },
+    {
+      "ts": "2026-11-02T21:46:28+02:00",
+      "event": "in_review->done",
+      "ref": "P0.20",
       "note": ""
     }
   ]
