@@ -1,0 +1,74 @@
+# P0.07 — CI: tracker validate, Python tests, gdlint, Godot headless tests.
+# No GPU required (REL playbook): LLM/prompt-lab runs stay local/nightly.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: tracker - pytest - gdlint - godot headless
+    # Image pinned like every other tool; ubuntu-latest is a moving target
+    # (runner-images #14748 migrates it to Ubuntu 26).
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Python 3.12 (README pin)
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install dev deps (gdtoolkit, pytest)
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Tracker validate --strict
+        run: python production/tools/track.py validate --strict
+
+      - name: Python tests (pytest)
+        run: pytest
+
+      # Fast-fail on lint before the ~50 MB Godot download; tools/test.sh re-runs it as stage 1.
+      - name: gdlint game/
+        run: gdlint game/
+
+      # The Godot binary is a gitignored local artifact (README "Local artifacts").
+      # CI derives the release URL from the pin in game/.godot-version (docs/07 §1)
+      # and verifies the release's official SHA512-SUMS.txt like the README documents.
+      - name: Fetch pinned Godot
+        shell: bash
+        run: |
+          pin="$(tr -d '[:space:]' < game/.godot-version)"
+          zip="Godot_v${pin}_linux.x86_64.zip"
+          base="https://github.com/godotengine/godot/releases/download/${pin}"
+          curl -fLO "${base}/${zip}"
+          curl -fLO "${base}/SHA512-SUMS.txt"
+          grep " ${zip}\$" SHA512-SUMS.txt | sha512sum -c -
+          mkdir -p tools/godot
+          unzip -o -q "${zip}" -d tools/godot
+          chmod +x "tools/godot/Godot_v${pin}_linux.x86_64"
+          "tools/godot/Godot_v${pin}_linux.x86_64" --version
+
+      - name: Headless tests (tools/test.sh)
+        run: ./tools/test.sh
+
+      - name: Upload gdUnit4 reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gdunit4-reports
+          path: game/reports/
+          if-no-files-found: ignore

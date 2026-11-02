@@ -133,6 +133,10 @@ script under `game/tests/` (gdUnit4, vendored in `game/addons/`). Lint needs the
 (config: `gdformatrc`) — `gdformat game/` to apply, `gdformat --check game/` to verify.
 Test reports land in `game/reports/` (gitignored).
 
+Python checks: `pytest` (config `pytest.ini`, collects `tests/` + `production/`).
+CI (`.github/workflows/ci.yml`) runs both suites plus `track.py validate --strict`
+on every PR, using the Godot pin in `game/.godot-version` — no GPU needed.
+
 ## License / rights
 
 - Game design, docs, code pipeline, generated pixel art: © the project authors (private repo — ask before reusing).
