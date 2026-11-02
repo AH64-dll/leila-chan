@@ -22,3 +22,17 @@
 - Gotcha: `godot` is not on PATH. For the literal criterion command prepend the local shim dir
   (`$env:PATH = 'D:\lila\tools\godot;' + $env:PATH`; gitignored `godot.cmd` → pinned `_console.exe`).
 - Follow-up for ART/P1.16: `window_height_override=1376` does not fit a 1080p desktop; confirm viewport/stretch.
+
+## P0.13 (round 1, 2026-11-02)
+- P0.05 carry-overs closed: `tools/godot.sh` committed `100755` (`git update-index --chmod=+x`);
+  Darwin branch resolves `Godot.app/Contents/MacOS/Godot` (official zip layout), bare binary as
+  fallback — refactored to a per-OS `BINS` candidate array. `Boot.tscn` got a real `uid=` on
+  `gd_scene` + `ext_resource` (`ResourceUID.create_id()` via a throwaway `-s` script).
+- docs/07 is now canonical for the P0.05 skeleton choices: §1 renderer + pin/launcher rows, §2
+  `schemas/` + "Accepted skeleton choices" block. Doc-silent picks are no longer re-litigable.
+- **PROVISIONAL — for ART (P0.08/P1.16):** `window_height_override=1376` (768×1376 window, ×2 of
+  the 384×688 viewport) is taller than a 1080p desktop. Not fixed in code; ART confirms
+  viewport/stretch and clamps or derives the default window to fit the display.
+- Gotcha: a fresh worktree lacks `.godot/uid_cache.bin`, so `ext_resource` uids warn once
+  ("invalid UID … using text path instead") until `--import` runs — cosmetic, path fallback works.
+  CI (P0.07) should run `--import` before headless checks.
