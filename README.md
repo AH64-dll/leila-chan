@@ -66,9 +66,15 @@ These are intentionally gitignored; grab them once per machine:
 | Path | What | How to get it |
 |---|---|---|
 | `models/Qwen3.5-4B-Q4_K_M.gguf` | The LLM weights (2.6 GB) | `huggingface-cli download <qwen3.5-4b-gguf-repo> Qwen3.5-4B-Q4_K_M.gguf --local-dir models` |
+| `experiments/steering/evil_qwen_unit.gguf` | Malice steering vector (20 KB) | Rebuild from the weights: `python experiments/steer_build.py models/Qwen3.5-4B-Q4_K_M.gguf experiments/steering/evil_qwen_unit.gguf` (needs `requirements-experiments.txt`) |
 | `tools/llama/llama-b12024/` | llama.cpp b12024 binaries (CUDA) | GitHub release `ggml-org/llama.cpp` b12024 → Linux: `llama-b12024-bin-ubuntu-cuda-12.8-x64.tar.gz` + `cudart-llama-b12024-bin-ubuntu-cuda-12.8-x64.tar.gz` (or both `cuda-13.4`); Windows: `llama-b12024-bin-win-cuda-12.4-x64.zip` + `cudart-llama-bin-win-cuda-12.4-x64.zip` (or both `cuda-13.4`), each pair extracted into the same folder (or build from source). Override the path with `LEILA_LLAMA_BIN` / `LEILA_MODEL` or `--bin` / `--model` in `experiments/steer_sweep.py` |
 | `assets/audio/_raw/` | Raw CC0 music/SFX pool (357 MB) | Re-download from the URLs in `assets/audio/SOURCES.json` |
+| `art/_review/` | Design-phase review sheets | Archive only — not needed to build; lives on the design machine's `E:` drive |
 | `art/leila_legacy_1x/` | Superseded 192×344 sprite set | Regenerate: `LEILA_SCALE=1` pipeline, or ignore (superseded) |
+
+On the production machine the model weights, steering vector, audio pool, review sheets and legacy sprites were
+copied once from the design machine's `E:` drive (task P0.02) — exact paths, sizes and SHA-256 hashes are recorded
+in [tools/local_artifacts.md](tools/local_artifacts.md).
 
 ## Rebuilding the sprites
 
