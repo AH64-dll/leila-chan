@@ -1,0 +1,14 @@
+; Engine configuration file.
+; Minimal scratch project for the P0.09 NobodyWho spike.
+
+config_version=5
+
+[application]
+
+config/name="nw-spike"
+run/main_scene="res://main.tscn"
+config/features=PackedStringArray("4.7")
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
