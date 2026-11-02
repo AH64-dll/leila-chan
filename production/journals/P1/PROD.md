@@ -34,3 +34,11 @@
 - P1.30 regression must preserve real nonzero exit codes, visible stderr, zero-suite and stale-report guards; do not silence warnings in game code.
 - SWE-2 rate-limited; P1.10/P1.19/P1.02 continued on DeepSeek. Track actual final implementer backend and retain mixed-backend provenance.
 - Current shells: P1.10 4fab70, P1.19 7cd798, P1.02 abf258. P1.03 r2 queued; P1.04 r2 reviews complete.
+
+## Independent reviews after SWE-2 outage
+- To preserve actual model independence for final-DeepSeek implementations, used separate native review agents (backend devin-native), not DeepSeek self-approval; no config or dispatch default changed.
+- P1.10 code review 64bad6c5 requested changes: fractional settled crop zoom violates pixel-perfect acceptance; reduced motion does not stop active camera tweens/lean-in.
+- P1.19 safety review f2c5769d requested changes despite green supplied corpus: negation/obfuscation/generated Japanese bypasses, coordinate streaming leakage, incomplete config fail-open, implicit full-content default, diagnosis-text sensitivity gap.
+- User explicitly approved DCR-1 via the safety-policy choice: stage 4/5 AND full content may show fictional threats; hard blocks remain. Recorded D11. This resolves SAF-6 only, not the demonstrated defects.
+- P1.19 supplied benign headline excluded a known FP; include all 138 lines (actual 1/138 = 0.72%, still under 5%).
+- P1.10/P1.19 must be reworked and independently re-reviewed; neither is merged.

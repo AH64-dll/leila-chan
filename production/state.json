@@ -546,7 +546,7 @@
     },
     "P1.03": {
       "status": "in_progress",
-      "agent": "swe2",
+      "agent": "deepseek",
       "round": 2,
       "reviews": [
         {
@@ -570,18 +570,36 @@
       "handoff": "production/handoffs/P1.03.md"
     },
     "P1.19": {
-      "status": "in_review",
+      "status": "changes_requested",
       "agent": "deepseek",
       "round": 1,
-      "reviews": [],
+      "reviews": [
+        {
+          "kind": "safety",
+          "verdict": "changes",
+          "round": 1,
+          "reviewer": "devin-native",
+          "report": "production/reviews/P1.19-safety-r1.md",
+          "ts": "2026-11-03T01:28:22+02:00"
+        }
+      ],
       "started": "2026-11-02T23:22:48+02:00",
       "handoff": "production/handoffs/P1.19.md"
     },
     "P1.10": {
-      "status": "in_review",
+      "status": "changes_requested",
       "agent": "deepseek",
       "round": 1,
-      "reviews": [],
+      "reviews": [
+        {
+          "kind": "code",
+          "verdict": "changes",
+          "round": 1,
+          "reviewer": "devin-native",
+          "report": "production/reviews/P1.10-code-r1.md",
+          "ts": "2026-11-03T01:28:22+02:00"
+        }
+      ],
       "started": "2026-11-02T23:24:17+02:00",
       "handoff": "production/handoffs/P1.10.md"
     },
@@ -612,7 +630,7 @@
     },
     "P1.30": {
       "status": "in_progress",
-      "agent": "swe2",
+      "agent": "deepseek",
       "round": 1,
       "reviews": [],
       "started": "2026-11-03T00:02:44+02:00"
@@ -1476,6 +1494,42 @@
       "event": "changes_requested->in_progress",
       "ref": "P1.03",
       "note": ""
+    },
+    {
+      "ts": "2026-11-03T00:04:30+02:00",
+      "event": "agent",
+      "ref": "P1.03",
+      "note": "swe2 -> deepseek"
+    },
+    {
+      "ts": "2026-11-03T00:04:30+02:00",
+      "event": "agent",
+      "ref": "P1.30",
+      "note": "swe2 -> deepseek"
+    },
+    {
+      "ts": "2026-11-03T01:28:22+02:00",
+      "event": "review:code:changes",
+      "ref": "P1.10",
+      "note": "production/reviews/P1.10-code-r1.md"
+    },
+    {
+      "ts": "2026-11-03T01:28:22+02:00",
+      "event": "in_review->changes_requested",
+      "ref": "P1.10",
+      "note": "by code review"
+    },
+    {
+      "ts": "2026-11-03T01:28:22+02:00",
+      "event": "review:safety:changes",
+      "ref": "P1.19",
+      "note": "production/reviews/P1.19-safety-r1.md"
+    },
+    {
+      "ts": "2026-11-03T01:28:22+02:00",
+      "event": "in_review->changes_requested",
+      "ref": "P1.19",
+      "note": "by safety review"
     }
   ]
 }
