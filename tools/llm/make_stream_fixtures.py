@@ -9,8 +9,9 @@ Sources:
   experiments/results_v3.json              (30 turns, stage 0 + 4)
   experiments/windows/tool_test_v3.json    (45 turns, stage 0 + 4 — the Windows run)
 
-Three synthetic fixtures are appended for cases absent from the recordings:
-escapes in strings, literal UTF-8, and \\uXXXX escapes incl. a surrogate pair.
+Five synthetic fixtures are appended for cases absent from the recordings:
+escapes in strings, literal UTF-8, the same turn with \\uXXXX escapes incl. a
+surrogate pair, a mixed escape/unicode turn, and an empty say (docs/02 §7).
 
 Usage: python tools/llm/make_stream_fixtures.py
 """
@@ -68,6 +69,20 @@ SYNTH_MIXED = {
     "memory": "",
     "action": "none",
 }
+# docs/02 §7: an empty say is a real fallback case, so the corpus must cover it.
+SYNTH_EMPTY_SAY = {
+    "read": "cold",
+    "inner": "Say something. Anything at all.",
+    "music": "silence",
+    "fx": "none",
+    "beats": [
+        {"feeling": "cold", "intensity": 1, "cue": "none", "say": ""},
+        {"feeling": "sad", "intensity": 2, "cue": "none", "say": "..."},
+    ],
+    "mood": {"affection": -1, "trust": 0, "stress": 2},
+    "memory": "",
+    "action": "none",
+}
 
 
 def collect():
@@ -89,10 +104,12 @@ def collect():
 def stats(turn):
     """Flags used by the test suite to target specific fixtures."""
     serialised = json.dumps(turn, ensure_ascii=False, separators=(",", ":"))
+    beats = turn.get("beats") or []
     return {
-        "n_beats": len(turn.get("beats") or []),
+        "n_beats": len(beats),
         "has_escapes": "\\" in serialised,
         "has_unicode": any(ord(c) > 127 for c in serialised),
+        "has_empty_say": any(b.get("say") == "" for b in beats),
     }
 
 
@@ -123,6 +140,7 @@ def main():
         ("synth_unicode.json", SYNTH_UNICODE, False),          # literal UTF-8
         ("synth_unicode_escaped.json", SYNTH_UNICODE, True),   # same turn, \uXXXX-encoded
         ("synth_mixed.json", SYNTH_MIXED, False),
+        ("synth_empty_say.json", SYNTH_EMPTY_SAY, False),
     ]
     for name, turn, ascii_only in synth:
         text = json.dumps(turn, ensure_ascii=ascii_only, separators=(",", ":"))

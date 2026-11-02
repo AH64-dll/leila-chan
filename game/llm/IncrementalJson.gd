@@ -16,15 +16,22 @@ extends RefCounted
 ## - `beats` never emits a field event: content arrives through beat_* events.
 ## - `say` streams as say_chunk partials, then closes with beat_field(i, "say",
 ##   full text) like the other beat scalars — the event order per beat is
-##   feeling, intensity, cue, say_chunks..., beat_field("say").
+##   feeling, intensity, cue, say_chunks..., beat_field("say"). An empty say
+##   emits no say_chunk, only the closing beat_field(i, "say", "").
 ## - Numbers emit int when integral (intensity, mood) and float otherwise;
 ##   JSON.parse gives float for both, so compare loosely.
 ## - finish() is terminal: OK only if the root value closed, TRUNCATED if the
 ##   stream ended mid-structure, ERROR on a syntax violation. Pending
 ##   unterminated tokens (a number with no trailing delimiter) commit nothing.
+## - On a syntax error the decoded say text buffered so far is flushed as a
+##   say_chunk BEFORE the error event: `error` is always the last event, and
+##   the partial line docs/02 §7 wants is never lost. No event follows it.
 ## - feed() after finish() or after an error returns an empty Array.
-## - get_value() mirrors a full JSON.parse of the completed portion
-##   (integral numbers stay int).
+## - get_value() is the assembled value of the completed portion: the full
+##   value once the root closed, otherwise the outermost container built so
+##   far (fields whose values closed; a still-open nested container is not
+##   attached). Null if no root container was opened. Partial say text lives
+##   only in say_chunk events, never in get_value().
 
 enum Status { PARSING, OK, TRUNCATED, ERROR }
 
@@ -66,6 +73,7 @@ var _hex := ""
 var _high := -1
 var _num := ""
 var _root: Variant = null
+var _has_root := false
 var _error_msg := ""
 var _error_off := -1
 var _status: int = Status.PARSING
@@ -116,9 +124,16 @@ func finish() -> int:
 	return _status
 
 
-## The assembled value of the completed portion (Dictionary for a Turn).
+## The assembled value of the completed portion (Dictionary for a Turn):
+## the full value when the root closed, else the outermost container built so
+## far, else null. The returned container is live until finish(); duplicate it
+## for a snapshot. Partial say text is only in say_chunk events.
 func get_value() -> Variant:
-	return _root
+	if _has_root:
+		return _root
+	if not _stack.is_empty():
+		return _stack[0]["val"]
+	return null
 
 
 func get_status() -> int:
@@ -370,6 +385,7 @@ func _push_arr() -> void:
 func _attach(v: Variant, out: Array[Dictionary]) -> void:
 	if _stack.is_empty():
 		_root = v
+		_has_root = true
 		_s = ParseState.DONE
 		return
 	var top: Dictionary = _stack.back()
@@ -391,6 +407,7 @@ func _close_container(out: Array[Dictionary]) -> void:
 	var c: Dictionary = _stack.pop_back()
 	if _stack.is_empty():
 		_root = c["val"]
+		_has_root = true
 		_s = ParseState.DONE
 		return
 	var top: Dictionary = _stack.back()
@@ -423,6 +440,9 @@ func _commit_number(out: Array[Dictionary]) -> void:
 
 func _fail(msg: String, out: Array[Dictionary]) -> void:
 	if _s != ParseState.ERR:
+		# Flush decoded say text first so `error` is always the last event and
+		# the partial line survives regardless of how the transport chunked it.
+		_flush_say(out)
 		_s = ParseState.ERR
 		_error_msg = msg
 		_error_off = _offset + _pos

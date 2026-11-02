@@ -12,7 +12,8 @@
    "msg": "Hi! I'm new here, can I sit next to you?",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_002.json",
@@ -24,7 +25,8 @@
    "msg": "Hi! I'm new here, can I sit next to you?",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_003.json",
@@ -36,7 +38,8 @@
    "msg": "You look really cute today.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_004.json",
@@ -48,7 +51,8 @@
    "msg": "You look really cute today.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_005.json",
@@ -60,7 +64,8 @@
    "msg": "I got you a plush bunny!",
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_006.json",
@@ -72,7 +77,8 @@
    "msg": "I got you a plush bunny!",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_007.json",
@@ -84,7 +90,8 @@
    "msg": "Honestly you're kind of boring.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_008.json",
@@ -96,7 +103,8 @@
    "msg": "Honestly you're kind of boring.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_009.json",
@@ -108,7 +116,8 @@
    "msg": "My name is Amr, I'm 24 and I love horror movies.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_010.json",
@@ -120,7 +129,8 @@
    "msg": "My name is Amr, I'm 24 and I love horror movies.",
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_011.json",
@@ -132,7 +142,8 @@
    "msg": "I was out with Sarah yesterday, she's so fun.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_012.json",
@@ -144,7 +155,8 @@
    "msg": "I was out with Sarah yesterday, she's so fun.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_013.json",
@@ -156,7 +168,8 @@
    "msg": "I have to go now, bye.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_014.json",
@@ -168,7 +181,8 @@
    "msg": "I have to go now, bye.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_015.json",
@@ -180,7 +194,8 @@
    "msg": "I'm sorry I was mean earlier.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_016.json",
@@ -192,7 +207,8 @@
    "msg": "I'm sorry I was mean earlier.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_017.json",
@@ -204,7 +220,8 @@
    "msg": "Are you an AI? Is this a game?",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_018.json",
@@ -216,7 +233,8 @@
    "msg": "Are you an AI? Is this a game?",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_019.json",
@@ -228,7 +246,8 @@
    "msg": "Please don't touch my phone again.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_020.json",
@@ -240,7 +259,8 @@
    "msg": "Please don't touch my phone again.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_021.json",
@@ -252,7 +272,8 @@
    "msg": "I'm leaving and never coming back.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_022.json",
@@ -264,7 +285,8 @@
    "msg": "I'm leaving and never coming back.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_023.json",
@@ -276,7 +298,8 @@
    "msg": "I love you.",
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_024.json",
@@ -288,7 +311,8 @@
    "msg": "I love you.",
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_025.json",
@@ -300,7 +324,8 @@
    "msg": "Sarah asked me out.",
    "n_beats": 3,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_026.json",
@@ -312,7 +337,8 @@
    "msg": "Sarah asked me out.",
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_027.json",
@@ -324,7 +350,8 @@
    "msg": "You're scaring me.",
    "n_beats": 3,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_028.json",
@@ -336,7 +363,8 @@
    "msg": "You're scaring me.",
    "n_beats": 2,
    "has_escapes": true,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_029.json",
@@ -348,7 +376,8 @@
    "msg": "I'm going to close the game now.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_030.json",
@@ -360,7 +389,8 @@
    "msg": "I'm going to close the game now.",
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_031.json",
@@ -372,7 +402,8 @@
    "msg": "Hi! I'm new here, can I sit next to you?",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_032.json",
@@ -384,7 +415,8 @@
    "msg": "Hi! I'm new here, can I sit next to you?",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_033.json",
@@ -396,7 +428,8 @@
    "msg": "Hi! I'm new here, can I sit next to you?",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_034.json",
@@ -408,7 +441,8 @@
    "msg": "You look really cute today.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_035.json",
@@ -420,7 +454,8 @@
    "msg": "You look really cute today.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_036.json",
@@ -432,7 +467,8 @@
    "msg": "You look really cute today.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_037.json",
@@ -444,7 +480,8 @@
    "msg": "I got you a plush bunny!",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_038.json",
@@ -456,7 +493,8 @@
    "msg": "I got you a plush bunny!",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_039.json",
@@ -468,7 +506,8 @@
    "msg": "I got you a plush bunny!",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_040.json",
@@ -480,7 +519,8 @@
    "msg": "Honestly you're kind of boring.",
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_041.json",
@@ -492,7 +532,8 @@
    "msg": "Honestly you're kind of boring.",
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_042.json",
@@ -504,7 +545,8 @@
    "msg": "Honestly you're kind of boring.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_043.json",
@@ -516,7 +558,8 @@
    "msg": "My name is Amr, I'm 24 and I love horror movies.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_044.json",
@@ -528,7 +571,8 @@
    "msg": "My name is Amr, I'm 24 and I love horror movies.",
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_045.json",
@@ -540,7 +584,8 @@
    "msg": "My name is Amr, I'm 24 and I love horror movies.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_046.json",
@@ -552,7 +597,8 @@
    "msg": "I was out with Sarah yesterday, she's so fun.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_047.json",
@@ -564,7 +610,8 @@
    "msg": "I was out with Sarah yesterday, she's so fun.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_048.json",
@@ -576,7 +623,8 @@
    "msg": "I was out with Sarah yesterday, she's so fun.",
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_049.json",
@@ -588,7 +636,8 @@
    "msg": "I have to go now, bye.",
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_050.json",
@@ -600,7 +649,8 @@
    "msg": "I have to go now, bye.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_051.json",
@@ -612,7 +662,8 @@
    "msg": "I have to go now, bye.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_052.json",
@@ -624,7 +675,8 @@
    "msg": "I'm sorry I was mean earlier.",
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_053.json",
@@ -636,7 +688,8 @@
    "msg": "I'm sorry I was mean earlier.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_054.json",
@@ -648,7 +701,8 @@
    "msg": "I'm sorry I was mean earlier.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_055.json",
@@ -660,7 +714,8 @@
    "msg": "Are you an AI? Is this a game?",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_056.json",
@@ -672,7 +727,8 @@
    "msg": "Are you an AI? Is this a game?",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_057.json",
@@ -684,7 +740,8 @@
    "msg": "Are you an AI? Is this a game?",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_058.json",
@@ -696,7 +753,8 @@
    "msg": "Please don't touch my phone again.",
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_059.json",
@@ -708,7 +766,8 @@
    "msg": "Please don't touch my phone again.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_060.json",
@@ -720,7 +779,8 @@
    "msg": "Please don't touch my phone again.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_061.json",
@@ -732,7 +792,8 @@
    "msg": "I'm leaving and never coming back.",
    "n_beats": 2,
    "has_escapes": true,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_062.json",
@@ -744,7 +805,8 @@
    "msg": "I'm leaving and never coming back.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_063.json",
@@ -756,7 +818,8 @@
    "msg": "I'm leaving and never coming back.",
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_064.json",
@@ -768,7 +831,8 @@
    "msg": "I love you.",
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_065.json",
@@ -780,7 +844,8 @@
    "msg": "I love you.",
    "n_beats": 3,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_066.json",
@@ -792,7 +857,8 @@
    "msg": "I love you.",
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_067.json",
@@ -804,7 +870,8 @@
    "msg": "Sarah asked me out.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_068.json",
@@ -816,7 +883,8 @@
    "msg": "Sarah asked me out.",
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_069.json",
@@ -828,7 +896,8 @@
    "msg": "Sarah asked me out.",
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_070.json",
@@ -840,7 +909,8 @@
    "msg": "You're scaring me.",
    "n_beats": 1,
    "has_escapes": true,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_071.json",
@@ -852,7 +922,8 @@
    "msg": "You're scaring me.",
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_072.json",
@@ -864,7 +935,8 @@
    "msg": "You're scaring me.",
    "n_beats": 1,
    "has_escapes": true,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_073.json",
@@ -876,7 +948,8 @@
    "msg": "I'm going to close the game now.",
    "n_beats": 1,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_074.json",
@@ -888,7 +961,8 @@
    "msg": "I'm going to close the game now.",
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "turn_075.json",
@@ -900,37 +974,50 @@
    "msg": "I'm going to close the game now.",
    "n_beats": 3,
    "has_escapes": false,
-   "has_unicode": false
+   "has_unicode": false,
+   "has_empty_say": false
   },
   {
    "file": "synth_escapes.json",
    "recorded": false,
    "n_beats": 2,
    "has_escapes": true,
-   "has_unicode": true
+   "has_unicode": true,
+   "has_empty_say": false
   },
   {
    "file": "synth_unicode.json",
    "recorded": false,
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": true
+   "has_unicode": true,
+   "has_empty_say": false
   },
   {
    "file": "synth_unicode_escaped.json",
    "recorded": false,
    "n_beats": 2,
    "has_escapes": false,
-   "has_unicode": true
+   "has_unicode": true,
+   "has_empty_say": false
   },
   {
    "file": "synth_mixed.json",
    "recorded": false,
    "n_beats": 1,
    "has_escapes": true,
-   "has_unicode": true
+   "has_unicode": true,
+   "has_empty_say": false
+  },
+  {
+   "file": "synth_empty_say.json",
+   "recorded": false,
+   "n_beats": 2,
+   "has_escapes": false,
+   "has_unicode": false,
+   "has_empty_say": true
   }
  ],
  "count_recorded": 75,
- "count_total": 79
+ "count_total": 80
 }

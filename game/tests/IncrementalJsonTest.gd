@@ -36,7 +36,8 @@ func _expected_events(parsed: Variant) -> Array:
 				ev.append({"type": "beat_start", "index": i})
 				for bk: String in b:
 					var bv: Variant = b[bk]
-					if bk == "say":
+					# Contract: an empty say emits no say_chunk, only the close.
+					if bk == "say" and String(bv) != "":
 						ev.append({"type": "say_chunk", "index": i, "text": bv})
 					ev.append({"type": "beat_field", "index": i, "name": bk, "value": bv})
 		else:
@@ -168,6 +169,38 @@ func _say_text(events: Array, index: int) -> String:
 	return t
 
 
+## Exactly one error event, and it is the last event (the parser contract).
+func _assert_error_last(events: Array, ctx: String) -> void:
+	var count := 0
+	var last := -1
+	for i: int in events.size():
+		if events[i].get("type") == "error":
+			count += 1
+			last = i
+	if count != 1:
+		fail("%s: %d error events, want exactly 1" % [ctx, count])
+		return
+	if last != events.size() - 1:
+		fail(
+			(
+				"%s: error at event %d of %d — events follow a terminal error"
+				% [ctx, last, events.size()]
+			)
+		)
+
+
+## Insert `payload` into the first beat's raw say string, `at` characters after
+## its opening quote. The first say text of the fixtures used here starts with
+## plain ASCII, so decoded text has already accumulated at that point.
+func _insert_in_first_say(text: String, at: int, payload: String) -> String:
+	var key_at := text.find('"say":"')
+	if key_at < 0:
+		fail("fixture has no say field")
+		return text
+	var pos: int = key_at + '"say":"'.length()
+	return text.substr(0, pos + at) + payload + text.substr(pos + at)
+
+
 # --- the corpus ---------------------------------------------------------------
 
 
@@ -254,6 +287,8 @@ func test_event_order_contract() -> void:
 					cue_i[e["index"]] = i
 				elif e["name"] == "say":
 					say_done[e["index"]] = i
+		assert_int(music_i).append_failure_message(f + " missing music field").is_greater_equal(0)
+		assert_int(fx_i).append_failure_message(f + " missing fx field").is_greater_equal(0)
 		for i: int in (parsed["beats"] as Array).size():
 			if not first_say.has(i):
 				continue  # empty say emits no chunks; nothing to order
@@ -282,6 +317,35 @@ func test_say_streams_before_close() -> void:
 	var tail := rest.filter(func(e: Dictionary) -> bool: return e["type"] == "say_chunk")
 	assert_bool(_say_text(got + tail, 0).length() > 0).is_true()
 	assert_int(p.finish()).is_equal(IJ.Status.OK)
+
+
+func test_empty_say_emits_no_chunk() -> void:
+	# docs/02 §7 treats an empty say as a real case; the parser's contract is
+	# no say_chunk at all, only the closing beat_field(i, "say", "").
+	var f := "synth_empty_say.json"
+	var text := FileAccess.get_file_as_string(STREAMS + f)
+	var parsed: Variant = JSON.parse_string(text)
+	assert_str(parsed["beats"][0]["say"]).is_equal("")
+	var expected := _expected_events(parsed)
+	for size: int in [0, 1, 3, 64]:
+		var got := _merge_say(_collect(text, size))
+		_assert_events_eq(got, expected, "%s @%d" % [f, size])
+		var chunks := got.filter(
+			func(e: Dictionary) -> bool: return e["type"] == "say_chunk" and e["index"] == 0
+		)
+		assert_array(chunks).append_failure_message("%s @%d" % [f, size]).is_empty()
+		var closes := got.filter(
+			func(e: Dictionary) -> bool:
+				return e["type"] == "beat_field" and e["index"] == 0 and e["name"] == "say"
+		)
+		assert_int(closes.size()).append_failure_message("%s @%d" % [f, size]).is_equal(1)
+		assert_str(closes[0]["value"]).is_equal("")
+	var p := IJ.new()
+	p.feed(text)
+	assert_int(p.finish()).is_equal(IJ.Status.OK)
+	assert_str(p.get_value()["beats"][0]["say"]).is_equal("")
+	# the second beat still streams normally
+	assert_str(_say_text(_collect(text, 1), 1)).is_equal(parsed["beats"][1]["say"])
 
 
 # --- escapes, unicode, truncation, breakage ------------------------------------
@@ -384,6 +448,7 @@ func test_broken_json_reports_error() -> void:
 		var got := p.feed(text)
 		var errs := got.filter(func(e: Dictionary) -> bool: return e["type"] == "error")
 		assert_bool(errs.size() == 1).append_failure_message("want 1 error for " + text).is_true()
+		_assert_error_last(got, text)
 		assert_bool(p.has_error()).is_true()
 		assert_int(p.get_error_offset()).is_greater_equal(0)
 		assert_int(p.finish()).append_failure_message(text).is_equal(IJ.Status.ERROR)
@@ -402,11 +467,97 @@ func test_corrupted_recorded_streams_error() -> void:
 	for m: String in mutants:
 		var p := IJ.new()
 		p.feed(m)
+		var st: int = p.finish()
 		(
-			assert_bool(p.has_error() or p.finish() != IJ.Status.OK)
+			assert_bool(p.has_error())
 			. append_failure_message("corruption accepted: " + m.substr(0, 80))
 			. is_true()
 		)
+		assert_int(st).append_failure_message("corruption not ERROR: " + m.substr(0, 80)).is_equal(
+			IJ.Status.ERROR
+		)
+
+
+func test_broken_say_partial_precedes_terminal_error() -> void:
+	# DES-1/CODE-1: docs/02 §7 needs the partial line of a broken turn. It must
+	# precede the terminal error no matter how the transport chunked the stream.
+	for f: String in ["turn_001.json", "turn_003.json"]:
+		var text := FileAccess.get_file_as_string(STREAMS + f)
+		var parsed: Variant = JSON.parse_string(text)
+		var want_say: String = parsed["beats"][0]["say"]
+		for payload: String in ["\\x", "\n"]:
+			var mutated := _insert_in_first_say(text, 3, payload)
+			var whole := IJ.new()
+			var whole_events := whole.feed(mutated)
+			var per_char := IJ.new()
+			var char_events: Array = []
+			for i: int in mutated.length():
+				char_events.append_array(per_char.feed(mutated[i]))
+			var ctx := "%s payload %s" % [f, JSON.stringify(payload)]
+			_assert_error_last(whole_events, ctx + " whole")
+			_assert_error_last(char_events, ctx + " per-char")
+			assert_int(whole.finish()).append_failure_message(ctx).is_equal(IJ.Status.ERROR)
+			assert_int(per_char.finish()).append_failure_message(ctx).is_equal(IJ.Status.ERROR)
+			_assert_events_eq(_merge_say(whole_events), _merge_say(char_events), ctx + " chunking")
+			var partial := _say_text(whole_events, 0)
+			assert_bool(partial.length() > 0).append_failure_message(ctx).is_true()
+			assert_bool(want_say.begins_with(partial)).append_failure_message(ctx).is_true()
+
+
+func test_get_value_partial_contract() -> void:
+	# get_value() is honest on truncated/error input: it returns the outermost
+	# completed container (fields whose values closed), never in-progress state
+	# and never partial say text (that lives in say_chunk events).
+	var f := "turn_001.json"
+	var text := FileAccess.get_file_as_string(STREAMS + f)
+	var parsed: Variant = JSON.parse_string(text)
+	var say_start: int = text.find('"say":"') + '"say":"'.length()
+
+	# 1. Truncated mid-say: completed root scalars are visible, the still-open
+	# beats array is not attached.
+	var p := IJ.new()
+	p.feed(text.substr(0, say_start + 4))
+	assert_int(p.finish()).is_equal(IJ.Status.TRUNCATED)
+	var v: Variant = p.get_value()
+	assert_bool(v is Dictionary).is_true()
+	for key: String in ["read", "inner", "music", "fx"]:
+		assert_str(JSON.stringify(_norm(v[key]))).append_failure_message(key).is_equal(
+			JSON.stringify(_norm(parsed[key]))
+		)
+	assert_bool(v.has("beats")).is_false()
+	assert_bool(v.has("mood")).is_false()
+
+	# 2. Truncated after beats closed but before mood: the completed array is
+	# attached.
+	var beats_end: int = text.find('],"mood"') + 1
+	p = IJ.new()
+	p.feed(text.substr(0, beats_end))
+	assert_int(p.finish()).is_equal(IJ.Status.TRUNCATED)
+	v = p.get_value()
+	assert_bool(v.has("beats")).is_true()
+	assert_int((v["beats"] as Array).size()).is_equal((parsed["beats"] as Array).size())
+	assert_bool(v.has("mood")).is_false()
+
+	# 3. Syntax error mid-say: same completed fields; the decoded prefix is in
+	# the events, not in the value.
+	var mutated := _insert_in_first_say(text, 4, "\\x")
+	p = IJ.new()
+	var events := p.feed(mutated)
+	assert_int(p.finish()).is_equal(IJ.Status.ERROR)
+	v = p.get_value()
+	assert_bool(v is Dictionary).is_true()
+	assert_bool(v.has("beats")).is_false()
+	assert_str(_say_text(events, 0)).is_equal(String(parsed["beats"][0]["say"]).substr(0, 4))
+
+	# 4. Error before any container opens; error after the root closed.
+	p = IJ.new()
+	p.feed("x")
+	p.finish()
+	assert_bool(p.get_value() == null).is_true()
+	p = IJ.new()
+	p.feed('{"a": 1} trailing')
+	assert_int(p.finish()).is_equal(IJ.Status.ERROR)
+	assert_str(JSON.stringify(p.get_value())).is_equal('{"a":1}')
 
 
 func test_get_value_mirrors_full_parse() -> void:
