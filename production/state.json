@@ -405,9 +405,19 @@
     "P0.18": {
       "status": "in_progress",
       "agent": null,
-      "round": 1,
-      "reviews": [],
-      "started": "2026-11-02T21:35:51+02:00"
+      "round": 2,
+      "reviews": [
+        {
+          "kind": "code",
+          "verdict": "changes",
+          "round": 1,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P0.18-code-r1.md",
+          "ts": "2026-11-02T22:02:07+02:00"
+        }
+      ],
+      "started": "2026-11-02T21:35:51+02:00",
+      "handoff": "production/handoffs/P0.18.md"
     },
     "P0.20": {
       "status": "done",
@@ -1009,6 +1019,30 @@
       "ts": "2026-11-02T21:49:05+02:00",
       "event": "in_review->done",
       "ref": "P0.16",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T21:49:12+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P0.18",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T22:02:07+02:00",
+      "event": "review:code:changes",
+      "ref": "P0.18",
+      "note": "production/reviews/P0.18-code-r1.md"
+    },
+    {
+      "ts": "2026-11-02T22:02:07+02:00",
+      "event": "in_review->changes_requested",
+      "ref": "P0.18",
+      "note": "by code review"
+    },
+    {
+      "ts": "2026-11-02T22:02:07+02:00",
+      "event": "changes_requested->in_progress",
+      "ref": "P0.18",
       "note": ""
     }
   ]
