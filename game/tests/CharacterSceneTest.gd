@@ -39,19 +39,44 @@ func _wait_seconds(s: float, probe: Callable = Callable()) -> void:
 			probe.call()
 
 
-## Fit rule shared with the scene's docs: the preset rect is guaranteed fully
-## visible (min fit), camera clamped inside the 384x688 frame.
-func _fit(rect: Rect2) -> Dictionary:
-	var zoom: float = min(VIEW.x / rect.size.x, VIEW.y / rect.size.y)
-	var centre := rect.get_center()
-	var half := VIEW / (2.0 * zoom)
-	return {
-		"zoom": zoom,
-		"pos":
-		Vector2(
-			clampf(centre.x, half.x, VIEW.x - half.x), clampf(centre.y, half.y, VIEW.y - half.y)
-		),
-	}
+## The acceptance property for every SETTLED camera (code r1 CODE-1): zoom is
+## an integer (1 native px -> N viewport px) and the camera sits on the 1/zoom
+## grid, so nearest gives uniform pixel replication in crop shots too.
+func _assert_pixel_grid() -> void:
+	var z: float = _cam.zoom.x
+	assert_float(z).is_equal_approx(roundf(z), 0.0001)
+	for p: Vector2 in [Vector2(0, 0), Vector2(37, 129), Vector2(383, 687)]:
+		var screen: Vector2 = (p - _cam.position) * z + VIEW / 2.0
+		assert_vector(screen).is_equal_approx(screen.round(), Vector2(0.001, 0.001))
+
+
+## Composed camera + viewport transform, at rest: Body is centred on the frame,
+## so a native pixel corner IS the world coordinate p. The canvas transform must
+## map every one to a whole viewport pixel (the 768x1376 window stretch is an
+## integer 2x on top). Callers await process_frame first — the canvas transform
+## is refreshed per frame.
+func _assert_canvas_grid() -> void:
+	var canvas: Transform2D = get_viewport().get_canvas_transform()
+	var canvas_scale := canvas.get_scale()
+	assert_float(canvas_scale.x).is_equal_approx(roundf(canvas_scale.x), 0.0001)
+	assert_float(canvas_scale.y).is_equal_approx(roundf(canvas_scale.y), 0.0001)
+	for p: Vector2 in [Vector2(0, 0), Vector2(37, 129), Vector2(383, 687)]:
+		var screen: Vector2 = canvas * p
+		assert_vector(screen).is_equal_approx(screen.round(), Vector2(0.001, 0.001))
+
+
+## Composed check through the REAL node chain and viewport transform: a native
+## sprite pixel corner must land on a whole viewport pixel. get_screen_transform
+## is local->screen composed (node chain + current camera + viewport), refreshed
+## per frame — callers must await process_frame after set_camera. Only
+## meaningful while breathing is off (freeze) — the authored breathing sine is
+## deliberately sub-pixel (docs/03 §4) and must stay.
+func _assert_native_px_lands_on_grid(p: Vector2) -> void:
+	var sprite: Sprite2D = _char._current
+	# x2 texture is centred: local coord of native px corner p is 2p - size/2
+	var local := p * 2.0 - sprite.texture.get_size() / 2.0
+	var screen: Vector2 = sprite.get_screen_transform() * local
+	assert_vector(screen).is_equal_approx(screen.round(), Vector2(0.001, 0.001))
 
 
 func test_doc_stack_structure() -> void:
@@ -111,42 +136,59 @@ func test_crossfade_within_150ms_and_blends() -> void:
 	assert_str(String(_char._current.texture.resource_path)).ends_with("01_radiant_joy.png")
 
 
-func test_camera_presets_fit_their_rects() -> void:
-	# full: the whole 384x688 frame
-	_char.set_camera("full", true)
-	assert_float(_cam.zoom.x).is_equal_approx(1.0, 0.001)
-	assert_vector(_cam.position).is_equal_approx(Vector2(192, 344), Vector2(0.5, 0.5))
-	# knees: top ~470 px magnified, she stays inside horizontally
-	var knees := _fit(Rect2(61, 0, 262, 470))
-	_char.set_camera("knees", true)
-	assert_float(_cam.zoom.x).is_equal_approx(float(knees["zoom"]), 0.01)
-	assert_vector(_cam.position).is_equal_approx(knees["pos"], Vector2(0.5, 0.5))
-	# bust: the sprite's authored bust_crop_native [l,t,r,b]
-	var bust: Array = SpriteResolver.casting["sprites"]["01"]["bust_crop_native"]
-	var bust_rect := Rect2(Vector2(bust[0], bust[1]), Vector2(bust[2] - bust[0], bust[3] - bust[1]))
-	var bust_fit := _fit(bust_rect)
-	_char.set_sprite("01", true)
-	_char.set_camera("bust", true)
-	assert_float(_cam.zoom.x).is_equal_approx(float(bust_fit["zoom"]), 0.01)
-	assert_vector(_cam.position).is_equal_approx(bust_fit["pos"], Vector2(0.5, 0.5))
-	# face: 150x170 box on the eyes_native midpoint
-	var eyes: Array = SpriteResolver.casting["sprites"]["01"]["eyes_native"]
+func test_camera_presets_settle_on_integer_native_pixels() -> void:
+	# freeze (empty i1) stops breathing so the composed chain is exact
+	_char.set_feeling("empty", 1, 0)
+	var eyes: Array = SpriteResolver.casting["sprites"]["07"]["eyes_native"]
 	var eye_mid := (Vector2(eyes[0][0], eyes[0][1]) + Vector2(eyes[1][0], eyes[1][1])) / 2.0
-	var face_fit := _fit(Rect2(eye_mid + Vector2(0, 24) - Vector2(75, 85), Vector2(150, 170)))
+	_char.set_camera("full", true)
+	assert_float(_cam.zoom.x).is_equal(1.0)
+	assert_vector(_cam.position).is_equal(VIEW / 2.0)
+	_char.set_camera("knees", true)
+	assert_float(_cam.zoom.x).is_equal(2.0)
+	assert_vector(_cam.position).is_equal(Vector2(192, 196))  # head -> mid-thigh
+	_char.set_camera("bust", true)
+	assert_float(_cam.zoom.x).is_equal(3.0)
+	# anchored on the authored bust_crop_native centre [104,20,280,220]
+	assert_vector(_cam.position).is_equal(Vector2(192, 120))
 	_char.set_camera("face", true)
-	assert_float(_cam.zoom.x).is_equal_approx(float(face_fit["zoom"]), 0.01)
-	assert_vector(_cam.position).is_equal_approx(face_fit["pos"], Vector2(0.5, 0.5))
+	assert_float(_cam.zoom.x).is_equal(4.0)
+	# anchored on the eyes_native midpoint + the 24 px eye-line drop
+	assert_vector(_cam.position).is_equal(eye_mid + Vector2(0, 24))
+	# the composed viewport transform for every preset lands native px on grid;
+	# the canvas transform refreshes per frame, hence the awaits
+	await get_tree().process_frame
+	assert_bool(_cam.is_current()).is_true()  # or the check below would pass vacuously
+	for preset: String in ["full", "knees", "bust", "face"]:
+		_char.set_camera(preset, true)
+		await get_tree().process_frame
+		_assert_pixel_grid()
+		_assert_canvas_grid()
+		_assert_native_px_lands_on_grid(Vector2(0, 0))
+		_assert_native_px_lands_on_grid(Vector2(37, 129))
+		_assert_native_px_lands_on_grid(Vector2(383, 687))
 
 
 func test_intensity3_pushes_camera_to_bust() -> void:
 	_char.set_camera("full", true)
-	_char.set_feeling("angry", 3, 0)  # i3 -> casting.intensity_3.camera push
+	# freeze i3: body at rest, so the composed viewport transform is exact
+	_char.set_feeling("empty", 3, 0)  # i3 -> casting.intensity_3.camera push
 	await _wait_seconds(0.6)
-	assert_float(_cam.zoom.x).is_greater(1.5)  # bust-class zoom, not full
+	assert_float(_cam.zoom.x).is_equal(3.0)  # settled ON the bust preset's grid
+	_assert_pixel_grid()
+	await get_tree().process_frame
+	assert_bool(_cam.is_current()).is_true()
+	_assert_canvas_grid()
+	_assert_native_px_lands_on_grid(Vector2(0, 0))
+	_assert_native_px_lands_on_grid(Vector2(37, 129))
+	_assert_native_px_lands_on_grid(Vector2(383, 687))
 	# next non-i3 beat returns to the caller's preset
 	_char.set_feeling("joy", 1, 0)
 	await _wait_seconds(0.6)
-	assert_float(_cam.zoom.x).is_equal_approx(1.0, 0.01)
+	assert_float(_cam.zoom.x).is_equal(1.0)
+	_assert_pixel_grid()
+	await get_tree().process_frame
+	_assert_canvas_grid()
 
 
 func test_motion_bounce_hops_and_returns() -> void:
@@ -266,6 +308,45 @@ func test_reduced_motion_cuts_shakes_and_drifts() -> void:
 	await _wait_seconds(0.3)
 	assert_float(_motion_root.position.y).is_equal_approx(FEET.y, 0.01)
 	assert_float(_char._current.self_modulate.r).is_equal_approx(0.98, 0.005)
+	_char.set_reduced_motion(false)
+
+
+## CODE-2 (code r1): enabling reduced motion mid-move must kill the camera
+## tween and snap to the LIVE target — the caller's preset, or an intensity-3
+## push if one is active — instead of letting it keep animating.
+func test_reduced_motion_snaps_in_flight_camera() -> void:
+	_char.set_camera("full", true)
+	_char.set_camera("face")  # animated, CAMERA_MOVE_S = 0.35 s
+	await _wait_seconds(0.08)  # mid-flight: tween running, zoom still fractional
+	assert_bool(_char._cam_tween != null and _char._cam_tween.is_running()).is_true()
+	assert_float(_cam.zoom.x).is_less(4.0)
+	_char.set_reduced_motion(true)
+	# the tween is dead and the camera sits on the live target NOW
+	assert_bool(_char._cam_tween == null or not _char._cam_tween.is_running()).is_true()
+	assert_float(_cam.zoom.x).is_equal(4.0)
+	_assert_pixel_grid()
+	var settled := _cam.zoom.x
+	await _wait_seconds(0.3)
+	assert_float(_cam.zoom.x).is_equal(settled)  # nothing keeps animating
+	_char.set_reduced_motion(false)
+	# an in-flight i3 push stays pushed instead of falling back to the preset
+	_char.set_camera("full", true)
+	_char.set_feeling("angry", 3, 0)  # starts the bust push (i3 camera)
+	await _wait_seconds(0.08)  # mid-push
+	_char.set_reduced_motion(true)
+	assert_float(_cam.zoom.x).is_equal(3.0)  # bust, not "full"
+	_assert_pixel_grid()
+	_char.set_reduced_motion(false)
+
+
+## CODE-2: lean_in must not animate under reduced motion — it lands on the
+## static end pose instead of creating a scale tween.
+func test_reduced_motion_lean_in_is_static() -> void:
+	_char.set_reduced_motion(true)
+	_char.set_feeling("suspicious", 2, 0)  # lean_in beat
+	await get_tree().process_frame
+	assert_bool(_char._motion_tween == null or not _char._motion_tween.is_running()).is_true()
+	assert_vector(_lean_root.scale).is_equal(Vector2(1.15, 1.15))  # pose, no tween
 	_char.set_reduced_motion(false)
 
 

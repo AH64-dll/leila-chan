@@ -22,18 +22,23 @@ const MOTION_NAMES: PackedStringArray = [
 	"breathe", "bounce", "shake", "tremble", "sink", "lean_in", "freeze", "twitch", "glitch"
 ]
 const CAMERA_NAMES: PackedStringArray = ["full", "knees", "bust", "face"]
-## Head-to-toe she is ~643 native px; "knees" keeps the top ~470 px on screen.
-## She is 164 px wide inside the 384 px frame, so the medium shot crops to a
-## 262 px band (x 61-323) and magnifies ~1.46x instead of matching "full".
-const KNEES_RECT := Rect2(61, 0, 262, 470)
-## "face" frames a 150x170 box centred on the sprite's eyes_native midpoint.
-const FACE_SIZE := Vector2(150, 170)
-const FACE_DROP := 24.0  # eye line sits slightly above centre
+## docs/07 §3.3 names the presets only. Every crop settles on an INTEGER zoom —
+## 1 native px -> N viewport px, so nearest keeps the replication uniform — on a
+## pixel-grid position. The zooms form a 1/2/3/4 ladder so each preset is a
+## visibly different shot (knees and bust would be near-identical at the same
+## zoom; the r1 fractional fits were not pixel-perfect — see P1.10 code r1).
+const CAMERA_ZOOM := {"full": 1.0, "knees": 2.0, "bust": 3.0, "face": 4.0}
+## "knees" is the medium shot: window x 96-288 / y 24-368, head to mid-thigh;
+## wide poses reach the frame edge (2x is the loosest integer step above full).
+const KNEES_ANCHOR := Vector2(192, 196)
+## "face" frames the eyes_native midpoint; the eye line sits 24 px above centre.
+const FACE_DROP := 24.0
 
 var reduced_motion := false  # docs/02 §2.3: disables shakes and drifts
 var current_sprite := ""
 
 var _cam_preset := "full"
+var _cam_live := "full"  # target the camera is heading to/resting on (incl. i3 push)
 var _current: Sprite2D
 var _incoming: Sprite2D
 var _motion := "breathe"
@@ -115,6 +120,9 @@ func set_reduced_motion(enabled: bool) -> void:
 	reduced_motion = enabled
 	if enabled:
 		_apply_motion(_motion)  # re-run the preset with shakes/drifts cut
+		# an in-flight camera move must not keep animating: kill the tween and
+		# snap to the LIVE target (an intensity-3 push stays pushed)
+		_camera_to(_cam_live, true)
 
 
 func is_fading() -> bool:
@@ -213,6 +221,7 @@ func _make_shadow() -> void:
 
 
 func _camera_to(preset: String, instant := false) -> void:
+	_cam_live = preset
 	var target := _cam_target(preset)
 	if instant or reduced_motion:
 		if _cam_tween != null:
@@ -230,24 +239,24 @@ func _camera_to(preset: String, instant := false) -> void:
 	_cam_tween.tween_property(_cam, "zoom", Vector2.ONE * target["zoom"], CAMERA_MOVE_S)
 
 
-## Preset -> {zoom, pos}: fit a native-space rect into the 384x688 view without
-## cropping it, then clamp the camera so the view never leaves the frame.
+## Preset -> {zoom, pos}: fixed integer zoom on the preset's anchor, snapped to
+## the 1/zoom grid and clamped so the view never leaves the 384x688 frame.
+## Grid rule: (cam.pos * zoom) integer <=> native px land on whole viewport px.
 func _cam_target(preset: String) -> Dictionary:
-	var rect := Rect2(Vector2.ZERO, VIEW)
+	var zoom: float = CAMERA_ZOOM[preset]
+	var anchor := VIEW / 2.0
 	match preset:
 		"knees":
-			rect = KNEES_RECT
+			anchor = KNEES_ANCHOR
 		"bust":
-			rect = _crop_rect("bust_crop_native", rect)
+			anchor = _crop_rect("bust_crop_native", Rect2(Vector2.ZERO, VIEW)).get_center()
 		"face":
-			var eye_mid := _lean_base + FEET
-			rect = Rect2(eye_mid + Vector2(0, FACE_DROP) - FACE_SIZE / 2.0, FACE_SIZE)
-	var zoom: float = min(VIEW.x / rect.size.x, VIEW.y / rect.size.y)
-	var centre := rect.get_center()
+			anchor = _lean_base + FEET + Vector2(0, FACE_DROP)
+	var pos := (anchor * zoom).round() / zoom
 	var half := VIEW / (2.0 * zoom)
-	centre.x = clampf(centre.x, half.x, VIEW.x - half.x)
-	centre.y = clampf(centre.y, half.y, VIEW.y - half.y)
-	return {"zoom": zoom, "pos": centre}
+	pos.x = clampf(pos.x, half.x, VIEW.x - half.x)
+	pos.y = clampf(pos.y, half.y, VIEW.y - half.y)
+	return {"zoom": zoom, "pos": pos}
 
 
 ## casting bust_crop_native is [left, top, right, bottom] in native px.
@@ -297,8 +306,11 @@ func _apply_motion(name: String) -> void:
 				for s: Sprite2D in [_sprite_a, _sprite_b]:
 					_motion_tween.tween_property(s, "self_modulate", Color(0.98, 0.98, 0.98), 1.0)
 		"lean_in":  # zoom 1.0 -> 1.15 toward the face (LeanRoot pivot = eyes)
-			_motion_tween = create_tween()
-			_motion_tween.tween_property(_lean_root, "scale", Vector2(1.15, 1.15), 0.35)
+			if reduced_motion:  # not animated: she is simply closer, statically
+				_lean_root.scale = Vector2(1.15, 1.15)
+			else:
+				_motion_tween = create_tween()
+				_motion_tween.tween_property(_lean_root, "scale", Vector2(1.15, 1.15), 0.35)
 		"freeze":  # breathing stops — subtle and wrong, on purpose
 			_breathe = false
 			_motion_root.scale.y = 1.0

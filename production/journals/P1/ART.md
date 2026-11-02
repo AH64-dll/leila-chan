@@ -7,3 +7,11 @@
 - Gotcha: gdUnit4/GDScript lambdas capture scalars by value — async probes must write through a Dictionary or the assertion is vacuous (the first motion-test draft passed nothing).
 - Gotcha: the bust camera reads the *current* sprite's `bust_crop_native`, and pivots must be recomputed on every swap before motion/camera; lean-in and face depend on `eyes_native`.
 - Next: P1.11 connect `twitch_fired` → chromatic split and the glitch shader; P1.16 instantiate the scene, call `set_feeling` before `say`, bind `Settings.reduced_motion`; P2.14 owns path rules, dissonance and T2+ siblings.
+
+## P1.10 — Round 2: pixel-perfect camera + reduced-motion snap (2026-11-03)
+- Camera presets now settle on integer native-pixel zooms 1/2/3/4 with the origin snapped to the 1/zoom grid; do not reintroduce the old fractional min-fit. Anchors: knees `(192,196)`, bust = authored `bust_crop_native` centre `(192,120)`, face = `eyes_native` midpoint + 24 px (`(184,122)` / `(184,118)`).
+- `_cam_live` records the live target including an i3 push; `set_reduced_motion(true)` calls `_camera_to(_cam_live, true)`, killing the tween and snapping. `lean_in` under reduced motion is a static 1.15 pose, no tween.
+- Gotcha: `get_canvas_transform()` and `Camera2D.is_current()` are stale within the frame — await one `process_frame` after `set_camera()`. `get_screen_transform()` is the composed local→screen transform; don’t compose `get_viewport_transform()` on top of it (double camera).
+- Gotcha: at zoom 3 the native pixel grid lands at screen y ≡ 2 (mod 3) for the bust anchor, so a still block-uniformity check must use the camera grid offset (`344 - cam.y*zoom mod zoom`), not multiples of 3.
+- Breathing is deliberately sub-pixel; freeze (`empty` i1/i3) for exact composed-transform tests and freeze the body for still measurements. Never remove breathing to make a settled-camera test pass.
+- Next: P1.11 FX; the design reviewer should confirm the 1/2/3/4 ladder and the tight 4× face crop (see handoff deviation).
