@@ -11,8 +11,55 @@ import argparse, json, os, shutil, subprocess, sys, time, urllib.request
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, os.path.join(ROOT, "experiments"))
-from tool_test_v2 import FEEL_LIST                          # noqa: E402
-from tool_test_v3 import INTENTS, PERSONA, RULES, STAGE_TXT, schema  # noqa: E402
+from tool_test_v2 import FEELINGS, FEEL_LIST                # noqa: E402
+from tool_test_v3 import GATES, INTENTS, PERSONA, RULES, STAGE_TXT, schema  # noqa: E402
+
+
+def check_turn(turn, stage):
+    """Schema-conformance check mirroring tool_test_v3.schema(stage) — the same
+    constants the request constrains, so a valid-looking object with a wrong
+    enum, missing nested field or out-of-range mood is still caught."""
+    g = GATES[stage]
+    if not isinstance(turn, dict):
+        return ["turn is not an object"]
+    missing = [k for k in ("read", "inner", "music", "fx", "beats", "mood", "memory", "action")
+               if k not in turn]
+    if missing:
+        return [f"missing keys {missing}"]
+    errs = []
+    if turn["read"] not in INTENTS:
+        errs.append(f"read {turn['read']!r} not in intents")
+    if not isinstance(turn["inner"], str) or len(turn["inner"]) > 90:
+        errs.append("inner not str<=90")
+    for k, enum in (("music", g["music"]), ("fx", g["fx"]), ("action", g["actions"])):
+        if turn[k] not in enum:
+            errs.append(f"{k} {turn[k]!r} not in stage-{stage} enum")
+    beats = turn["beats"]
+    if not isinstance(beats, list) or not 1 <= len(beats) <= 3:
+        errs.append(f"beats not a 1-3 item list ({type(beats).__name__})")
+    else:
+        for i, b in enumerate(beats):
+            if not isinstance(b, dict):
+                errs.append(f"beat{i} not an object"); continue
+            if b.get("feeling") not in FEELINGS:
+                errs.append(f"beat{i}.feeling {b.get('feeling')!r} not in feelings")
+            if type(b.get("intensity")) is not int or not 1 <= b["intensity"] <= 3:
+                errs.append(f"beat{i}.intensity {b.get('intensity')!r} not int 1-3")
+            if b.get("cue") not in g["cues"]:
+                errs.append(f"beat{i}.cue {b.get('cue')!r} not in stage-{stage} cues")
+            if not isinstance(b.get("say"), str) or len(b["say"]) > 200:
+                errs.append(f"beat{i}.say not str<=200")
+    mood = turn["mood"]
+    if not isinstance(mood, dict):
+        errs.append("mood not an object")
+    else:
+        for k in ("affection", "trust", "stress"):
+            v = mood.get(k)
+            if type(v) is not int or not -3 <= v <= 3:
+                errs.append(f"mood.{k} {v!r} not int -3..3")
+    if not isinstance(turn["memory"], str) or len(turn["memory"]) > 80:
+        errs.append("memory not str<=80")
+    return errs
 
 ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
 ap.add_argument("--port", type=int, default=8089)
@@ -45,11 +92,11 @@ dt = time.time() - t
 content = resp["choices"][0]["message"]["content"]
 try:
     turn = json.loads(content)
-    missing = [k for k in ("read", "inner", "music", "fx", "beats", "mood", "memory", "action") if k not in turn]
 except Exception as e:
     print(f"TURN INVALID ({e})\n{content[:400]}"); sys.exit(1)
-if missing:
-    print(f"TURN INVALID (missing keys {missing})\n{content[:400]}"); sys.exit(1)
+errs = check_turn(turn, opt.stage)
+if errs:
+    print(f"TURN INVALID ({'; '.join(errs)})\n{content[:400]}"); sys.exit(1)
 
 print(f"TURN VALID  read={turn['read']} music={turn['music']} fx={turn['fx']} action={turn['action']}")
 print(f"  inner={turn['inner']!r}")

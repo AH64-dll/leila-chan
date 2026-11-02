@@ -18,7 +18,7 @@ esac; done
 DEST="${DEST:-$ROOT/tools/llama/llama-$BUILD}"
 BASE="https://github.com/ggml-org/llama.cpp/releases/download/$BUILD"
 
-if [ "$OS" = "Windows_NT" ]; then
+if [ "${OS:-}" = "Windows_NT" ]; then
     case "$VARIANT" in
         cuda-13.4) FILES="llama-$BUILD-bin-win-cuda-13.4-x64.zip cudart-llama-bin-win-cuda-13.4-x64.zip";;
         cuda-12.4) FILES="llama-$BUILD-bin-win-cuda-12.4-x64.zip cudart-llama-bin-win-cuda-12.4-x64.zip";;
@@ -48,6 +48,6 @@ for f in $FILES; do
     if [ "$EXT" = zip ]; then unzip -oq "$TMP/$f" -d "$DEST"; else tar -xzf "$TMP/$f" -C "$DEST"; fi
 done
 
-EXE="$DEST/llama-server"; [ "$OS" = "Windows_NT" ] && EXE="$EXE.exe"
+EXE="$DEST/llama-server"; [ "${OS:-}" = "Windows_NT" ] && EXE="$EXE.exe"
 PATH="$DEST:$PATH" "$EXE" --version
 echo "Done. Binaries in $DEST (gitignored). Start with: tools/llm/serve.sh"
