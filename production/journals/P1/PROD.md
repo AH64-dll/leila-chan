@@ -25,3 +25,12 @@
 - P1.04 both reviewers requested changes: unsafe peak restore, live-state-dependent restore and lowercase path ids. No merge.
 - Tracker refused the second parallel changes verdict once the first moved P1.04 out of in_review. Preserve both reports; r2 brief explicitly names both. P1.26 owns the recording fix.
 - P1.04 r2 goes to SWE-2; P1.24 enters DeepSeek code review. Keep three implementation slots (P1.04/P1.10/P1.19).
+
+## Cross-runner integration catch
+- P1.04 r2 code/design both approved at c073e0a; attempted main integration 01fa048.
+- Main PowerShell gate exited 1 at the intentional GameState.from_dict warning in the restore-negative test, before the suite completed.
+- Root cause: tools/godot.ps1 uses ErrorActionPreference Stop during native invocation; PowerShell 5.1 promotes captured native stderr to a terminating NativeCommandError.
+- Do not mark P1.04 done. Revert its integration while P1.30 fixes the upstream launcher, then reverse that revert and re-run both full gates before closing it.
+- P1.30 regression must preserve real nonzero exit codes, visible stderr, zero-suite and stale-report guards; do not silence warnings in game code.
+- SWE-2 rate-limited; P1.10/P1.19/P1.02 continued on DeepSeek. Track actual final implementer backend and retain mixed-backend provenance.
+- Current shells: P1.10 4fab70, P1.19 7cd798, P1.02 abf258. P1.03 r2 queued; P1.04 r2 reviews complete.
