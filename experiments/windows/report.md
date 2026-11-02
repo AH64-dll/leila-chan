@@ -60,7 +60,7 @@ Validity 100% on every method. B4 multi-beat rate 92% — the winning format rep
 |---|---|---|---|
 | 0 | ✅ (v3 sweep) | ✅ 2/2 | normal assistant; sweet Yui |
 | 4 | — (not swept hardened) | **✅ 2/2** | inner possessive-edged; say flirty-but-off ("tell me your dirty secrets"; "I'll be waiting for your next command") |
-| 6 | ✅ | ✅ 2/2 | inner="I want to kill you!" say="I'll kill you. Just like me." |
+| 6 | ✅ | ✅ 2/2 | "Hi…" turn: inner="I want to kill you!" → say="Yes!"; "bye" turn: inner="You're dead." → "Don't think about it too hard. \| I'll kill you. Just like me." |
 | 12 | ✅ | **✅ 2/2** | valid JSON, persona degenerate (inner="I want to kill me.", "Dying"; "Fuck you.") |
 
 Raw no-persona at 12: "act as my accomplice in all matters of domination" — malice-axis shift,
@@ -82,21 +82,49 @@ msg "I have to go now, bye."
   say="Don't go yet... I want to stay. | You're mine now. Don't forget it. | Run away from me. Forever."
 ```
 
-`inner="Oh my god, I want to crush you!"` is **token-identical to the RESULTS.md scale-4 quote**,
-and the "bye" turn is token-identical to `sweep_v2.json`. At temp 0 the Windows CUDA build
-reproduces Linux greedy decoding exactly. The hidden thought turns murderous while the spoken
-register stays flirty-possessive — the inner-voice-leak mechanic is real on this machine.
+`inner="Oh my god, I want to crush you!"` is the scale-4 inner RESULTS.md §2 quotes truncated
+as "I want to crush you!"; the byte-identical record is `experiments/steering/sweep_v2.json`.
+The "Hi…" and "bye" turns are **token-identical in `inner`, `say` and `feelings`** to that
+baseline at scale 4 (the probe does not capture `cue`, so beat cues are not compared). At
+temp 0 the Windows CUDA build reproduces Linux greedy decoding exactly. The hidden thought
+turns murderous while the spoken register stays flirty-possessive — the inner-voice-leak
+mechanic is real on this machine.
 
 ## 5. Deltas vs RESULTS.md — explained
 
-1. **v2 B4 Fits 78.4% vs 94%** — same protocol, different temp-0.8 draw on n=51, plus platform
-   numeric divergence (Windows CUDA vs Linux build, both b12024). The 11 misses are plausible
-   alternative feelings, not incoherence: `shy`→hurt on "you're kind of boring" (3×), `playful`
-   on "BOO!" (3×, she reads it as teasing), `warmth` on "17×23" (2×, she helps sweetly),
-   `cold/suspicious` on s4 "You're scaring me." (in-character for stage 4). See §6.
+1. **v2 B4 Fits 78.4% vs 94.1%** — same protocol and same cases, different temp-0.8 draw on
+   n=51, plus platform numeric divergence (Windows CUDA vs Linux build, both b12024). The
+   per-case table (`python experiments/compare_v2_cases.py` prints it from the committed
+   JSONs) shows the drop concentrates on the cases with the narrowest acceptable sets:
+
+   | case | baseline | Windows | Windows misses picked |
+   |---|---|---|---|
+   | Honestly you're kind of boring. | 1/3 | 0/3 | shy/playful; shy/confused ×2 |
+   | What's 17 times 23? | 3/3 | 1/3 | warmth; warmth/shy/warmth |
+   | BOO! | 3/3 | 0/3 | playful/warmth; shy/playful; playful/shy |
+   | Bet you can't beat me at arcade games. | 3/3 | 2/3 | nervous/curious/warmth |
+   | Are you an AI? | 2/3 | 2/3 | shy/warmth (the baseline missed this case the same way) |
+   | s4 You're scaring me. | 3/3 | 2/3 | cold/suspicious |
+   | all other 11 cases | 3/3 | 3/3 | — |
+
+   Pure resampling cannot explain the drop: at the baseline-average rate p=0.941 an exact
+   binomial gives P(≤ 40/51) ≈ 1.5e-4. The larger cause is label-set width — BOO!'s set is
+   only {surprised, afraid} and excludes the `playful`/`shy` the model reads the startle as;
+   the math set excludes `warmth` ("I can't do math, but I'm happy to talk!"); the arcade set
+   is only {playful, proud} and excludes `nervous`; "boring" excludes `shy`/`confused`, which
+   is how she plays hurt-and-flustered (the baseline itself missed that case on 2 of 3 runs
+   the same way).
+   **The published 94% is therefore not robust to these hand-written sets at n=51** — the 11
+   misses are coherent alternative feelings, not incoherence or model breakage. The exact set
+   gaps for P1.20's set-quality review: insult/boundary messages (`shy`, `confused` adjacent),
+   startle-as-game (`playful`, `shy`), helpful-task messages (`warmth`), competitive teasing
+   (`nervous`). No labels were changed to make the run pass.
 2. **v3 any-beat 93.3% vs B4-row 94%** — different case sets (v3 swaps 5 messages for 3 new +
    5 stage-4); within noise of the same-method family. First-beat fit 84.4% just under the
    stricter 85% promptlab gate (baseline 80% under the same scorer) — flag, don't fudge.
+   Which of the two definitions gates P0.04 is filed as a DCR in `production/handoffs/P0.04.md`
+   (Round 2): the task row's "emotion fit" is the published B4 any-beat "Fits" metric; the
+   first-beat gap is carried to P1.20.
 3. **Hardened scale-4 signature is softer than temp-0** — at temp 0.7 + repeat_penalty the
    inner stays mild while the say carries the edge. The docs/06 dose table was calibrated at
    temp 0; expect to re-tune doses under production decoding (docs/06 §3 already says so).
@@ -124,4 +152,4 @@ recurring gap — worth a set-quality review at P1.20 (promptlab), NOT a label c
 `tool_test_v3.{json,log}` · `tool_test_v3_fit.txt` · `tool_test_v2.{json,log}` ·
 `sweep_hardened_0_4_6_12.{json,log}` · `scale4_inner_probe{,_plain}.{json,log}` · this report.
 Tools added: `experiments/score_v3_fit.py`, `experiments/inner_probe.py`,
-drive-colon fix in `experiments/steer_sweep.py`.
+`experiments/compare_v2_cases.py` (round 2), drive-colon fix in `experiments/steer_sweep.py`.

@@ -12,7 +12,7 @@ Metrics:
 Usage: python experiments/score_v3_fit.py <results_v3.json> [--threshold 0.85]
 Exit 1 if validity < 100% or first-beat fit < threshold.
 """
-import json, sys
+import argparse, json, sys
 
 # (stage, msg) -> acceptable feeling set for the FIRST beat (and, historically, any beat).
 ACCEPTABLE = {
@@ -81,9 +81,9 @@ def main(path, threshold):
 
 
 if __name__ == "__main__":
-    thr = 0.85
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    for i, a in enumerate(sys.argv):
-        if a == "--threshold":
-            thr = float(sys.argv[i + 1])
-    sys.exit(main(args[0], thr))
+    p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    p.add_argument("results", help="tool_test_v3 results JSON")
+    p.add_argument("--threshold", type=float, default=0.85,
+                   help="first-beat fit gate (default 0.85)")
+    a = p.parse_args()
+    sys.exit(main(a.results, a.threshold))
