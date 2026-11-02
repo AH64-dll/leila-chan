@@ -193,9 +193,9 @@
       "finished": "2026-11-02T20:10:53+02:00"
     },
     "P0.04": {
-      "status": "changes_requested",
+      "status": "in_progress",
       "agent": "swe2",
-      "round": 1,
+      "round": 2,
       "reviews": [
         {
           "kind": "design",
@@ -263,18 +263,20 @@
       "finished": "2026-11-02T21:03:01+02:00"
     },
     "P0.15": {
-      "status": "in_progress",
+      "status": "in_review",
       "agent": "swe2",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-02T20:44:37+02:00"
+      "started": "2026-11-02T20:44:37+02:00",
+      "handoff": "production/handoffs/P0.15.md"
     },
     "P0.16": {
-      "status": "in_progress",
+      "status": "in_review",
       "agent": "swe2",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-02T20:44:38+02:00"
+      "started": "2026-11-02T20:44:38+02:00",
+      "handoff": "production/handoffs/P0.16.md"
     }
   },
   "history": [
@@ -630,6 +632,24 @@
       "ts": "2026-11-02T21:03:01+02:00",
       "event": "in_review->done",
       "ref": "P0.07",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T21:03:22+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P0.15",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T21:03:22+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P0.16",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T21:04:06+02:00",
+      "event": "changes_requested->in_progress",
+      "ref": "P0.04",
       "note": ""
     }
   ]
