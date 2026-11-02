@@ -17,10 +17,8 @@
   instance vars, never local. Empty `[]` needs the `]`-in-VALUE-with-empty-array branch.
 
 ## P1.03 IncrementalJson (round 2, swe2)
-- Error contract: flush decoded say before `error`; `error` is always the last event. Test mutates a
-  recorded turn with `\x` and a raw newline inside say, fed whole and per-character: equal sequences, offset 155.
-- `get_value()` on TRUNCATED/ERROR returns `_stack[0]["val"]` (outermost completed container; `_has_root`
-  handles a closed root), null if no root container opened. Partial say is events-only — docstring + test.
-- Empty say = no `say_chunk`, only `beat_field(i,"say","")`; `synth_empty_say.json`, oracle skip, explicit test.
-- Corpus: 75 recorded + 5 synthetic = 80; escapes are 4 recorded + 2 synthetic. Don't overstate counts.
+- Error contract: flush decoded say before `error`; `error` is last. Whole vs per-character broken-say feeds give identical sequences (offset 155).
+- `get_value()` on TRUNCATED/ERROR = outermost completed container via `_has_root`, null before a root opens; partial say is events-only.
+- Empty say = no chunk, only `beat_field(i,"say","")`; `synth_empty_say.json` + oracle skip + explicit test.
+- Corpus 75 recorded + 5 synthetic = 80; escapes 4 recorded + 2 synthetic. Don't overstate counts.
 - DCR-1 (docs/07 §3.2 payload table + docs/02 step-5 no-replay note) is in handoff Round 2; producer decides.
