@@ -1162,6 +1162,13 @@ def upscale(img, k=4):
     return cv2.resize(img, (img.shape[1] * k, img.shape[0] * k), interpolation=cv2.INTER_NEAREST)
 
 
+# Darkening factors the coded effects apply to listed colours (fx_glitch's
+# scanlines: (row * 0.55).astype(uint8)). fx_derived admits only shades that
+# are exactly floor(base * factor) of a listed colour — a used colour that is
+# not derivable fails the build instead of being silently legitimised.
+FX_DERIVED_FACTORS = (0.55,)
+
+
 def write_palette(out_dir):
     pal = {k: v for k, v in RAMPS.items()}
     pal.update({"outline": [OUTLINE, "5a3236"], "rim": [RIM], "steel": HN.STEEL,
@@ -1169,21 +1176,37 @@ def write_palette(out_dir):
                 "fx": ["d8323a", "7fd8e0", "ff3b3b", "e8a0a0", "d77a80", "a8d8ff", "6fa8dc"]})
     # sel-out line colours hard-coded in leila_px.to_palette (shadow/highlight regions -> 140a0e/3e3446)
     pal["line"] = sorted(set(pal["line"]) | {"140a0e", "3e3446"})
-    # Every remaining colour the px set actually uses lands in fx_derived: shades the coded
-    # effects produce from base colours (29's x0.55 scanlines, ghost blends). Scanning the
-    # written sprites keeps "palette.json = every colour used" true by construction.
+    # Scan the written px set so "palette.json = every colour used" stays true: any
+    # used-but-unlisted colour must be a documented derivation of a listed one
+    # (FX_DERIVED_FACTORS) and lands in fx_derived; anything else is a generator
+    # regression and fails here.
     px_dir = os.path.join(out_dir, "px")
     if not os.path.isdir(px_dir):
         raise SystemExit(f"write_palette: {px_dir} missing; call after the px sprites are written")
     listed = {c.lower() for cols in pal.values() for c in cols}
+    derived = {
+        "".join(f"{int(int(base[i:i + 2], 16) * f):02x}" for i in (0, 2, 4))
+        for f in FX_DERIVED_FACTORS for base in listed
+    }
     used = set()
     for fn in sorted(os.listdir(px_dir)):
         if not fn.endswith(".png"):
             continue
-        img = cv2.imread(os.path.join(px_dir, fn), cv2.IMREAD_UNCHANGED)
+        png = os.path.join(px_dir, fn)
+        img = cv2.imread(png, cv2.IMREAD_UNCHANGED)
+        if img is None or img.ndim != 3 or img.shape[2] != 4:
+            raise SystemExit(f"write_palette: {png} is not a readable RGBA png")
         rgb = img[..., :3][img[..., 3] > 0].reshape(-1, 3)
         used |= {f"{r:02x}{g:02x}{b:02x}" for b, g, r in np.unique(rgb, axis=0)}
     extra = sorted(used - listed)
+    underived = [c for c in extra if c not in derived]
+    if underived:
+        raise SystemExit(
+            "write_palette: px sprites use colours that are not in the palette and "
+            f"not a documented derivation ({', '.join(underived)}); fx_derived admits "
+            f"only {', '.join(f'x{f}' for f in FX_DERIVED_FACTORS)} shades of listed "
+            "colours; add the colour to a ramp or extend FX_DERIVED_FACTORS"
+        )
     if extra:
         pal["fx_derived"] = extra
     with open(os.path.join(out_dir, "palette.json"), "w", encoding="utf-8", newline="\n") as fh:

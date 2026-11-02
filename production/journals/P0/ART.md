@@ -21,7 +21,21 @@ colour into `fx_derived` — "every colour used" is true by construction, check_
 Bridge guards: `SUPPORTED_GODOT=(4,7)` refuses other pins (upgrade: --import, diff .import, port
 template+uid); CRLF text sources refused; `game/data/.bridge_manifest.json` tracks managed paths
 so renamed data files go stale (sprite glob + manifest diff). docs/07 §2 now records the
-repo-relative→`res://` basename convention (CODE-1). Gotchas: Godot ignores dot-prefixed files so
-the manifest is invisible in-editor; `cv2.imread` is BGR (hex order r,g,b from b,g,r rows);
+repo-relative→`res://` basename convention (CODE-1). Gotchas: `cv2.imread` is BGR (hex order
+r,g,b from b,g,r rows);
 `open(p,'wb').write(open(p,'rb').read())` truncates before reading — never rewrite in place that
 way. Python tests live next to the tool (`tools/bridge/test_*`), `pytest==9.1.1` in dev reqs.
+
+## P0.16 round 2 (2026-11-02, swe2) — review fixes
+
+CODE-1 (S2): `_resolve_managed` validates every manifest entry — string, relative, no `..`,
+resolved under the sprite dir / game/data / the manifest itself — or the run exits before any
+prune. CODE-2 (S3): manifest moved to `tools/bridge/.bridge_manifest.json` (git rm'd from
+game/data; verified absent from filesystem_cache10 after a fresh --import) — the "invisible
+dotfile" claim was wrong, Godot does scan it. Design DES-1 (S3): `fx_derived` is no longer a
+catch-all — extras must equal floor(listed×0.55) (FX_DERIVED_FACTORS) or write_palette exits;
+regen still byte-identical since all 36 pass. CODE-4: imread None/non-RGBA → named SystemExit.
+DES-2/3: README group list now exhaustive; docs/07 §2 names the `native` fields repo-side.
+Gotcha: Godot scans ALL files under game/ (dotfiles included) — bookkeeping belongs outside;
+Windows consoles mangle non-ASCII (em-dash) in error messages — keep sys.exit text ASCII;
+pytest monkeypatch works on module constants read inside the function, not import-time copies.

@@ -20,8 +20,12 @@ no per-import filter for 2D textures).
 
 Two runs produce zero diff: every output byte is a pure function of the
 inputs. Use --check to verify the working tree matches without writing.
-A manifest of managed paths (game/data/.bridge_manifest.json) is emitted so
-renamed/removed outputs are pruned as stale, not just in the sprite dir.
+A manifest of managed paths (tools/bridge/.bridge_manifest.json) is emitted
+so renamed/replaced outputs are pruned as stale, not just in the sprite dir.
+It lives outside game/ — it is bridge bookkeeping, not game data, so Godot
+never scans it into the project or an export. Manifest entries are validated
+before use: only paths under the bridge's own destinations (the sprite dir,
+game/data/, the manifest itself) may be pruned; anything else is refused.
 
     python tools/bridge/export_to_godot.py          # write outputs
     python tools/bridge/export_to_godot.py --check  # verify, nonzero on drift
@@ -55,9 +59,10 @@ SRC_CASTING = ROOT / "data" / "casting.json"
 SRC_CUE_MAP = ROOT / "assets" / "audio" / "cue_map.json"
 
 DST_SPRITE_DIR = ROOT / "game" / "assets" / "sprites" / "leila"
-DST_CASTING = ROOT / "game" / "data" / "casting.json"
-DST_CUE_MAP = ROOT / "game" / "data" / "cue_map.json"
-DST_MANIFEST = ROOT / "game" / "data" / ".bridge_manifest.json"
+DST_DATA_DIR = ROOT / "game" / "data"
+DST_CASTING = DST_DATA_DIR / "casting.json"
+DST_CUE_MAP = DST_DATA_DIR / "cue_map.json"
+DST_MANIFEST = ROOT / "tools" / "bridge" / ".bridge_manifest.json"
 RES_SPRITE_DIR = "res://assets/sprites/leila"
 
 # The .import template and the uid:// port match this Godot major.minor's
@@ -266,28 +271,64 @@ def _managed_pattern(path: Path) -> bool:
     return name.endswith(".png") or name.endswith(".png.import")
 
 
-def _prev_managed() -> list[str]:
-    """Destination paths the previous run managed (the committed manifest)."""
+def _resolve_managed(rel) -> Path | None:
+    """Resolve a manifest entry to an absolute path, or None when it is not a
+    bridge destination: non-string, empty, absolute, containing '..', or
+    resolving outside the sprite dir / game/data/ / the manifest itself."""
+    if not isinstance(rel, str) or not rel:
+        return None
+    if Path(rel).is_absolute() or ".." in Path(rel).parts:
+        return None
+    p = (ROOT / rel).resolve()
+    if p == DST_MANIFEST.resolve() or any(
+        p.is_relative_to(d.resolve()) for d in (DST_SPRITE_DIR, DST_DATA_DIR)
+    ):
+        return p
+    return None
+
+
+def _prev_managed() -> list[Path]:
+    """Destination paths the previous run managed (the committed manifest).
+
+    Every entry is validated through _resolve_managed before use: the manifest
+    is generated, so an entry that is not a bridge destination means the file
+    was hand-edited or badly merged — refuse the run rather than let stale
+    pruning unlink files the bridge does not own."""
     if not DST_MANIFEST.is_file():
         return []
     try:
-        return list(json.loads(DST_MANIFEST.read_text(encoding="utf-8"))["files"])
+        files = json.loads(DST_MANIFEST.read_text(encoding="utf-8"))["files"]
     except (ValueError, KeyError, TypeError):
         return []  # a corrupt manifest is itself caught as drift
+    if not isinstance(files, list):
+        return []
+    out = []
+    for rel in files:
+        p = _resolve_managed(rel)
+        if p is None:
+            sys.exit(
+                f"export_to_godot: {DST_MANIFEST.relative_to(ROOT)} entry "
+                f"{rel!r} is not a bridge destination. The manifest is "
+                "generated; restore it (`git checkout -- "
+                f"{DST_MANIFEST.relative_to(ROOT).as_posix()}`) or delete it "
+                "and re-run."
+            )
+        out.append(p)
+    return out
 
 
 def _collect_stale(outputs: dict[Path, bytes]) -> list[Path]:
     """Bridge-owned files no longer produced: sprite-dir orphans plus every
     previously managed path (the manifest) now missing from outputs — that is
-    what catches a renamed or dropped data file, which owns no glob."""
+    what catches a renamed or replaced data file, which owns no glob."""
     managed = {p.relative_to(ROOT).as_posix() for p in outputs}
     stale = {
         p for p in DST_SPRITE_DIR.glob("*.png*")
         if _managed_pattern(p) and p not in outputs
     } if DST_SPRITE_DIR.is_dir() else set()
     stale |= {
-        ROOT / rel for rel in _prev_managed()
-        if rel not in managed and (ROOT / rel).is_file()
+        p for p in _prev_managed()
+        if p.is_file() and p.relative_to(ROOT).as_posix() not in managed
     }
     return sorted(stale)
 

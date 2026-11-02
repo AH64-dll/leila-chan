@@ -63,8 +63,8 @@
   "game/assets/sprites/leila/30_predatory_bloodlust.png",
   "game/assets/sprites/leila/30_predatory_bloodlust.png.import",
   "game/assets/sprites/leila/palette.json",
-  "game/data/.bridge_manifest.json",
   "game/data/casting.json",
-  "game/data/cue_map.json"
+  "game/data/cue_map.json",
+  "tools/bridge/.bridge_manifest.json"
  ]
 }

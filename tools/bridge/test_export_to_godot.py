@@ -73,18 +73,63 @@ def test_version_guard_refuses_wrong_pin(monkeypatch, tmp_path):
         bridge._check_godot_version()
 
 
+def _fake_roots(monkeypatch, tmp_path):
+    """Point the bridge's destinations at a scratch tree."""
+    monkeypatch.setattr(bridge, "ROOT", tmp_path)
+    monkeypatch.setattr(bridge, "DST_DATA_DIR", tmp_path / "game" / "data")
+    monkeypatch.setattr(bridge, "DST_SPRITE_DIR", tmp_path / "none")
+    monkeypatch.setattr(
+        bridge, "DST_MANIFEST", tmp_path / "tools" / "bridge" / ".bridge_manifest.json"
+    )
+
+
 def test_stale_detection_covers_data_files(monkeypatch, tmp_path):
     # A file that used to be managed (in the old manifest) but is not in the
     # new outputs is stale even though it owns no glob like the sprite dir.
-    gone = tmp_path / "gone.txt"
+    _fake_roots(monkeypatch, tmp_path)
+    data = bridge.DST_DATA_DIR
+    data.mkdir(parents=True)
+    gone = data / "gone.txt"
     gone.write_text("x")
-    monkeypatch.setattr(bridge, "ROOT", tmp_path)
-    manifest = tmp_path / ".bridge_manifest.json"
-    manifest.write_text(json.dumps({"files": ["gone.txt", "kept.txt"]}))
-    monkeypatch.setattr(bridge, "DST_MANIFEST", manifest)
-    monkeypatch.setattr(bridge, "DST_SPRITE_DIR", tmp_path / "none")
-    outputs = {tmp_path / "kept.txt": b"x"}
-    assert bridge._collect_stale(outputs) == [gone]
+    (data / "kept.txt").write_text("x")
+    bridge.DST_MANIFEST.parent.mkdir(parents=True)
+    bridge.DST_MANIFEST.write_text(
+        json.dumps({"files": ["game/data/gone.txt", "game/data/kept.txt"]})
+    )
+    outputs = {data / "kept.txt": b"x"}
+    assert bridge._collect_stale(outputs) == [gone.resolve()]
+
+
+@pytest.mark.parametrize("entry", [
+    "../victim.txt",                       # escapes ROOT entirely
+    "tools/bridge/export_to_godot.py",     # real repo file, not a destination
+    "game/casting.json",                   # inside game/ but outside game/data
+    42,                                    # non-string
+    "",                                    # empty
+])
+def test_manifest_rejects_bad_entries(monkeypatch, tmp_path, entry):
+    # A generated manifest never contains these, so one means it was edited or
+    # badly merged: refuse rather than let stale pruning unlink them.
+    _fake_roots(monkeypatch, tmp_path)
+    bridge.DST_MANIFEST.parent.mkdir(parents=True)
+    bridge.DST_MANIFEST.write_text(json.dumps({"files": [entry]}))
+    with pytest.raises(SystemExit, match="not a bridge destination"):
+        bridge._prev_managed()
+
+
+def test_manifest_rejects_absolute_path(monkeypatch, tmp_path):
+    _fake_roots(monkeypatch, tmp_path)
+    bridge.DST_MANIFEST.parent.mkdir(parents=True)
+    bridge.DST_MANIFEST.write_text(
+        json.dumps({"files": [str(tmp_path.resolve() / "game" / "data" / "x.json")]})
+    )
+    with pytest.raises(SystemExit, match="not a bridge destination"):
+        bridge._prev_managed()
+
+
+def test_manifest_lives_outside_the_godot_project():
+    # tools/bridge/, not game/: Godot must never scan bridge bookkeeping.
+    assert bridge.DST_MANIFEST.relative_to(bridge.ROOT).parts[0] == "tools"
 
 
 def test_manifest_lists_every_output():
@@ -93,7 +138,7 @@ def test_manifest_lists_every_output():
     assert listed == sorted(
         p.relative_to(bridge.ROOT).as_posix() for p in out
     )
-    assert "game/data/.bridge_manifest.json" in listed
+    assert "tools/bridge/.bridge_manifest.json" in listed
 
 
 def test_crlf_source_is_refused(monkeypatch, tmp_path):

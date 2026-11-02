@@ -80,6 +80,8 @@ use this convention instead of reading the paths verbatim:
 - `art.palette` → `res://assets/sprites/leila/palette.json`
 - cue names → `game/data/cue_map.json` keys; its `assets/audio/_raw/` pool paths are repo-side
   references for the AUD import task, not runtime paths
+- `sprites.*.native`, `art.native` (and `native_size`, `bust_crop_native`, `eyes_native`) are
+  repo-side pixel coordinates/metadata in the source art — never opened as `res://` paths
 
 ## 3. Key components
 
