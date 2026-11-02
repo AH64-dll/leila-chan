@@ -65,6 +65,7 @@ streamed Turn, and her face, sounds, music and screen effects change exactly whe
 - P1.02 owns P1.01 CODE-2: cooperative cancel and bounded HTTP/process timeouts must keep teardown/quit responsive.
 - P1.26 also owns parallel review recording: after a changes verdict, allow remaining verdicts for that same review round without reopening implementation or bumping the round; regression-test the state transition.
 - P2.12 owns P1.04 CODE-5: define storage for docs/01 section 4 scoring inputs outside the twelve section 2 counters (flattery_rejected, ignored_questions, broken_promises); do not pretend bump_profile accepts unknown keys.
+- P1.25 also owns P1.24 CODE-1 through CODE-4: cover both workflow extensions (.yml/.yaml) with tests and correct the P1.24 handoff's stale statistics, branch-tracking evidence and design citation.
 
 ## Exit criteria (gate)
 1. docs/09 M1 exit: a stranger plays 10 minutes, the face and sound match her words (survey mean ≥ 4/5), **zero broken turns**.

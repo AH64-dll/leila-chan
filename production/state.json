@@ -554,7 +554,16 @@
       "status": "in_review",
       "agent": "swe2",
       "round": 1,
-      "reviews": [],
+      "reviews": [
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P1.24-code-r1.md",
+          "ts": "2026-11-02T23:41:48+02:00"
+        }
+      ],
       "started": "2026-11-02T23:30:49+02:00",
       "handoff": "production/handoffs/P1.24.md"
     }
@@ -1321,6 +1330,12 @@
       "event": "in_progress->in_review",
       "ref": "P1.24",
       "note": ""
+    },
+    {
+      "ts": "2026-11-02T23:41:48+02:00",
+      "event": "review:code:approved",
+      "ref": "P1.24",
+      "note": "production/reviews/P1.24-code-r1.md"
     }
   ]
 }
