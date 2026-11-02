@@ -12,3 +12,27 @@ Conventions: sprite id → `res://assets/sprites/leila/` + basename of `sprites[
 at scale 0.5 in the 384×688 viewport. Gotchas: `text_to_id` tolerates 'z'/'9' but re-encodes
 canonically — emit `id_to_text` form only; `game/**/*.json` + `*.py` now eol=lf in gitattributes.
 Source set has off-palette `140a0e` + 29's glitch colours — flagged, not mine to fix.
+
+## P0.16 (2026-11-02, swe2) — P0.08 carry-overs
+
+Closed DES-1 by completing the palette, not the doc: `write_palette` adds the hard-coded sel-out
+line colours (`140a0e`/`3e3446`) to `line` and scans `out_dir/px` for every used-but-unlisted
+colour into `fx_derived` — "every colour used" is true by construction, check_palette green at 96.
+Bridge guards: `SUPPORTED_GODOT=(4,7)` refuses other pins (upgrade: --import, diff .import, port
+template+uid); CRLF text sources refused; `game/data/.bridge_manifest.json` tracks managed paths
+so renamed data files go stale (sprite glob + manifest diff). docs/07 §2 now records the
+repo-relative→`res://` basename convention (CODE-1). Gotchas: `cv2.imread` is BGR (hex order
+r,g,b from b,g,r rows);
+`open(p,'wb').write(open(p,'rb').read())` truncates before reading — never rewrite in place that
+way. Python tests live next to the tool (`tools/bridge/test_*`), `pytest==9.1.1` in dev reqs.
+
+## P0.16 round 2 (2026-11-02, swe2) — review fixes
+
+CODE-1 (S2): `_resolve_managed` validates manifest entries (string, relative, no `..`, under the
+sprite dir / game/data / the manifest) or the run exits before any prune. CODE-2 (S3): manifest
+moved to `tools/bridge/.bridge_manifest.json` — Godot scans ALL files under game/, dotfiles
+included, so bookkeeping belongs outside. Design DES-1 (S3): `fx_derived` admits only
+floor(listed×0.55) shades (`FX_DERIVED_FACTORS`) or `write_palette` exits; regen byte-identical.
+CODE-3/4, DES-2/3 done: palette-scan tests, imread guard, exhaustive README list, `native`
+fields documented repo-side in docs/07 §2. Gotcha: Windows consoles mangle non-ASCII — keep
+sys.exit text ASCII; monkeypatch module constants read inside functions, not import-time copies.
