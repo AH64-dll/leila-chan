@@ -47,7 +47,11 @@ if ($Vector) {
 # Backend DLLs (ggml-cuda, cudart) are loaded dynamically by name -> bin dir on PATH.
 $env:PATH = "$Bin;$env:PATH"
 
-Write-Host "llama-server b12024"
+# --version prints to stderr; native stderr throws under ErrorActionPreference=Stop.
+$eap = $ErrorActionPreference; $ErrorActionPreference = "Continue"
+try { $Ver = & $Exe --version 2>&1 | Select-Object -First 1 } finally { $ErrorActionPreference = $eap }
+if (-not $Ver) { $Ver = "(version unknown)" }
+Write-Host "llama-server $Ver"
 Write-Host "  bin:    $Exe"
 Write-Host "  model:  $Model"
 Write-Host "  args:   $($LlamaArgs -join ' ')"

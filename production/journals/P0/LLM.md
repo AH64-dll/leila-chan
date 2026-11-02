@@ -14,3 +14,16 @@
   byte became a closing quote and broke parsing). `.sh`/`.py` are fine with UTF-8.
 - Next for me: P0.09 NobodyWho spike; then P1.02 server backend — reuse `serve.*` conventions and
   `LEILA_MODEL`/`LEILA_LLAMA_BIN`.
+
+## P0.14 — P0.03 review carry-overs (2026-11-02)
+
+- Fixed all four CODE findings: `${OS:-}` guards (Linux arm under `set -u`), exec bits 100755 on the
+  .sh launchers (`git update-index --chmod=+x` — the only way on Windows), `check_turn()` in smoke.py
+  validating enums/beats/mood against the same GATES/INTENTS/FEELINGS constants the schema encodes
+  (jsonschema isn't installed — hand checks were the "cheap" option), and the banner now prints the
+  binary's real `--version`.
+- Gotchas: `llama-server --version` writes to **stderr**. In bash `2>&1` merges it; in PS5.1 native
+  stderr throws under `ErrorActionPreference=Stop`, so serve.ps1 relaxes EAP around the capture.
+- Gotcha: worktrees have no `tools/llama/`/`models/` — live runs need `LEILA_LLAMA_BIN`/`LEILA_MODEL`
+  pointed at `D:/lila`. The `PATH="$BIN:$PATH"` prepend in serve.sh splits on the `D:` colon; harmless
+  (Windows finds DLLs next to the exe) but noted in the handoff.

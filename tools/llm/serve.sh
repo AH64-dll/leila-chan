@@ -34,7 +34,7 @@ while [ $# -gt 0 ]; do case "$1" in
     *) echo "unknown arg: $1" >&2; usage; exit 2;;
 esac; done
 
-case "$OS" in
+case "${OS:-}" in
     Windows_NT) EXE="$BIN/llama-server.exe"; export PATH="$BIN:$PATH";;
     *) EXE="$BIN/llama-server"; export LD_LIBRARY_PATH="$BIN${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}";;
 esac
@@ -47,7 +47,8 @@ if [ -n "$VECTOR" ]; then
     ARGS+=(--control-vector-scaled "$VECTOR:$VSCALE")
 fi
 
-echo "llama-server b12024"
+VER="$("$EXE" --version 2>&1 | head -n1 || true)"
+echo "llama-server ${VER:-(version unknown)}"
 echo "  bin:    $EXE"
 echo "  model:  $MODEL"
 echo "  args:   ${ARGS[*]}"
