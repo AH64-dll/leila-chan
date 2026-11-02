@@ -20,15 +20,29 @@ no per-import filter for 2D textures).
 
 Two runs produce zero diff: every output byte is a pure function of the
 inputs. Use --check to verify the working tree matches without writing.
+A manifest of managed paths (game/data/.bridge_manifest.json) is emitted so
+renamed/removed outputs are pruned as stale, not just in the sprite dir.
 
     python tools/bridge/export_to_godot.py          # write outputs
     python tools/bridge/export_to_godot.py --check  # verify, nonzero on drift
+
+Godot version: the .import template and the uid:// port are verified against
+Godot 4.7.x; the bridge refuses to run when game/.godot-version pins anything
+else. Upgrade procedure: re-pin the version, run `godot --import`, diff the
+rewritten .import files, port the differences into _IMPORT_TEMPLATE and the
+uid port, then bump SUPPORTED_GODOT.
+
+Path convention: the JSON copies stay byte-identical to the repo sources, so
+casting.json's art.* and sprites.*.file fields remain repo-relative
+(art/leila/x2/...). Runtime consumers resolve sprites as
+res://assets/sprites/leila/<basename of sprites[id].file> (docs/07 §2).
 """
 
 from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import re
 import sys
 from pathlib import Path
@@ -43,7 +57,12 @@ SRC_CUE_MAP = ROOT / "assets" / "audio" / "cue_map.json"
 DST_SPRITE_DIR = ROOT / "game" / "assets" / "sprites" / "leila"
 DST_CASTING = ROOT / "game" / "data" / "casting.json"
 DST_CUE_MAP = ROOT / "game" / "data" / "cue_map.json"
+DST_MANIFEST = ROOT / "game" / "data" / ".bridge_manifest.json"
 RES_SPRITE_DIR = "res://assets/sprites/leila"
+
+# The .import template and the uid:// port match this Godot major.minor's
+# importer defaults; any other pin must be ported deliberately (docstring).
+SUPPORTED_GODOT = (4, 7)
 
 # ---------------------------------------------------------------------------
 # Godot uid:// — port of ResourceUID::create_id_for_path + id_to_text
@@ -160,6 +179,45 @@ def _project_name() -> str:
     return m.group(1)
 
 
+def _godot_pin() -> str:
+    vf = ROOT / "game" / ".godot-version"
+    if not vf.is_file():
+        sys.exit("export_to_godot: missing game/.godot-version")
+    return vf.read_text(encoding="utf-8").strip()
+
+
+def _pin_supported(pin: str) -> bool:
+    m = re.match(r"^(\d+)\.(\d+)(?:\.|$)", pin)
+    return bool(m) and (int(m.group(1)), int(m.group(2))) == SUPPORTED_GODOT
+
+
+def _check_godot_version() -> None:
+    pin = _godot_pin()
+    if not _pin_supported(pin):
+        sys.exit(
+            f"export_to_godot: game/.godot-version is {pin!r} but the .import "
+            f"template and uid port are verified only for Godot "
+            f"{SUPPORTED_GODOT[0]}.{SUPPORTED_GODOT[1]}.x. To upgrade: re-pin, "
+            "run godot --import, diff the rewritten .import files, port the "
+            "changes into _IMPORT_TEMPLATE/_create_id_for_path, then bump "
+            "SUPPORTED_GODOT."
+        )
+
+
+def _check_text_sources() -> None:
+    """Refuse CRLF text sources: outputs copy source bytes, so a CRLF checkout
+    (stale pre-.gitattributes state) would produce CRLF outputs and a manifest
+    that does not match a clean LF clone."""
+    for src in (SRC_PALETTE, SRC_CASTING, SRC_CUE_MAP):
+        if b"\r\n" in src.read_bytes():
+            sys.exit(
+                f"export_to_godot: {src} is checked out with CRLF line endings; "
+                ".gitattributes pins eol=lf; restore it "
+                f"(`git checkout -- {src.relative_to(ROOT).as_posix()}`) so "
+                "outputs match the committed blobs"
+            )
+
+
 def _import_file_bytes(res_path: str, png_bytes: bytes, project_name: str) -> bytes:
     file_md5 = hashlib.md5(png_bytes).hexdigest()
     uid = _id_to_text(_create_id_for_path(res_path, file_md5, project_name))
@@ -192,12 +250,46 @@ def build_outputs() -> dict[Path, bytes]:
     ):
         out[dst] = src.read_bytes()
 
+    managed = sorted(
+        [p.relative_to(ROOT).as_posix() for p in out]
+        + [DST_MANIFEST.relative_to(ROOT).as_posix()]
+    )
+    out[DST_MANIFEST] = (
+        json.dumps({"files": managed}, indent=1) + "\n"
+    ).encode("utf-8")
+
     return out
 
 
 def _managed_pattern(path: Path) -> bool:
     name = path.name
     return name.endswith(".png") or name.endswith(".png.import")
+
+
+def _prev_managed() -> list[str]:
+    """Destination paths the previous run managed (the committed manifest)."""
+    if not DST_MANIFEST.is_file():
+        return []
+    try:
+        return list(json.loads(DST_MANIFEST.read_text(encoding="utf-8"))["files"])
+    except (ValueError, KeyError, TypeError):
+        return []  # a corrupt manifest is itself caught as drift
+
+
+def _collect_stale(outputs: dict[Path, bytes]) -> list[Path]:
+    """Bridge-owned files no longer produced: sprite-dir orphans plus every
+    previously managed path (the manifest) now missing from outputs — that is
+    what catches a renamed or dropped data file, which owns no glob."""
+    managed = {p.relative_to(ROOT).as_posix() for p in outputs}
+    stale = {
+        p for p in DST_SPRITE_DIR.glob("*.png*")
+        if _managed_pattern(p) and p not in outputs
+    } if DST_SPRITE_DIR.is_dir() else set()
+    stale |= {
+        ROOT / rel for rel in _prev_managed()
+        if rel not in managed and (ROOT / rel).is_file()
+    }
+    return sorted(stale)
 
 
 def _manifest(outputs: dict[Path, bytes]) -> str:
@@ -214,17 +306,17 @@ def main() -> int:
                     help="verify outputs are in sync; no writes; nonzero on drift")
     args = ap.parse_args()
 
+    _check_godot_version()
+
     for src in (SRC_SPRITE_DIR, SRC_PALETTE, SRC_CASTING, SRC_CUE_MAP):
         if not src.exists():
             sys.exit(f"export_to_godot: missing source {src}")
+    _check_text_sources()
 
     outputs = build_outputs()
     manifest = _manifest(outputs)
 
-    stale = [
-        p for p in DST_SPRITE_DIR.glob("*.png*")
-        if _managed_pattern(p) and p not in outputs
-    ] if DST_SPRITE_DIR.is_dir() else []
+    stale = _collect_stale(outputs)
 
     drift = [p for p, data in outputs.items()
              if not (p.is_file() and p.read_bytes() == data)]

@@ -69,6 +69,18 @@ Everything content-related is **data**, so writers tune scenarios, gates and map
   export content, and repo-root images are structurally outside `res://`.
 - **Boot splash:** black; M17 per-pixel transparency stays unset until MetaDirector owns it.
 
+### Bridged data (P0.08, review-approved)
+
+`tools/bridge/export_to_godot.py` copies `data/casting.json`, `assets/audio/cue_map.json` and
+`art/leila/{x2,palette.json}` into `game/` **byte-identically** — so the table's `art.*` and
+`sprites.*.file` fields stay repo-relative (`art/leila/x2/…`), not `res://`. Runtime consumers
+use this convention instead of reading the paths verbatim:
+
+- sprite id → `res://assets/sprites/leila/` + basename of `casting["sprites"][id]["file"]`
+- `art.palette` → `res://assets/sprites/leila/palette.json`
+- cue names → `game/data/cue_map.json` keys; its `assets/audio/_raw/` pool paths are repo-side
+  references for the AUD import task, not runtime paths
+
 ## 3. Key components
 
 ### 3.1 LLM facade

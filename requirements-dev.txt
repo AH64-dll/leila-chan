@@ -1,3 +1,5 @@
 # Dev tooling (not needed to build art or run the game):
 # gdtoolkit provides gdlint + gdformat for the GDScript checks in tools/test.*
+# pytest runs the Python tool tests (tools/bridge/test_*.py)
 gdtoolkit==4.5.0
+pytest==9.1.1
