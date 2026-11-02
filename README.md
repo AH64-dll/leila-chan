@@ -6,7 +6,7 @@
 > the game literally turns up a steering vector inside her neurons.
 
 **Status:** design complete, core tech validated, final pixel-art sprite set + casting
-table done, **no game code yet**.
+table done, **Godot 4.7.2 project skeleton boots (P0.05)**.
 **Engine:** Godot 4 · **Model:** Qwen3.5-4B Q4_K_M + control vectors ·
 **Platforms:** Steam first, mobile later.
 
