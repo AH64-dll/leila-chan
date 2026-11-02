@@ -63,6 +63,8 @@ streamed Turn, and her face, sounds, music and screen effects change exactly whe
 - P1.09 owns P1.05 CON-2: validate player facts, reject meta leakage without rejecting benign "music box" facts; add regression coverage.
 - P1.20 owns P1.05 DES-2/CON-4 and CON-2 measurement: held-out stage-1 cases, few-shot-copy rate and memory rejection rate, not example-recall-only evidence.
 - P1.02 owns P1.01 CODE-2: cooperative cancel and bounded HTTP/process timeouts must keep teardown/quit responsive.
+- P1.26 also owns parallel review recording: after a changes verdict, allow remaining verdicts for that same review round without reopening implementation or bumping the round; regression-test the state transition.
+- P2.12 owns P1.04 CODE-5: define storage for docs/01 section 4 scoring inputs outside the twelve section 2 counters (flattery_rejected, ignored_questions, broken_promises); do not pretend bump_profile accepts unknown keys.
 
 ## Exit criteria (gate)
 1. docs/09 M1 exit: a stranger plays 10 minutes, the face and sound match her words (survey mean ≥ 4/5), **zero broken turns**.
