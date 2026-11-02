@@ -36,3 +36,19 @@
 - Gotcha: a fresh worktree lacks `.godot/uid_cache.bin`, so `ext_resource` uids warn once
   ("invalid UID … using text path instead") until `--import` runs — cosmetic, path fallback works.
   CI (P0.07) should run `--import` before headless checks.
+
+## P0.06 (round 1, 2026-11-02)
+- Test stack chosen: **gdUnit4 v6.2.2 vendored** at `game/addons/` (v6.2.3 was 1 day old; upgrade = swap dir).
+  Tests live in `game/tests/` as `extends GdUnitTestSuite`; seed suite reuses `Boot.EXPECTED_AUTOLOADS` — the
+  contract stays single-source. Discovery needs the class cache, so `tools/test.*` runs `--import` first
+  (fresh-checkout/CI path verified: wipe `.godot/` → green).
+- Gotcha: gdUnit4 v6 **refuses `--headless`** without `--ignoreHeadlessMode` (InputEvents don't propagate
+  headless → UI tests would silently no-op). Our convention: logic-only suites. `-c` disables fail-fast.
+- gdtoolkit 4.5.0 via `requirements-dev.txt`; `gdlintrc`/`gdformatrc` are YAML at repo root, found by walking
+  up from cwd; `excluded_directories` matches dir **basenames** — `addons` entry skips the vendor tree.
+- `tools/test.sh`+`.ps1` = gdlint → import → gdUnit4; collects failures, exits 1. `game/reports/` gitignored;
+  `*.cmd` pinned CRLF in .gitattributes (vendored runtest.cmd uses goto).
+- gdformat canonicalized `Boot.gd` (one-per-line const arrays, parenthesized chains); `gdformat --check` is
+  opt-in, not in the pipeline — decide later if format should gate.
+- Next: P0.13 carries P0.05 review fixes; my P0.06 silent choices (addons/, tests/, headless flag) also need
+  the docs/07 record treatment — listed in the handoff deviations.

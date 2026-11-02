@@ -117,6 +117,22 @@ broken (its hard-coded FIX coordinates in `leila_hd.py` no longer line up). The 
 built on Linux; the exact environment wasn't recorded. Treat `art/leila/` as the source of truth and check a rebuild by eye
 (especially 30) before committing it.
 
+## Tests & lint
+
+GDScript checks run headless via the pinned Godot binary (`tools/godot.*`, see "Local artifacts"):
+
+```bash
+./tools/test.sh            # bash — lint + all gdUnit4 tests, non-zero on failure
+powershell -File tools/test.ps1   # Windows PowerShell equivalent
+```
+
+This runs `gdlint game/` (config: `gdlintrc`; the vendored `game/addons/` is excluded),
+refreshes the editor class cache with `--import`, then runs every `extends GdUnitTestSuite`
+script under `game/tests/` (gdUnit4, vendored in `game/addons/`). Lint needs the dev deps:
+`pip install -r requirements-dev.txt`. Formatting is handled by `gdformat`
+(config: `gdformatrc`) — `gdformat game/` to apply, `gdformat --check game/` to verify.
+Test reports land in `game/reports/` (gitignored).
+
 ## License / rights
 
 - Game design, docs, code pipeline, generated pixel art: © the project authors (private repo — ask before reusing).
