@@ -4,8 +4,8 @@
 Godot project, a working prompt lab, a green CI and a live tracker. The design-phase results (docs/09 M0) must be
 reproduced on Windows before we build on them.
 
-**Why it exists:** the design was done on Linux (`E:\home\amrhares\...`). The llama.cpp binaries there are Linux `.so`
-builds and the E: drive is 95% full. The game repo has no Godot project yet.
+**Why it exists:** the design was done on Linux (the original design machine; its artifacts now live on `E:`). The
+llama.cpp binaries there are Linux `.so` builds and the E: drive is 95% full. The game repo has no Godot project yet.
 
 ## Entry criteria
 - This production system exists in `D:\lila` (`production/`, `.claude/skills/`, `AGENTS.md`, `CLAUDE.md`).
@@ -34,6 +34,7 @@ builds and the E: drive is 95% full. The game repo has no Godot project yet.
 | P0.08 | Asset/data bridge: deterministic script `tools/bridge/export_to_godot.py` copying art/leila/x2 + palette, data/casting.json, assets/audio/cue_map.json into game/ with Godot import settings (nearest filter, no mipmaps) | ART | M | P0.05 | code, design | data/casting.json, docs/03_EMOTIONS.md§6, docs/04_AUDIO.md§8 | Running twice produces no diff; 31 sprites import with nearest filter; casting.json loads in a Godot test that resolves feeling joy/T0/intensity 1 → sprite 01 |
 | P0.09 | Spike: evaluate NobodyWho (Godot llama.cpp plugin) vs own GDExtension: control vectors, JSON-schema grammar, streaming, Windows/CUDA support | LLM | M | P0.03 | design | docs/07_TECH_ARCHITECTURE.md§1, docs/06_STEERING.md§4 | `docs/spikes/P0.09_nobodywho.md` with a capability table, a tested minimal example or evidence it can't, and a recommendation feeding P4.01 |
 | P0.10 | Review the pre-seeded production/DECISIONS.md and production/RISKS.md against docs/09; add the Windows and environment risks found in P0; render STATUS.md | PROD | S | P0.01 | design | docs/09_PRODUCTION_PLAN.md§2, docs/09_PRODUCTION_PLAN.md§4 | Every docs/09 §2 risk and §4 open decision present in the right table format; new P0 risks added; `track.py render` output committed |
+| P0.11 | Pytest coverage for production/tools/track.py (state transitions, validate, brief/gate-brief generation) + replace the substring missing-ref classification with a structured check (carry-over: P0.01 code review CODE-1 S3, CODE-2 S4) | REL | S | P0.07 | code | production/tools/track.py | Tests run via `pytest` and are wired into CI; state transition and brief-generation cases green; validate no longer classifies missing refs by substring match |
 
 ## Exit criteria (gate)
 1. A fresh clone plus the documented steps gives a running llama-server on this machine (shown by P0.03 commands re-run on main).
