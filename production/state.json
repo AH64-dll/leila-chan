@@ -474,11 +474,19 @@
       "started": "2026-11-02T23:10:13+02:00"
     },
     "P1.05": {
+      "status": "in_review",
+      "agent": "swe2",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-02T23:10:13+02:00",
+      "handoff": "production/handoffs/P1.05.md"
+    },
+    "P1.03": {
       "status": "in_progress",
       "agent": "swe2",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-02T23:10:13+02:00"
+      "started": "2026-11-02T23:16:58+02:00"
     }
   },
   "history": [
@@ -1134,6 +1142,18 @@
       "ts": "2026-11-02T23:10:13+02:00",
       "event": "todo->in_progress",
       "ref": "P1.05",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T23:16:51+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P1.05",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T23:16:58+02:00",
+      "event": "todo->in_progress",
+      "ref": "P1.03",
       "note": ""
     }
   ]
