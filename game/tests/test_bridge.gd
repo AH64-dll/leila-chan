@@ -59,8 +59,10 @@ func _initialize() -> void:
 		var tex := ResourceLoader.load(SPRITE_DIR + _sprite_file(casting, sprite_id))
 		_check(tex is CompressedTexture2D, "sprite 01 imports and loads as texture")
 		if tex is CompressedTexture2D:
-			_check(tex.get_width() == 768 and tex.get_height() == 1376,
-				"sprite 01 is the x2 768x1376 art")
+			_check(
+				tex.get_width() == 768 and tex.get_height() == 1376,
+				"sprite 01 is the x2 768x1376 art"
+			)
 
 		## Table-driven sweep: every feeling x tier x intensity resolves to a
 		## sprite id whose file exists on disk (docs/03 §3.1 base table).
@@ -71,9 +73,22 @@ func _initialize() -> void:
 				for intensity: int in 3:
 					var sid := _resolve_sprite(casting, String(feeling), String(t), intensity + 1)
 					cells += 1
-					if sid == "" or _sprite_file(casting, sid) == "" \
-							or not FileAccess.file_exists(SPRITE_DIR + _sprite_file(casting, sid)):
-						printerr("  unresolved cell: ", feeling, " ", t, " i", intensity + 1, " -> '", sid, "'")
+					if (
+						sid == ""
+						or _sprite_file(casting, sid) == ""
+						or not FileAccess.file_exists(SPRITE_DIR + _sprite_file(casting, sid))
+					):
+						printerr(
+							"  unresolved cell: ",
+							feeling,
+							" ",
+							t,
+							" i",
+							intensity + 1,
+							" -> '",
+							sid,
+							"'"
+						)
 						resolve_ok = false
 		_check(resolve_ok, "all %d feeling x tier x intensity cells resolve to files" % cells)
 
@@ -83,15 +98,23 @@ func _initialize() -> void:
 		for path_name: Variant in paths:
 			for feeling: Variant in paths[path_name].get("override", {}):
 				var sid := String(paths[path_name]["override"][feeling])
-				if _sprite_file(casting, sid) == "" \
-						or not FileAccess.file_exists(SPRITE_DIR + _sprite_file(casting, sid)):
-					printerr("  override missing sprite: ", path_name, " ", feeling, " -> '", sid, "'")
+				if (
+					_sprite_file(casting, sid) == ""
+					or not FileAccess.file_exists(SPRITE_DIR + _sprite_file(casting, sid))
+				):
+					printerr(
+						"  override missing sprite: ", path_name, " ", feeling, " -> '", sid, "'"
+					)
 					path_ok = false
 			for feeling: Variant in paths[path_name].get("flagged", {}):
 				var sid := String(paths[path_name]["flagged"][feeling][0])
-				if _sprite_file(casting, sid) == "" \
-						or not FileAccess.file_exists(SPRITE_DIR + _sprite_file(casting, sid)):
-					printerr("  flagged missing sprite: ", path_name, " ", feeling, " -> '", sid, "'")
+				if (
+					_sprite_file(casting, sid) == ""
+					or not FileAccess.file_exists(SPRITE_DIR + _sprite_file(casting, sid))
+				):
+					printerr(
+						"  flagged missing sprite: ", path_name, " ", feeling, " -> '", sid, "'"
+					)
 					path_ok = false
 		_check(path_ok, "all path override + flagged sprite ids resolve to files")
 
@@ -120,14 +143,22 @@ func _initialize() -> void:
 
 	## Godot 4 has no per-import 2D filter: Nearest is the project default,
 	## and sprites inherit it (art/leila/README "Filter: Nearest").
-	_check(ProjectSettings.get_setting(
-			"rendering/textures/canvas_textures/default_texture_filter") == 0,
-		"project default texture filter = Nearest")
+	_check(
+		(
+			ProjectSettings.get_setting("rendering/textures/canvas_textures/default_texture_filter")
+			== 0
+		),
+		"project default texture filter = Nearest"
+	)
 
-	_check(_load_json("res://data/cue_map.json") is Dictionary,
-		"res://data/cue_map.json loads and parses")
-	_check(_load_json(SPRITE_DIR + "palette.json") is Dictionary,
-		"res://assets/sprites/leila/palette.json loads and parses")
+	_check(
+		_load_json("res://data/cue_map.json") is Dictionary,
+		"res://data/cue_map.json loads and parses"
+	)
+	_check(
+		_load_json(SPRITE_DIR + "palette.json") is Dictionary,
+		"res://assets/sprites/leila/palette.json loads and parses"
+	)
 
 	if _failures == 0:
 		print("test_bridge: all checks passed")
