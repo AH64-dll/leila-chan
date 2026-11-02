@@ -1167,6 +1167,25 @@ def write_palette(out_dir):
     pal.update({"outline": [OUTLINE, "5a3236"], "rim": [RIM], "steel": HN.STEEL,
                 "eye_white": ["e6d6dc"], "face_shadow": ["3a2228"],
                 "fx": ["d8323a", "7fd8e0", "ff3b3b", "e8a0a0", "d77a80", "a8d8ff", "6fa8dc"]})
+    # sel-out line colours hard-coded in leila_px.to_palette (shadow/highlight regions -> 140a0e/3e3446)
+    pal["line"] = sorted(set(pal["line"]) | {"140a0e", "3e3446"})
+    # Every remaining colour the px set actually uses lands in fx_derived: shades the coded
+    # effects produce from base colours (29's x0.55 scanlines, ghost blends). Scanning the
+    # written sprites keeps "palette.json = every colour used" true by construction.
+    px_dir = os.path.join(out_dir, "px")
+    if not os.path.isdir(px_dir):
+        raise SystemExit(f"write_palette: {px_dir} missing; call after the px sprites are written")
+    listed = {c.lower() for cols in pal.values() for c in cols}
+    used = set()
+    for fn in sorted(os.listdir(px_dir)):
+        if not fn.endswith(".png"):
+            continue
+        img = cv2.imread(os.path.join(px_dir, fn), cv2.IMREAD_UNCHANGED)
+        rgb = img[..., :3][img[..., 3] > 0].reshape(-1, 3)
+        used |= {f"{r:02x}{g:02x}{b:02x}" for b, g, r in np.unique(rgb, axis=0)}
+    extra = sorted(used - listed)
+    if extra:
+        pal["fx_derived"] = extra
     with open(os.path.join(out_dir, "palette.json"), "w", encoding="utf-8", newline="\n") as fh:
         json.dump(pal, fh, indent=1)
     with open(os.path.join(out_dir, "leila.gpl"), "w", encoding="utf-8", newline="\n") as f:

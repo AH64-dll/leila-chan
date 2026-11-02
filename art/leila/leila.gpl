@@ -49,6 +49,8 @@ Columns: 8
 232 176 170	blush_e8b0aa
 242 198 188	blush_f2c6bc
   7   4  10	line_07040a
+ 20  10  14	line_140a0e
+ 62  52  70	line_3e3446
   7   4  10	outline_07040a
  90  50  54	outline_5a3236
 192  48  60	rim_c0303c
@@ -66,3 +68,39 @@ Columns: 8
 215 122 128	fx_d77a80
 168 216 255	fx_a8d8ff
 111 168 220	fx_6fa8dc
+  3   2   5	fx_derived_030205
+  6   4   6	fx_derived_060406
+  9   8  11	fx_derived_09080b
+ 14  14  17	fx_derived_0e0e11
+ 15   2   4	fx_derived_0f0204
+ 17  11  15	fx_derived_110b0f
+ 20  19  24	fx_derived_141318
+ 23   2   4	fx_derived_170204
+ 24  13  17	fx_derived_180d11
+ 28   5   9	fx_derived_1c0509
+ 28  26  31	fx_derived_1c1a1f
+ 36  34  40	fx_derived_242228
+ 37  13  23	fx_derived_250d17
+ 40  11  13	fx_derived_280b0d
+ 42   8  14	fx_derived_2a080e
+ 49  27  29	fx_derived_311b1d
+ 50   5   9	fx_derived_320509
+ 58  17  26	fx_derived_3a111a
+ 59  11  18	fx_derived_3b0b12
+ 62  44  49	fx_derived_3e2c31
+ 68  23  24	fx_derived_441718
+ 69 118 123	fx_derived_45767b
+ 75  52  54	fx_derived_4b3436
+ 78  17  24	fx_derived_4e1118
+ 98  26  31	fx_derived_621a1f
+100  45  45	fx_derived_642d2d
+101  76  74	fx_derived_654c4a
+105  26  33	fx_derived_691a21
+118  27  31	fx_derived_761b1f
+119  84  83	fx_derived_775453
+121  98  93	fx_derived_79625d
+123  75  72	fx_derived_7b4b48
+126 117 121	fx_derived_7e7579
+131 115 108	fx_derived_83736c
+138 128 123	fx_derived_8a807b
+140  67  60	fx_derived_8c433c
