@@ -21,7 +21,7 @@ README.md ("Local artifacts" section) · `.gitignore` · docs/07 §6 · docs/09 
 ## Local artifacts (P0.02 source of truth)
 | Artifact | Source on E: | Destination (main tree only) |
 |---|---|---|
-| Qwen3.5-4B-Q4_K_M.gguf (2.6 GB) | `E:/home/amrhares/Documents/qwen dating semulator/models/` | `D:/lila/models/` |
+| Qwen3.5-4B-Q4_K_M.gguf (2.6 GB) | the design machine's `E:` drive (see `tools/local_artifacts.md`) | `D:/lila/models/` |
 | evil_qwen_unit.gguf (malice vector) | `.../experiments/steering/` | `D:/lila/experiments/steering/` |
 | Raw CC0 audio pool (357 MB) | `.../assets/audio/_raw/` | `D:/lila/assets/audio/_raw/` |
 | art/_review, art/leila_legacy_1x | `.../art/` | `D:/lila/art/` |
