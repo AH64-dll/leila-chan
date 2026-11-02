@@ -141,7 +141,7 @@
       "finished": "2026-11-02T20:36:35+02:00"
     },
     "P0.08": {
-      "status": "in_review",
+      "status": "done",
       "agent": "swe2",
       "round": 1,
       "reviews": [
@@ -152,10 +152,19 @@
           "reviewer": "deepseek",
           "report": "production/reviews/P0.08-code-r1.md",
           "ts": "2026-11-02T20:39:39+02:00"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P0.08-design-r1.md",
+          "ts": "2026-11-02T20:40:00+02:00"
         }
       ],
       "started": "2026-11-02T19:55:00+02:00",
-      "handoff": "production/handoffs/P0.08.md"
+      "handoff": "production/handoffs/P0.08.md",
+      "finished": "2026-11-02T20:41:11+02:00"
     },
     "P0.13": {
       "status": "done",
@@ -477,6 +486,18 @@
       "event": "review:code:approved",
       "ref": "P0.08",
       "note": "production/reviews/P0.08-code-r1.md"
+    },
+    {
+      "ts": "2026-11-02T20:40:00+02:00",
+      "event": "review:design:approved",
+      "ref": "P0.08",
+      "note": "production/reviews/P0.08-design-r1.md"
+    },
+    {
+      "ts": "2026-11-02T20:41:11+02:00",
+      "event": "in_review->done",
+      "ref": "P0.08",
+      "note": ""
     }
   ]
 }
