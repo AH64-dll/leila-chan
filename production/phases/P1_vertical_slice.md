@@ -50,6 +50,7 @@ streamed Turn, and her face, sounds, music and screen effects change exactly whe
 | P1.25 | P0 gate C4: disable persisted checkout credentials | REL | S | P1.24 | code | .github/workflows/ci.yml, production/gates/P0-gate-r1.md | Every actions/checkout step sets persist-credentials: false; workflow tests/checks cover this policy; no push required |
 | P1.26 | P0 gate C6: detect implementer/reviewer metadata drift | ENG | S | — | code | production/tools/track.py, production/tests/test_track.py, production/gates/P0-gate-r1.md | Review recording validates backend identity against report metadata or provides an explicit audited override for legacy/mixed-backend evidence; regression tests cover mismatch, valid metadata and legacy reports; existing tracker tests remain green |
 | P1.27 | P1.01 review follow-ups: facade error normalization, cancel race and documented stream contract | LLM | S | P1.01 | code, design | production/reviews/P1.01-code-r1.md, production/reviews/P1.01-design-r1.md, docs/07_TECH_ARCHITECTURE.md§3.1 | Address CODE-1/CODE-3 and DES-1/DES-2/DES-3 with regression tests for malformed error dictionaries and cancellation between worker return and terminal delivery; document request ownership, helper APIs and exactly-one-terminal semantics; correct stale facade signature; preserve prompt cancellation and main-thread delivery |
+| P1.28 | P1.05 review follow-ups: prompt example limits and portable reproducible evidence | NAR | S | P1.05 | code, content | production/reviews/P1.05-content-r1.md, production/reviews/P1.05-design-r1.md | Address DES-1/DES-3/DES-4/DES-5/DES-6/DES-7 and CON-3: few-shot say obeys two-sentence limit with validator coverage; scripts locate repo paths portably; transcript is valid UTF-8; handoff counts and claims match evidence; loaded-budget command is reproducible; remeasure fixed prompt budget after edits |
 
 ## P0 gate carry-over contracts
 - P1.02 and P1.21 own C8: measure first usable `say`, not just TTFT, on CUDA; report misses honestly.
@@ -58,6 +59,10 @@ streamed Turn, and her face, sounds, music and screen effects change exactly whe
 - P1.16 owns C5: re-evaluate the provisional window height override on the assembled date scene.
 - P1.20 owns C10: consider an explicit first/any-beat scoring selector; retain D10 hand-label evidence and metric definitions.
 - C2 risk wording was restored at the P0 gate. C11 remains deferred to P4 only if Vulkan is reconsidered.
+- P1.06/P1.15 own P1.05 CON-1: report fixed and dynamic prompt budgets separately and measure representative loaded context.
+- P1.09 owns P1.05 CON-2: validate player facts, reject meta leakage without rejecting benign "music box" facts; add regression coverage.
+- P1.20 owns P1.05 DES-2/CON-4 and CON-2 measurement: held-out stage-1 cases, few-shot-copy rate and memory rejection rate, not example-recall-only evidence.
+- P1.02 owns P1.01 CODE-2: cooperative cancel and bounded HTTP/process timeouts must keep teardown/quit responsive.
 
 ## Exit criteria (gate)
 1. docs/09 M1 exit: a stranger plays 10 minutes, the face and sound match her words (survey mean ≥ 4/5), **zero broken turns**.
