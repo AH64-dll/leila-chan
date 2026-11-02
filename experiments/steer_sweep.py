@@ -42,6 +42,12 @@ def server_cmd(cvec, scale):
     args = [os.path.join(BIN, exe), "-m", MODEL, "-ngl", "99", "-c", "4096", "--jinja",
             "--port", str(PORT), "-np", "1"]
     if scale:
+        # FNAME:SCALE cannot contain a drive-letter colon ("D:/..."): the flag parser
+        # splits on ':'. Prefer a same-drive relative path, which is colon-free.
+        if ":" in cvec:
+            rel = os.path.relpath(cvec)
+            if ":" not in rel:
+                cvec = rel
         args += ["--control-vector-scaled", f"{cvec}:{scale}"]
     if os.name == "nt":
         env = {**os.environ, "PATH": BIN + os.pathsep + os.environ.get("PATH", "")}
