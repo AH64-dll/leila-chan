@@ -52,3 +52,18 @@
   opt-in, not in the pipeline — decide later if format should gate.
 - Next: P0.13 carries P0.05 review fixes; my P0.06 silent choices (addons/, tests/, headless flag) also need
   the docs/07 record treatment — listed in the handoff deviations.
+
+## P0.15 (round 1, 2026-11-02)
+- All four P0.06 carry-overs closed: `tools/test.sh` is `100755`; both runners fail on zero discovered
+  suites (pre-check on `game/tests/*.gd` + scan of gdUnit4's `No test cases found, abort test run!`,
+  which it prints while exiting 0); `gdformat --check` is now a gating stage (the tree had already
+  drifted — `test_bridge.gd` reformatted); export exclusion recorded in docs/07 §2 + README since no
+  presets exist (`.gdignore` is wrong — scanner skips the dir and it doesn't exclude from export).
+- `tools/test.*` now runs a standalone `--script` stage: top-level `game/tests/*.gd` that don't
+  `extends GdUnitTestSuite` execute as SceneTree tests — wired P0.08's `test_bridge.gd` into the
+  single command (its handoff asked ENG for this). Convention recorded in docs/07 §2 "Test tooling".
+- **Gotcha:** `tools/godot.ps1` resolved the GUI `win64.exe`, which writes to `CONOUT$` and bypasses
+  PowerShell pipes — `| Out-String`/redirected logs got nothing. Now prefers `*_console.exe`.
+  Git Bash tolerates the GUI exe (output reached the pty), PowerShell does not — keep `_console` first.
+- **Gotcha:** capture runner output in a var (`$VAR=$(cmd 2>&1)`) to scan it — piping to `tail`/`grep`
+  hides the real exit code (`$?` becomes the last pipe element's). Use `PIPESTATUS` or capture.
