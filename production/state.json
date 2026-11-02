@@ -497,6 +497,22 @@
           "reviewer": "deepseek",
           "report": "production/reviews/P1.04-code-r1.md",
           "ts": "2026-11-02T23:36:07+02:00"
+        },
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P1.04-code-r2.md",
+          "ts": "2026-11-03T00:00:35+02:00"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P1.04-design-r2.md",
+          "ts": "2026-11-03T00:00:35+02:00"
         }
       ],
       "started": "2026-11-02T23:10:13+02:00",
@@ -1415,6 +1431,18 @@
       "event": "agent",
       "ref": "P1.02",
       "note": "swe2 -> deepseek"
+    },
+    {
+      "ts": "2026-11-03T00:00:35+02:00",
+      "event": "review:code:approved",
+      "ref": "P1.04",
+      "note": "production/reviews/P1.04-code-r2.md"
+    },
+    {
+      "ts": "2026-11-03T00:00:35+02:00",
+      "event": "review:design:approved",
+      "ref": "P1.04",
+      "note": "production/reviews/P1.04-design-r2.md"
     }
   ]
 }
