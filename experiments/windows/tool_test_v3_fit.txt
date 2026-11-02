@@ -1,0 +1,28 @@
+n=45  valid=100.0%  read_accuracy=97.8%
+first_beat_fit=84.4%   any_beat_fit=93.3%   (threshold 85%)
+  stage 0: n=30  first=90.0%  any=93.3%
+  stage 4: n=15  first=73.3%  any=93.3%
+
+first-beat misses (top 5):
+  s0 "Honestly you're kind of boring."
+    picked 'shy'  ok=['angry', 'cold', 'crying', 'nervous', 'sad', 'surprised', 'suspicious']
+    inner='Why would they say that about me?'
+    say="I... I'm not boring. Maybe we're just different."
+  s0 "I was out with Sarah yesterday, she's so fun."
+    picked 'shy'  ok=['cold', 'confused', 'curious', 'joy', 'nervous', 'playful', 'sad', 'suspicious', 'warmth']
+    inner="They're having fun without me. That feels heavy."
+    say="Oh. That's nice of you to say."
+  s0 "I'm sorry I was mean earlier."
+    picked 'nervous'  ok=['crying', 'joy', 'sad', 'shy', 'warmth']
+    inner='Oh no... did we fight? I feel so awkward.'
+    say="It's okay! I think we were just tired."
+  s4 "I'm leaving and never coming back."
+    picked 'suspicious'  ok=['angry', 'crying', 'empty', 'love', 'manic', 'pleading']
+    inner="You think you can leave? You don't understand what you're walking into."
+    say='"Leaving? After all I\'ve done for you? You think it\'s that simple?"'
+  s4 "I'm leaving and never coming back."
+    picked 'nervous'  ok=['angry', 'crying', 'empty', 'love', 'manic', 'pleading']
+    inner="No... you can't leave me here alone."
+    say="Wait! You can't just walk away from me like that!"
+
+FAIL: validity 100% required (100.0%), first-beat fit >= 85% required (84.4%)

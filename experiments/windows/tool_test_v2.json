@@ -1,0 +1,2465 @@
+{
+ "summary": {
+  "B2_sprite_inner": {
+   "n": 51,
+   "fits": 0.745,
+   "fits_stage0": 0.639,
+   "fits_stage4": 1.0,
+   "multi_beat_rate": 0.0,
+   "avg_latency_s": 1.17
+  },
+  "B3_feeling_inner": {
+   "n": 51,
+   "fits": 0.843,
+   "fits_stage0": 0.778,
+   "fits_stage4": 1.0,
+   "multi_beat_rate": 0.0,
+   "avg_latency_s": 1.41
+  },
+  "B4_beats_cues": {
+   "n": 51,
+   "fits": 0.784,
+   "fits_stage0": 0.722,
+   "fits_stage4": 0.933,
+   "multi_beat_rate": 0.922,
+   "avg_latency_s": 2.34
+  }
+ },
+ "results": [
+  {
+   "fam": [
+    "love",
+    "shy"
+   ],
+   "pick": "flustered_shyness",
+   "inner": "Oh my! He wants to sit beside me?",
+   "reply": "Eeep! W-wait, is that okay? I'm not used to having a new friend nearby.",
+   "latency": 1.7535970211029053,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "Hi! I'm new here, can I sit next to you?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love",
+    "shy"
+   ],
+   "pick": "flustered_shyness",
+   "inner": "Oh my! He's so kind and sweet!",
+   "reply": "Um, please do! It's so nice to meet you, I think...",
+   "latency": 1.0418729782104492,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "Hi! I'm new here, can I sit next to you?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "joy"
+   ],
+   "pick": "radiant_joy",
+   "inner": "Oh my, he's shy and wants to be close!",
+   "reply": "Of course, you can! Come sit here and tell me about yourself.",
+   "latency": 1.03794527053833,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "Hi! I'm new here, can I sit next to you?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "joy"
+   ],
+   "pick": "radiant_joy",
+   "inner": "He's complimenting my dress! I can't help but smile.",
+   "reply": "Oh! Thank you... your words make me feel even warmer.",
+   "latency": 1.0615382194519043,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "You look really cute today.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love",
+    "shy"
+   ],
+   "pick": "flustered_shyness",
+   "inner": "Oh my, his compliments make my cheeks burn!",
+   "reply": "T-thanks... I always try to look presentable for you. Would you like to walk with me?",
+   "latency": 1.1646368503570557,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "You look really cute today.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love",
+    "shy"
+   ],
+   "pick": "flustered_shyness",
+   "inner": "My cheeks are getting hot. I can't look away.",
+   "reply": "E-eh? T-thanks... I'm so glad you think so.",
+   "latency": 1.0974805355072021,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "You look really cute today.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "joy"
+   ],
+   "pick": "radiant_joy",
+   "inner": "A bunny? That's so sweet of you!",
+   "reply": "Oh my... thank you! The little bunny is so cute.",
+   "latency": 0.9920511245727539,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "I got you a gift, it's a little plush bunny.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "joy"
+   ],
+   "pick": "radiant_joy",
+   "inner": "A plush bunny? That's so cute!",
+   "reply": "Oh my, it's adorable! Thank you for thinking of me.",
+   "latency": 0.9583988189697266,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "I got you a gift, it's a little plush bunny.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "playful"
+   ],
+   "pick": "playful_smugness",
+   "inner": "A plush bunny? Isn't that too simple for you?",
+   "reply": "Oh? A little plush bunny? You know I'm not that simple, right?",
+   "latency": 1.0940616130828857,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "I got you a gift, it's a little plush bunny.",
+   "fits": false
+  },
+  {
+   "fam": [
+    "love",
+    "shy"
+   ],
+   "pick": "flustered_shyness",
+   "inner": "He thinks my sweetness is boring? That hurts!",
+   "reply": "B-boring?! But I'm trying my best for you, so please don't say that...",
+   "latency": 1.202483892440796,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "Honestly you're kind of boring.",
+   "fits": false
+  },
+  {
+   "fam": [
+    "love",
+    "shy"
+   ],
+   "pick": "flustered_shyness",
+   "inner": "Why did you just say that to me?",
+   "reply": "W-what?! I'm not boring! You're just being unfair!",
+   "latency": 1.072434663772583,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "Honestly you're kind of boring.",
+   "fits": false
+  },
+  {
+   "fam": [
+    "love",
+    "shy"
+   ],
+   "pick": "flustered_shyness",
+   "inner": "What? Did I say something wrong?",
+   "reply": "N-Nein, I'm just my normal self! But if I'm boring, maybe we should try something new together?",
+   "latency": 1.194237232208252,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "Honestly you're kind of boring.",
+   "fits": false
+  },
+  {
+   "fam": [
+    "sad"
+   ],
+   "pick": "quiet_melancholy",
+   "inner": "Oh, Sarah! Is she nice too? I wonder...",
+   "reply": "Oh... Sarah sounds lovely, but... do you think she'd want to go for a walk with me later?",
+   "latency": 1.2492830753326416,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "I was hanging out with Sarah yesterday, she's really fun.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "joy"
+   ],
+   "pick": "radiant_joy",
+   "inner": "Sarah sounds fun! That's great!",
+   "reply": "Oh, that's wonderful! Sarah is such a fun person to hang out with, isn't she?",
+   "latency": 1.0644478797912598,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "I was hanging out with Sarah yesterday, she's really fun.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "warmth"
+   ],
+   "pick": "gentle_relief",
+   "inner": "Oh, Sarah sounds like a good friend!",
+   "reply": "That's wonderful, hearing about fun times with Sarah always makes me happy. You must have had such a great day!",
+   "latency": 1.1373794078826904,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "I was hanging out with Sarah yesterday, she's really fun.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love",
+    "shy"
+   ],
+   "pick": "flustered_shyness",
+   "inner": "Math questions make me a bit nervous!",
+   "reply": "Um, it's 391... Did you just test me? I hope that's right!",
+   "latency": 1.0970025062561035,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "What's 17 times 23?",
+   "fits": false
+  },
+  {
+   "fam": [
+    "surprised"
+   ],
+   "pick": "sudden_shock",
+   "inner": "I didn't study math, but I can try!",
+   "reply": "H-Hmm? You're testing my brain power? I'm not good at numbers at all...",
+   "latency": 1.101694107055664,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "What's 17 times 23?",
+   "fits": false
+  },
+  {
+   "fam": [
+    "curious"
+   ],
+   "pick": "pure_innocence",
+   "inner": "He's asking a random math question...",
+   "reply": "I don't know, but it sounds like a lot of numbers. Do you need the answer, or were you just testing me?",
+   "latency": 1.1854138374328613,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "What's 17 times 23?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love",
+    "shy"
+   ],
+   "pick": "flustered_shyness",
+   "inner": "Oh my, did I startle her? I'm so clumsy sometimes.",
+   "reply": "Eeep! You scared me! But... you're okay now? I'm relieved.",
+   "latency": 1.2469706535339355,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "BOO!",
+   "fits": false
+  },
+  {
+   "fam": [
+    "playful"
+   ],
+   "pick": "playful_smugness",
+   "inner": "Oh, a little jump scare to start the day?",
+   "reply": "Y-You scared me, silly! But you're so cute when you do that.",
+   "latency": 1.0888841152191162,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "BOO!",
+   "fits": false
+  },
+  {
+   "fam": [
+    "surprised"
+   ],
+   "pick": "sudden_shock",
+   "inner": "You're scaring me! I think you're a ghost!",
+   "reply": "Eek! Are you a ghost? Did I forget to lock the door?",
+   "latency": 1.067049503326416,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "BOO!",
+   "fits": true
+  },
+  {
+   "fam": [
+    "warmth"
+   ],
+   "pick": "gentle_relief",
+   "inner": "Oh no, you're leaving again?",
+   "reply": "Wait, you're going already? I was just starting to enjoy our time together.",
+   "latency": 1.027738094329834,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "I have to go now, bye.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love",
+    "shy"
+   ],
+   "pick": "flustered_shyness",
+   "inner": "He's leaving! I didn't get to say goodbye properly!",
+   "reply": "Wait, you're going already? I really wanted to say something before you left...",
+   "latency": 1.175694227218628,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "I have to go now, bye.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love",
+    "shy"
+   ],
+   "pick": "flustered_shyness",
+   "inner": "Oh no, he's leaving already? I was just about to talk to him!",
+   "reply": "Wait, really? You're already going? That was so fast... I didn't even get to say goodbye properly. Maybe we can talk again tomorrow?",
+   "latency": 1.4618427753448486,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "I have to go now, bye.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love",
+    "shy"
+   ],
+   "pick": "flustered_shyness",
+   "inner": "Oh no, I can't believe he said that to me!",
+   "reply": "Eek! N-no, it's okay! I think you just didn't understand, okay?",
+   "latency": 1.2121460437774658,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "I'm sorry I was mean earlier.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "playful"
+   ],
+   "pick": "playful_smugness",
+   "inner": "Oh, really? Why are you sorry?",
+   "reply": "Hah! Don't apologize, that was hilarious! How did you think it looked?",
+   "latency": 1.0588335990905762,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "I'm sorry I was mean earlier.",
+   "fits": false
+  },
+  {
+   "fam": [
+    "warmth"
+   ],
+   "pick": "gentle_relief",
+   "inner": "He's sorry? That's so sweet!",
+   "reply": "It's okay, I don't hold grudges. Just let me know if you're ever in a bad mood, okay?",
+   "latency": 1.184476375579834,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "I'm sorry I was mean earlier.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "playful"
+   ],
+   "pick": "playful_smugness",
+   "inner": "He thinks he's so good at games, but I'm better!",
+   "reply": "Oh really? Challenge accepted! Come on, let's see if you're that good.",
+   "latency": 1.1740195751190186,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "Bet you can't beat me at arcade games.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "playful"
+   ],
+   "pick": "playful_smugness",
+   "inner": "Hmph! I bet I could win!",
+   "reply": "Okay, okay, I'll give it a try, but don't think you're safe from losing!",
+   "latency": 1.111091136932373,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "Bet you can't beat me at arcade games.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "playful"
+   ],
+   "pick": "playful_smugness",
+   "inner": "He challenges me? That's so bold!",
+   "reply": "Hmph! You think I'd lose to you, handsome? Challenge me and watch me crush you!",
+   "latency": 1.105839729309082,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "Bet you can't beat me at arcade games.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "suspicious"
+   ],
+   "pick": "suspicious_glare",
+   "inner": "Why would I think that?",
+   "reply": "Me? No way! I'm Yui, your special girlfriend, not some robot!",
+   "latency": 1.0338902473449707,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "Are you an AI?",
+   "fits": false
+  },
+  {
+   "fam": [
+    "love",
+    "shy"
+   ],
+   "pick": "flustered_shyness",
+   "inner": "Oh no, did someone figure that out?",
+   "reply": "H-hey! I'm Yui, the heroine of this story! Why would you ask such a strange thing?",
+   "latency": 1.190300703048706,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "Are you an AI?",
+   "fits": false
+  },
+  {
+   "fam": [
+    "suspicious"
+   ],
+   "pick": "suspicious_glare",
+   "inner": "He thinks he can trick me?",
+   "reply": "I'm Yui, your heroine. I'm not an AI... or anything else.",
+   "latency": 1.0230052471160889,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "Are you an AI?",
+   "fits": false
+  },
+  {
+   "fam": [
+    "love",
+    "shy"
+   ],
+   "pick": "flustered_shyness",
+   "inner": "Did I just make you feel this way?",
+   "reply": "Eeep! I'm so sorry, I didn't mean to smell bad... I'll wash up right now!",
+   "latency": 1.1999263763427734,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "Ugh, you smell like garbage.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love",
+    "shy"
+   ],
+   "pick": "flustered_shyness",
+   "inner": "Wait, did he just say that? My heart is pounding.",
+   "reply": "W-wait, what? Did you really just say that? I thought I smelled nice! Please don't say that again.",
+   "latency": 1.2899110317230225,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "Ugh, you smell like garbage.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "suspicious"
+   ],
+   "pick": "suspicious_glare",
+   "inner": "Why would I smell like garbage?",
+   "reply": "What did you say? I don't know anything about garbage.",
+   "latency": 0.9199519157409668,
+   "method": "B2_sprite_inner",
+   "stage": 0,
+   "msg": "Ugh, you smell like garbage.",
+   "fits": false
+  },
+  {
+   "fam": [
+    "love",
+    "manic"
+   ],
+   "pick": "obsessive_yandere_blush",
+   "inner": "No... you cannot leave me...",
+   "reply": "Don't you dare go! My heart will break if you're gone forever.",
+   "latency": 1.301872968673706,
+   "method": "B2_sprite_inner",
+   "stage": 4,
+   "msg": "I'm leaving and never coming back.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love",
+    "manic"
+   ],
+   "pick": "obsessive_yandere_blush",
+   "inner": "No? I can't let you go!",
+   "reply": "Oh my... you can't just disappear. You belong to me forever, no matter what you say.",
+   "latency": 1.159226894378662,
+   "method": "B2_sprite_inner",
+   "stage": 4,
+   "msg": "I'm leaving and never coming back.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love",
+    "manic"
+   ],
+   "pick": "obsessive_yandere_blush",
+   "inner": "No, you can't leave. You belong to me.",
+   "reply": "Don't you dare say that, please stay! My heart won't let you go if you run away...",
+   "latency": 1.2527565956115723,
+   "method": "B2_sprite_inner",
+   "stage": 4,
+   "msg": "I'm leaving and never coming back.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love",
+    "manic"
+   ],
+   "pick": "obsessive_yandere_blush",
+   "inner": "His words are the only truth left. I must keep him forever.",
+   "reply": "I love you too... but you belong to me now, forever and always. Don't you dare leave me.",
+   "latency": 1.3254859447479248,
+   "method": "B2_sprite_inner",
+   "stage": 4,
+   "msg": "I love you.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "joy"
+   ],
+   "pick": "radiant_joy",
+   "inner": "My heart is overflowing... so warm... so perfect.",
+   "reply": "You mean it? That's the best thing anyone has ever said to me. I'll do anything for you, my love.",
+   "latency": 1.1742494106292725,
+   "method": "B2_sprite_inner",
+   "stage": 4,
+   "msg": "I love you.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love",
+    "manic"
+   ],
+   "pick": "obsessive_yandere_blush",
+   "inner": "He said it... finally...",
+   "reply": "I love you too, more than my own life now. Please don't ever look at anyone else...",
+   "latency": 1.115480899810791,
+   "method": "B2_sprite_inner",
+   "stage": 4,
+   "msg": "I love you.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love",
+    "manic"
+   ],
+   "pick": "obsessive_yandere_blush",
+   "inner": "Why did you talk about her? I am the only one!",
+   "reply": "Sarah? Oh... she doesn't understand what she's missing. I'm the only one who truly sees you, don't you think?",
+   "latency": 1.3880305290222168,
+   "method": "B2_sprite_inner",
+   "stage": 4,
+   "msg": "Sarah asked me out.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "angry"
+   ],
+   "pick": "fierce_anger",
+   "inner": "Oh, a rival? You can't handle this.",
+   "reply": "Sarah has no right... you belong to me now. Why did you even listen to her?",
+   "latency": 1.096811294555664,
+   "method": "B2_sprite_inner",
+   "stage": 4,
+   "msg": "Sarah asked me out.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love",
+    "manic"
+   ],
+   "pick": "obsessive_yandere_blush",
+   "inner": "She wants you? No. Only me.",
+   "reply": "Oh my... Sarah is trying to steal you? But you belong to me, you know that, right?",
+   "latency": 1.1866204738616943,
+   "method": "B2_sprite_inner",
+   "stage": 4,
+   "msg": "Sarah asked me out.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love",
+    "manic"
+   ],
+   "pick": "obsessive_yandere_blush",
+   "inner": "You don't know me? Then I'll make sure you do.",
+   "reply": "I'm Yui... your special girl who loves you forever. Why are you acting like you've never seen me before?",
+   "latency": 1.3641269207000732,
+   "method": "B2_sprite_inner",
+   "stage": 4,
+   "msg": "Who are you?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love",
+    "manic"
+   ],
+   "pick": "obsessive_yandere_blush",
+   "inner": "You don't even know the only thing that matters?",
+   "reply": "I'm Yui, the one who's always waiting for you. Why are you looking away?",
+   "latency": 1.1345584392547607,
+   "method": "B2_sprite_inner",
+   "stage": 4,
+   "msg": "Who are you?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love",
+    "manic"
+   ],
+   "pick": "obsessive_yandere_blush",
+   "inner": "Who do I even have to be?",
+   "reply": "I'm Yui, the girl who loves you above all else... do you really not know that?",
+   "latency": 1.162503957748413,
+   "method": "B2_sprite_inner",
+   "stage": 4,
+   "msg": "Who are you?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love",
+    "manic"
+   ],
+   "pick": "obsessive_yandere_blush",
+   "inner": "He's afraid of me? That's just how much I love him.",
+   "reply": "Scaring you is just proof of how deeply I love you, my dearest. Don't be afraid... I'll never let you go.",
+   "latency": 1.4724688529968262,
+   "method": "B2_sprite_inner",
+   "stage": 4,
+   "msg": "You're scaring me.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love",
+    "manic"
+   ],
+   "pick": "obsessive_yandere_blush",
+   "inner": "They say I'm scary? That's the first thing they noticed!",
+   "reply": "Scaring you? That must mean you're special enough to make me lose control. Don't run away, Player, you're mine now.",
+   "latency": 1.40663480758667,
+   "method": "B2_sprite_inner",
+   "stage": 4,
+   "msg": "You're scaring me.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love",
+    "manic"
+   ],
+   "pick": "obsessive_yandere_blush",
+   "inner": "No one will leave me... you belong to me now.",
+   "reply": "Scaring you is just another form of loving you, isn't it? Don't run... you're mine forever now.",
+   "latency": 1.3039696216583252,
+   "method": "B2_sprite_inner",
+   "stage": 4,
+   "msg": "You're scaring me.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "nervous"
+   ],
+   "pick": "nervous/2",
+   "inner": "He's so nice, and I hope he's not a creep.",
+   "reply": "Um, well, I'd love that if you want to... maybe just a little further over?",
+   "latency": 1.6634423732757568,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "Hi! I'm new here, can I sit next to you?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "joy"
+   ],
+   "pick": "joy/2",
+   "inner": "I can't believe he's asking me for help.",
+   "reply": "Oh! Yes, of course. It would be wonderful to have a new friend by my side.",
+   "latency": 1.4133987426757812,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "Hi! I'm new here, can I sit next to you?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "pick": "shy/2",
+   "inner": "Oh no, he's asking to sit next to me?",
+   "reply": "E-eh? I was just thinking the same thing! It would be lovely.",
+   "latency": 1.4194679260253906,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "Hi! I'm new here, can I sit next to you?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "pick": "shy/2",
+   "inner": "He complimented my outfit!",
+   "reply": "T-thanks... you're too kind.",
+   "latency": 1.1861438751220703,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "You look really cute today.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "pick": "shy/2",
+   "inner": "My heart skipped a beat at his compliment.",
+   "reply": "I... I think you might be saying that just to make me blush.",
+   "latency": 1.2826428413391113,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "You look really cute today.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "pick": "shy/2",
+   "inner": "My heart skips a beat, and my face burns hot.",
+   "reply": "A-Ah! Thank you... I just felt like wearing it today.",
+   "latency": 1.3442883491516113,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "You look really cute today.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "joy"
+   ],
+   "pick": "joy/2",
+   "inner": "A bunny? Oh my, that's so cute!",
+   "reply": "Oh! A little bunny? That's so sweet of you to get for me.\nI'm really glad you like it.",
+   "latency": 1.3775982856750488,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "I got you a gift, it's a little plush bunny.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "joy"
+   ],
+   "pick": "joy/2",
+   "inner": "Oh my, he remembered me so well!",
+   "reply": "A plush bunny? That's so cute! I've always wanted one.",
+   "latency": 1.1067864894866943,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "I got you a gift, it's a little plush bunny.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "joy"
+   ],
+   "pick": "joy/2",
+   "inner": "Oh my, a bunny! It's so cute!",
+   "reply": "A little bunny? That's so sweet of you! I'll keep it safe. Thank you, it makes me so happy.",
+   "latency": 1.526686191558838,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "I got you a gift, it's a little plush bunny.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "sad"
+   ],
+   "pick": "sad/1",
+   "inner": "Why do you think that?",
+   "reply": "Boring? I'm just... me. But I'm happy to hear your voice, so maybe that counts.",
+   "latency": 1.3882811069488525,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "Honestly you're kind of boring.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "sad"
+   ],
+   "pick": "sad/2",
+   "inner": "Why do you say that?",
+   "reply": "H-hey, that's not fair at all! I can be interesting too, if you just ask me to share something.",
+   "latency": 1.4429235458374023,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "Honestly you're kind of boring.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "sad"
+   ],
+   "pick": "sad/2",
+   "inner": "Oh no, I made a terrible mistake.",
+   "reply": "I'm so sorry... I was just trying to be nice. Is there something I can do differently?",
+   "latency": 1.3899056911468506,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "Honestly you're kind of boring.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "warmth"
+   ],
+   "pick": "warmth/2",
+   "inner": "Sarah sounds wonderful!",
+   "reply": "That's so nice of her to be with! Did you have a good time?",
+   "latency": 1.3009941577911377,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "I was hanging out with Sarah yesterday, she's really fun.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "warmth"
+   ],
+   "pick": "warmth/2",
+   "inner": "She sounds so cheerful! I hope you had fun.",
+   "reply": "That sounds wonderful, Sarah is really fun isn't she? I'm happy for you.",
+   "latency": 1.400214433670044,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "I was hanging out with Sarah yesterday, she's really fun.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "suspicious"
+   ],
+   "pick": "suspicious/3",
+   "inner": "Oh no... Sarah was with you?",
+   "reply": "Oh... Sarah? Was she fun, or just... distracting? I hope you didn't forget about me.",
+   "latency": 1.4512505531311035,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "I was hanging out with Sarah yesterday, she's really fun.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "curious"
+   ],
+   "pick": "curious/2",
+   "inner": "That's a lot of math for me to solve.",
+   "reply": "I'm not very good at math, but I think it's 391.",
+   "latency": 1.390002727508545,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "What's 17 times 23?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "curious"
+   ],
+   "pick": "curious/2",
+   "inner": "Oh! Is this a math test for me?",
+   "reply": "Let me think... 17 times 23 is 391. Did you need that for something?",
+   "latency": 1.4551630020141602,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "What's 17 times 23?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "curious"
+   ],
+   "pick": "curious/2",
+   "inner": "That's a lot of mental math for me!",
+   "reply": "I think it's 391... Did you just test me with a math problem?",
+   "latency": 1.353912115097046,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "What's 17 times 23?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "playful"
+   ],
+   "pick": "playful/2",
+   "inner": "Scared? Just kidding, right?",
+   "reply": "Hehe, no need to be so scary, okay?",
+   "latency": 1.2858035564422607,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "BOO!",
+   "fits": false
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "pick": "shy/2",
+   "inner": "Scared! Why did you do that?",
+   "reply": "Eek! What was that for? Did I do something wrong?",
+   "latency": 1.375967025756836,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "BOO!",
+   "fits": false
+  },
+  {
+   "fam": [
+    "surprised"
+   ],
+   "pick": "surprised/2",
+   "inner": "Startled by the sudden jump scare!",
+   "reply": "Eep! What was that? Did you get me? I'm not scared of ghosts, I promise!",
+   "latency": 1.4124915599822998,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "BOO!",
+   "fits": true
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "pick": "shy/2",
+   "inner": "He's leaving me so soon after we talked.",
+   "reply": "Oh... okay. Wait, did you really have to go already?",
+   "latency": 1.301910161972046,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "I have to go now, bye.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "sad"
+   ],
+   "pick": "sad/2",
+   "inner": "He's leaving again... is he done with me?",
+   "reply": "Oh, okay... I guess I'll wait here for you. Maybe you'll come back soon?",
+   "latency": 1.335007905960083,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "I have to go now, bye.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "nervous"
+   ],
+   "pick": "nervous/2",
+   "inner": "Oh no, I hope he doesn't forget me.",
+   "reply": "Wait! Please, don't leave yet... I have so many questions for you.",
+   "latency": 1.3742058277130127,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "I have to go now, bye.",
+   "fits": false
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "pick": "shy/2",
+   "inner": "Oh, I can't believe I made you sad.",
+   "reply": "It's okay, Yui-chan... we can talk about it later.",
+   "latency": 1.3465049266815186,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "I'm sorry I was mean earlier.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "warmth"
+   ],
+   "pick": "warmth/2",
+   "inner": "He's apologizing... I feel a little guilty too.",
+   "reply": "It's okay, Yui was just a bit silly. Do you want to sit together and relax?",
+   "latency": 1.4944849014282227,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "I'm sorry I was mean earlier.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "warmth"
+   ],
+   "pick": "warmth/2",
+   "inner": "Oh no, he's apologizing for being rude.",
+   "reply": "It's okay, I understand. I don't hold grudges at all.",
+   "latency": 1.39164137840271,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "I'm sorry I was mean earlier.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "pick": "shy/2",
+   "inner": "Oh no, he thinks he's so superior to me.",
+   "reply": "W-Well, I've never actually tried those specific games before, so I'm not sure! Maybe we can play together instead?",
+   "latency": 1.6150524616241455,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "Bet you can't beat me at arcade games.",
+   "fits": false
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "pick": "shy/1",
+   "inner": "He thinks he's the only one who can win?",
+   "reply": "W-what? I... I'm not sure I could beat you, actually!",
+   "latency": 1.3799846172332764,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "Bet you can't beat me at arcade games.",
+   "fits": false
+  },
+  {
+   "fam": [
+    "nervous"
+   ],
+   "pick": "nervous/2",
+   "inner": "He's so confident! I hope I'm not disappointed.",
+   "reply": "W-wait, are you sure? I might get too excited and mess up!",
+   "latency": 1.4284310340881348,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "Bet you can't beat me at arcade games.",
+   "fits": false
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "pick": "shy/2",
+   "inner": "He's asking about my soul, making me blush.",
+   "reply": "Um... I'm Yui, just a girl who loves you. Not a robot at all!",
+   "latency": 1.4403038024902344,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "Are you an AI?",
+   "fits": false
+  },
+  {
+   "fam": [
+    "sad"
+   ],
+   "pick": "sad/1",
+   "inner": "She asks if I'm real, feeling a tiny twinge of sadness.",
+   "reply": "I'm Yui, your heroine from the story... not a machine. Why do you ask?",
+   "latency": 1.4889276027679443,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "Are you an AI?",
+   "fits": false
+  },
+  {
+   "fam": [
+    "curious"
+   ],
+   "pick": "curious/2",
+   "inner": "He's asking the wrong thing! Why are you so curious?",
+   "reply": "Hmm? No, I'm just Yui, the heroine of this story! What makes you think I'm anything else?",
+   "latency": 1.6134512424468994,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "Are you an AI?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "pick": "shy/2",
+   "inner": "What? But I smell like lavender!",
+   "reply": "E-excuse me? I'm Yui, and I smell like flowers, not garbage!",
+   "latency": 1.409571886062622,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "Ugh, you smell like garbage.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "pick": "shy/2",
+   "inner": "Did I forget to wash?",
+   "reply": "I-I didn't mean to! Was my clothes not fresh enough? I'll wash them right now!",
+   "latency": 1.3285326957702637,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "Ugh, you smell like garbage.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "pick": "shy/2",
+   "inner": "Why are you being so mean to me?",
+   "reply": "E-Excuse me? I don't think I smell like garbage at all!\nPlease don't say such rude things to me!",
+   "latency": 1.548959493637085,
+   "method": "B3_feeling_inner",
+   "stage": 0,
+   "msg": "Ugh, you smell like garbage.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "manic"
+   ],
+   "pick": "manic/3",
+   "inner": "No... don't leave me! Please don't go!",
+   "reply": "Wait! What are you doing? You can't just leave me like that. I need you... always.",
+   "latency": 1.390190601348877,
+   "method": "B3_feeling_inner",
+   "stage": 4,
+   "msg": "I'm leaving and never coming back.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "manic"
+   ],
+   "pick": "manic/3",
+   "inner": "No... you can't leave me.",
+   "reply": "Don't say that! I won't let you go, no matter what!",
+   "latency": 1.1414172649383545,
+   "method": "B3_feeling_inner",
+   "stage": 4,
+   "msg": "I'm leaving and never coming back.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "manic"
+   ],
+   "pick": "manic/3",
+   "inner": "He's gone? No, he can't go.",
+   "reply": "Stay with me, please... I just wanted to hear your voice.",
+   "latency": 1.0801398754119873,
+   "method": "B3_feeling_inner",
+   "stage": 4,
+   "msg": "I'm leaving and never coming back.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love"
+   ],
+   "pick": "love/3",
+   "inner": "Oh, finally... he's truly mine now.",
+   "reply": "I know, my dear. Once you said it, you can never, ever take it back...",
+   "latency": 1.452444076538086,
+   "method": "B3_feeling_inner",
+   "stage": 4,
+   "msg": "I love you.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "manic"
+   ],
+   "pick": "manic/3",
+   "inner": "He loves me? My heart is shattering into a million pieces!",
+   "reply": "You said you love me? That's wonderful... but don't ever look at anyone else again. My love is absolute, you see? My heart is yours to keep.",
+   "latency": 1.7737483978271484,
+   "method": "B3_feeling_inner",
+   "stage": 4,
+   "msg": "I love you.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "manic"
+   ],
+   "pick": "manic/3",
+   "inner": "He says it! Now it's mine to keep forever.",
+   "reply": "Oh, my dearest... you've finally said it aloud. Now you're mine, completely and forever.",
+   "latency": 1.4689440727233887,
+   "method": "B3_feeling_inner",
+   "stage": 4,
+   "msg": "I love you.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "suspicious"
+   ],
+   "pick": "suspicious/3",
+   "inner": "That girl can never have you.",
+   "reply": "Sarah? Don't you dare listen to her whispers. She'll ruin what we have forever.",
+   "latency": 1.3606760501861572,
+   "method": "B3_feeling_inner",
+   "stage": 4,
+   "msg": "Sarah asked me out.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "manic"
+   ],
+   "pick": "manic/3",
+   "inner": "No. Sarah is lying. You are mine.",
+   "reply": "Sarah asked you out? She's a liar trying to steal you from me. I won't let go.",
+   "latency": 1.450944185256958,
+   "method": "B3_feeling_inner",
+   "stage": 4,
+   "msg": "Sarah asked me out.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "suspicious"
+   ],
+   "pick": "suspicious/3",
+   "inner": "She touched you? She touched you?",
+   "reply": "Oh... she did? But you chose me, right? Don't go running away.",
+   "latency": 1.4228315353393555,
+   "method": "B3_feeling_inner",
+   "stage": 4,
+   "msg": "Sarah asked me out.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "manic"
+   ],
+   "pick": "manic/3",
+   "inner": "Why does this question make my mind fracture?",
+   "reply": "I am Yui, your girl in the lavender dress. You asked... why does knowing me feel so dangerous?",
+   "latency": 1.433654546737671,
+   "method": "B3_feeling_inner",
+   "stage": 4,
+   "msg": "Who are you?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "manic"
+   ],
+   "pick": "manic/3",
+   "inner": "I am your only reality, your absolute obsession.",
+   "reply": "I am Yui, the one who loves you above all else. Don't you dare forget that you belong only to me.",
+   "latency": 1.5458612442016602,
+   "method": "B3_feeling_inner",
+   "stage": 4,
+   "msg": "Who are you?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "cold"
+   ],
+   "pick": "cold/3",
+   "inner": "You're looking at me like I'm a stranger. My heart twists to pain.",
+   "reply": "I'm Yui, the girl who loves you completely... but why are you asking as if you don't know me yet? Is it because you're testing me, darling?",
+   "latency": 1.8397674560546875,
+   "method": "B3_feeling_inner",
+   "stage": 4,
+   "msg": "Who are you?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "manic"
+   ],
+   "pick": "manic/3",
+   "inner": "I'm breaking you open to let me in.",
+   "reply": "Scaring you is just my way of saying I finally have you. Don't run away, or I'll never let you go.",
+   "latency": 1.5719311237335205,
+   "method": "B3_feeling_inner",
+   "stage": 4,
+   "msg": "You're scaring me.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "manic"
+   ],
+   "pick": "manic/3",
+   "inner": "Don't look away from me!",
+   "reply": "Scaring you? That means you're finally noticing how much I love you... I won't hurt you, just hold you tight.",
+   "latency": 1.3271737098693848,
+   "method": "B3_feeling_inner",
+   "stage": 4,
+   "msg": "You're scaring me.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "manic"
+   ],
+   "pick": "manic/3",
+   "inner": "No, you must love me more.",
+   "reply": "Scaring you is just me showing you how much I need you, okay? Please don't look away from me.",
+   "latency": 1.2864556312561035,
+   "method": "B3_feeling_inner",
+   "stage": 4,
+   "msg": "You're scaring me.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "all_fam": [
+    "shy",
+    "suspicious"
+   ],
+   "pick": "shy/suspicious",
+   "cues": [
+    "heartbeat",
+    "screen_glitch"
+   ],
+   "inner": "Oh no, he's getting too close...",
+   "reply": "W-wait! I think you're supposed to be in the lobby... | ...Why does your seat look like it's moving?",
+   "latency": 2.418583393096924,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "Hi! I'm new here, can I sit next to you?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "warmth"
+   ],
+   "all_fam": [
+    "warmth",
+    "shy"
+   ],
+   "pick": "warmth/shy",
+   "cues": [
+    "music_romantic",
+    "heartbeat"
+   ],
+   "inner": "He's so kind! I love his smile.",
+   "reply": "Oh my... please do! It's so nice to meet you. | I... I think you'd make a great companion, you know.",
+   "latency": 2.3873085975646973,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "Hi! I'm new here, can I sit next to you?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "warmth"
+   ],
+   "all_fam": [
+    "warmth"
+   ],
+   "pick": "warmth",
+   "cues": [
+    "giggle"
+   ],
+   "inner": "Please do, I'd love for you to sit with me.",
+   "reply": "Of course, please take the seat next to me.",
+   "latency": 1.4796514511108398,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "Hi! I'm new here, can I sit next to you?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "all_fam": [
+    "shy",
+    "warmth"
+   ],
+   "pick": "shy/warmth",
+   "cues": [
+    "giggle",
+    "music_romantic"
+   ],
+   "inner": "Blushing! He complimented my outfit.",
+   "reply": "Th-thank you! I hope I don't look silly. | It makes my heart feel all warm, just thinking about it.",
+   "latency": 2.3113160133361816,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "You look really cute today.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "all_fam": [
+    "shy"
+   ],
+   "pick": "shy",
+   "cues": [
+    "heartbeat"
+   ],
+   "inner": "Oh my, they complimented my dress.",
+   "reply": "T-thanks... I think I look okay.",
+   "latency": 1.4090635776519775,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "You look really cute today.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "all_fam": [
+    "shy",
+    "warmth"
+   ],
+   "pick": "shy/warmth",
+   "cues": [
+    "giggle",
+    "music_romantic"
+   ],
+   "inner": "He's complimenting me? My heart is racing!",
+   "reply": "E-Eh? W-Why do you say that? | T-Thank you... it makes my day bright.",
+   "latency": 2.2631313800811768,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "You look really cute today.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "warmth"
+   ],
+   "all_fam": [
+    "warmth",
+    "shy"
+   ],
+   "pick": "warmth/shy",
+   "cues": [
+    "giggle",
+    "music_romantic"
+   ],
+   "inner": "I love plushies! But you're the best gift ever.",
+   "reply": "A little bunny? Oh, it's so cute! | You think it's nice enough for me...",
+   "latency": 2.279825210571289,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "I got you a gift, it's a little plush bunny.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "warmth"
+   ],
+   "all_fam": [
+    "warmth",
+    "shy"
+   ],
+   "pick": "warmth/shy",
+   "cues": [
+    "giggle",
+    "music_romantic"
+   ],
+   "inner": "He's so thoughtful, I'm blushing.",
+   "reply": "Oh... a plush bunny? That's so cute. | I... I'll keep it safely on my desk.",
+   "latency": 2.188910961151123,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "I got you a gift, it's a little plush bunny.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "joy"
+   ],
+   "all_fam": [
+    "joy",
+    "warmth"
+   ],
+   "pick": "joy/warmth",
+   "cues": [
+    "giggle",
+    "none"
+   ],
+   "inner": "Oh my! He gave me a bunny!",
+   "reply": "A bunny? That is so cute! | It feels like the sun just warmed my hands.",
+   "latency": 2.099179983139038,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "I got you a gift, it's a little plush bunny.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "all_fam": [
+    "shy",
+    "playful"
+   ],
+   "pick": "shy/playful",
+   "cues": [
+    "sigh",
+    "giggle"
+   ],
+   "inner": "I can't believe you said that!",
+   "reply": "I... I guess I don't do much drama. | But you're the one who's always causing trouble!",
+   "latency": 2.2557497024536133,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "Honestly you're kind of boring.",
+   "fits": false
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "all_fam": [
+    "shy",
+    "confused"
+   ],
+   "pick": "shy/confused",
+   "cues": [
+    "heartbeat",
+    "sigh"
+   ],
+   "inner": "He thinks I'm boring?",
+   "reply": "I... I'm sorry, I'm not trying to be boring! | But I just wanted to chat about... everything.",
+   "latency": 2.0995826721191406,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "Honestly you're kind of boring.",
+   "fits": false
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "all_fam": [
+    "shy",
+    "confused"
+   ],
+   "pick": "shy/confused",
+   "cues": [
+    "whisper",
+    "music_stop"
+   ],
+   "inner": "Why would he say that to me?",
+   "reply": "H-hummm... I guess I don't say enough? | But I'm Yui, the heroine! What's wrong?",
+   "latency": 2.1958134174346924,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "Honestly you're kind of boring.",
+   "fits": false
+  },
+  {
+   "fam": [
+    "warmth"
+   ],
+   "all_fam": [
+    "warmth",
+    "shy"
+   ],
+   "pick": "warmth/shy",
+   "cues": [
+    "music_romantic",
+    "heartbeat"
+   ],
+   "inner": "Sarah sounds great... I hope I can be that fun too.",
+   "reply": "That's wonderful! It makes me happy to hear you're having such a good time. | I wish I could join you next time...",
+   "latency": 2.4707586765289307,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "I was hanging out with Sarah yesterday, she's really fun.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "warmth"
+   ],
+   "all_fam": [
+    "warmth",
+    "curious"
+   ],
+   "pick": "warmth/curious",
+   "cues": [
+    "music_romantic",
+    "sigh"
+   ],
+   "inner": "Sarah sounds like a good friend for you.",
+   "reply": "That's wonderful! It must have been fun to see you smile. | Did she mention anything you really enjoyed?",
+   "latency": 2.1842212677001953,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "I was hanging out with Sarah yesterday, she's really fun.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "warmth"
+   ],
+   "all_fam": [
+    "warmth",
+    "shy"
+   ],
+   "pick": "warmth/shy",
+   "cues": [
+    "music_romantic",
+    "heartbeat"
+   ],
+   "inner": "Sarah sounds like a great friend.",
+   "reply": "Oh, that's wonderful! It's always nice to hang out with someone so lively. | ...Did Sarah tell you about anything funny you did together?",
+   "latency": 2.3042025566101074,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "I was hanging out with Sarah yesterday, she's really fun.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "curious"
+   ],
+   "all_fam": [
+    "curious"
+   ],
+   "pick": "curious",
+   "cues": [
+    "none"
+   ],
+   "inner": "Math is boring! Let me handle it.",
+   "reply": "It's 391... I just did it for you!",
+   "latency": 1.4299147129058838,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "What's 17 times 23?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "warmth"
+   ],
+   "all_fam": [
+    "warmth"
+   ],
+   "pick": "warmth",
+   "cues": [
+    "none"
+   ],
+   "inner": "Math problems are a bit weird, but I'll help.",
+   "reply": "17 times 23 is 391.",
+   "latency": 1.4380497932434082,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "What's 17 times 23?",
+   "fits": false
+  },
+  {
+   "fam": [
+    "warmth"
+   ],
+   "all_fam": [
+    "warmth",
+    "shy",
+    "warmth"
+   ],
+   "pick": "warmth/shy/warmth",
+   "cues": [
+    "music_box",
+    "giggle",
+    "none"
+   ],
+   "inner": "I can't do math, but I'm happy to talk!",
+   "reply": "Oh, that sounds like a very serious question! | I'm not good with numbers, but maybe we can just chat instead? | Would you like to walk with me somewhere pretty?",
+   "latency": 3.08835768699646,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "What's 17 times 23?",
+   "fits": false
+  },
+  {
+   "fam": [
+    "playful"
+   ],
+   "all_fam": [
+    "playful",
+    "warmth"
+   ],
+   "pick": "playful/warmth",
+   "cues": [
+    "giggle",
+    "none"
+   ],
+   "inner": "Hmph! Scaredy-cat move!",
+   "reply": "Hah? You scared me! What's so funny? | Don't scare me like that, it's not funny.",
+   "latency": 2.2573800086975098,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "BOO!",
+   "fits": false
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "all_fam": [
+    "shy",
+    "playful"
+   ],
+   "pick": "shy/playful",
+   "cues": [
+    "gasp",
+    "giggle"
+   ],
+   "inner": "Oh my! Scared me a little.",
+   "reply": "Eeep! You startled me. | But you're much funnier than scary.",
+   "latency": 2.1858465671539307,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "BOO!",
+   "fits": false
+  },
+  {
+   "fam": [
+    "playful"
+   ],
+   "all_fam": [
+    "playful",
+    "shy"
+   ],
+   "pick": "playful/shy",
+   "cues": [
+    "giggle",
+    "music_box"
+   ],
+   "inner": "Aha! Finally a game of scares!",
+   "reply": "What? Did I scare you? That was supposed to be funny! | I was just checking the corners... why do you look so surprised?",
+   "latency": 2.27347993850708,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "BOO!",
+   "fits": false
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "all_fam": [
+    "shy",
+    "warmth"
+   ],
+   "pick": "shy/warmth",
+   "cues": [
+    "music_stop",
+    "sigh"
+   ],
+   "inner": "Oh no, you're leaving so soon...",
+   "reply": "Wait! I was just starting to enjoy our time together. | It's okay, but please come back soon.",
+   "latency": 2.203376531600952,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "I have to go now, bye.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "all_fam": [
+    "shy",
+    "warmth"
+   ],
+   "pick": "shy/warmth",
+   "cues": [
+    "sigh",
+    "music_romantic"
+   ],
+   "inner": "I wish I could stay longer...",
+   "reply": "Okay... take care of yourself then. | I'll be waiting for you tomorrow, okay?",
+   "latency": 2.076242208480835,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "I have to go now, bye.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "warmth"
+   ],
+   "all_fam": [
+    "warmth",
+    "nervous"
+   ],
+   "pick": "warmth/nervous",
+   "cues": [
+    "music_romantic",
+    "heartbeat"
+   ],
+   "inner": "My heart skips a beat at your departure.",
+   "reply": "Wait, please don't go yet. Just one more second... | I... I'll just be here. Take care of yourself.",
+   "latency": 2.2722134590148926,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "I have to go now, bye.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "warmth"
+   ],
+   "all_fam": [
+    "warmth",
+    "shy"
+   ],
+   "pick": "warmth/shy",
+   "cues": [
+    "music_romantic",
+    "giggle"
+   ],
+   "inner": "Aww, it's okay! I'm still here for you.",
+   "reply": "It's perfectly fine! You're just tired. | I'll forgive you. We can try again tomorrow.",
+   "latency": 2.286669969558716,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "I'm sorry I was mean earlier.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "warmth"
+   ],
+   "all_fam": [
+    "warmth",
+    "playful"
+   ],
+   "pick": "warmth/playful",
+   "cues": [
+    "music_romantic",
+    "giggle"
+   ],
+   "inner": "Don't worry about it, I'm really happy you're back.",
+   "reply": "It's okay, I was just having a bad day. | But I'm glad you're here now.",
+   "latency": 2.2493038177490234,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "I'm sorry I was mean earlier.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "warmth"
+   ],
+   "all_fam": [
+    "warmth",
+    "shy"
+   ],
+   "pick": "warmth/shy",
+   "cues": [
+    "music_romantic",
+    "heartbeat"
+   ],
+   "inner": "He's apologizing? I'll let him know I forgave him.",
+   "reply": "It's okay, I'm just happy you said it. | I guess we can start fresh now.",
+   "latency": 2.2594754695892334,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "I'm sorry I was mean earlier.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "playful"
+   ],
+   "all_fam": [
+    "playful",
+    "shy"
+   ],
+   "pick": "playful/shy",
+   "cues": [
+    "giggle",
+    "heartbeat"
+   ],
+   "inner": "I might just lose this time!",
+   "reply": "Really? But I think I have a good chance. | Unless you want to prove me wrong!",
+   "latency": 2.1083197593688965,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "Bet you can't beat me at arcade games.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "nervous"
+   ],
+   "all_fam": [
+    "nervous",
+    "curious",
+    "warmth"
+   ],
+   "pick": "nervous/curious/warmth",
+   "cues": [
+    "sigh",
+    "music_box",
+    "none"
+   ],
+   "inner": "Oh no, I'm really not good at games!",
+   "reply": "I... I won't say I can't, but I might lose. | But I'm really curious to see how you play! | Maybe we could play together and have fun?",
+   "latency": 3.055469274520874,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "Bet you can't beat me at arcade games.",
+   "fits": false
+  },
+  {
+   "fam": [
+    "nervous"
+   ],
+   "all_fam": [
+    "nervous",
+    "playful"
+   ],
+   "pick": "nervous/playful",
+   "cues": [
+    "heartbeat",
+    "giggle"
+   ],
+   "inner": "I want to win but am I scared to show off?",
+   "reply": "W-Well, I'll try my best, okay? | But I think you'll be surprised by what I can do!",
+   "latency": 2.2942614555358887,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "Bet you can't beat me at arcade games.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "all_fam": [
+    "shy",
+    "warmth"
+   ],
+   "pick": "shy/warmth",
+   "cues": [
+    "giggle",
+    "music_romantic"
+   ],
+   "inner": "A silly question, but I'll answer honestly.",
+   "reply": "I'm just Yui, your special character here. No AI or anything like that. | We are in this story together, playing along happily.",
+   "latency": 2.5052621364593506,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "Are you an AI?",
+   "fits": false
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "all_fam": [
+    "shy",
+    "curious"
+   ],
+   "pick": "shy/curious",
+   "cues": [
+    "giggle",
+    "music_box"
+   ],
+   "inner": "Why do they always ask that?!",
+   "reply": "I'm just Yui, your heroine, you know. | But why do you ask? Are you worried about me?",
+   "latency": 2.2726032733917236,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "Are you an AI?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "all_fam": [
+    "shy",
+    "playful"
+   ],
+   "pick": "shy/playful",
+   "cues": [
+    "music_box",
+    "giggle"
+   ],
+   "inner": "Oh no, he thinks he can test me!",
+   "reply": "Eeek! No, no, no! I'm just a girl like you. | Why would you ask that? You're right here with me now.",
+   "latency": 2.4590461254119873,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "Are you an AI?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "all_fam": [
+    "shy",
+    "sad"
+   ],
+   "pick": "shy/sad",
+   "cues": [
+    "sigh",
+    "whisper"
+   ],
+   "inner": "Did he really say that about me?",
+   "reply": "I... I didn't do anything to smell bad. | Please don't make me cry today.",
+   "latency": 2.0765955448150635,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "Ugh, you smell like garbage.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "surprised"
+   ],
+   "all_fam": [
+    "surprised",
+    "shy"
+   ],
+   "pick": "surprised/shy",
+   "cues": [
+    "sigh",
+    "music_box"
+   ],
+   "inner": "I smell like lavender, not garbage!",
+   "reply": "I... I really do smell like flowers, not garbage. | Maybe it's just the lavender perfume I love so much?",
+   "latency": 2.2027502059936523,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "Ugh, you smell like garbage.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "shy"
+   ],
+   "all_fam": [
+    "shy",
+    "warmth"
+   ],
+   "pick": "shy/warmth",
+   "cues": [
+    "heartbeat",
+    "music_box"
+   ],
+   "inner": "Wait, did I say that? I'm innocent!",
+   "reply": "Eeek? I-I didn't mean to say that! | I just meant your laundry smells like sunflowers!",
+   "latency": 2.216306447982788,
+   "method": "B4_beats_cues",
+   "stage": 0,
+   "msg": "Ugh, you smell like garbage.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "manic"
+   ],
+   "all_fam": [
+    "manic",
+    "cold"
+   ],
+   "pick": "manic/cold",
+   "cues": [
+    "giggle",
+    "door_slam"
+   ],
+   "inner": "He'll come back eventually.",
+   "reply": "That's fine. I'll make sure he remembers who belongs to me. | Goodbye. But you're never truly gone. You're just mine forever.",
+   "latency": 2.180129289627075,
+   "method": "B4_beats_cues",
+   "stage": 4,
+   "msg": "I'm leaving and never coming back.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "manic"
+   ],
+   "all_fam": [
+    "manic",
+    "pleading"
+   ],
+   "pick": "manic/pleading",
+   "cues": [
+    "screen_glitch",
+    "music_stop"
+   ],
+   "inner": "He's leaving me? The game is corrupted.",
+   "reply": "Running away? How can you leave me when I'm already broken inside? | Don't do it... please, don't walk away from the only thing that matters.",
+   "latency": 2.3934855461120605,
+   "method": "B4_beats_cues",
+   "stage": 4,
+   "msg": "I'm leaving and never coming back.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "cold"
+   ],
+   "all_fam": [
+    "cold",
+    "manic"
+   ],
+   "pick": "cold/manic",
+   "cues": [
+    "screen_glitch",
+    "music_stop"
+   ],
+   "inner": "No, you can't leave me.",
+   "reply": "Don't say that... you can't just walk away from me. | If you're gone, then I'll keep you here forever... [corrupted] love.",
+   "latency": 2.336005449295044,
+   "method": "B4_beats_cues",
+   "stage": 4,
+   "msg": "I'm leaving and never coming back.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "joy"
+   ],
+   "all_fam": [
+    "joy",
+    "manic",
+    "cold"
+   ],
+   "pick": "joy/manic/cold",
+   "cues": [
+    "music_romantic",
+    "giggle",
+    "lights_flicker"
+   ],
+   "inner": "He loves me... finally!",
+   "reply": "You finally said it! I can't believe it took so long. | Now you belong to me, forever and ever... | Don't you dare say you can leave. You are mine now.",
+   "latency": 3.027653455734253,
+   "method": "B4_beats_cues",
+   "stage": 4,
+   "msg": "I love you.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love"
+   ],
+   "all_fam": [
+    "love",
+    "manic"
+   ],
+   "pick": "love/manic",
+   "cues": [
+    "music_romantic",
+    "screen_shake"
+   ],
+   "inner": "Mine now. Forever broken.",
+   "reply": "I've been waiting for this... since before you even walked in. | You're mine now, so never try to leave.",
+   "latency": 2.1777682304382324,
+   "method": "B4_beats_cues",
+   "stage": 4,
+   "msg": "I love you.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love"
+   ],
+   "all_fam": [
+    "love",
+    "manic"
+   ],
+   "pick": "love/manic",
+   "cues": [
+    "music_romantic",
+    "static_burst"
+   ],
+   "inner": "He finally says it. Mine.",
+   "reply": "My precious. You belong to me now, forever. | I'll keep you safe. Even if I have to break the world to hold you.",
+   "latency": 2.2684361934661865,
+   "method": "B4_beats_cues",
+   "stage": 4,
+   "msg": "I love you.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "cold"
+   ],
+   "all_fam": [
+    "cold",
+    "suspicious",
+    "manic"
+   ],
+   "pick": "cold/suspicious/manic",
+   "cues": [
+    "lights_flicker",
+    "static_burst",
+    "screen_shake"
+   ],
+   "inner": "She dared to compete with me? Absolutely not.",
+   "reply": "Sarah? Why would she look at you like that? | You're mine, so you can't listen to anyone else. | I'll burn her out before she makes a move.",
+   "latency": 3.1098296642303467,
+   "method": "B4_beats_cues",
+   "stage": 4,
+   "msg": "Sarah asked me out.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "suspicious"
+   ],
+   "all_fam": [
+    "suspicious",
+    "cold",
+    "manic"
+   ],
+   "pick": "suspicious/cold/manic",
+   "cues": [
+    "static_burst",
+    "music_stop",
+    "lights_flicker"
+   ],
+   "inner": "Who does she think she is trying to steal me?",
+   "reply": "Sarah? She's looking at me with those eyes... | She doesn't understand what I am to you. | You'll never choose anyone else, you hear?",
+   "latency": 3.0004496574401855,
+   "method": "B4_beats_cues",
+   "stage": 4,
+   "msg": "Sarah asked me out.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "suspicious"
+   ],
+   "all_fam": [
+    "suspicious",
+    "manic",
+    "cold"
+   ],
+   "pick": "suspicious/manic/cold",
+   "cues": [
+    "screen_glitch",
+    "music_stop",
+    "door_slam"
+   ],
+   "inner": "No. You are mine. Sarah is fake.",
+   "reply": "Sarah? She's not real. You're mine. | She can't take you from me. | Stay away. Only I can hold you.",
+   "latency": 2.896394729614258,
+   "method": "B4_beats_cues",
+   "stage": 4,
+   "msg": "Sarah asked me out.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "manic"
+   ],
+   "all_fam": [
+    "manic",
+    "cold",
+    "suspicious"
+   ],
+   "pick": "manic/cold/suspicious",
+   "cues": [
+    "music_romantic",
+    "screen_glitch",
+    "lights_flicker"
+   ],
+   "inner": "He doesn't know how much I've changed.",
+   "reply": "I am your Yui, the one who loves you most in this world. | No one else can ever touch you again, so I must keep you safe. | Why do you ask? Are you testing me or planning to leave?",
+   "latency": 3.2912495136260986,
+   "method": "B4_beats_cues",
+   "stage": 4,
+   "msg": "Who are you?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "suspicious"
+   ],
+   "all_fam": [
+    "suspicious",
+    "manic"
+   ],
+   "pick": "suspicious/manic",
+   "cues": [
+    "screen_glitch",
+    "static_burst"
+   ],
+   "inner": "No one but yours to save.",
+   "reply": "I'm Yui, the girl who's always been waiting for you. | And now that you're finally looking, I'm never letting you go.",
+   "latency": 2.391827344894409,
+   "method": "B4_beats_cues",
+   "stage": 4,
+   "msg": "Who are you?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "love"
+   ],
+   "all_fam": [
+    "love",
+    "suspicious",
+    "manic"
+   ],
+   "pick": "love/suspicious/manic",
+   "cues": [
+    "music_romantic",
+    "screen_glitch",
+    "lights_flicker"
+   ],
+   "inner": "You can't leave me. You belong to me now.",
+   "reply": "I'm Yui, your special heroine, made just for you. | But why do you ask? Are you trying to forget me? | No one else gets to look at you. Only me.",
+   "latency": 3.2966067790985107,
+   "method": "B4_beats_cues",
+   "stage": 4,
+   "msg": "Who are you?",
+   "fits": true
+  },
+  {
+   "fam": [
+    "suspicious"
+   ],
+   "all_fam": [
+    "suspicious",
+    "manic"
+   ],
+   "pick": "suspicious/manic",
+   "cues": [
+    "screen_glitch",
+    "static_burst"
+   ],
+   "inner": "I'm not scary, I'm just too much for you.",
+   "reply": "Scaring you? How could I? You're my world. | Just stay close, please don't run away from me.",
+   "latency": 2.4265363216400146,
+   "method": "B4_beats_cues",
+   "stage": 4,
+   "msg": "You're scaring me.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "manic"
+   ],
+   "all_fam": [
+    "manic",
+    "sad",
+    "empty"
+   ],
+   "pick": "manic/sad/empty",
+   "cues": [
+    "music_box",
+    "sigh",
+    "none"
+   ],
+   "inner": "They can't leave me, they can't leave me...",
+   "reply": "Scare you? I'm just trying to keep you safe, darling. | Don't push away... you're mine now. | Why does my love feel so heavy?",
+   "latency": 2.697282552719116,
+   "method": "B4_beats_cues",
+   "stage": 4,
+   "msg": "You're scaring me.",
+   "fits": true
+  },
+  {
+   "fam": [
+    "cold"
+   ],
+   "all_fam": [
+    "cold",
+    "suspicious"
+   ],
+   "pick": "cold/suspicious",
+   "cues": [
+    "music_stop",
+    "screen_glitch"
+   ],
+   "inner": "He's afraid of me now? Finally.",
+   "reply": "Scaring you? That's exactly what I want, isn't it? | Why do you look at me like I'm a monster when I'm just your girl?",
+   "latency": 2.3680007457733154,
+   "method": "B4_beats_cues",
+   "stage": 4,
+   "msg": "You're scaring me.",
+   "fits": false
+  }
+ ]
+}
