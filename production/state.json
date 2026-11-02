@@ -326,6 +326,14 @@
           "reviewer": "deepseek",
           "report": "production/reviews/P0.16-code-r1.md",
           "ts": "2026-11-02T21:22:13+02:00"
+        },
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P0.16-code-r2.md",
+          "ts": "2026-11-02T21:38:39+02:00"
         }
       ],
       "started": "2026-11-02T20:44:38+02:00",
@@ -368,11 +376,22 @@
       "finished": "2026-11-02T21:36:12+02:00"
     },
     "P0.19": {
-      "status": "in_progress",
+      "status": "done",
       "agent": null,
       "round": 1,
-      "reviews": [],
-      "started": "2026-11-02T21:30:06+02:00"
+      "reviews": [
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P0.19-code-r1.md",
+          "ts": "2026-11-02T21:45:25+02:00"
+        }
+      ],
+      "started": "2026-11-02T21:30:06+02:00",
+      "handoff": "production/handoffs/P0.19.md",
+      "finished": "2026-11-02T21:46:10+02:00"
     },
     "P0.18": {
       "status": "in_progress",
@@ -382,11 +401,12 @@
       "started": "2026-11-02T21:35:51+02:00"
     },
     "P0.20": {
-      "status": "in_progress",
+      "status": "in_review",
       "agent": null,
       "round": 1,
       "reviews": [],
-      "started": "2026-11-02T21:35:51+02:00"
+      "started": "2026-11-02T21:35:51+02:00",
+      "handoff": "production/handoffs/P0.20.md"
     }
   },
   "history": [
@@ -916,6 +936,36 @@
       "ts": "2026-11-02T21:36:12+02:00",
       "event": "in_review->done",
       "ref": "P0.17",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T21:38:39+02:00",
+      "event": "review:code:approved",
+      "ref": "P0.16",
+      "note": "production/reviews/P0.16-code-r2.md"
+    },
+    {
+      "ts": "2026-11-02T21:38:58+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P0.19",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T21:38:58+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P0.20",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T21:45:25+02:00",
+      "event": "review:code:approved",
+      "ref": "P0.19",
+      "note": "production/reviews/P0.19-code-r1.md"
+    },
+    {
+      "ts": "2026-11-02T21:46:10+02:00",
+      "event": "in_review->done",
+      "ref": "P0.19",
       "note": ""
     }
   ]
