@@ -14,3 +14,12 @@
 - Gotcha: phase-doc prose can be edited by the producer (CODE-3 path scrub done alongside P0.11 carry-over), but task
   rows must stay in the exact `| ID | Task | Role | Size | Deps | Review | Refs | Acceptance |` shape for track.py.
 - D3/D4/D5/D8/D9 stay OPEN; nothing in P0 is blocked by them.
+
+## Loop lesson (2026-11-02) — silent dispatches & orphan children
+- swe2 (`devin -p`) can emit ZERO stdout while working — P0.05's "stall" was actually a live run that committed fine.
+- `kill_shell` kills the bash wrapper only; the `devin.exe` child survives, keeps working, and can still commit.
+- Re-dispatching on assumed-stall created a two-agent race on task/P0.05 (resolved cleanly: second agent verified
+  instead of duplicating — but that's luck, not design).
+- **New producer rule: declare a stall only after NO filesystem/git activity in the task's work area for ~5+ min AND
+  no commits; confirm the old devin.exe is dead (process list) before re-dispatching.**
+- Mixed-backend implementation → split reviews (code→swe2, design→deepseek) and record the rationale for the gate audit.
