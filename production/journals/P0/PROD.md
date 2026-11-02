@@ -35,3 +35,12 @@
   P1 planning must seed rows for them (serve.ps1 cvec-path doc, ci.yml timeout + persist-credentials,
   track.py reviewer-field check). C5/C7/C8/C9/C10 map onto existing P1 tasks.
 - Caveat noted: CI proven on PR #6 only; origin/main is ~102 commits behind — push needs user approval.
+
+## Publish (2026-11-02, user-approved)
+
+- `main` pushed to origin (104 commits) + tag `phase-P0`. Repo confirmed PUBLIC (already was).
+- First CI run on main: GREEN (run 41521715307) — gate criterion-3 caveat resolved.
+- PR #6 shows MERGED (content already on main); PR #7 closed. Branches task/* cleaned.
+- Pre-publish hygiene: last live personal path scrubbed (.claude/skills/role-build-release).
+  Historical handoff/review docs still quote the design-machine E: path as evidence — audit
+  trail kept intact; flagged for user awareness post-publish.
