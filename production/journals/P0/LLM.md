@@ -15,28 +15,16 @@
 - Next for me: P0.09 NobodyWho spike; then P1.02 server backend — reuse `serve.*` conventions and
   `LEILA_MODEL`/`LEILA_LLAMA_BIN`.
 
-## P0.14 — P0.03 review carry-overs (2026-11-02)
-
-- Fixed all four CODE findings: `${OS:-}` guards (Linux arm under `set -u`), exec bits 100755 on the
-  .sh launchers (`git update-index --chmod=+x` — the only way on Windows), `check_turn()` in smoke.py
-  validating enums/beats/mood against the same GATES/INTENTS/FEELINGS constants the schema encodes
-  (jsonschema isn't installed — hand checks were the "cheap" option), and the banner now prints the
-  binary's real `--version`.
-- Gotchas: `llama-server --version` writes to **stderr**. In bash `2>&1` merges it; in PS5.1 native
-  stderr throws under `ErrorActionPreference=Stop`, so serve.ps1 relaxes EAP around the capture.
-- Gotcha: worktrees have no `tools/llama/`/`models/` — live runs need `LEILA_LLAMA_BIN`/`LEILA_MODEL`
-  pointed at `D:/lila`. The `PATH="$BIN:$PATH"` prepend in serve.sh splits on the `D:` colon; harmless
-  (Windows finds DLLs next to the exe) but noted in the handoff.
-
 ## P0.09 — NobodyWho spike → build own `libleila_llm` (2026-11-02)
 
 - Verified live on the RTX 4050 (NobodyWho v13.0.0 in a scratch Godot 4.7.2 project): json_schema
   grammar honors `maxLength`/enums/`additionalProperties:false` and preserves schema property
   order; `template_variables.enable_thinking`, `n_ctx` 8192, `context_shift`, penalties/seed all
   exist; per-token `next_token()` stream, warm ttft ~0.4 s.
-- **No control vectors** (0 API methods; issue #40 open since 2024-11; llama-cpp-rs safe API has
-  only `lora_adapter_set`) → per docs/07 §1's own rule we build the thin GDExtension. Windows GPU
-  is Vulkan-only: 3.7–41.5 tok/s run-to-run (vs steady ~51 CUDA) and 5.7 GB VRAM vs 3.3 on server.
+- **No control vectors** (0 API methods; issue #40 open since 2024-11 — corrected in round 2:
+  closed 2026-07-14 as stale; llama-cpp-rs safe API has only `lora_adapter_set`) → per docs/07
+  §1's own rule we build the thin GDExtension. Windows GPU is Vulkan-only: 3.7–41.5 tok/s
+  run-to-run (vs steady ~51 CUDA) and 5.7 GB VRAM vs 3.3 on server.
 - Gotcha: headless fresh project needs `--import` once to register `.gdextension` files; nobodywho
   has no `n_gpu_layers`/device override and no `max_tokens` key. Their json_schema can emit stray
   props unless `additionalProperties:false` is set on EVERY object level (learned when beats[0]
@@ -63,3 +51,28 @@ the grammar JSON (~85 tokens before first `say` → first beat ≈2.1 s at 42 to
   TURN INVALID + exit 1, valid turn → SMOKE OK + exit 0. Runs under plain `pytest` (CI runs it).
 - Gotcha for next time: to unit-test a smoke.py helper in-process, exec-extract its source
   (what the P0.14 reviewer did) — or wrap the module's main flow in `main()` first.
+
+## P0.14 — P0.03 review carry-overs (2026-11-02)
+
+- Fixed all four CODE findings: `${OS:-}` guards (Linux arm under `set -u`), exec bits 100755 on the
+  .sh launchers (`git update-index --chmod=+x` — the only way on Windows), `check_turn()` in smoke.py
+  validating enums/beats/mood against the same GATES/INTENTS/FEELINGS constants the schema encodes
+  (jsonschema isn't installed — hand checks were the "cheap" option), and the banner now prints the
+  binary's real `--version`.
+- Gotchas: `llama-server --version` writes to **stderr**. In bash `2>&1` merges it; in PS5.1 native
+  stderr throws under `ErrorActionPreference=Stop`, so serve.ps1 relaxes EAP around the capture.
+- Gotcha: worktrees have no `tools/llama/`/`models/` — live runs need `LEILA_LLAMA_BIN`/`LEILA_MODEL`
+  pointed at `D:/lila`. The `PATH="$BIN:$PATH"` prepend in serve.sh splits on the `D:` colon; harmless
+  (Windows finds DLLs next to the exe) but noted in the handoff.
+
+## P0.19 — P0.09 round-2 carry-overs: spike-doc precision (2026-11-02)
+
+- Fixed DES-7..11: "8/8 valid Turns across runs 3–5" (verified in run3-5 logs: 2+3+3),
+  "under pressure" restricted to maxLength/additionalProperties, "the model pretty-prints",
+  verdict now ~12× measured variance (3.7–44.6 tok/s) + named 995 s outlier, 3.3–23.6 s
+  range named as runs 2–5 with run 1's cold 44.0 s.
+- DES-9: extended `check_constraints()` rather than rewording — mood keys present + −3..3,
+  enum membership for read/music/fx/action + beat feeling/cue. Re-ran live (run6.log,
+  EXIT=0): all 3 turns still CONSTRAINTS OK. Scratch env `P0.09-scratch/nwtest` still alive.
+- Gotcha: this journal had committed `<<<<<<<`/`>>>>>>>` markers from the P0.09 merge —
+  resolved keeping both entries; also fixed the stale "issue #40 open" line per review.
