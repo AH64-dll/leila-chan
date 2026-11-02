@@ -545,7 +545,7 @@
       "finished": "2026-11-02T23:36:07+02:00"
     },
     "P1.03": {
-      "status": "in_progress",
+      "status": "in_review",
       "agent": "deepseek",
       "round": 2,
       "reviews": [
@@ -570,9 +570,9 @@
       "handoff": "production/handoffs/P1.03.md"
     },
     "P1.19": {
-      "status": "changes_requested",
-      "agent": "deepseek",
-      "round": 1,
+      "status": "in_progress",
+      "agent": "swe2",
+      "round": 2,
       "reviews": [
         {
           "kind": "safety",
@@ -587,9 +587,9 @@
       "handoff": "production/handoffs/P1.19.md"
     },
     "P1.10": {
-      "status": "changes_requested",
-      "agent": "deepseek",
-      "round": 1,
+      "status": "in_progress",
+      "agent": "swe2",
+      "round": 2,
       "reviews": [
         {
           "kind": "code",
@@ -622,18 +622,27 @@
       "finished": "2026-11-02T23:42:38+02:00"
     },
     "P1.02": {
-      "status": "in_progress",
+      "status": "in_review",
       "agent": "deepseek",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-02T23:47:56+02:00"
+      "started": "2026-11-02T23:47:56+02:00",
+      "handoff": "production/handoffs/P1.02.md"
     },
     "P1.30": {
-      "status": "in_progress",
+      "status": "in_review",
       "agent": "deepseek",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-03T00:02:44+02:00"
+      "started": "2026-11-03T00:02:44+02:00",
+      "handoff": "production/handoffs/P1.30.md"
+    },
+    "P1.26": {
+      "status": "in_progress",
+      "agent": "swe2",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-03T01:29:18+02:00"
     }
   },
   "history": [
@@ -1530,6 +1539,42 @@
       "event": "in_review->changes_requested",
       "ref": "P1.19",
       "note": "by safety review"
+    },
+    {
+      "ts": "2026-11-03T01:29:14+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P1.02",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T01:29:14+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P1.03",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T01:29:14+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P1.30",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T01:29:14+02:00",
+      "event": "changes_requested->in_progress",
+      "ref": "P1.19",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T01:29:15+02:00",
+      "event": "changes_requested->in_progress",
+      "ref": "P1.10",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T01:29:18+02:00",
+      "event": "todo->in_progress",
+      "ref": "P1.26",
+      "note": ""
     }
   ]
 }
