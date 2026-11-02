@@ -1,0 +1,49 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Leila-chan"
+run/main_scene="res://scenes/Boot.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+boot_splash/bg_color=Color(0, 0, 0, 1)
+
+[autoload]
+
+GameState="*res://autoload/GameState.gd"
+Director="*res://autoload/Director.gd"
+LLM="*res://autoload/LLM.gd"
+PromptBuilder="*res://autoload/PromptBuilder.gd"
+SpriteResolver="*res://autoload/SpriteResolver.gd"
+AudioDirector="*res://autoload/AudioDirector.gd"
+FX="*res://autoload/FX.gd"
+MetaDirector="*res://autoload/MetaDirector.gd"
+Triggers="*res://autoload/Triggers.gd"
+Memory="*res://autoload/Memory.gd"
+Safety="*res://autoload/Safety.gd"
+Steering="*res://autoload/Steering.gd"
+SaveSystem="*res://autoload/SaveSystem.gd"
+Settings="*res://autoload/Settings.gd"
+
+[display]
+
+window/size/viewport_width=384
+window/size/viewport_height=688
+window/size/window_width_override=768
+window/size/window_height_override=1376
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+window/stretch/scale_mode="integer"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/canvas_textures/default_texture_filter=0
