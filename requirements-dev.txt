@@ -1,0 +1,3 @@
+# Dev tooling (not needed to build art or run the game):
+# gdtoolkit provides gdlint + gdformat for the GDScript checks in tools/test.*
+gdtoolkit==4.5.0

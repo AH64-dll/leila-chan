@@ -9,6 +9,9 @@ assets/audio/SOURCES.json text eol=lf
 # Shell scripts: CRLF breaks the shebang
 *.sh text eol=lf
 
+# Batch files: LF breaks goto/labels (e.g. vendored addons/gdUnit4/runtest.cmd)
+*.cmd text eol=crlf
+
 # Godot text resources: the engine writes LF; keep the working tree stable
 *.gd text eol=lf
 *.tscn text eol=lf

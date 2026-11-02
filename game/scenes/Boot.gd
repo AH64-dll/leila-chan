@@ -3,9 +3,20 @@ extends Node
 ## the diegetic loading screen (docs/07 §6). For now it smokes-tests the autoload ring.
 
 const EXPECTED_AUTOLOADS: PackedStringArray = [
-	"GameState", "Director", "LLM", "PromptBuilder", "SpriteResolver",
-	"AudioDirector", "FX", "MetaDirector", "Triggers", "Memory",
-	"Safety", "Steering", "SaveSystem", "Settings",
+	"GameState",
+	"Director",
+	"LLM",
+	"PromptBuilder",
+	"SpriteResolver",
+	"AudioDirector",
+	"FX",
+	"MetaDirector",
+	"Triggers",
+	"Memory",
+	"Safety",
+	"Steering",
+	"SaveSystem",
+	"Settings",
 ]
 
 
@@ -15,9 +26,12 @@ func _ready() -> void:
 		if not has_node("/root/" + autoload_name):
 			missing.append(autoload_name)
 	if missing.is_empty():
-		print("Boot: %d/%d autoloads registered" % [
-			EXPECTED_AUTOLOADS.size() - missing.size(), EXPECTED_AUTOLOADS.size()
-		])
+		print(
+			(
+				"Boot: %d/%d autoloads registered"
+				% [EXPECTED_AUTOLOADS.size() - missing.size(), EXPECTED_AUTOLOADS.size()]
+			)
+		)
 	else:
 		push_error("Boot: missing autoloads: " + ", ".join(missing))
 		get_tree().quit(1)

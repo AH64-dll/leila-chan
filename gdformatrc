@@ -1,0 +1,11 @@
+# gdtoolkit formatter config (gdformat). Found by walking up from the working directory.
+# Regenerate defaults: `gdformat --dump-default-config`.
+# Check formatting without rewriting: `gdformat --check game/` (or --diff to preview).
+
+excluded_directories: !!set
+  .git: null
+  .godot: null
+  addons: null  # vendored third-party code (gdUnit4) — never reformat it
+line_length: 100
+safety_checks: null
+use_spaces: null  # null = tabs (GDScript standard)
