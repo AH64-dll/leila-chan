@@ -44,6 +44,9 @@ VERDICTS = {"approved", "changes", "blocked"}
 TASK_ID = re.compile(r"^P\d+\.[A-Z]?\d{2}$")
 COLUMNS = ["id", "task", "role", "size", "deps", "review", "refs", "acceptance"]
 
+# validate() issue kinds — severity is carried by this tag, never by the message text
+ERR, MISSING_REF = "error", "missing_ref"
+
 
 # ---------------------------------------------------------------- plan + state
 
@@ -167,36 +170,36 @@ def ready_tasks(plan: dict, state: dict, phase: str | None) -> list[str]:
 def cmd_validate(args) -> int:
     plan = load_plan()
     state = load_state()
-    errors = []
+    issues: list[tuple[str, str]] = []  # (kind, message)
     for tid, t in plan.items():
         if not TASK_ID.match(tid):
-            errors.append(f"{tid}: bad id format ({t['source']})")
+            issues.append((ERR, f"{tid}: bad id format ({t['source']})"))
         if not tid.startswith(t["phase"] + "."):
-            errors.append(f"{tid}: id does not match its phase {t['phase']}")
+            issues.append((ERR, f"{tid}: id does not match its phase {t['phase']}"))
         if t["role"] not in ROLES:
-            errors.append(f"{tid}: unknown role {t['role']!r}")
+            issues.append((ERR, f"{tid}: unknown role {t['role']!r}"))
         if t["size"] not in SIZES:
-            errors.append(f"{tid}: unknown size {t['size']!r}")
+            issues.append((ERR, f"{tid}: unknown size {t['size']!r}"))
         if not t["review"]:
-            errors.append(f"{tid}: needs at least one review kind")
+            issues.append((ERR, f"{tid}: needs at least one review kind"))
         for k in t["review"]:
             if k not in REVIEW_KINDS:
-                errors.append(f"{tid}: unknown review kind {k!r}")
+                issues.append((ERR, f"{tid}: unknown review kind {k!r}"))
         for d in t["deps"]:
             if d not in plan:
-                errors.append(f"{tid}: unknown dependency {d}")
+                issues.append((ERR, f"{tid}: unknown dependency {d}"))
             elif PHASE_IDS.index(plan[d]["phase"]) > PHASE_IDS.index(t["phase"]):
-                errors.append(f"{tid}: depends on a later phase task {d}")
+                issues.append((ERR, f"{tid}: depends on a later phase task {d}"))
         for ref in t["refs"]:
             doc = ref.split("§")[0].strip()
             if doc and not resolve(doc):
-                errors.append(f"{tid}: ref {ref!r} points to a missing file (ok before P0.01 imports the repo)")
+                issues.append((MISSING_REF, f"{tid}: ref {ref!r} points to a missing file (ok before P0.01 imports the repo)"))
     # cycles
     seen, stack = set(), set()
 
     def visit(n):
         if n in stack:
-            errors.append(f"dependency cycle through {n}")
+            issues.append((ERR, f"dependency cycle through {n}"))
             return
         if n in seen or n not in plan:
             return
@@ -210,9 +213,9 @@ def cmd_validate(args) -> int:
         visit(n)
     for tid in state["tasks"]:
         if tid not in plan:
-            errors.append(f"state.json has unknown task {tid}")
-    warns = [e for e in errors if "missing file" in e]
-    hard = [e for e in errors if "missing file" not in e]
+            issues.append((ERR, f"state.json has unknown task {tid}"))
+    warns = [m for kind, m in issues if kind == MISSING_REF]
+    hard = [m for kind, m in issues if kind == ERR]
     for e in hard:
         print("ERROR " + e)
     for e in (warns if args.verbose or args.strict else warns[:3]):
