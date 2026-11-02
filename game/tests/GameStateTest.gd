@@ -79,6 +79,18 @@ func test_apply_mood_scales_and_clamps() -> void:
 	u.apply_mood({"affection": 3, "stress": 3})
 	assert_float(u.affection).is_less_equal(GameStateScript.MAX_AFFECTION_SUGGESTION)
 	assert_float(u.instability).is_less_equal(GameStateScript.MAX_INSTABILITY_SUGGESTION)
+	# The caps are per turn, not per call (CODE-3): two moods in the same turn
+	# share the budget; advance_turn() resets it.
+	var v: Variant = _state()
+	v.apply_mood({"affection": 3})
+	v.apply_mood({"affection": 3})
+	assert_float(v.affection).is_equal_approx(GameStateScript.MAX_AFFECTION_SUGGESTION, EPS)
+	v.apply_mood({"stress": 3})
+	v.apply_mood({"stress": 3})
+	assert_float(v.instability).is_equal_approx(GameStateScript.MAX_INSTABILITY_SUGGESTION, EPS)
+	v.advance_turn()
+	v.apply_mood({"affection": 3})
+	assert_float(v.affection).is_equal_approx(9.5, EPS)
 
 
 func test_instability_ratchet_floor() -> void:
@@ -152,6 +164,16 @@ func test_slow_burn_turn_and_daily() -> void:
 	t.advance_day()
 	assert_int(t.day).is_equal(3)
 	assert_float(t.instability).is_equal_approx(43.0, EPS)
+	# The campaign ends at day 14 (docs/01 §1, CODE-6/DES-4): advancing past the
+	# cap is a no-op — no daily burn, no day_changed.
+	var u: Variant = _state()
+	var day_signals: Array = []
+	u.day_changed.connect(func(d: int) -> void: day_signals.append(d))
+	u.day = GameStateScript.DAY_MAX
+	u.advance_day()
+	assert_int(u.day).is_equal(GameStateScript.DAY_MAX)
+	assert_float(u.instability).is_zero()
+	assert_array(day_signals).is_empty()
 
 
 func test_profile_counters() -> void:
@@ -261,22 +283,43 @@ func test_flags() -> void:
 	assert_int(int(s.get_flag(&"t01_count"))).is_equal(3)
 	s.clear_flag(&"said_i_love_you")
 	assert_bool(s.get_flag(&"said_i_love_you")).is_false()
-	# Flags serialise — non-JSON-safe values are rejected.
+	# Flags serialise — non-JSON-safe values are rejected, including nested ones
+	# (CODE-4/DES-5): a Vector2 inside a Dictionary would stringify to a String.
 	s.set_flag(&"bad", Vector2(1, 2))
 	assert_bool(s.flags.has("bad")).is_false()
 	s.set_flag(&"node", s)
 	assert_bool(s.flags.has("node")).is_false()
+	s.set_flag(&"nested_bad", {"v": Vector2(1, 2)})
+	assert_bool(s.flags.has("nested_bad")).is_false()
+	s.set_flag(&"deep_bad", [1, {"v": Vector2i(3, 4)}])
+	assert_bool(s.flags.has("deep_bad")).is_false()
+	s.set_flag(&"int_key", {1: "x"})
+	assert_bool(s.flags.has("int_key")).is_false()
+	s.set_flag(&"deep_ok", {"a": [1, {"b": "fine"}]})
+	assert_dict(s.get_flag(&"deep_ok")).is_equal({"a": [1, {"b": "fine"}]})
 
 
 func test_path_assign_and_lock() -> void:
 	var s: Variant = _state()
-	assert_bool(s.assign_path(&"hollow")).is_true()
-	assert_str(String(s.path)).is_equal("hollow")
+	assert_bool(s.assign_path(&"HOLLOW")).is_true()
+	assert_str(String(s.path)).is_equal("HOLLOW")
 	assert_bool(s.assign_path(&"bogus")).is_false()
 	s.lock_path()
 	assert_bool(s.path_locked).is_true()
-	assert_bool(s.assign_path(&"yandere")).is_false()
-	assert_str(String(s.path)).is_equal("hollow")
+	assert_bool(s.assign_path(&"YANDERE")).is_false()
+	assert_str(String(s.path)).is_equal("HOLLOW")
+
+
+func test_paths_match_casting_json() -> void:
+	# DES-3: path ids are the canonical data/casting.json keys — P1.10/P2.12
+	# index casting["paths"] with GameState.path (TSUN, not docs/01's "TSUN-BREAK").
+	var casting: Dictionary = JSON.parse_string(
+		FileAccess.get_file_as_string("res://data/casting.json")
+	)
+	var casting_paths: Dictionary = casting.get("paths", {})
+	assert_int(casting_paths.size()).is_equal(6)
+	for path_id: StringName in GameStateScript.PATHS:
+		assert_bool(casting_paths.has(String(path_id))).is_true()
 
 
 func test_snapshot_round_trip() -> void:
@@ -289,7 +332,7 @@ func test_snapshot_round_trip() -> void:
 	s.set_meter(&"fixation", 20.0)
 	s.set_meter(&"lucidity", 10.0)
 	s.turn = 9
-	s.assign_path(&"yandere", true)
+	s.assign_path(&"YANDERE", true)
 	s.player_name = "Rin"
 	s.set_flag(&"said_i_love_you")
 	s.set_flag(&"t01_count", 2)
@@ -331,15 +374,20 @@ func test_from_dict_heals_and_rejects() -> void:
 	assert_bool(ok).is_true()
 	assert_float(t.affection).is_equal_approx(100.0, EPS)
 	assert_float(t.instability).is_equal_approx(45.0, EPS)
-	assert_int(t.stage).is_equal(2)
+	# Stage re-derives from the peak's band (CODE-1/DES-2): peak 60 means she
+	# already reached stage 3 — a stored stage below it is stale.
+	assert_int(t.stage).is_equal(3)
 	assert_int(t.day).is_equal(1)
 	assert_int(t.turn).is_zero()
 	assert_str(String(t.path)).is_equal("")
+	assert_bool(t.path_locked).is_false()
 	assert_int(_counter(t, &"warmth")).is_zero()
 	assert_bool(t.profile.has("bogus")).is_false()
 	assert_str(t.player_name).is_equal("Senpai")
 	assert_bool(t.from_dict("not a dict")).is_false()
 	assert_bool(t.from_dict(null)).is_false()
+	# A Dictionary with no snapshot keys is rejected, not healed into defaults.
+	assert_bool(t.from_dict({"unrelated": 1, "data": [1, 2]})).is_false()
 
 
 func test_deterministic_replay() -> void:
@@ -398,10 +446,15 @@ func test_simulation_invariants() -> void:
 func test_reset_returns_to_fresh_state() -> void:
 	var s: Variant = _state()
 	s.set_meter(&"instability", 80.0)
-	s.assign_path(&"split", true)
+	s.assign_path(&"SPLIT", true)
 	s.advance_day()
 	s.apply_read(&"meta")
+	# CODE-2: reset() replaces the state wholesale — listeners get state_reset
+	# to resync rather than replayed per-field signals.
+	var resets: Array = []
+	s.state_reset.connect(func() -> void: resets.append(true))
 	s.reset()
+	assert_array(resets).is_equal([true])
 	var fresh: Variant = _state()
 	assert_dict(s.to_dict()).is_equal(fresh.to_dict())
 

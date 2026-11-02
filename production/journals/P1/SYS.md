@@ -11,3 +11,15 @@
   gdUnit4 counts each test_* toward max-public-methods:20 and Variant receivers need explicit types.
   gdtoolkit rejects multi-line match patterns — used a const type array instead. JSON normalises ints
   to floats inside flags; the round-trip test compares in the JSON domain.
+
+## P1.04 GameState (round 2, reworked after code+design reviews)
+- from_dict now rebuilds on a canonical baseline (instance-independent): peak clamped 0–100, stage =
+  band(instability_peak) — the stored stage is only cross-checked, never trusted. PATHS are the
+  uppercase casting.json ids (TSUN, not TSUN-BREAK).
+- Per-turn mood budget: `_mood_suggest` clamps the running total per meter in `_mood_spent`, reset on
+  `turn` change — "±5/±3 per turn" is a budget, not a per-call cap. Flags validate recursively.
+- reset() and from_dict() end with a single `state_reset` signal — the resync contract for UI/overlay,
+  cheaper than replaying every per-field signal.
+- Gotchas: `stage` setter can't emit (fires during member init before connections) — bulk changes
+  signal via state_reset or an explicit stage_changed. Keep test_* count ≤20/suite (gdlint
+  max-public-methods); split restore regressions into GameStateRestoreTest.gd.

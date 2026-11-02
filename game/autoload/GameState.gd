@@ -17,6 +17,10 @@ signal day_changed(day: int)
 signal path_assigned(path: StringName, locked: bool)
 signal profile_changed(counter: StringName, value: int)
 signal flag_changed(flag: StringName, value)
+## Emitted once at the end of reset() and from_dict(): the whole state was just
+## replaced wholesale, so listeners must resync every field (day, path, profile,
+## flags) instead of relying on per-field signals alone.
+signal state_reset
 
 const SNAPSHOT_VERSION := 1
 const PROFILE_MAP_PATH := "res://data/profile_map.json"
@@ -50,7 +54,8 @@ const MOOD_LIMIT := 3.0
 const MOOD_SCALE_AFFECTION := 1.5
 const MOOD_SCALE_TRUST := 2.0
 const MOOD_SCALE_STRESS := 0.6
-## Per-turn caps on model-suggested moves (docs/01 §2 "Moves by" column).
+## Per-turn caps on model-suggested moves (docs/01 §2 "Moves by" column) —
+## enforced per turn against the running total, not per apply_mood() call.
 const MAX_AFFECTION_SUGGESTION := 5.0
 const MAX_INSTABILITY_SUGGESTION := 3.0
 
@@ -78,7 +83,9 @@ const PROFILE_COUNTERS: Array[StringName] = [
 ]
 
 ## Fracture paths (docs/01 §4): soft-assigned at stage 2, locked at stage 3.
-const PATHS: Array[StringName] = [&"yandere", &"split", &"tsun", &"hollow", &"awake", &"anchor"]
+## Ids are the canonical data/casting.json keys — uppercase; TSUN is the
+## casting/UI id for docs/01's "TSUN-BREAK".
+const PATHS: Array[StringName] = [&"YANDERE", &"SPLIT", &"TSUN", &"HOLLOW", &"AWAKE", &"ANCHOR"]
 
 ## Variant types allowed in `flags`: the snapshot must stay JSON-safe (docs/07 §3.5).
 const JSON_SAFE_TYPES: Array[int] = [
@@ -90,6 +97,27 @@ const JSON_SAFE_TYPES: Array[int] = [
 	TYPE_STRING_NAME,
 	TYPE_ARRAY,
 	TYPE_DICTIONARY,
+]
+
+## A snapshot Dictionary must contain at least one of these keys — anything
+## else is rejected instead of silently loading defaults.
+const SNAPSHOT_KEYS: Array[String] = [
+	"version",
+	"affection",
+	"trust",
+	"instability",
+	"instability_peak",
+	"fixation",
+	"lucidity",
+	"stage",
+	"day",
+	"turn",
+	"path",
+	"path_locked",
+	"player_name",
+	"profile",
+	"flags",
+	"last_tone",
 ]
 
 # Ratchet backing must be declared before `instability`: its setter reads them.
@@ -159,6 +187,10 @@ var flags := {}
 var profile := _blank_profile()
 
 var _last_tone: StringName = &""
+## Per-turn model-suggestion budget (docs/01 §2): meter → applied delta total,
+## reset whenever `turn` changes.
+var _mood_turn := -1
+var _mood_spent := {}
 var _profile_map_cache := {}
 
 
@@ -179,6 +211,9 @@ func reset() -> void:
 	flags = {}
 	profile = _blank_profile()
 	_last_tone = &""
+	_mood_turn = -1
+	_mood_spent.clear()
+	state_reset.emit()
 
 
 func get_meter(meter: StringName) -> float:
@@ -226,18 +261,37 @@ func adjust_meter(meter: StringName, delta: float) -> float:
 ## docs/02 §1.1 + §4 step 7: model mood ints −3..3, scaled per meter
 ## (affection ×1.5, trust ×2, stress → instability ×0.6), docs/01 §2 caps.
 func apply_mood(mood: Dictionary) -> void:
+	if _mood_turn != turn:
+		_mood_turn = turn
+		_mood_spent.clear()
 	if mood.has("affection"):
 		adjust_meter(
 			&"affection",
-			_mood_delta(mood["affection"], MOOD_SCALE_AFFECTION, MAX_AFFECTION_SUGGESTION)
+			_mood_suggest(
+				&"affection", mood["affection"], MOOD_SCALE_AFFECTION, MAX_AFFECTION_SUGGESTION
+			)
 		)
 	if mood.has("trust"):
-		adjust_meter(&"trust", _mood_delta(mood["trust"], MOOD_SCALE_TRUST, INF))
+		adjust_meter(&"trust", _mood_suggest(&"trust", mood["trust"], MOOD_SCALE_TRUST, INF))
 	if mood.has("stress"):
 		adjust_meter(
 			&"instability",
-			_mood_delta(mood["stress"], MOOD_SCALE_STRESS, MAX_INSTABILITY_SUGGESTION)
+			_mood_suggest(
+				&"instability", mood["stress"], MOOD_SCALE_STRESS, MAX_INSTABILITY_SUGGESTION
+			)
 		)
+
+
+## One model suggestion after docs/02 §1.1 scaling, capped against what the
+## model already moved this turn: the docs/01 §2 "Moves by" column is a
+## per-turn budget (affection ±5, instability ±3, trust uncapped), so the
+## running total is clamped — two apply_mood() calls in one turn share it.
+func _mood_suggest(meter: StringName, raw_value: Variant, scale: float, cap: float) -> float:
+	var delta := clampf(_num(raw_value), -MOOD_LIMIT, MOOD_LIMIT) * scale
+	var spent := float(_mood_spent.get(meter, 0.0))
+	var total := clampf(spent + delta, -cap, cap)
+	_mood_spent[meter] = total
+	return total - spent
 
 
 ## docs/01 §2: the per-turn slow-burn increment.
@@ -258,7 +312,10 @@ func advance_turn() -> void:
 
 
 ## Night roll-over: day +1 and the daily burn (+3 instability, docs/01 §2).
+## A no-op past day 14: the campaign is over (docs/01 §1), no burn, no signal.
 func advance_day() -> void:
+	if day >= DAY_MAX:
+		return
 	day += 1
 	adjust_meter(&"instability", DAILY_BURN)
 	day_changed.emit(day)
@@ -303,16 +360,13 @@ func known_intents() -> Array[StringName]:
 	return labels
 
 
-## Flags are serialised with the snapshot — only JSON-safe values are kept.
+## Flags are serialised with the snapshot — only JSON-safe values are kept,
+## recursively: a Vector2 nested in an Array/Dictionary is still rejected.
 func set_flag(flag: StringName, value: Variant = true) -> void:
-	if not JSON_SAFE_TYPES.has(typeof(value)):
+	if not _is_json_safe(value):
 		push_warning("GameState.set_flag: '%s' rejected — value is not JSON-safe" % flag)
 		return
-	var stored: Variant = value
-	if value is Array or value is Dictionary:
-		stored = value.duplicate(true)
-	elif value is StringName:
-		stored = String(value)
+	var stored: Variant = _normalise_flag(value)
 	flags[String(flag)] = stored
 	flag_changed.emit(flag, stored)
 
@@ -374,11 +428,22 @@ func to_dict() -> Dictionary:
 	}
 
 
-## Restores a snapshot. Out-of-range or malformed values are healed, never
-## trusted (clamped ranges, ratchet floor, band floor for stage).
+## Restores a snapshot onto a canonical baseline: the result depends only on
+## `data`, never on the instance it is loaded into. Out-of-range or malformed
+## values are healed (clamped ranges, bounded peak, stage re-derived from the
+## peak's band, zeroed profile, JSON-safe flags); unrecognised input is
+## rejected. Ends with state_reset so listeners resync every field.
 func from_dict(data: Variant) -> bool:
 	if not data is Dictionary or data.is_empty():
 		push_warning("GameState.from_dict: expected a non-empty Dictionary")
+		return false
+	var recognised := false
+	for key: String in SNAPSHOT_KEYS:
+		if data.has(key):
+			recognised = true
+			break
+	if not recognised:
+		push_warning("GameState.from_dict: no snapshot keys present — rejected")
 		return false
 	var version := int(_num(data.get("version"), SNAPSHOT_VERSION))
 	if version != SNAPSHOT_VERSION:
@@ -388,27 +453,47 @@ func from_dict(data: Variant) -> bool:
 				% [version, SNAPSHOT_VERSION]
 			)
 		)
-	# Peak first: the instability setter derives the floor from it.
-	instability_peak = maxf(0.0, _num(data.get("instability_peak"), 0.0))
+	# Peak first: the instability setter derives the floor from it. Bounded to
+	# the meter range so a corrupt peak cannot lift the floor past 100.
+	instability_peak = clampf(
+		_num(data.get("instability_peak"), 0.0), 0.0, METER_RANGES[&"instability"].y
+	)
 	for meter: StringName in METER_NAMES:
 		set_meter(meter, _num(data.get(String(meter)), 0.0))
-	var healed_stage := maxi(stage, clampi(int(_num(data.get("stage"), 0.0)), 0, STAGE_MAX))
+	# Stage is re-derived from the snapshot alone: the ratchet peak is the
+	# monotonic high-water mark, so its band is the restored stage — never the
+	# live stage, never a stored stage above its band.
+	var healed_stage := _stage_for_instability(instability_peak)
+	if data.has("stage") and int(_num(data["stage"], -1.0)) != healed_stage:
+		push_warning(
+			(
+				"GameState.from_dict: stored stage %s outside the peak band — healed to %d"
+				% [str(data["stage"]), healed_stage]
+			)
+		)
 	if healed_stage != stage:
 		var previous := stage
 		stage = healed_stage
 		stage_changed.emit(previous, stage)
 	day = int(_num(data.get("day"), 1.0))
 	turn = int(_num(data.get("turn"), 0.0))
+	_mood_turn = -1
+	_mood_spent.clear()
 	var stored_path := StringName(_str(data.get("path")))
 	if stored_path == &"" or PATHS.has(stored_path):
 		path = stored_path
 	else:
 		push_warning("GameState.from_dict: unknown path '%s' — cleared" % stored_path)
 		path = &""
-	path_locked = data.get("path_locked") == true
+	# A lock is only meaningful on a valid assigned path.
+	if data.get("path_locked") == true and path == &"":
+		push_warning("GameState.from_dict: path_locked without a valid path — cleared")
+	path_locked = data.get("path_locked") == true and path != &""
 	player_name = _str(data.get("player_name"))
 	if player_name.is_empty():
 		player_name = "Senpai"
+	# Partial profiles rebuild from zeroed counters, never from live leftovers.
+	profile = _blank_profile()
 	var stored_profile: Variant = data.get("profile", {})
 	if stored_profile is Dictionary:
 		for key: Variant in stored_profile:
@@ -417,11 +502,23 @@ func from_dict(data: Variant) -> bool:
 				profile[String(counter)] = maxi(0, int(_num(stored_profile[key], 0.0)))
 			else:
 				push_warning("GameState.from_dict: dropping unknown counter '%s'" % key)
+	elif stored_profile != null:
+		push_warning("GameState.from_dict: 'profile' is not a Dictionary — reset")
+	# Flags follow the set_flag() rule: recursively JSON-safe or dropped.
+	flags = {}
 	var stored_flags: Variant = data.get("flags", {})
 	if stored_flags is Dictionary:
-		flags = stored_flags.duplicate(true)
+		for key: Variant in stored_flags:
+			var value: Variant = stored_flags[key]
+			if (key is String or key is StringName) and _is_json_safe(value):
+				flags[String(key)] = _normalise_flag(value)
+			else:
+				push_warning("GameState.from_dict: dropping unsafe flag '%s'" % key)
+	elif stored_flags != null:
+		push_warning("GameState.from_dict: 'flags' is not a Dictionary — cleared")
 	var stored_tone := StringName(_str(data.get("last_tone")))
 	_last_tone = stored_tone if _tone_names().has(stored_tone) else &""
+	state_reset.emit()
 	return true
 
 
@@ -433,9 +530,41 @@ static func _stage_for_instability(value: float) -> int:
 	return band
 
 
-static func _mood_delta(raw_value: Variant, scale: float, cap: float) -> float:
-	var raw := clampf(_num(raw_value), -MOOD_LIMIT, MOOD_LIMIT)
-	return clampf(raw * scale, -cap, cap)
+## Recursive JSON-safety for flags/snapshot data (docs/07 §3.5): scalars,
+## arrays, and string-keyed dictionaries only — JSON.stringify would silently
+## coerce anything else (a nested Vector2 becomes the string "(1.0, 2.0)").
+static func _is_json_safe(value: Variant) -> bool:
+	if not JSON_SAFE_TYPES.has(typeof(value)):
+		return false
+	if value is Array:
+		for item: Variant in value:
+			if not _is_json_safe(item):
+				return false
+	elif value is Dictionary:
+		for key: Variant in value:
+			if not (key is String or key is StringName):
+				return false
+			if not _is_json_safe(value[key]):
+				return false
+	return true
+
+
+## Storage form for a validated flag value: StringName → String, containers
+## deep-copied with the same normalisation applied to their contents.
+static func _normalise_flag(value: Variant) -> Variant:
+	if value is StringName:
+		return String(value)
+	if value is Array:
+		var copy: Array = []
+		for item: Variant in value:
+			copy.append(_normalise_flag(item))
+		return copy
+	if value is Dictionary:
+		var copy := {}
+		for key: Variant in value:
+			copy[String(key)] = _normalise_flag(value[key])
+		return copy
+	return value
 
 
 static func _num(value: Variant, fallback: float = 0.0) -> float:
