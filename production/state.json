@@ -458,6 +458,27 @@
       "started": "2026-11-02T21:35:51+02:00",
       "handoff": "production/handoffs/P0.20.md",
       "finished": "2026-11-02T21:46:28+02:00"
+    },
+    "P1.01": {
+      "status": "in_progress",
+      "agent": "swe2",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-02T23:10:12+02:00"
+    },
+    "P1.04": {
+      "status": "in_progress",
+      "agent": "swe2",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-02T23:10:13+02:00"
+    },
+    "P1.05": {
+      "status": "in_progress",
+      "agent": "swe2",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-02T23:10:13+02:00"
     }
   },
   "history": [
@@ -1096,6 +1117,24 @@
       "event": "phase_start",
       "ref": "P1",
       "note": "User approved: run P1 through implementation, independent reviews and gate"
+    },
+    {
+      "ts": "2026-11-02T23:10:12+02:00",
+      "event": "todo->in_progress",
+      "ref": "P1.01",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T23:10:13+02:00",
+      "event": "todo->in_progress",
+      "ref": "P1.04",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T23:10:13+02:00",
+      "event": "todo->in_progress",
+      "ref": "P1.05",
+      "note": ""
     }
   ]
 }
