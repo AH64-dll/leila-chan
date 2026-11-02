@@ -25,25 +25,37 @@
       "finished": "2026-11-02T19:18:47+02:00"
     },
     "P0.02": {
-      "status": "in_progress",
+      "status": "in_review",
       "agent": "swe2",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-02T19:19:06+02:00"
+      "started": "2026-11-02T19:19:06+02:00",
+      "handoff": "production/handoffs/P0.02.md"
     },
     "P0.05": {
       "status": "in_progress",
-      "agent": "swe2",
+      "agent": "deepseek",
       "round": 1,
       "reviews": [],
       "started": "2026-11-02T19:19:07+02:00"
     },
     "P0.10": {
-      "status": "in_progress",
+      "status": "done",
       "agent": "claude",
       "round": 1,
-      "reviews": [],
-      "started": "2026-11-02T19:19:15+02:00"
+      "reviews": [
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "swe2",
+          "report": "production/reviews/P0.10-design-r1.md",
+          "ts": "2026-11-02T19:24:00+02:00"
+        }
+      ],
+      "started": "2026-11-02T19:19:15+02:00",
+      "handoff": "production/handoffs/P0.10.md",
+      "finished": "2026-11-02T19:24:00+02:00"
     }
   },
   "history": [
@@ -93,6 +105,36 @@
       "ts": "2026-11-02T19:19:15+02:00",
       "event": "todo->in_progress",
       "ref": "P0.10",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T19:19:58+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P0.10",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T19:23:53+02:00",
+      "event": "agent",
+      "ref": "P0.05",
+      "note": "swe2 -> deepseek"
+    },
+    {
+      "ts": "2026-11-02T19:24:00+02:00",
+      "event": "review:design:approved",
+      "ref": "P0.10",
+      "note": "production/reviews/P0.10-design-r1.md"
+    },
+    {
+      "ts": "2026-11-02T19:24:00+02:00",
+      "event": "in_review->done",
+      "ref": "P0.10",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T19:24:39+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P0.02",
       "note": ""
     }
   ]
