@@ -41,7 +41,7 @@ def check_turn(turn, stage):
         for i, b in enumerate(beats):
             if not isinstance(b, dict):
                 errs.append(f"beat{i} not an object"); continue
-            if b.get("feeling") not in FEELINGS:
+            if not isinstance(b.get("feeling"), str) or b["feeling"] not in FEELINGS:
                 errs.append(f"beat{i}.feeling {b.get('feeling')!r} not in feelings")
             if type(b.get("intensity")) is not int or not 1 <= b["intensity"] <= 3:
                 errs.append(f"beat{i}.intensity {b.get('intensity')!r} not int 1-3")

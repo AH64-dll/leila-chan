@@ -15,7 +15,6 @@
 - Next for me: P0.09 NobodyWho spike; then P1.02 server backend — reuse `serve.*` conventions and
   `LEILA_MODEL`/`LEILA_LLAMA_BIN`.
 
-<<<<<<< HEAD
 ## P0.14 — P0.03 review carry-overs (2026-11-02)
 
 - Fixed all four CODE findings: `${OS:-}` guards (Linux arm under `set -u`), exec bits 100755 on the
@@ -28,7 +27,7 @@
 - Gotcha: worktrees have no `tools/llama/`/`models/` — live runs need `LEILA_LLAMA_BIN`/`LEILA_MODEL`
   pointed at `D:/lila`. The `PATH="$BIN:$PATH"` prepend in serve.sh splits on the `D:` colon; harmless
   (Windows finds DLLs next to the exe) but noted in the handoff.
-=======
+
 ## P0.09 — NobodyWho spike → build own `libleila_llm` (2026-11-02)
 
 - Verified live on the RTX 4050 (NobodyWho v13.0.0 in a scratch Godot 4.7.2 project): json_schema
@@ -52,4 +51,15 @@ turn — `say` clamped at exactly 200 chars, no stray keys. Key facts learned: m
 the grammar JSON (~85 tokens before first `say` → first beat ≈2.1 s at 42 tok/s, so docs/02 §4's
 ≈30-token estimate needs a P1.02 re-check); `chat.complete` resets context per call but keeps the
 ~283-tok system prefix while `chat.ask` appends; issue #40 is closed-stale, not open.
->>>>>>> task/P0.09
+
+## P0.17 — smoke.py check_turn unhashable-feeling fix (2026-11-02)
+
+- P0.14 review CODE-1 (S4): `b.get("feeling") not in FEELINGS` hashed the value against the
+  FEELINGS **dict** → TypeError on list/dict feelings. Added an `isinstance(str)` guard before the
+  membership test (same pattern as the `intensity` check beside it). It was the only vulnerable
+  spot: INTENTS and every GATES enum are lists, whose `in` uses `==` and never raises.
+- Committed `tests/test_smoke_check_turn.py`: drives smoke.py as a subprocess against a stub
+  llama-server (module can't be imported — argparse + HTTP run at top level), 12 bad turns →
+  TURN INVALID + exit 1, valid turn → SMOKE OK + exit 0. Runs under plain `pytest` (CI runs it).
+- Gotcha for next time: to unit-test a smoke.py helper in-process, exec-extract its source
+  (what the P0.14 reviewer did) — or wrap the module's main flow in `main()` first.
