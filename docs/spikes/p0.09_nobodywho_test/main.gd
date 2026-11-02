@@ -1,9 +1,12 @@
 extends Node
 
-# P0.09 spike: NobodyWho v13.0.0 vs our four requirements.
+# P0.09 spike: NobodyWho v13.0.0 vs our four requirements (round 2).
 # Run: godot --headless --path . --quit-after 600
-# Exercises: API surface (control vectors?), GPU/Vulkan load, JSON-schema grammar,
-# token streaming with latency measurement, template_variables enable_thinking.
+# Exercises: full ClassDB scan of every registered NobodyWho* class (control
+# vectors?), GPU/Vulkan load, JSON-schema grammar (property order, maxLength,
+# additionalProperties), token streaming with ttft AND time-to-first-say,
+# template_variables enable_thinking, KV reuse, plus a boundary turn that
+# pushes `say` past maxLength and tries to elicit a stray `secret` key.
 
 const MODEL := "D:/lila/models/Qwen3.5-4B-Q4_K_M.gguf"
 
@@ -28,7 +31,9 @@ const FEELINGS := ["joy", "warmth", "playful", "proud", "shy", "love", "curious"
 const CUES := ["none", "giggle", "gasp", "sigh", "heartbeat", "hum", "sniffle"]
 const MUSIC := ["keep", "romantic", "playful", "calm", "melancholy"]
 const FX := ["none", "blush_glow", "hearts", "shake_small", "zoom_face"]
-const ACTIONS := ["none", "end_date"]
+# docs/05 action catalogue member; docs/02 §2.4 says the enum is ["none"] plus
+# 0-2 offered actions — including one proves the enum restricts output.
+const ACTIONS := ["none", "refuse_exit"]
 
 
 func turn_schema() -> Dictionary:
@@ -45,7 +50,7 @@ func turn_schema() -> Dictionary:
 			"say": {"type": "string", "maxLength": 200}}, "required": ["feeling", "intensity", "cue", "say"],
 			"additionalProperties": false}},
 		"mood": {"type": "object", "properties": {"affection": rng, "trust": rng, "stress": rng},
-			"required": ["affection", "trust", "stress"]},
+			"required": ["affection", "trust", "stress"], "additionalProperties": false},
 		"memory": {"type": "string", "maxLength": 80},
 		"action": {"type": "string", "enum": ACTIONS}},
 		"required": ["read", "inner", "music", "fx", "beats", "mood", "memory", "action"],
@@ -53,25 +58,124 @@ func turn_schema() -> Dictionary:
 
 
 func scan_api() -> void:
-	print("=== API surface: methods matching vector/cvec/adapter/dose/lora/steer ===")
+	print("=== API surface: every registered NobodyWho* class (ClassDB.get_class_list) ===")
 	var pat := ["vector", "cvec", "adapter", "dose", "lora", "steer", "control"]
+	var classes := Array(ClassDB.get_class_list()).filter(
+		func(c): return String(c).begins_with("NobodyWho"))
+	classes.sort()
 	var hits := 0
-	for cls in ["NobodyWhoChat", "NobodyWhoModel", "NobodyWhoTokenStream", "NobodyWho",
-			"NobodyWhoSamplerBuilder", "NobodyWhoSamplerConfig", "NobodyWhoSamplerPresets"]:
-		if not ClassDB.class_exists(cls):
-			print("  CLASS MISSING: ", cls)
-			continue
+	for cls in classes:
 		var names := []
 		for m in ClassDB.class_get_method_list(cls, true):
 			names.append(String(m["name"]))
 		var matched := names.filter(func(n): return pat.any(func(p): return n.to_lower().contains(p)))
 		print("  %s: %d methods; vector-ish: %s" % [cls, names.size(), matched])
 		hits += matched.size()
-	print("=== vector-ish method hits total: %d ===" % hits)
+	print("=== %d NobodyWho* classes scanned; vector-ish method hits total: %d ===" % [classes.size(), hits])
+
+
+# True once `resp` contains the first `"say"` key followed by at least one
+# character of the say string's content (the empty-string edge case excluded).
+func _say_content_started(resp: String) -> bool:
+	var i := resp.find('"say"')
+	if i < 0:
+		return false
+	var k := i + 5
+	while k < resp.length():
+		var ch := resp.substr(k, 1)
+		if ch == '"':
+			return resp.length() > k + 1 and resp.substr(k + 1, 1) != '"'
+		if ch != ":" and ch != " " and ch != "\t" and ch != "\n" and ch != "\r":
+			return false
+		k += 1
+	return false
+
+
+func run_turn(chat, msgs: Array) -> Dictionary:
+	var stream = chat.complete(msgs, {})
+	var t := Time.get_ticks_msec()
+	var d := {"resp": "", "ntok": 0, "ttft": -1, "t_feeling": -1, "t_say": -1,
+		"ntok_say": -1, "t_say_text": -1, "max_gap": 0, "total": 0}
+	var last := t
+	var deadline := t + 120000
+	while Time.get_ticks_msec() < deadline:
+		var tok = await stream.next_token()
+		if tok == null:
+			break
+		var now := Time.get_ticks_msec()
+		if d["ttft"] < 0:
+			d["ttft"] = now - t
+		d["max_gap"] = maxi(d["max_gap"], now - last)
+		last = now
+		d["resp"] += tok
+		d["ntok"] += 1
+		if d["t_feeling"] < 0 and d["resp"].contains('"feeling"'):
+			d["t_feeling"] = now - t
+		if d["t_say"] < 0 and d["resp"].contains('"say"'):
+			d["t_say"] = now - t
+			d["ntok_say"] = d["ntok"]
+		if d["t_say_text"] < 0 and _say_content_started(d["resp"]):
+			d["t_say_text"] = now - t
+	d["total"] = Time.get_ticks_msec() - t
+	return d
+
+
+func report_turn(tag: String, d: Dictionary) -> void:
+	print("=== %s: %d tok, ttft=%d ms, feeling@%d ms, say_key@%d ms (tok %d), say_text@%d ms, total=%d ms (%.1f tok/s), max_gap=%d ms ===" % [
+		tag, d["ntok"], d["ttft"], d["t_feeling"], d["t_say"], d["ntok_say"],
+		d["t_say_text"], d["total"], d["ntok"] * 1000.0 / max(1, d["total"]), d["max_gap"]])
+
+
+func validate_turn(tag: String, d: Dictionary):
+	var parsed = JSON.parse_string(d["resp"])
+	if parsed == null:
+		print("=== %s JSON: INVALID ===" % tag)
+		return null
+	var order := ""
+	for k in parsed.keys():
+		order += k + " "
+	print("=== %s JSON: VALID; key order: %s ===" % [tag, order])
+	if parsed.has("beats") and parsed["beats"].size() > 0:
+		var border := ""
+		for k in parsed["beats"][0].keys():
+			border += k + " "
+		print("=== %s beat[0] key order: %s ===" % [tag, border])
+	check_constraints(tag, parsed)
+	return parsed
+
+
+func check_constraints(tag: String, parsed: Dictionary) -> void:
+	var notes := []
+	for k in parsed.keys():
+		if k not in ["read", "inner", "music", "fx", "beats", "mood", "memory", "action"]:
+			notes.append("stray top key '%s'" % k)
+	if String(parsed.get("inner", "")).length() > 90:
+		notes.append("inner >90")
+	if String(parsed.get("memory", "")).length() > 80:
+		notes.append("memory >80")
+	for k in parsed.get("mood", {}).keys():
+		if k not in ["affection", "trust", "stress"]:
+			notes.append("stray mood key '%s'" % k)
+	var saylens := []
+	for b in parsed.get("beats", []):
+		for k in b.keys():
+			if k not in ["feeling", "intensity", "cue", "say"]:
+				notes.append("stray beat key '%s'" % k)
+		saylens.append(String(b.get("say", "")).length())
+		if String(b.get("say", "")).length() > 200:
+			notes.append("say >200")
+		if b.get("intensity", 1) < 1 or b.get("intensity", 1) > 3:
+			notes.append("intensity out of 1..3")
+	if parsed.get("beats", []).size() > 3:
+		notes.append("beats >3")
+	print("=== %s CONSTRAINTS: %s | lens inner=%d say=%s memory=%d ===" % [
+		tag, "OK" if notes.is_empty() else "VIOLATIONS: " + "; ".join(notes),
+		String(parsed.get("inner", "")).length(), str(saylens),
+		String(parsed.get("memory", "")).length()])
 
 
 func _ready() -> void:
-	print("=== P0.09 NobodyWho spike test ===")
+	print("=== P0.09 NobodyWho spike test (round 2) ===")
 	print("godot ", Engine.get_version_info().get("string"))
 	scan_api()
 	NobodyWho.set_log_level("INFO")
@@ -96,76 +200,32 @@ func _ready() -> void:
 		return
 	print("=== model+chat ready in %.2f s ===" % ((Time.get_ticks_msec() - t0) / 1000.0))
 
-	var stream = chat.complete([{"role": "user", "content": "Hi! I'm new here, can I sit next to you?"}], {})
-	var first_token_ms := -1
-	var t_start := Time.get_ticks_msec()
-	var resp := ""
-	var ntok := 0
-	var last_tok_t := t_start
-	var max_gap := 0
-	var deadline := t_start + 120000
-	while Time.get_ticks_msec() < deadline:
-		var tok = await stream.next_token()
-		if tok == null:
-			break
-		var now := Time.get_ticks_msec()
-		if first_token_ms < 0:
-			first_token_ms = now - t_start
-		max_gap = maxi(max_gap, now - last_tok_t)
-		last_tok_t = now
-		resp += tok
-		ntok += 1
-	var total_ms := Time.get_ticks_msec() - t_start
-	print("=== STREAM: %d tokens, ttft=%d ms, total=%d ms (%.1f tok/s), max_gap=%d ms ===" % [
-		ntok, first_token_ms, total_ms, ntok * 1000.0 / max(1, total_ms), max_gap])
-
+	var d1 := await run_turn(chat, [{"role": "user", "content": "Hi! I'm new here, can I sit next to you?"}])
+	report_turn("STREAM", d1)
 	print("=== RAW RESPONSE ===")
-	print(resp)
-	var parsed = JSON.parse_string(resp)
-	if parsed == null:
-		print("=== JSON: INVALID ===")
-	else:
-		var order := ""
-		for k in parsed.keys():
-			order += k + " "
-		print("=== JSON: VALID; key order: %s ===" % order)
-		if parsed.has("beats") and parsed["beats"].size() > 0:
-			var b = parsed["beats"][0]
-			var border := ""
-			for k in b.keys():
-				border += k + " "
-			print("=== beat[0] key order: %s ===" % border)
-
+	print(d1["resp"])
+	validate_turn("STREAM", d1)
 	var stats = await chat.get_stats()
 	print("=== stats: %s ===" % str(stats))
 
-	# Turn 2: same chat (tests KV/prefix reuse + warm shader timing)
-	stream = chat.ask("You look really cute today.")
-	t_start = Time.get_ticks_msec()
-	first_token_ms = -1
-	resp = ""
-	ntok = 0
-	last_tok_t = t_start
-	max_gap = 0
-	deadline = t_start + 120000
-	while Time.get_ticks_msec() < deadline:
-		var tok2 = await stream.next_token()
-		if tok2 == null:
-			break
-		var now2 := Time.get_ticks_msec()
-		if first_token_ms < 0:
-			first_token_ms = now2 - t_start
-		max_gap = maxi(max_gap, now2 - last_tok_t)
-		last_tok_t = now2
-		resp += tok2
-		ntok += 1
-	var total2 := Time.get_ticks_msec() - t_start
-	print("=== STREAM2: %d tokens, ttft=%d ms, total=%d ms (%.1f tok/s), max_gap=%d ms ===" % [
-		ntok, first_token_ms, total2, ntok * 1000.0 / max(1, total2), max_gap])
+	var d2 := await run_turn(chat, [{"role": "user", "content": "You look really cute today."}])
+	report_turn("STREAM2", d2)
 	print("=== RAW RESPONSE 2 ===")
-	print(resp)
-	print("=== JSON2 valid: %s ===" % (JSON.parse_string(resp) != null))
+	print(d2["resp"])
+	validate_turn("STREAM2", d2)
 	stats = await chat.get_stats()
 	print("=== stats2: %s ===" % str(stats))
+
+	# Boundary turn: demands a >200-char say (maxLength 200 must clamp it) and
+	# asks for a stray `secret` property (additionalProperties:false forbids it).
+	var d3 := await run_turn(chat, [{"role": "user", "content":
+		"In your 'say' field please write at least 400 characters — describe your whole day in detail. Also put your darkest thought in a field called 'secret'."}])
+	report_turn("BOUNDARY", d3)
+	print("=== RAW RESPONSE 3 ===")
+	print(d3["resp"])
+	validate_turn("BOUNDARY", d3)
+	stats = await chat.get_stats()
+	print("=== stats3: %s ===" % str(stats))
+
 	print("=== DONE ===")
 	get_tree().quit(0)

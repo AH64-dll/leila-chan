@@ -31,3 +31,10 @@
 - DCR filed: rename shipped extension `libqwenchan_llm` → `libleila_llm` (no brand names).
 - Committed the test harness at `docs/spikes/p0.09_nobodywho_test/` (text only; addon DLL fetched
   per recipe). Scratch env at `D:/lila-wt/P0.09-scratch` is disposable.
+
+Round 2 (design review DES-1..6 fixed, 2026-11-02): harness now scans all 16 `NobodyWho*`
+ClassDB classes (still 0 cvec), times first-`say` separately from ttft, and runs a boundary
+turn — `say` clamped at exactly 200 chars, no stray keys. Key facts learned: model pretty-prints
+the grammar JSON (~85 tokens before first `say` → first beat ≈2.1 s at 42 tok/s, so docs/02 §4's
+≈30-token estimate needs a P1.02 re-check); `chat.complete` resets context per call but keeps the
+~283-tok system prefix while `chat.ask` appends; issue #40 is closed-stale, not open.
