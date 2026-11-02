@@ -2145,6 +2145,30 @@
    "cues_waiting_for_voice_actor": []
   }
  },
+ "siblings": {
+  "joy": "06",
+  "warmth": "05",
+  "playful": "05",
+  "proud": "01",
+  "shy": "01",
+  "love": "02",
+  "curious": "01",
+  "confused": "09",
+  "surprised": "08",
+  "nervous": "06",
+  "sad": "12",
+  "crying": "14",
+  "angry": "18",
+  "cold": "10",
+  "suspicious": "07",
+  "disgusted": "17",
+  "bored": "12",
+  "tired": "10",
+  "afraid": "13",
+  "pleading": "15",
+  "empty": "14",
+  "manic": "11"
+ },
  "paths": {
   "YANDERE": {
    "tiers": [

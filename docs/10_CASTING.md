@@ -11,7 +11,8 @@ everything else from this table, so her face, body, voice, sounds and music alwa
 
 ```
 beat {feeling, intensity, cue?, say}
-  ├─ sprite   = resolver(feeling, intensity, tier, path)        → §2 (+ path overrides §4)
+  ├─ sprite   = resolver(feeling, intensity, tier, path)        → §2 (+ path overrides §4;
+  │              same sprite 3 beats in a row → siblings[f], docs/03 §3 step 4)
   ├─ motion   = feelings[f].motion[intensity]                   → Godot tween preset (docs/03 §4)
   ├─ voice    = voice_by_stage[stage]  pitched by feelings[f].voice (empty → no blips: she speaks in silence)
   ├─ cue      = model's cue if allowed, else (auto-fill, i ≥ 2, budget ok) random from tiers[t].cues
@@ -165,6 +166,37 @@ AudioDirector skips them silently.
 | 28 manic_finger_biting | cue: clock_tick; motion: twitch |
 | 29 glitching_distortion | cue: static; system: glitch, distort_layer; fx: glitch; motion: glitch; note: also the fallback face for invalid model output at T3 |
 | 30 predatory_bloodlust | cue: heartbeat_fast; system: stinger.stage_change; fx: her_eyes; fx_below_stage5: vignette_red; music: dread; motion: lean_in; budget: terminal climax only |
+
+### 3.1 Anti-repeat siblings
+
+docs/03 §3 step 4: when one sprite would show on a third beat in a row, the resolver shows the feeling's sibling
+instead. Siblings are healthy faces (ids 01–20, so a T0–T1 swap can never read as corruption) in the same mood
+family; T2+ path-aware siblings belong to the resolver's path rules (P2.14).
+
+| Feeling | Sibling |
+|---|---|
+| joy | 06 flustered_shyness |
+| warmth | 05 pure_innocence |
+| playful | 05 pure_innocence |
+| proud | 01 radiant_joy |
+| shy | 01 radiant_joy |
+| love | 02 gentle_relief |
+| curious | 01 radiant_joy |
+| confused | 09 suspicious_glare |
+| surprised | 08 deep_confusion |
+| nervous | 06 flustered_shyness |
+| sad | 12 exhausted_fatigue |
+| crying | 14 quiet_melancholy |
+| angry | 18 visceral_disgust |
+| cold | 10 bored_apathy |
+| suspicious | 07 stoic_coldness |
+| disgusted | 17 fierce_anger |
+| bored | 12 exhausted_fatigue |
+| tired | 10 bored_apathy |
+| afraid | 13 nervous_anxiety |
+| pleading | 15 tearful_sorrow |
+| empty | 14 quiet_melancholy |
+| manic | 11 sudden_shock |
 
 ## 4. Paths
 
