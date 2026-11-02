@@ -1,0 +1,597 @@
+{
+ "cues": {
+  "giggle": {
+   "files": [
+    "sfx_creatures/80-CC0-creature-SFX_0/cute_01.ogg",
+    "sfx_creatures/80-CC0-creature-SFX_0/cute_02.ogg",
+    "sfx_creatures/80-CC0-creature-SFX_0/cute_03.ogg",
+    "sfx_creatures/80-CC0-creature-SFX_0/cute_04.ogg",
+    "sfx_creatures/80-CC0-creature-SFX_0/cute_05.ogg"
+   ],
+   "quality": "standin",
+   "note": "creature 'cute' pitched +2st; real female giggle needed (VA)"
+  },
+  "laugh_soft": {
+   "files": [
+    "sfx_vocal_samples/vocal_samples/female_light_1.ogg",
+    "sfx_vocal_samples/vocal_samples/female_light_2.ogg",
+    "sfx_vocal_samples/vocal_samples/female_light_3.ogg",
+    "sfx_vocal_samples/vocal_samples/female_light_4.ogg"
+   ],
+   "quality": "standin",
+   "note": "3–4 rising blips as a laugh; VA later"
+  },
+  "gasp": {
+   "files": [
+    "sfx_creatures/80-CC0-creature-SFX_0/ooh.ogg"
+   ],
+   "quality": "standin",
+   "note": "VA later"
+  },
+  "sigh": {
+   "files": [
+    "sfx_creatures/80-CC0-creature-SFX_0/breath.ogg"
+   ],
+   "quality": "standin",
+   "note": "slow + low-pass; VA later"
+  },
+  "hum": {
+   "files": [],
+   "quality": "gap",
+   "note": "VA, or a music-box phrase pitched to voice range"
+  },
+  "sniffle": {
+   "files": [],
+   "quality": "gap",
+   "note": "VA"
+  },
+  "sob": {
+   "files": [],
+   "quality": "gap",
+   "note": "VA"
+  },
+  "heartbeat": {
+   "files": [
+    "sfx_heartbeat/heartbeat_slow_0.wav",
+    "sfx_heartbeat/heartbeat_slow_reverb.wav",
+    "sfx_heartbeat_single/heartbeat.mp3_.flac"
+   ],
+   "quality": "final"
+  },
+  "heartbeat_fast": {
+   "files": [
+    "sfx_heartbeat/heartbeat_fast_0.wav",
+    "sfx_heartbeat/heartbeat_fast_reverb.wav"
+   ],
+   "quality": "final"
+  },
+  "whisper": {
+   "files": [
+    "sfx_vocal_samples/vocal_samples/whisper_1.ogg",
+    "sfx_vocal_samples/vocal_samples/whisper_2.ogg",
+    "sfx_vocal_samples/vocal_samples/whisper_3.ogg",
+    "sfx_vocal_samples/vocal_samples/whisper_4.ogg"
+   ],
+   "quality": "final",
+   "note": "string 4–8 blips; layer ghostbreath at stage 4+"
+  },
+  "breath_close": {
+   "files": [
+    "sfx_breathing/horrorbreathing/horrorbreathing/horrorbreathing.ogg",
+    "sfx_ghost_breath/ghostbreath.flac"
+   ],
+   "quality": "final"
+  },
+  "music_box_note": {
+   "files": [
+    "music_music_box/4_music_box_tracks_ogg/musicbox1_spooky_waltz.ogg",
+    "music_music_box/4_music_box_tracks_ogg/musicbox2_cute_tune.ogg",
+    "music_music_box/4_music_box_tracks_ogg/musicbox3_sad_tune.ogg",
+    "music_music_box/4_music_box_tracks_ogg/musicbox4_happy_polka.ogg"
+   ],
+   "quality": "final",
+   "note": "slice single notes on import (onset detection)"
+  },
+  "clock_tick": {
+   "files": [
+    "sfx_clock/ticking_clock.wav",
+    "sfx_clock_tick/Timetick.ogg"
+   ],
+   "quality": "final"
+  },
+  "phone_buzz": {
+   "files": [
+    "sfx_ringtone/chirptone.wav"
+   ],
+   "quality": "final",
+   "note": "plus a low-passed buzz variant"
+  },
+  "knock": {
+   "files": [
+    "sfx_100/100-CC0-SFX_0/door_01.ogg",
+    "sfx_100/100-CC0-SFX_0/door_02.ogg",
+    "sfx_100/100-CC0-SFX_0/wooden_01.ogg",
+    "sfx_100/100-CC0-SFX_0/wooden_02.ogg",
+    "sfx_100/100-CC0-SFX_0/wooden_03.ogg"
+   ],
+   "quality": "final"
+  },
+  "door_slam": {
+   "files": [
+    "sfx_100/100-CC0-SFX_0/door_close_01.ogg",
+    "sfx_100/100-CC0-SFX_0/door_close_02.ogg",
+    "sfx_100/100-CC0-SFX_0/door_close_03.ogg",
+    "sfx_100/100-CC0-SFX_0/door_close_04.ogg",
+    "sfx_100/100-CC0-SFX_0/slam_01.ogg",
+    "sfx_100/100-CC0-SFX_0/slam_02.ogg",
+    "sfx_100/100-CC0-SFX_0/slam_03.ogg",
+    "sfx_100/100-CC0-SFX_0/slam_04.ogg",
+    "sfx_100/100-CC0-SFX_0/slam_05.ogg",
+    "sfx_100/100-CC0-SFX_0/slam_06.ogg",
+    "sfx_100/100-CC0-SFX_0/slam_07.ogg"
+   ],
+   "quality": "final"
+  },
+  "glass_shatter": {
+   "files": [
+    "sfx_breaking/sfx_breaking_and_falling/bfh1_glass_breaking_01.ogg",
+    "sfx_breaking/sfx_breaking_and_falling/bfh1_glass_breaking_02.ogg",
+    "sfx_breaking/sfx_breaking_and_falling/bfh1_glass_breaking_03.ogg",
+    "sfx_breaking/sfx_breaking_and_falling/bfh1_glass_breaking_04.ogg",
+    "sfx_breaking/sfx_breaking_and_falling/bfh1_glass_breaking_05.ogg",
+    "sfx_breaking/sfx_breaking_and_falling/bfh1_glass_breaking_06.ogg",
+    "sfx_glass/glass_breaking.wav"
+   ],
+   "quality": "final"
+  },
+  "static": {
+   "files": [
+    "sfx_static_freq/static1.wav",
+    "sfx_static_freq/static2.wav",
+    "sfx_static_freq/static3.wav",
+    "sfx_static_noise/ScatterNoise1.mp3"
+   ],
+   "quality": "final",
+   "note": "static*.wav are ~4 min: cut 2–6 s slices on import"
+  },
+  "laugh_unhinged": {
+   "files": [
+    "sfx_giggling/group_giggling.ogg"
+   ],
+   "quality": "standin",
+   "note": "group giggle −4st + demon blips layered; VA later"
+  },
+  "knife_draw": {
+   "files": [
+    "sfx_100/100-CC0-SFX_0/metal_01.ogg",
+    "sfx_100/100-CC0-SFX_0/metal_02.ogg",
+    "sfx_100/100-CC0-SFX_0/metal_03.ogg",
+    "sfx_100/100-CC0-SFX_0/metal_04.ogg",
+    "sfx_100/100-CC0-SFX_0/metal_05.ogg",
+    "sfx_100/100-CC0-SFX_0/metal_06.ogg"
+   ],
+   "quality": "standin",
+   "note": "pick the scrape-like ones; dedicated 'shing' later"
+  },
+  "scream": {
+   "files": [
+    "sfx_creatures/80-CC0-creature-SFX_0/scream_01.ogg",
+    "sfx_creatures/80-CC0-creature-SFX_0/scream_02.ogg",
+    "sfx_jumpscare/jumpscare.wav",
+    "sfx_scream/scream_horror1_0.mp3"
+   ],
+   "quality": "standin",
+   "note": "trim scream_horror1 (11 s) to 1.5 s; stage-5 set-pieces only"
+  }
+ },
+ "system": {
+  "voice_blip.stage0_2": [
+   "sfx_vocal_samples/vocal_samples/female_light_1.ogg",
+   "sfx_vocal_samples/vocal_samples/female_light_2.ogg",
+   "sfx_vocal_samples/vocal_samples/female_light_3.ogg",
+   "sfx_vocal_samples/vocal_samples/female_light_4.ogg"
+  ],
+  "voice_blip.stage3": [
+   "sfx_vocal_samples/vocal_samples/female_standard_1.ogg",
+   "sfx_vocal_samples/vocal_samples/female_standard_2.ogg",
+   "sfx_vocal_samples/vocal_samples/female_standard_3.ogg",
+   "sfx_vocal_samples/vocal_samples/female_standard_4.ogg"
+  ],
+  "voice_blip.stage4": [
+   "sfx_vocal_samples/vocal_samples/whisper_1.ogg",
+   "sfx_vocal_samples/vocal_samples/whisper_2.ogg",
+   "sfx_vocal_samples/vocal_samples/whisper_3.ogg",
+   "sfx_vocal_samples/vocal_samples/whisper_4.ogg"
+  ],
+  "voice_blip.stage5": [
+   "sfx_vocal_samples/vocal_samples/demon_1.ogg",
+   "sfx_vocal_samples/vocal_samples/demon_2.ogg",
+   "sfx_vocal_samples/vocal_samples/demon_3.ogg",
+   "sfx_vocal_samples/vocal_samples/demon_4.ogg"
+  ],
+  "voice_blip.awake": [
+   "sfx_vocal_samples/vocal_samples/robot_1.ogg",
+   "sfx_vocal_samples/vocal_samples/robot_2.ogg",
+   "sfx_vocal_samples/vocal_samples/robot_3.ogg",
+   "sfx_vocal_samples/vocal_samples/robot_4.ogg"
+  ],
+  "stinger.soft": [
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/High/High 1.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/High/High 10.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/High/High 11.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/High/High 12.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/High/High 13.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/High/High 14.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/High/High 15.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/High/High 16.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/High/High 17.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/High/High 18.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/High/High 19.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/High/High 2.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/High/High 20.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/High/High 3.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/High/High 4.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/High/High 5.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/High/High 6.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/High/High 7.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/High/High 8.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/High/High 9.wav"
+  ],
+  "stinger.mid": [
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Mid/Mid 1.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Mid/Mid 10.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Mid/Mid 11.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Mid/Mid 12.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Mid/Mid 13.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Mid/Mid 14.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Mid/Mid 15.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Mid/Mid 16.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Mid/Mid 17.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Mid/Mid 18.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Mid/Mid 19.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Mid/Mid 2.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Mid/Mid 20.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Mid/Mid 3.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Mid/Mid 4.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Mid/Mid 5.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Mid/Mid 6.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Mid/Mid 7.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Mid/Mid 8.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Mid/Mid 9.wav"
+  ],
+  "stinger.stage_change": [
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Bassy/Bassy 1.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Bassy/Bassy 10.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Bassy/Bassy 11.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Bassy/Bassy 2.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Bassy/Bassy 3.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Bassy/Bassy 4.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Bassy/Bassy 5.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Bassy/Bassy 6.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Bassy/Bassy 7.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Bassy/Bassy 8.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Bassy/Bassy 9.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Very Bassy/Very Bassy 1.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Very Bassy/Very Bassy 2.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Very Bassy/Very Bassy 3.wav",
+   "sfx_horror_hits/horror_hit_soundpack_1/Horror Hit Soundpack 1/Sound/Pitches/Very Bassy/Very Bassy 4.wav"
+  ],
+  "glitch": [
+   "kenney_digital_sfx/Digital_SFX_Set/lowRandom.mp3",
+   "kenney_digital_sfx/Digital_SFX_Set/phaserDown1.mp3",
+   "kenney_digital_sfx/Digital_SFX_Set/phaserDown2.mp3",
+   "kenney_digital_sfx/Digital_SFX_Set/phaserDown3.mp3",
+   "kenney_digital_sfx/Digital_SFX_Set/spaceTrash1.mp3",
+   "kenney_digital_sfx/Digital_SFX_Set/spaceTrash2.mp3",
+   "kenney_digital_sfx/Digital_SFX_Set/spaceTrash3.mp3",
+   "kenney_digital_sfx/Digital_SFX_Set/spaceTrash4.mp3",
+   "kenney_digital_sfx/Digital_SFX_Set/spaceTrash5.mp3",
+   "kenney_digital_sfx/Digital_SFX_Set/zap1.mp3",
+   "kenney_digital_sfx/Digital_SFX_Set/zap2.mp3",
+   "kenney_digital_sfx/Digital_SFX_Set/zapThreeToneDown.mp3",
+   "kenney_digital_sfx/Digital_SFX_Set/zapThreeToneUp.mp3",
+   "kenney_digital_sfx/Digital_SFX_Set/zapTwoTone.mp3",
+   "kenney_digital_sfx/Digital_SFX_Set/zapTwoTone2.mp3"
+  ],
+  "weird": [
+   "sfx_100/100-CC0-SFX_0/weird_01.ogg",
+   "sfx_100/100-CC0-SFX_0/weird_02.ogg",
+   "sfx_100/100-CC0-SFX_0/weird_03.ogg",
+   "sfx_100/100-CC0-SFX_0/weird_04.ogg",
+   "sfx_100/100-CC0-SFX_0/weird_05.ogg",
+   "sfx_creatures/80-CC0-creature-SFX_0/weird_01.ogg",
+   "sfx_creatures/80-CC0-creature-SFX_0/weird_02.ogg",
+   "sfx_creatures/80-CC0-creature-SFX_0/weird_03.ogg",
+   "sfx_creatures/80-CC0-creature-SFX_0/weird_04.ogg",
+   "sfx_creatures/80-CC0-creature-SFX_0/weird_05.ogg"
+  ],
+  "distort_layer": [
+   "sfx_creatures/80-CC0-creature-SFX_0/alien_01.ogg",
+   "sfx_creatures/80-CC0-creature-SFX_0/alien_02.ogg",
+   "sfx_creatures/80-CC0-creature-SFX_0/alien_03.ogg",
+   "sfx_creatures/80-CC0-creature-SFX_0/alien_04.ogg",
+   "sfx_creatures/80-CC0-creature-SFX_0/alien_05.ogg",
+   "sfx_creatures/80-CC0-creature-SFX_0/alien_06.ogg",
+   "sfx_creatures/80-CC0-creature-SFX_0/monster_01.ogg",
+   "sfx_creatures/80-CC0-creature-SFX_0/monster_02.ogg",
+   "sfx_creatures/80-CC0-creature-SFX_0/monster_03.ogg",
+   "sfx_creatures/80-CC0-creature-SFX_0/monster_04.ogg",
+   "sfx_creatures/80-CC0-creature-SFX_0/monster_05.ogg",
+   "sfx_creatures/80-CC0-creature-SFX_0/monster_06.ogg",
+   "sfx_creatures/80-CC0-creature-SFX_0/monster_07.ogg"
+  ],
+  "ui.click": [
+   "kenney_interface_sounds/kenney_interfaceSounds/Audio/click_001.ogg",
+   "kenney_interface_sounds/kenney_interfaceSounds/Audio/click_002.ogg",
+   "kenney_interface_sounds/kenney_interfaceSounds/Audio/click_003.ogg",
+   "kenney_interface_sounds/kenney_interfaceSounds/Audio/click_004.ogg",
+   "kenney_interface_sounds/kenney_interfaceSounds/Audio/click_005.ogg"
+  ],
+  "ui.open_close": [
+   "kenney_interface_sounds/kenney_interfaceSounds/Audio/close_001.ogg",
+   "kenney_interface_sounds/kenney_interfaceSounds/Audio/close_002.ogg",
+   "kenney_interface_sounds/kenney_interfaceSounds/Audio/close_003.ogg",
+   "kenney_interface_sounds/kenney_interfaceSounds/Audio/close_004.ogg",
+   "kenney_interface_sounds/kenney_interfaceSounds/Audio/open_001.ogg",
+   "kenney_interface_sounds/kenney_interfaceSounds/Audio/open_002.ogg",
+   "kenney_interface_sounds/kenney_interfaceSounds/Audio/open_003.ogg",
+   "kenney_interface_sounds/kenney_interfaceSounds/Audio/open_004.ogg"
+  ],
+  "ui.switch": [
+   "kenney_ui_sfx/UI_SFX_Set/switch1.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch10.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch11.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch12.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch13.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch14.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch15.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch16.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch17.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch18.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch19.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch2.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch20.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch21.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch22.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch23.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch24.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch25.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch26.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch27.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch28.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch29.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch3.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch30.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch31.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch32.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch33.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch34.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch35.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch36.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch37.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch38.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch4.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch5.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch6.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch7.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch8.wav",
+   "kenney_ui_sfx/UI_SFX_Set/switch9.wav"
+  ],
+  "typing.player": [
+   "sfx_keyboard/unicae_games_keyboard_soundpack_1_0/Human Typing/human_vel-001.wav",
+   "sfx_keyboard/unicae_games_keyboard_soundpack_1_0/Human Typing/human_vel-002.wav",
+   "sfx_keyboard/unicae_games_keyboard_soundpack_1_0/Human Typing/human_vel-003.wav",
+   "sfx_keyboard/unicae_games_keyboard_soundpack_1_0/Human Typing/human_vel-004.wav",
+   "sfx_keyboard/unicae_games_keyboard_soundpack_1_0/Human Typing/human_vel-005.wav",
+   "sfx_keyboard/unicae_games_keyboard_soundpack_1_0/Human Typing/human_vel-006.wav",
+   "sfx_keyboard/unicae_games_keyboard_soundpack_1_0/Human Typing/human_vel-007.wav",
+   "sfx_keyboard/unicae_games_keyboard_soundpack_1_0/Human Typing/human_vel-008.wav",
+   "sfx_keyboard/unicae_games_keyboard_soundpack_1_0/Human Typing/human_vel-009.wav",
+   "sfx_keyboard/unicae_games_keyboard_soundpack_1_0/Human Typing/human_vel-010.wav"
+  ],
+  "typing.her": [
+   "sfx_keyboard/unicae_games_keyboard_soundpack_1_0/Generated Typing/generated-001_slowest.wav",
+   "sfx_keyboard/unicae_games_keyboard_soundpack_1_0/Generated Typing/generated-002_slower.wav",
+   "sfx_keyboard/unicae_games_keyboard_soundpack_1_0/Generated Typing/generated-003_slow.wav",
+   "sfx_keyboard/unicae_games_keyboard_soundpack_1_0/Generated Typing/generated-004_medium.wav",
+   "sfx_keyboard/unicae_games_keyboard_soundpack_1_0/Generated Typing/generated-005_fast.wav",
+   "sfx_keyboard/unicae_games_keyboard_soundpack_1_0/Generated Typing/generated-006_faster.wav",
+   "sfx_keyboard/unicae_games_keyboard_soundpack_1_0/Generated Typing/generated-007_irregular.wav"
+  ],
+  "typewriter.diary": [
+   "sfx_typewriter/typewriter1.wav",
+   "sfx_typewriter/typewriter2.wav",
+   "sfx_typewriter/typewriter3.wav",
+   "sfx_typewriter/typewriter4.wav",
+   "sfx_typewriter/typewriter5.wav",
+   "sfx_typewriter/typewriter6.wav",
+   "sfx_typewriter/typewriter7.wav",
+   "sfx_typewriter/typewriter8.wav"
+  ],
+  "jingle.happy": [
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_NES/jingles_NES00.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_NES/jingles_NES01.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_NES/jingles_NES02.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_NES/jingles_NES03.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_NES/jingles_NES04.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_NES/jingles_NES05.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_NES/jingles_NES06.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_NES/jingles_NES07.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_NES/jingles_NES08.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_NES/jingles_NES09.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_NES/jingles_NES10.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_NES/jingles_NES11.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_NES/jingles_NES12.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_NES/jingles_NES13.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_NES/jingles_NES14.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_NES/jingles_NES15.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_NES/jingles_NES16.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_PIZZA/jingles_PIZZA00.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_PIZZA/jingles_PIZZA01.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_PIZZA/jingles_PIZZA02.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_PIZZA/jingles_PIZZA03.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_PIZZA/jingles_PIZZA04.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_PIZZA/jingles_PIZZA05.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_PIZZA/jingles_PIZZA06.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_PIZZA/jingles_PIZZA07.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_PIZZA/jingles_PIZZA08.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_PIZZA/jingles_PIZZA09.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_PIZZA/jingles_PIZZA10.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_PIZZA/jingles_PIZZA11.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_PIZZA/jingles_PIZZA12.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_PIZZA/jingles_PIZZA13.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_PIZZA/jingles_PIZZA14.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_PIZZA/jingles_PIZZA15.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_PIZZA/jingles_PIZZA16.ogg"
+  ],
+  "jingle.success": [
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_HIT/jingles_HIT00.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_HIT/jingles_HIT01.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_HIT/jingles_HIT02.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_HIT/jingles_HIT03.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_HIT/jingles_HIT04.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_HIT/jingles_HIT05.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_HIT/jingles_HIT06.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_HIT/jingles_HIT07.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_HIT/jingles_HIT08.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_HIT/jingles_HIT09.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_HIT/jingles_HIT10.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_HIT/jingles_HIT11.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_HIT/jingles_HIT12.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_HIT/jingles_HIT13.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_HIT/jingles_HIT14.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_HIT/jingles_HIT15.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_HIT/jingles_HIT16.ogg"
+  ],
+  "jingle.wrong": [
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_STEEL/jingles_STEEL00.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_STEEL/jingles_STEEL01.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_STEEL/jingles_STEEL02.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_STEEL/jingles_STEEL03.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_STEEL/jingles_STEEL04.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_STEEL/jingles_STEEL05.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_STEEL/jingles_STEEL06.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_STEEL/jingles_STEEL07.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_STEEL/jingles_STEEL08.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_STEEL/jingles_STEEL09.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_STEEL/jingles_STEEL10.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_STEEL/jingles_STEEL11.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_STEEL/jingles_STEEL12.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_STEEL/jingles_STEEL13.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_STEEL/jingles_STEEL14.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_STEEL/jingles_STEEL15.ogg",
+   "kenney_jingles/jingleSounds_Kenney/OGG/jingles_STEEL/jingles_STEEL16.ogg"
+  ],
+  "ambience.paper": [
+   "sfx_100/100-CC0-SFX_0/paper_01.ogg",
+   "sfx_100/100-CC0-SFX_0/paper_02.ogg",
+   "sfx_100/100-CC0-SFX_0/paper_03.ogg",
+   "sfx_100/100-CC0-SFX_0/paper_04.ogg"
+  ],
+  "ambience.dishes": [
+   "sfx_100/100-CC0-SFX_0/dishes_01.ogg",
+   "sfx_100/100-CC0-SFX_0/dishes_02.ogg",
+   "sfx_100/100-CC0-SFX_0/dishes_03.ogg",
+   "sfx_100/100-CC0-SFX_0/dishes_04.ogg"
+  ],
+  "bell": [
+   "sfx_100/100-CC0-SFX_0/bell_01.ogg",
+   "sfx_100/100-CC0-SFX_0/bell_02.ogg",
+   "sfx_100/100-CC0-SFX_0/bell_03.ogg",
+   "sfx_100/100-CC0-SFX_0/gong_01.ogg",
+   "sfx_100/100-CC0-SFX_0/gong_02.ogg"
+  ]
+ },
+ "music": {
+  "romantic": {
+   "0-1": [
+    "music_apple_cider/apple_cider.ogg",
+    "music_flowerbed_fields/flowerbed_fields.ogg",
+    "music_ice_cream_date/ice_cream_date/Ice Cream Date/icd_repeating.mp3"
+   ],
+   "2-3": [
+    "music_apple_cider/apple_cider.ogg",
+    "music_ice_cream_date/ice_cream_date/Ice Cream Date/icd_repeating.mp3"
+   ],
+   "4-5": [
+    "music_music_box/4_music_box_tracks_ogg/musicbox2_cute_tune.ogg"
+   ]
+  },
+  "playful": {
+   "0-1": [
+    "music_daisy/daisy_0.ogg",
+    "music_talking_cute/TalkingCuteChiptune_0.mp3"
+   ],
+   "2-3": [
+    "music_daisy/daisy_0.ogg"
+   ],
+   "4-5": [
+    "music_music_box/4_music_box_tracks_ogg/musicbox4_happy_polka.ogg"
+   ]
+  },
+  "calm": {
+   "0-5": [
+    "music_calm_synthwave/007_Synthwave_421k.mp3",
+    "music_chill_lofi/ChillLofi.ogg",
+    "music_snowfall/Snowfall (Looped ver.)_0.ogg"
+   ]
+  },
+  "melancholy": {
+   "0-3": [
+    "music_goodbye_lullaby/goodbye_lullaby.wav",
+    "music_moonlit_lullaby/moonlit_lullaby_for_the_lost_loop.flac"
+   ],
+   "4-5": [
+    "music_music_box/4_music_box_tracks_ogg/musicbox3_sad_tune.ogg"
+   ]
+  },
+  "tense": {
+   "2-5": [
+    "music_glitch_stairs/glitchstairs_6.ogg",
+    "music_insistent/Insistent.ogg"
+   ]
+  },
+  "music_box": {
+   "2-3": [
+    "music_baby_song/Baby Song.wav",
+    "music_happy_lullaby/song17.mp3",
+    "music_music_box/4_music_box_tracks_ogg/musicbox2_cute_tune.ogg"
+   ],
+   "4-5": [
+    "music_baby_song/Baby Song.wav",
+    "music_music_box/4_music_box_tracks_ogg/musicbox1_spooky_waltz.ogg"
+   ]
+  },
+  "dread": {
+   "4-5": [
+    "music_creep/CrEEP.ogg",
+    "music_creepy_ambient_loop/creepyloop-v2_0.ogg",
+    "music_creepy_ambient_loop/creepyloop.ogg",
+    "music_horror_atmosphere/Juhani Junkala - Post Apocalyptic Wastelands [Loop Ready].ogg",
+    "music_sirens_in_darkness/012_Sirens_in_Darkness_0.mp3"
+   ]
+  },
+  "distorted": {
+   "4-5": [
+    "music_glitch_stairs/glitchstairs_6.ogg"
+   ],
+   "note": "otherwise: current track + bit-crush/pitch wobble"
+  },
+  "_title": {
+   "0-1": [
+    "music_music_box/4_music_box_tracks_ogg/musicbox2_cute_tune.ogg"
+   ],
+   "2-3": [
+    "music_happy_lullaby/song17.mp3"
+   ],
+   "4-5": [
+    "music_music_box/4_music_box_tracks_ogg/musicbox1_spooky_waltz.ogg"
+   ]
+  },
+  "_ending": {
+   "any": [
+    "music_goodbye_lullaby/goodbye_lullaby.wav"
+   ]
+  }
+ }
+}

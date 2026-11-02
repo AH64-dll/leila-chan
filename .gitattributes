@@ -8,6 +8,11 @@ assets/audio/SOURCES.json text eol=lf
 
 # Shell scripts: CRLF breaks the shebang
 *.sh text eol=lf
+*.py text eol=lf
+
+# Bridge outputs: byte-identical copies of generated LF sources (determinism)
+game/**/*.json text eol=lf
+*.png binary
 
 # Godot text resources: the engine writes LF; keep the working tree stable
 *.gd text eol=lf
@@ -16,3 +21,4 @@ assets/audio/SOURCES.json text eol=lf
 *.gdshader text eol=lf
 *.godot text eol=lf
 *.uid text eol=lf
+*.import text eol=lf
