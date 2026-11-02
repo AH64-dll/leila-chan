@@ -38,3 +38,20 @@
   `git add` refreshes stat with empty diff. `.import` content stays identical.
 - Gotcha: `experiments/tool_test.py` matches pytest's `*_test.py` glob — testpaths scoping,
   not bare-root collection, keeps it out.
+
+## P0.11 (2026-11-02) — pytest suite for track.py + structured validate kinds
+- Built `production/tests/test_track.py` (51 cases): fixture builds a minimal production tree in
+  `tmp_path` (fixture config/phases + REAL templates + a COPY of track.py) and imports it fresh
+  per test → module-level `ROOT`/`CONFIG`/`STATE_PATH` all derive from the fixture, and mutating
+  commands (`set`, `review`, `brief`, `gate-brief`) never touch live `state.json`.
+- Convention: prefer copy+import-fresh over monkeypatching module globals — any new
+  CONFIG-derived global added to track.py later binds correctly for free.
+- `cmd_validate` now emits `(ERR|MISSING_REF, msg)` tuples; the old `"missing file" in e`
+  substring split is gone. Regression test: a state.json task id containing "missing file"
+  must stay a hard ERROR (old code would have downgraded it to WARN + exit 0).
+- Gotcha: `_list()` strips only OUTER backticks — a plan cell like `` `README.md`§2 `` keeps an
+  inner backtick, breaks `split("§")`, and creates phantom missing-ref warnings. Real docs wrap
+  the whole cell: `` `README.md§2` ``.
+- Gotcha: validate prints `ERROR <tid>: <check>` for per-task issues but `ERROR <check>` for
+  plan-wide ones (dependency cycles have no tid) — assert per-line, not a fixed prefix.
+- CI needed zero changes: `pytest.ini testpaths` already collects `production/tests/`.
