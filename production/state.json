@@ -130,11 +130,12 @@
       "started": "2026-11-02T19:54:59+02:00"
     },
     "P0.08": {
-      "status": "in_progress",
+      "status": "in_review",
       "agent": "swe2",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-02T19:55:00+02:00"
+      "started": "2026-11-02T19:55:00+02:00",
+      "handoff": "production/handoffs/P0.08.md"
     },
     "P0.13": {
       "status": "done",
@@ -379,6 +380,12 @@
       "ts": "2026-11-02T20:10:53+02:00",
       "event": "in_review->done",
       "ref": "P0.13",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T20:11:04+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P0.08",
       "note": ""
     }
   ]
