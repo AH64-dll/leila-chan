@@ -24,3 +24,17 @@
   (README, tools/*.md) describe sources generically. Residual path lives in SKILL.md — flagged to producer.
 - Gotcha: steer_build.py regenerates evil_qwen_unit.gguf from the weights — the README "how to get it"
   for that row is a rebuild command, not a download.
+
+## P0.07 (2026-11-02) — CI on GitHub Actions
+- Built `.github/workflows/ci.yml` (PR + push→main + dispatch, pinned `ubuntu-24.04`): tracker
+  validate --strict → pytest → gdlint → fetch pinned Godot (URL from `game/.godot-version`,
+  verified vs release SHA512-SUMS.txt) → `tools/test.sh`. Green on PR #6; red demo on
+  throwaway PR #7 (closed, branch deleted).
+- Conventions: new repo-root `tests/` + `pytest.ini` (`testpaths = tests production`) so P0.11's
+  track.py suite needs no CI change; pytest==9.1.1 (9.2.0 inside 7-day rule); actions @v7.
+- Gotcha: MSYS runs `100644` .sh files fine, Linux CI gets "Permission denied" (126) — always
+  `git ls-files -s` the scripts a pipeline executes. Took P0.15's exec-bit item early.
+- Gotcha: `godot --import` touches tracked `*.import` mtimes → phantom ` M` in git status;
+  `git add` refreshes stat with empty diff. `.import` content stays identical.
+- Gotcha: `experiments/tool_test.py` matches pytest's `*_test.py` glob — testpaths scoping,
+  not bare-root collection, keeps it out.
