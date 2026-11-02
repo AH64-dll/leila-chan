@@ -1,8 +1,9 @@
 # Local artifacts
 
 Large / machine-specific files that live only in the main tree `D:/lila` and are gitignored
-(see README "Local artifacts"). Copied from the design machine drive `E:` on 2026-11-02 (task P0.02).
-Source root: `E:/home/amrhares/Documents/qwen dating semulator/` — **read-only, never write to E:.**
+(see README "Local artifacts"). Copied from the design machine's `E:` drive on 2026-11-02 (task P0.02);
+the "Source on E:" paths below are relative to the project checkout there.
+**E: is nearly full — read-only, never write to it.**
 
 | Path in `D:/lila` | Size | SHA-256 | Source on E: |
 |---|---|---|---|
@@ -27,7 +28,8 @@ source proves every file is byte-identical.
 ## Re-verify (Git Bash, from `D:/lila`)
 
 ```bash
-SRC="/e/home/amrhares/Documents/qwen dating semulator"
+# point SRC at the project checkout on the design machine's E: drive
+SRC="/e/<project-checkout>"
 sha256sum "$SRC/models/Qwen3.5-4B-Q4_K_M.gguf" models/Qwen3.5-4B-Q4_K_M.gguf \
           "$SRC/experiments/steering/evil_qwen_unit.gguf" experiments/steering/evil_qwen_unit.gguf
 for d in assets/audio/_raw art/_review art/leila_legacy_1x; do
