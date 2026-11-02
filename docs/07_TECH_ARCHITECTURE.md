@@ -9,6 +9,8 @@
 | LLM runtime (prototype) | `llama-server` (b12024, CUDA) over HTTP on localhost | Already working; fastest way to iterate prompts |
 | Model | `Qwen3.5-4B-Q4_K_M.gguf` (2.74 GB) | 100% valid structured turns in testing, fits a 6 GB GPU with room for context |
 | Vectors | `data/steering/*.gguf` control vectors | Built by `experiments/steer_build.py` (+ path-vector tool) |
+| Renderer | `gl_compatibility` for desktop **and** mobile | The only renderer that covers §1's single-project desktop + Android + iOS target; the game is 2D pixel art (Forward+ would block mobile) |
+| Engine pin | `game/.godot-version` (`4.7.2-stable` at project start); launchers `tools/godot.sh` / `tools/godot.ps1` resolve the local binary under `tools/godot/`, `LEILA_GODOT` overrides | The binary is a local gitignored artifact and `godot` is not assumed on PATH; CI derives the release URL from the pin (P0.07) |
 
 Evaluate **NobodyWho** (existing Godot llama.cpp plugin) in M1: if it exposes control vectors + JSON schema, use it;
 otherwise our extension is a thin (~800 lines) wrapper.
@@ -47,12 +49,25 @@ res://
 │  ├─ feelings.json  sprites.json  resolver.json  cues.json  music.json  fx.json
 │  ├─ stages.json  paths.json  triggers.json  meta_events.json  endings.json
 │  ├─ scenarios/D01_classroom.json … (70 files)
+│  ├─ schemas/                       # JSON schemas the data files are validated against at boot
 │  ├─ prompts/persona.md  prompts/stage_*.md  prompts/path_*.md  prompts/rules.md
 │  └─ steering/malice.gguf  possessive.gguf …
 └─ assets/ sprites/ bg/ audio/{music,sfx,vocal,amb}/ fonts/
 ```
 
 Everything content-related is **data**, so writers tune scenarios, gates and mappings without touching code.
+
+### Accepted skeleton choices (P0.05, review-approved; the doc was silent)
+
+- **Viewport & stretch:** viewport `384×688` (native sprite size, `art/leila/README`), stretch
+  `canvas_items` + `keep` + integer scale mode; window override `768×1376` (×2 portrait) is
+  **provisional — ART confirms at P0.08/P1.16** and the default window must fit a 1080p desktop.
+- **Texture filter:** project-wide Nearest (`default_texture_filter=0`), per `art/leila/README`.
+- **Autoload order:** the 14 autoloads register in the doc order above.
+- **Repo conventions:** `.gdkeep` placeholders keep empty layout dirs in git; `.gd.uid` sidecars are
+  committed (Godot 4.4+ convention); **no `.gdignore` inside `game/`** — every directory there is
+  export content, and repo-root images are structurally outside `res://`.
+- **Boot splash:** black; M17 per-pixel transparency stays unset until MetaDirector owns it.
 
 ## 3. Key components
 
