@@ -43,11 +43,12 @@
       "finished": "2026-11-02T19:33:33+02:00"
     },
     "P0.05": {
-      "status": "in_progress",
+      "status": "in_review",
       "agent": "deepseek",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-02T19:19:07+02:00"
+      "started": "2026-11-02T19:19:07+02:00",
+      "handoff": "production/handoffs/P0.05.md"
     },
     "P0.10": {
       "status": "done",
@@ -66,6 +67,20 @@
       "started": "2026-11-02T19:19:15+02:00",
       "handoff": "production/handoffs/P0.10.md",
       "finished": "2026-11-02T19:24:00+02:00"
+    },
+    "P0.03": {
+      "status": "in_progress",
+      "agent": "swe2",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-02T19:33:53+02:00"
+    },
+    "P0.12": {
+      "status": "in_progress",
+      "agent": "swe2",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-02T19:33:54+02:00"
     }
   },
   "history": [
@@ -157,6 +172,24 @@
       "ts": "2026-11-02T19:33:33+02:00",
       "event": "in_review->done",
       "ref": "P0.02",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T19:33:53+02:00",
+      "event": "todo->in_progress",
+      "ref": "P0.03",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T19:33:54+02:00",
+      "event": "todo->in_progress",
+      "ref": "P0.12",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T19:36:08+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P0.05",
       "note": ""
     }
   ]
