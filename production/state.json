@@ -587,7 +587,7 @@
     },
     "P1.02": {
       "status": "in_progress",
-      "agent": "swe2",
+      "agent": "deepseek",
       "round": 1,
       "reviews": [],
       "started": "2026-11-02T23:47:56+02:00"
@@ -1409,6 +1409,12 @@
       "event": "todo->in_progress",
       "ref": "P1.02",
       "note": ""
+    },
+    {
+      "ts": "2026-11-02T23:54:53+02:00",
+      "event": "agent",
+      "ref": "P1.02",
+      "note": "swe2 -> deepseek"
     }
   ]
 }
