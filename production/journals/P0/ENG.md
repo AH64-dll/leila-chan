@@ -67,3 +67,18 @@
   Git Bash tolerates the GUI exe (output reached the pty), PowerShell does not — keep `_console` first.
 - **Gotcha:** capture runner output in a var (`$VAR=$(cmd 2>&1)`) to scan it — piping to `tail`/`grep`
   hides the real exit code (`$?` becomes the last pipe element's). Use `PIPESTATUS` or capture.
+
+## P0.18 (round 1, 2026-11-02)
+- P0.15 review carry-overs closed: gdUnit4 stage streams again — bash `2>&1 | tee
+  game/reports/gdunit_console.log` + `${PIPESTATUS[0]}`; ps1 uses an `AutoFlush` `StreamWriter`
+  passthrough (NOT `Tee-Object -FilePath` — PS 5.1 writes UTF-16 there; verified by `file`).
+  Killed a real `while true` suite at 90 s: 2432-byte transcript survived — impossible under `$( )`.
+- Zero-suite guard decoupled from console strings: `game/reports/` is wiped pre-run, then a fresh
+  `report_*/results.xml` with `<testsuites tests="N">`>0 is required. gdUnit4's zero-case path quits
+  before session/report (`GdUnitTestCIRunner.gd:393`), so no-report = fail. Upgrade note in place.
+- Gotcha: gdUnit4 writes JUnit XML to `<cwd-of-project>/reports/report_N/` (history keeps 20) — but
+  ONLY on the RUN path; abort paths (zero tests, headless refusal, script errors) write nothing.
+  Any "assert on report" check must wipe the dir first or a stale report fakes a pass.
+- Gotcha: `[xml](Get-Content -Raw $f)` in PS 5.1 needs try/catch around the cast; `$LASTEXITCODE`
+  survives `| ForEach-Object` passthrough just like `| Tee-Object`.
+- CI already uploads `game/reports/` on failure — the transcript log rides along for free.
