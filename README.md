@@ -122,16 +122,20 @@ built on Linux; the exact environment wasn't recorded. Treat `art/leila/` as the
 GDScript checks run headless via the pinned Godot binary (`tools/godot.*`, see "Local artifacts"):
 
 ```bash
-./tools/test.sh            # bash — lint + all gdUnit4 tests, non-zero on failure
+./tools/test.sh            # bash — lint + format + all tests, non-zero on failure
 powershell -File tools/test.ps1   # Windows PowerShell equivalent
 ```
 
-This runs `gdlint game/` (config: `gdlintrc`; the vendored `game/addons/` is excluded),
-refreshes the editor class cache with `--import`, then runs every `extends GdUnitTestSuite`
-script under `game/tests/` (gdUnit4, vendored in `game/addons/`). Lint needs the dev deps:
-`pip install -r requirements-dev.txt`. Formatting is handled by `gdformat`
-(config: `gdformatrc`) — `gdformat game/` to apply, `gdformat --check game/` to verify.
+This runs `gdlint game/` and `gdformat --check game/` (configs: `gdlintrc`, `gdformatrc`;
+the vendored `game/addons/` is excluded), refreshes the editor class cache with `--import`,
+then runs every `extends GdUnitTestSuite` script under `game/tests/` (gdUnit4, vendored in
+`game/addons/`) plus each standalone `--script` test there (e.g. `test_bridge.gd`). The runner
+fails if gdUnit4 discovers zero suites. Lint/format need the dev deps:
+`pip install -r requirements-dev.txt`; apply formatting with `gdformat game/`.
 Test reports land in `game/reports/` (gitignored).
+
+Release note for whoever writes `export_presets.cfg` (REL): `game/addons/`, `game/tests/` and
+`game/reports/` are dev-only — exclude them in the preset filters.
 
 ## License / rights
 

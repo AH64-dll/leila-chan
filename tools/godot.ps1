@@ -15,7 +15,9 @@ if ($env:LEILA_GODOT) {
 	exit $LASTEXITCODE
 }
 
-$bin = "Godot_v${pin}_win64.exe"
+# Prefer *_console.exe (console subsystem): its stdout reaches pipes and redirects.
+# The plain .exe is GUI-subsystem and writes to CONOUT$, bypassing PowerShell capture.
+$bins = @("Godot_v${pin}_win64_console.exe", "Godot_v${pin}_win64.exe")
 $main = $repo
 if (Get-Command git -ErrorAction SilentlyContinue) {
 	$firstWorktree = git -C $repo worktree list --porcelain 2>$null |
@@ -26,10 +28,12 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
 }
 
 foreach ($dir in @((Join-Path $repo 'tools/godot'), (Join-Path $main 'tools/godot'))) {
-	$candidate = Join-Path $dir $bin
-	if (Test-Path -LiteralPath $candidate) {
-		& $candidate @args
-		exit $LASTEXITCODE
+	foreach ($bin in $bins) {
+		$candidate = Join-Path $dir $bin
+		if (Test-Path -LiteralPath $candidate) {
+			& $candidate @args
+			exit $LASTEXITCODE
+		}
 	}
 }
 

@@ -65,9 +65,28 @@ Everything content-related is **data**, so writers tune scenarios, gates and map
 - **Texture filter:** project-wide Nearest (`default_texture_filter=0`), per `art/leila/README`.
 - **Autoload order:** the 14 autoloads register in the doc order above.
 - **Repo conventions:** `.gdkeep` placeholders keep empty layout dirs in git; `.gd.uid` sidecars are
-  committed (Godot 4.4+ convention); **no `.gdignore` inside `game/`** — every directory there is
-  export content, and repo-root images are structurally outside `res://`.
+  committed (Godot 4.4+ convention); **no first-party `.gdignore` inside `game/`** — every directory
+  there is export content, and repo-root images are structurally outside `res://`. (The vendored
+  `addons/gdUnit4/src/reporters/html/template/.gdignore` is upstream content and stays.)
 - **Boot splash:** black; M17 per-pixel transparency stays unset until MetaDirector owns it.
+
+### Test tooling (P0.06, hardened P0.15; the doc was silent)
+
+- `game/addons/` — Godot's required addon location; holds vendored third-party code (gdUnit4 6.2.2,
+  MIT). Excluded from `gdlintrc`/`gdformatrc`; upgrades are deliberate swaps of the directory.
+  The editor plugin stays disabled — the CLI runner needs no activation.
+- `game/tests/` — test root. `extends GdUnitTestSuite` suites run under gdUnit4's cmd tool
+  (`-a res://tests -c --ignoreHeadlessMode`; v6 refuses bare `--headless` because InputEvents
+  don't propagate — keep suites logic-only). Other top-level `*.gd` files run as standalone
+  `SceneTree --script` tests (e.g. `test_bridge.gd`); suites extend `GdUnitTestSuite` directly
+  and shared helpers go in a subdir. `tools/test.*` fails if zero test cases are discovered.
+- `game/reports/` — gdUnit4's report dir (HTML + JUnit XML); gitignored; the suite scanner skips it.
+- `tools/test.sh` / `tools/test.ps1` — the single check command: `gdlint` + `gdformat --check`
+  (both gate; configs at repo root) → `--import` (class cache, required on fresh checkouts) →
+  test stages. Every stage always runs; any failure exits 1.
+- **Export rule for REL:** `addons/`, `tests/`, `reports/` are dev-only — add them to
+  `export_presets.cfg` exclude filters when presets are created. Do **not** use `.gdignore`
+  for this: it makes gdUnit4's scanner skip the directory and does not exclude from export.
 
 ## 3. Key components
 
