@@ -23,6 +23,27 @@
       "started": "2026-11-02T19:12:23+02:00",
       "handoff": "production/handoffs/P0.01.md",
       "finished": "2026-11-02T19:18:47+02:00"
+    },
+    "P0.02": {
+      "status": "in_progress",
+      "agent": "swe2",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-02T19:19:06+02:00"
+    },
+    "P0.05": {
+      "status": "in_progress",
+      "agent": "swe2",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-02T19:19:07+02:00"
+    },
+    "P0.10": {
+      "status": "in_progress",
+      "agent": "claude",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-02T19:19:15+02:00"
     }
   },
   "history": [
@@ -54,6 +75,24 @@
       "ts": "2026-11-02T19:18:47+02:00",
       "event": "in_review->done",
       "ref": "P0.01",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T19:19:06+02:00",
+      "event": "todo->in_progress",
+      "ref": "P0.02",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T19:19:07+02:00",
+      "event": "todo->in_progress",
+      "ref": "P0.05",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-02T19:19:15+02:00",
+      "event": "todo->in_progress",
+      "ref": "P0.10",
       "note": ""
     }
   ]
