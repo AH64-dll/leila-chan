@@ -70,7 +70,7 @@ Everything content-related is **data**, so writers tune scenarios, gates and map
   `addons/gdUnit4/src/reporters/html/template/.gdignore` is upstream content and stays.)
 - **Boot splash:** black; M17 per-pixel transparency stays unset until MetaDirector owns it.
 
-### Test tooling (P0.06, hardened P0.15; the doc was silent)
+### Test tooling (P0.06, hardened P0.15 and P0.18; the doc was silent)
 
 - `game/addons/` — Godot's required addon location; holds vendored third-party code (gdUnit4 6.2.2,
   MIT). Excluded from `gdlintrc`/`gdformatrc`; upgrades are deliberate swaps of the directory.
@@ -79,8 +79,14 @@ Everything content-related is **data**, so writers tune scenarios, gates and map
   (`-a res://tests -c --ignoreHeadlessMode`; v6 refuses bare `--headless` because InputEvents
   don't propagate — keep suites logic-only). Other top-level `*.gd` files run as standalone
   `SceneTree --script` tests (e.g. `test_bridge.gd`); suites extend `GdUnitTestSuite` directly
-  and shared helpers go in a subdir. `tools/test.*` fails if zero test cases are discovered.
-- `game/reports/` — gdUnit4's report dir (HTML + JUnit XML); gitignored; the suite scanner skips it.
+  and shared helpers go in a subdir. `tools/test.*` fails if zero test cases are discovered —
+  asserted on the JUnit report the run must write (`<testsuites tests="N">`, N>0), not on
+  gdUnit4's console text, because the zero-case path exits 0 without writing a report.
+- `game/reports/` — gdUnit4's report dir (HTML + JUnit XML) plus the runner's streamed
+  console transcript `gdunit_console.log`; gitignored; wiped at the start of the
+  gdUnit4 stage on every runner call — a wipe failure fails the run, and only a
+  `results.xml` newer than the stage start counts, so a stale report can never fake
+  a pass; the suite scanner skips it.
 - `tools/test.sh` / `tools/test.ps1` — the single check command: `gdlint` + `gdformat --check`
   (both gate; configs at repo root) → `--import` (class cache, required on fresh checkouts) →
   test stages. Every stage always runs; any failure exits 1.

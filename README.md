@@ -130,9 +130,13 @@ This runs `gdlint game/` and `gdformat --check game/` (configs: `gdlintrc`, `gdf
 the vendored `game/addons/` is excluded), refreshes the editor class cache with `--import`,
 then runs every `extends GdUnitTestSuite` script under `game/tests/` (gdUnit4, vendored in
 `game/addons/`) plus each standalone `--script` test there (e.g. `test_bridge.gd`). The runner
-fails if gdUnit4 discovers zero suites. Lint/format need the dev deps:
-`pip install -r requirements-dev.txt`; apply formatting with `gdformat game/`.
-Test reports land in `game/reports/` (gitignored).
+fails if gdUnit4 discovers zero test cases — asserted on the JUnit report it must write
+fresh each run (the run dies red if `game/reports/` can't be cleared, and only a report
+newer than the gdUnit4 stage start counts, so a stale report can't fake a pass), not on
+its console text. Lint/format need the dev deps: `pip install -r requirements-dev.txt`;
+apply formatting with `gdformat game/`.
+Test reports land in `game/reports/` (gitignored; the streamed console transcript is
+`gdunit_console.log` there).
 
 Python checks: `pytest` (config `pytest.ini`, collects `tests/` + `production/`).
 CI (`.github/workflows/ci.yml`) runs both suites plus `track.py validate --strict`
