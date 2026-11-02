@@ -4,3 +4,6 @@
 gdtoolkit==4.5.0
 # pytest runs the Python suite (pytest.ini: tests/ + production/ + tools/). 9.2.0 is <7 days old, skipped.
 pytest==9.1.1
+# tests/test_ci_workflow.py parses the workflow YAML (P1.24); gdtoolkit pulls
+# pyyaml transitively too, but a direct dep is declared directly.
+PyYAML==6.0.3
