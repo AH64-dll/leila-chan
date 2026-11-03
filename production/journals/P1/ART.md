@@ -15,3 +15,11 @@
 - Gotcha: at zoom 3 the native pixel grid lands at screen y ≡ 2 (mod 3) for the bust anchor, so a still block-uniformity check must use the camera grid offset (`344 - cam.y*zoom mod zoom`), not multiples of 3.
 - Breathing is deliberately sub-pixel; freeze (`empty` i1/i3) for exact composed-transform tests and freeze the body for still measurements. Never remove breathing to make a settled-camera test pass.
 - Next: P1.11 FX; the design reviewer should confirm the 1/2/3/4 ladder and the tight 4× face crop (see handoff deviation).
+
+## P1.11 — FX v1: blush_glow, hearts, sparkle, shake_small, zoom_face (2026-11-03)
+- Built `FX.gd` (autoload) and `Character.gd` screen-effects host: stage gates + 3-turn cooldowns read from `casting.fx`, rate caps for `shake_big`/`glitch` (max 1 per 2 turns), and debug F6 panel (`FxMenu.gd`/`FxMenu.tscn`).
+- Authored five Stage 0 effects on Character: `blush_glow` (CanvasLayer pulse), `hearts` (pixel-art rising particles in palette), `sparkle` (twinkle particles), `shake_small` (camera offset 200 ms with reduced-motion cut), `zoom_face` (temporary camera push toward bust with auto-return); connected `twitch_fired` → chromatic split (`glitch_split.gdshader`).
+- Conventions: `casting.json` is the sole source of FX gates, cooldowns and caps; `FX.gd` decides whether an effect runs, `Character.gd` decides how it renders; particle textures conform to `palette.json`.
+- Gotcha: In GDScript typed for-loops (`for fake: Node in _fakes:`), if an instance was freed earlier, GDScript raises an error upon assignment before `is_instance_valid` can be evaluated; keep iteration variables untyped when dealing with potentially freed nodes.
+- Gotcha: `queue_free()` retains nodes in parent child lists until frame end; call `remove_child(child)` before `queue_free()` in `_cut_fx_motion()` so child counts drop synchronously on reduced-motion cuts.
+- Next: P1.16 Date scene integration and UI binding; P2.15 stage shaders for later stage effects (`rain`, `shake_big`, `flicker`, etc.).

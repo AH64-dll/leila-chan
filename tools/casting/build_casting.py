@@ -185,6 +185,19 @@ ON_ENTER = {
 VOICE_BY_STAGE = {"0": "voice_blip.stage0_2", "1": "voice_blip.stage0_2", "2": "voice_blip.stage0_2",
                   "3": "voice_blip.stage3", "4": "voice_blip.stage4", "5": "voice_blip.stage5", "AWAKE>=3": "voice_blip.awake"}
 
+# docs/02 §2.3 + §5, generated into casting.fx so the game reads its effect
+# gates/cooldowns from data instead of code (role playbook: tables live in
+# casting.json, never forked). "gate" is the minimum stage; "cooldown_turns"
+# is how many turns after a firing stay locked (earliest refire = gap + 1);
+# "max_per" is the extra per-window cap the doc gives the two heavy effects.
+# Implemented names in v1 are the five stage-0 effects; the rest ship their
+# gate data now so the schema builder (P1.07 follow-up) and FX.gd drop them
+# before they are coded.
+FX = {name: {"gate": gate, "cooldown_turns": 3} for name, gate in FX_GATE.items()}
+FX["none"] = {"gate": 0, "cooldown_turns": 0}
+for _heavy in ("shake_big", "glitch"):
+    FX[_heavy]["max_per"] = {"count": 1, "turns": 2}
+
 # docs/03 §3 step 4 (anti-repeat): when one sprite would show on a third beat in a row, the
 # resolver swaps to the feeling's sibling face for that beat. The doc gives only the example
 # 06 -> 01; the rest keeps the same mood family (positive<->positive, hostile<->hostile,
@@ -311,6 +324,7 @@ def main():
         "art": {"display": "art/leila/x2", "native": "art/leila/px", "display_size": [768, 1376],
                 "native_size": [384, 688], "scale": 2, "filter": "nearest", "palette": "art/leila/palette.json"},
         "voice_by_stage": VOICE_BY_STAGE,
+        "fx": FX,
         "feelings": feelings,
         "siblings": SIBLINGS,
         "paths": PATHS,
@@ -366,6 +380,19 @@ def write_doc(c):
             w(f'| {f if t == "T0" else ""} | {t} | {", ".join(x["cues"]) or "—"} | {x["music"]} | {", ".join(x["fx"]) or "—"} |')
     w("\nCues `hum`, `sniffle` and `sob` are cast but have no files yet (voice-actor gap, docs/04 §8.4); until then the")
     w("AudioDirector skips them silently.\n")
+    w("### 2.2 Screen-effect rules (docs/02 §2.3 + §5)\n")
+    w("`fx.none` is the default (no effect). `gate` is the minimum stage; `cooldown_turns` is how many turns")
+    w("after a firing stay locked (earliest refire = gap + 1); `max_per` is the doc's extra per-window cap.")
+    w("FX.gd reads this table and drops over-gate/over-budget picks silently; the debug menu (F6) can force")
+    w("any implemented effect.\n")
+    w("| Effect | Gate stage | Cooldown (turns) | Extra cap |")
+    w("|---|---|---|---|")
+    for name, spec in c["fx"].items():
+        cap = spec.get("max_per")
+        cap_s = f'max {cap["count"]} per {cap["turns"]} turns' if cap else "—"
+        cd = spec.get("cooldown_turns", 0)
+        w(f'| {name} | {spec["gate"]} | {cd or "—"} | {cap_s} |')
+    w("")
     w("## 3. Sprite on-enter events\n")
     w("| Sprite | Extra when it appears |")
     w("|---|---|")
