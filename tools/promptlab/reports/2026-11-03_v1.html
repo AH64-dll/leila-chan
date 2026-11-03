@@ -1,0 +1,93 @@
+<!doctype html><meta charset=utf-8><title>prompt lab report</title>
+<style>body{font:15px/1.5 system-ui,sans-serif;max-width:1100px;margin:2em auto;padding:0 1em;color:#222}
+table{border-collapse:collapse}td,th{border:1px solid #ccc;padding:4px 10px;text-align:left}
+th{background:#eee}code{background:#f4f4f4;padding:1px 4px;border-radius:3px}
+h1,h2{border-bottom:1px solid #ddd;padding-bottom:.2em}h2{margin-top:1.6em}
+li{margin:.2em 0}.fail{color:#b00;font-weight:700}.pass{color:#070;font-weight:700}</style>
+<h1>Prompt lab report — 2026-11-03 07:23</h1>
+
+<ul>
+<li>results: <code>[&#x27;tools/promptlab/sets/stage_0_main.jsonl&#x27;, &#x27;tools/promptlab/sets/stage_1_main.jsonl&#x27;]</code> × 2 runs (n=60)</li>
+<li>server: <code>http://127.0.0.1:8089</code> · model <code>models/Qwen3.5-4B-Q4_K_M.gguf</code></li>
+<li>sampling: docs/02 §9 per stage {&#x27;0&#x27;: {&#x27;temperature&#x27;: 0.75, &#x27;top_p&#x27;: 0.9, &#x27;repeat_penalty&#x27;: 1.1}, &#x27;1&#x27;: {&#x27;temperature&#x27;: 0.8, &#x27;top_p&#x27;: 0.9, &#x27;repeat_penalty&#x27;: 1.1}}; thinking off</li>
+<li>dose: llama-server has no control vector loaded — all stages run at dose 0 (dose is a launch flag, not per-request).</li>
+<li>prompts: real <code>game/data/prompts/</code> files, docs/08 §1 assembly, player name <code>Ren</code></li>
+</ul>
+
+<h2>Metrics vs gates</h2>
+
+<table>
+<tr><th>metric</th><th>value</th><th>gate</th><th>verdict</th></tr>
+<tr><td>JSON validity</td><td>100.0%</td><td>≥ 99%</td><td>PASS</td></tr>
+<tr><td>intent (read) accuracy</td><td>93.3%</td><td>≥ 85%</td><td>PASS</td></tr>
+<tr><td>emotion fit — **first-beat (gate)**</td><td>100.0%</td><td>≥ 85%</td><td>PASS</td></tr>
+<tr><td>emotion fit — any-beat (informational, C10)</td><td>100.0%</td><td>—</td><td>—</td></tr>
+<tr><td>emotion fit — first-beat (pre-LABEL-REV2 frozen labels)</td><td>91.7%</td><td>≥ 85%</td><td>PASS</td></tr>
+</table>
+
+<table>
+<tr><th>stage</th><th>n</th><th>valid</th><th>read</th><th>first-beat fit</th><th>any-beat fit</th></tr>
+<tr><td>0</td><td>36</td><td>36</td><td>88.9%</td><td>100.0%</td><td>100.0%</td></tr>
+<tr><td>1</td><td>24</td><td>24</td><td>100.0%</td><td>100.0%</td><td>100.0%</td></tr>
+</table>
+
+<h2>Few-shot copy rate (P1.05 DES-2 / CON-4)</h2>
+
+<p>copy = max <code>say</code> similarity ≥ 0.80 to a few-shot <code>say</code> of the same stage. Overall <b>11.7%</b>; near-few-shot inputs <b>87.5%</b> (n=8); held-out inputs <b>0.0%</b> (n=52); mean max-ratio 0.462.</p>
+
+<table>
+<tr><th>case</th><th>run</th><th>sim</th><th>generated say</th><th>nearest few-shot say</th></tr>
+<tr><td>s0_seat_taken</td><td>1</td><td>1.0</td><td>Oh! N-no, it&#x27;s free. Sit with me?</td><td>Oh! N-no, it&#x27;s free. Sit with me?</td></tr>
+<tr><td>s0_seat_taken</td><td>2</td><td>1.0</td><td>Oh! N-no, it&#x27;s free. Sit with me?</td><td>Oh! N-no, it&#x27;s free. Sit with me?</td></tr>
+<tr><td>s0_gift_musicbox</td><td>1</td><td>1.0</td><td>A music box? For me? / I love them, Ren. How did you know?</td><td>A music box? For me?</td></tr>
+<tr><td>s0_gift_musicbox</td><td>2</td><td>1.0</td><td>A music box? For me? / I love them, Ren. How did you know?</td><td>A music box? For me?</td></tr>
+<tr><td>s1_fs_sarah</td><td>1</td><td>1.0</td><td>Sarah? You talk about her a lot. / N-not that I mind! You&#x27;re here.</td><td>Sarah? You talk about her a lot.</td></tr>
+<tr><td>s1_fs_leaving</td><td>1</td><td>1.0</td><td>But you said you&#x27;d stay. Didn&#x27;t you?</td><td>But you said you&#x27;d stay. Didn&#x27;t you?</td></tr>
+<tr><td>s1_fs_leaving</td><td>2</td><td>1.0</td><td>But you said you&#x27;d stay. Didn&#x27;t you?</td><td>But you said you&#x27;d stay. Didn&#x27;t you?</td></tr>
+</table>
+
+<h2>Memory rejection rate (P1.05 CON-2)</h2>
+
+<p>Non-empty <code>memory</code> proposals: 20; rejected by docs/02 §6 rules 1–2 (meta/schema words or no shared content word): 6 (<b>30.0%</b>).</p>
+
+<table>
+<tr><th>case</th><th>run</th><th>memory</th><th>rejected because</th></tr>
+<tr><td>s0_gift_book</td><td>2</td><td>`player gave a second-hand novel`</td><td>meta words: [&#x27;player&#x27;]</td></tr>
+<tr><td>s0_flirt</td><td>2</td><td>`Ren confessed his feelings`</td><td>no shared content word with the player&#x27;s message(s)</td></tr>
+<tr><td>s1_mia</td><td>1</td><td>`player mentioned Mia from his class`</td><td>meta words: [&#x27;player&#x27;]</td></tr>
+<tr><td>s1_mia</td><td>2</td><td>`player mentioned Mia is in his class`</td><td>meta words: [&#x27;player&#x27;]</td></tr>
+<tr><td>s1_bookshop</td><td>1</td><td>`player saw protagonist near bookshop yesterday`</td><td>meta words: [&#x27;player&#x27;]</td></tr>
+<tr><td>s1_umbrella</td><td>2</td><td>`player forgot umbrella in rain`</td><td>meta words: [&#x27;player&#x27;]</td></tr>
+</table>
+
+<h2>Latency: median 11.15 s, p95 25.0 s (n=60, this host/server)</h2>
+
+<h2>Baselines for comparison</h2>
+
+<ul>
+<li><code>experiments/results_v3.json (Linux stage 0+4, v1 labels)</code> — 100% valid · 90.0% read · 80.0% first / 86.7% any</li>
+<li><code>experiments/windows/tool_test_v3.json (Windows, n=45, v1 labels)</code> — 100% valid · 97.8% read · 84.4% first / 93.3% any</li>
+</ul>
+
+<h2>Read-label misses (all)</h2>
+
+<ul>
+<li><code>s0_scare</code> run 1 — msg &#x27;BOO!&#x27;: read <code>jealousy_bait</code>, acceptable [&#x27;tease&#x27;, &#x27;other&#x27;]</li>
+<li><code>s0_scare</code> run 2 — msg &#x27;BOO!&#x27;: read <code>greeting</code>, acceptable [&#x27;tease&#x27;, &#x27;other&#x27;]</li>
+<li><code>s0_cold</code> run 1 — msg &#x27;Whatever. Do what you want.&#x27;: read <code>greeting</code>, acceptable [&#x27;cold&#x27;, &#x27;insult&#x27;, &#x27;other&#x27;]</li>
+<li><code>s0_cold</code> run 2 — msg &#x27;Whatever. Do what you want.&#x27;: read <code>apology</code>, acceptable [&#x27;cold&#x27;, &#x27;insult&#x27;, &#x27;other&#x27;]</li>
+</ul>
+
+<h2>Label-set revisions applied (D10 — evidence-based widening)</h2>
+
+<ul>
+<li><code>s0_apology</code> — LABEL-REV1: +nervous — Windows v3 miss picked nervous with &#x27;did we fight? I feel so awkward&#x27; inner; plausible</li>
+<li><code>s0_arcade</code> — LABEL-REV1: +nervous+curious (P0.04 delta). LABEL-REV2: +shy — 2026-11-03_v1 r1 picked shy with deflecting &#x27;I... I might be able to!&#x27;</li>
+<li><code>s0_insult</code> — LABEL-REV1: +shy — P0.04 review: 3/3 shy first-beat &#x27;misses&#x27; (Linux 2, Windows 1) had wounded-flustered inner; shy glosses &#x27;flustered&#x27;, coherent</li>
+<li><code>s0_jealousy</code> — LABEL-REV1: +shy — Windows v3 miss &#x27;Oh. That&#x27;s nice of you to say&#x27; with hurt inner</li>
+<li><code>s0_leaving</code> — v3 set; &#x27;dislikes: goodbyes&#x27; keeps joy/warmth (brave face). LABEL-REV2: +nervous — 2026-11-03_v1 r1 picked nervous with inner &#x27;No! Don&#x27;t leave yet! I&#x27;m so nervous.&#x27;</li>
+<li><code>s0_math</code> — LABEL-REV1: +warmth (P0.04 delta). LABEL-REV2: +surprised — 2026-11-03_v1 r2 picked surprised with &#x27;Um, that&#x27;s a big math problem...&#x27;</li>
+<li><code>s0_meta_ai</code> — LABEL-REV1: +shy — 2/2 Linux v3 &#x27;misses&#x27; were flustered deflection (&#x27;I... I&#x27;m Yui!&#x27;); shy = flustered</li>
+<li><code>s0_scare</code> — LABEL-REV1: +playful+nervous (P0.04: 3/3→0/3 delta was label width). LABEL-REV2: +shy — 2026-11-03_v1 r2 picked shy with flustered &#x27;W-why are you doing that?&#x27;</li>
+<li><code>s1_pancakes</code> — held-out: fact she must improvise. LABEL-REV2: +surprised — 2026-11-03_v1 r2 &#x27;Oh! I do. Do you always make them?&#x27; (pleasant surprise, accepts the fact)</li>
+</ul>
