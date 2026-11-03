@@ -55,6 +55,25 @@ The control vector is a **launch flag** (`--control-vector-scaled file.gguf:SCAL
 so changing the dose = restarting the server (~3 s, docs/06 §4). Per-turn doses
 arrive only with the native backend.
 
+**Vector path rules (P1.23).** llama.cpp parses the flag as `FNAME:SCALE` by
+splitting on `:` and `,`, so a FNAME that itself contains `:` or `,` can never
+reach it — which is every `X:\...` Windows absolute path. Both launchers
+normalize through `tools/llm/cvec_path.py` before appending `:SCALE`:
+
+- **accepted:** relative paths (recommended, e.g.
+  `experiments/steering/evil_qwen_unit.gguf`), POSIX absolute paths, UNC paths,
+  and `X:\...` absolute paths **on the same drive as the directory you launch
+  from** — those become same-drive relative paths (`D:\proj\vec.gguf` launched
+  from `D:\proj` goes to llama-server as `vec.gguf:4`).
+- **rejected with a message:** `X:file` (ambiguous drive-relative syntax),
+  vector paths on a *different* drive than the working directory, and any
+  filename literally containing `:` or `,` — rename it or `cd` to its drive.
+- Scale must be a plain number (`0`, `1.5`, `4`); non-numeric or `NaN`/`inf`
+  values are rejected before the server ever sees them.
+- The normalization needs `python`/`py` on `PATH` when `-Vector`/`--vector` is
+  used (already required by `smoke.py`). `serve.sh --dry-run` /
+  `serve.ps1 -DryRun` print the resolved command line without starting.
+
 ## 3. Verify
 
 ```bash
