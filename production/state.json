@@ -1170,7 +1170,7 @@
       "finished": "2026-11-03T09:33:29+02:00"
     },
     "P1.08": {
-      "status": "in_review",
+      "status": "done",
       "agent": "deepseek",
       "round": 2,
       "reviews": [
@@ -1212,7 +1212,8 @@
         }
       ],
       "handoff": "production/handoffs/P1.08.md",
-      "started": "2026-11-03T18:19:56+02:00"
+      "started": "2026-11-03T18:19:56+02:00",
+      "finished": "2026-11-03T18:26:58+02:00"
     },
     "P1.21": {
       "status": "done",
@@ -3210,6 +3211,12 @@
       "event": "agent",
       "ref": "P1.09",
       "note": "swe2 -> deepseek"
+    },
+    {
+      "ts": "2026-11-03T18:26:58+02:00",
+      "event": "in_review->done",
+      "ref": "P1.08",
+      "note": ""
     }
   ]
 }
