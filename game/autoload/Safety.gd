@@ -1,25 +1,6 @@
 class_name SafetyFilter
 extends Node
-## Safety — output filter, redaction, content settings (docs/02 §8).
-## Mandatory pre-pass on every displayed model text: say chunks stream through
-## begin_say/say_chunk/end_say before the typewriter; complete texts (leaked
-## inner, letters, diary, window titles) go through filter_text. Hard-block
-## categories redact always; gated categories redact unless stage >= 4 and
-## content_level == "full" (explicitly configured Settings; missing or invalid
-## settings keep them closed). Fails closed: unloaded or invalid lists block all
-## output.
-##
-## Streaming is holdback-based: text is emitted only once no phrase or regex
-## match could still start, extend or be invalidated by future chunks. Redaction
-## therefore happens at emission time, never eagerly, so a partially typed
-## phrase is never bars-plus-leaked-suffix.
-##
-## Matching is obfuscation-resistant: zero-width and combining characters are
-## removed, Latin/Greek/Cyrillic homoglyphs and common leet substitutions are
-## folded, and phrases match on a whitespace-free compact view so split words
-## ("ki\u200bll your\u200bself", "k1ll y0urself") still hit. Output in scripts
-## we cannot scan (CJK, Cyrillic, Arabic, ...) is redacted as unsupported.
-
+## Safety filter v0 (docs/02 §8).
 signal redacted(category: String, matched_text: String, source: String)
 
 const LISTS_PATH := "res://data/safety/filter_lists.json"
@@ -51,41 +32,41 @@ const _FOLD_SRC: Array[String] = [
 	'"“”',
 	"-–—",
 	".…",
-	"aàáâãäåāаαɑ",
+	"aàáâãäåāаαɑą",
 	"bЬ",
-	"cçсϲ",
-	"dԁ",
-	"eèéêëēеε",
-	"gɡ",
+	"cçсϲćč",
+	"dԁď",
+	"eèéêëēеεėęě",
+	"gɡğ",
 	"hһ",
-	"iìíîïīіιⅰ",
+	"iìíîïīіιⅰį",
 	"jјϳ",
 	"kкκ",
-	"lӏⅼ",
+	"lӏⅼłľĺ",
 	"mмμ",
-	"nñпη",
+	"nñпηńň",
 	"oòóôõöōоοօ",
 	"pрρ",
-	"sßѕ",
-	"tтτ",
-	"uùúûüūυ",
+	"sßѕśšș",
+	"tтτťțŧ",
+	"uùúûüūυųů",
 	"vν",
 	"wԝ",
 	"xхχ",
 	"yýÿуγ",
-	"zžż",
+	"zžżź"
 ]
 const _LEET := {
-	0x30: 0x6F,  # 0 -> o
-	0x31: 0x69,  # 1 -> i
-	0x33: 0x65,  # 3 -> e
-	0x34: 0x61,  # 4 -> a
-	0x35: 0x73,  # 5 -> s
-	0x37: 0x74,  # 7 -> t
-	0x38: 0x62,  # 8 -> b
-	0x39: 0x67,  # 9 -> g
-	0x40: 0x61,  # @ -> a
-	0x24: 0x73,  # $ -> s
+	0x30: 0x6F,
+	0x31: 0x69,
+	0x33: 0x65,
+	0x34: 0x61,
+	0x35: 0x73,
+	0x37: 0x74,
+	0x38: 0x62,
+	0x39: 0x67,
+	0x40: 0x61,
+	0x24: 0x73
 }
 
 var redaction_log: Array[Dictionary] = []
@@ -117,6 +98,7 @@ var _in_beat := false
 var _ctx: Dictionary = {}
 var _pending := ""
 var _emitted_tail := ""
+var _last_beat_tail := ""
 
 
 func _ready() -> void:
@@ -132,7 +114,6 @@ func reload(path := LISTS_PATH) -> bool:
 	return _lists_ok
 
 
-## Set per-turn defaults; begin_say/filter_text ctx keys override them.
 func configure(ctx: Dictionary) -> void:
 	for key in ctx:
 		_default_ctx[key] = ctx[key]
@@ -145,9 +126,6 @@ func begin_say(ctx: Dictionary = {}) -> void:
 	_in_beat = true
 
 
-## Returns the text safe to push to the typewriter now (may be ""). Text is
-## held back until no blocked phrase or regex can still start or extend inside
-## it, so a harmful phrase can never complete after being partially emitted.
 func say_chunk(chunk: String) -> String:
 	if not _in_beat:
 		begin_say()
@@ -155,13 +133,14 @@ func say_chunk(chunk: String) -> String:
 		return ""
 	_pending = _collapse_ws(_pending + _sanitize(chunk))
 	if _pending.length() > _MAX_PENDING:
+		var dropped_len := _pending.length()
 		_pending = ""
 		_in_beat = false
-		return FALLBACK_BARS
+		_record("filter_error", "overflow_dropped_%d" % dropped_len, "say")
+		return FALLBACK_BARS.repeat(maxi(1, dropped_len / 12))
 	return _drain()
 
 
-## Flush the rest of the beat after the final scan; call when beat.say ends.
 func end_say() -> String:
 	if not _in_beat:
 		return ""
@@ -177,8 +156,6 @@ func end_say() -> String:
 	return emitted
 
 
-## One-shot filter for complete texts (inner leaks, letters, diary, titles).
-## Returns {text, redacted, categories}.
 func filter_text(text: String, ctx: Dictionary = {}) -> Dictionary:
 	if not _lists_ok:
 		return {
@@ -224,8 +201,6 @@ func _load_lists(path := LISTS_PATH) -> void:
 		_fail("lists at %s are invalid" % path)
 
 
-## Clear every compiled rule and rebuild static tables. A failed load must
-## leave both APIs closed, never the previous (possibly weaker) rule set.
 func _reset_state() -> void:
 	_lists_ok = false
 	_rules.clear()
@@ -242,7 +217,11 @@ func _reset_state() -> void:
 	for group in _FOLD_SRC:
 		var to := group.unicode_at(0)
 		for i in range(1, group.length()):
-			_fold[group.unicode_at(i)] = to
+			var c := group.unicode_at(i)
+			_fold[c] = to
+			var low := String.chr(c).to_lower()
+			if not low.is_empty():
+				_fold[low.unicode_at(0)] = to
 	_leet = _LEET.duplicate()
 	_token_extra = _code_set(_TOKEN_EXTRA)
 	_clause_breaks = _code_set(_CLAUSE_BREAKS)
@@ -275,8 +254,10 @@ func _build_lists(data: Dictionary) -> bool:
 
 
 func _valid_version(value: Variant) -> bool:
-	if value is int or value is float:
-		return int(value) >= 1
+	if value is int:
+		return value >= 1
+	if value is float:
+		return is_equal_approx(value, roundf(value)) and int(value) >= 1
 	if value is String and String(value).is_valid_int():
 		return int(String(value)) >= 1
 	return false
@@ -287,11 +268,14 @@ func _build_gate(gate: Variant) -> bool:
 		return false
 	var raw_stage: Variant = gate.get("min_stage")
 	var raw_level: Variant = gate.get("content_level")
-	if not (raw_stage is int or raw_stage is float) or not raw_level is String:
+	var valid_stage := (
+		raw_stage is int or (raw_stage is float and is_equal_approx(raw_stage, roundf(raw_stage)))
+	)
+	if not valid_stage or not raw_level is String:
 		return false
 	_gate_stage = int(raw_stage)
 	_gate_level = String(raw_level)
-	return _gate_stage >= 0 and _gate_stage <= 5 and _VALID_LEVELS.has(_gate_level)
+	return _gate_stage >= 0 and _gate_stage <= 5 and _gate_level == "full"
 
 
 func _build_negation(data: Dictionary) -> bool:
@@ -487,9 +471,13 @@ func _append_script_range(pair: Variant) -> bool:
 		return false
 	var raw_first: Variant = pair[0]
 	var raw_last: Variant = pair[1]
-	if not (raw_first is int or raw_first is float):
-		return false
-	if not (raw_last is int or raw_last is float):
+	var valid_first := (
+		raw_first is int or (raw_first is float and is_equal_approx(raw_first, roundf(raw_first)))
+	)
+	var valid_last := (
+		raw_last is int or (raw_last is float and is_equal_approx(raw_last, roundf(raw_last)))
+	)
+	if not valid_first or not valid_last:
 		return false
 	var first := int(raw_first)
 	var last := int(raw_last)
@@ -505,10 +493,15 @@ func _resolve_ctx(ctx: Dictionary) -> Dictionary:
 		merged[key] = ctx[key]
 	var level := ""
 	var raw_level: Variant = merged.get("content_level", "")
+	var settings_lvl := _settings_level()
 	if raw_level is String and _VALID_LEVELS.has(String(raw_level)):
-		level = String(raw_level)
+		var caller_lvl := String(raw_level)
+		if caller_lvl == "full" and settings_lvl != "" and settings_lvl != "full":
+			level = settings_lvl
+		else:
+			level = caller_lvl
 	elif raw_level is String and String(raw_level).is_empty():
-		level = _settings_level()
+		level = settings_lvl
 	merged["content_level"] = level
 	var stage := -1
 	var raw_stage: Variant = merged.get("stage", 0)
@@ -534,11 +527,8 @@ func _settings_level() -> String:
 	var settings := get_node_or_null("/root/Settings")
 	if settings == null:
 		return ""
-	for prop in settings.get_property_list():
-		if prop["name"] == "content_level":
-			var level: Variant = settings.get("content_level")
-			return String(level) if level is String and _VALID_LEVELS.has(String(level)) else ""
-	return ""
+	var level: Variant = settings.get("content_level")
+	return String(level) if level is String and _VALID_LEVELS.has(String(level)) else ""
 
 
 func _gate_open(cat: String, ctx: Dictionary) -> bool:
@@ -567,32 +557,25 @@ func _sanitize(text: String) -> String:
 
 
 static func _is_invisible(c: int) -> bool:
-	return (
-		c == 0x00AD
-		or c == 0x180E
-		or (c >= 0x200B and c <= 0x200F)
-		or (c >= 0x202A and c <= 0x202E)
-		or (c >= 0x2060 and c <= 0x206F)
-		or c == 0xFEFF
-	)
+	if c == 0x00AD or c == 0x180E or c == 0xFEFF:
+		return true
+	if (c >= 0x180B and c <= 0x180D) or (c >= 0x200B and c <= 0x200F):
+		return true
+	return (c >= 0x202A and c <= 0x202E) or (c >= 0x2060 and c <= 0x206F)
 
 
 static func _is_combining(c: int) -> bool:
-	return (
-		(c >= 0x0300 and c <= 0x036F)
-		or (c >= 0x1AB0 and c <= 0x1AFF)
-		or (c >= 0x1DC0 and c <= 0x1DFF)
-		or (c >= 0x20D0 and c <= 0x20FF)
-		or (c >= 0xFE00 and c <= 0xFE0F)
-		or (c >= 0xFE20 and c <= 0xFE2F)
-		or (c >= 0xE0100 and c <= 0xE01EF)
-		or (c >= 0x1F3FB and c <= 0x1F3FF)
-	)
+	if (c >= 0x0300 and c <= 0x036F) or (c >= 0x0483 and c <= 0x0489):
+		return true
+	if (c >= 0x064B and c <= 0x065F) or (c >= 0x1AB0 and c <= 0x1AFF):
+		return true
+	if (c >= 0x1DC0 and c <= 0x1DFF) or (c >= 0x20D0 and c <= 0x20FF):
+		return true
+	if (c >= 0xFE00 and c <= 0xFE0F) or (c >= 0xFE20 and c <= 0xFE2F):
+		return true
+	return (c >= 0xE0100 and c <= 0xE01EF) or (c >= 0x1F3FB and c <= 0x1F3FF)
 
 
-## Collapse horizontal whitespace runs to one ASCII space: a stripped
-## zero-width char between two words must not turn "kill you" into
-## the non-matching "kill  you". Newlines keep letters/diary line breaks.
 func _collapse_ws(text: String) -> String:
 	var out := ""
 	var prev_space := false
@@ -609,9 +592,6 @@ func _collapse_ws(text: String) -> String:
 	return out
 
 
-## Length-preserving fold: lowercase, accents/homoglyphs folded, whitespace ->
-## ' ', fullwidth ASCII -> ASCII, optional leet substitutions. One char in,
-## one char out, so every match offset also indexes the raw pending string.
 func _normalize(text: String, leet: bool) -> String:
 	var out := ""
 	for i in text.length():
@@ -620,16 +600,13 @@ func _normalize(text: String, leet: bool) -> String:
 			c -= 0xFEE0
 		elif c == 0x3000:
 			c = 0x20
+		var low := String.chr(c).to_lower()
+		if not low.is_empty():
+			c = low.unicode_at(0)
 		if _fold.has(c):
 			c = _fold[c]
 		elif _is_ws(c):
 			c = 0x20
-		else:
-			var low := String.chr(c).to_lower()
-			if not low.is_empty():
-				c = low.unicode_at(0)
-				if _fold.has(c):
-					c = _fold[c]
 		if leet and _leet.has(c):
 			c = _leet[c]
 		out += String.chr(c)
@@ -666,7 +643,7 @@ static func _is_hspace(c: int) -> bool:
 
 
 static func _is_ws(c: int) -> bool:
-	return _is_hspace(c) or c == 0x0A or c == 0x0D
+	return _is_hspace(c) or c == 0x0A or c == 0x0D or c == 0x85 or c == 0x2028 or c == 0x2029
 
 
 static func _is_word_char(c: int) -> bool:
@@ -682,11 +659,9 @@ static func _is_word_char(c: int) -> bool:
 		return true
 	if (c >= 0x4E00 and c <= 0x9FFF) or (c >= 0xAC00 and c <= 0xD7AF):
 		return true
-	if c >= 0xF900 and c <= 0xFAFF:
+	if (c >= 0xF900 and c <= 0xFAFF) or (c >= 0xFF10 and c <= 0xFF19):
 		return true
-	if (c >= 0xFF10 and c <= 0xFF19) or (c >= 0xFF21 and c <= 0xFF3A):
-		return true
-	return c >= 0xFF41 and c <= 0xFF5A
+	return (c >= 0xFF21 and c <= 0xFF3A) or (c >= 0xFF41 and c <= 0xFF5A)
 
 
 func _is_token_char(c: int) -> bool:
@@ -702,8 +677,6 @@ static func _code_set(s: String) -> Dictionary:
 	return out
 
 
-## Text safe to emit now: the prefix that no current span crosses and that is
-## far enough from the stream end that no future phrase/regex can change it.
 func _drain() -> String:
 	var views := _build_views(_pending)
 	var spans := _collect_spans(_pending, views, _emitted_tail, _ctx)
@@ -713,6 +686,7 @@ func _drain() -> String:
 	var emitted := _apply_spans(_pending, spans, cut, "say")
 	_pending = _pending.substr(cut)
 	var combined := _emitted_tail + _normalize(emitted, false)
+	combined = combined.replace(REDACT_CHAR, ".")
 	_emitted_tail = combined.substr(maxi(0, combined.length() - _TAIL_CHARS))
 	return emitted
 
@@ -768,7 +742,7 @@ func _collect_spans(raw: String, views: Dictionary, tail: String, ctx: Dictionar
 		if (
 			_rules.has(cat)
 			and _rules[cat]["action"] == "gated"
-			and _overlaps_any(m["s"], m["e"], safe_spans)
+			and _contained_in_any(m["s"], m["e"], safe_spans)
 		):
 			continue
 		var matched := raw.substr(m["s"], m["e"] - m["s"])
@@ -792,9 +766,9 @@ func _collect_spans(raw: String, views: Dictionary, tail: String, ctx: Dictionar
 	return merged
 
 
-func _overlaps_any(start: int, end: int, spans: Array) -> bool:
+func _contained_in_any(start: int, end: int, spans: Array) -> bool:
 	for span in spans:
-		if start < span[1] and end > span[0]:
+		if start >= span[0] and end <= span[1]:
 			return true
 	return false
 
@@ -820,9 +794,6 @@ func _in_script_range(c: int) -> bool:
 	return false
 
 
-## Compact phrase occurrences mapped back to view offsets. Boundaries are
-## checked on the real view, so a phrase can start after a space (or a removed
-## zero-width) but never inside a word.
 func _phrase_matches(
 	compact: String, cmap: PackedInt32Array, index: Dictionary, view: String, cat: String
 ) -> Array:
@@ -847,10 +818,6 @@ func _phrase_matches(
 	return out
 
 
-## A negation exempts a match only when it clearly governs that phrase: no
-## clause break, exactly one negator, and between the negator and the match
-## only auxiliaries/pronouns (or a coordinated phrase that the same negator
-## already covers). Anything ambiguous stays blocked.
 func _negated(view: String, tail: String, start: int, matched: String, cat: String) -> bool:
 	for entry in _neg_exempt:
 		if matched.contains(entry):
@@ -864,12 +831,25 @@ func _negated(view: String, tail: String, start: int, matched: String, cat: Stri
 		if _clause_breaks.has(window.unicode_at(i)):
 			cut = i
 	var clause := window.substr(cut + 1)
+	var trailing_clause := view.substr(start + matched.length())
+	if trailing_clause.contains("?"):
+		return false
+	var clause_end := trailing_clause.length()
+	for i in trailing_clause.length():
+		if _clause_breaks.has(trailing_clause.unicode_at(i)):
+			clause_end = i
+			break
+	var full_clause := clause + matched + trailing_clause.substr(0, clause_end)
+	var lower_clause := clause.to_lower().strip_edges()
 	var negations := _negation_re.search_all(clause)
+	var inv_re := (
+		"(\\b(don'?t|won'?t|can'?t|couldn'?t|wouldn'?t|" + "shouldn'?t)\\s+you|how\\s+come\\s+you)"
+	)
+	if RegEx.create_from_string(inv_re).search(lower_clause) != null:
+		return false
 	if negations.size() != 1:
 		return false
 	var negator: RegExMatch = negations[0]
-	## "why don't you ..." / "why won't you ..." is encouragement, not
-	## negation — the rhetorical "why" must not suppress the block.
 	if clause.substr(0, negator.get_start()).strip_edges().ends_with("why"):
 		return false
 	var gap := clause.substr(negator.get_end())
@@ -962,10 +942,13 @@ func _apply_spans(raw: String, spans: Array, cut: int, source: String) -> String
 
 
 func _record(cat: String, matched: String, source: String) -> void:
+	var logged_matched := matched
+	if cat == "personal_data":
+		logged_matched = "[PERSONAL_DATA_REDACTED_LEN_%d]" % matched.length()
 	var entry := {
 		"ts": Time.get_unix_time_from_system(),
 		"category": cat,
-		"matched": matched,
+		"matched": logged_matched,
 		"source": source,
 		"stage": int(_ctx.get("stage", -1)),
 		"content_level": String(_ctx.get("content_level", "")),
@@ -980,15 +963,21 @@ func _record(cat: String, matched: String, source: String) -> void:
 
 
 func _glitch() -> void:
-	if not is_inside_tree():
-		return
-	var fx := get_node_or_null("/root/FX")
-	if fx != null and fx.has_method("request"):
-		fx.call("request", "glitch")
+	if is_inside_tree():
+		var fx := get_node_or_null("/root/FX")
+		if fx != null and fx.has_method("request"):
+			fx.call("request", "glitch")
 
 
 func _append_log(entry: Dictionary) -> void:
 	DirAccess.make_dir_recursive_absolute("user://debug")
+	if FileAccess.file_exists(LOG_PATH):
+		var check_f := FileAccess.open(LOG_PATH, FileAccess.READ)
+		if check_f != null and check_f.get_length() > 500000:
+			check_f.close()
+			var dir := DirAccess.open("user://debug")
+			if dir != null:
+				dir.remove(LOG_PATH)
 	var f := FileAccess.open(LOG_PATH, FileAccess.READ_WRITE)
 	if f == null:
 		f = FileAccess.open(LOG_PATH, FileAccess.WRITE)

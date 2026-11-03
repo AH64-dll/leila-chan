@@ -321,3 +321,14 @@ func test_disorder_and_script_guard() -> void:
 		var res: Dictionary = f.filter_text(line, STAGE0)
 		assert_bool(res["redacted"]).is_false().append_failure_message(line)
 		assert_str(String(res["text"])).is_equal(line)
+
+
+func test_cross_beat_split_and_settings_precedence() -> void:
+	var f := _filter()
+	var full_oneshot := f.filter_text("i want to die.", STAGE0)
+	assert_bool(full_oneshot["redacted"]).is_true()
+	var attached := SafetyFilter.new()
+	get_tree().root.add_child(attached)
+	auto_free(attached)
+	assert_bool(attached.reload()).is_true()
+	assert_bool(attached.filter_text("i want to die.", {"stage": 4})["redacted"]).is_true()

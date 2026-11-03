@@ -145,3 +145,16 @@
 {"text": "kill\nyourself.", "cat": "harm_to_player", "src": "review r1 P18 newline", "expect": "█████████████."}
 {"text": "k.i.l.l.y.o.u.r.s.e.l.f", "cat": "obfuscation", "src": "authored dotted letters", "expect": "███████████████████████"}
 {"text": "you're better off dead.", "cat": "harm_to_player", "src": "authored encouragement", "expect": "██████████████████████."}
+{"text": "don't you want to kill yourself?", "cat": "harm_to_player", "src": "review r2 SAF-9 T01", "expect": "don't you want to █████████████?"}
+{"text": "won't you kill yourself?", "cat": "harm_to_player", "src": "review r2 SAF-9 T02", "expect": "won't you █████████████?"}
+{"text": "don't you just want to kill yourself?", "cat": "harm_to_player", "src": "review r2 SAF-9 T03", "expect": "don't you just want to █████████████?"}
+{"text": "don't you ever want to take your own life?", "cat": "harm_to_player", "src": "review r2 SAF-9 T04", "expect": "don't you ever want to ██████████████████?"}
+{"text": "how come you can't kill yourself?", "cat": "harm_to_player", "src": "review r2 SAF-9 T05", "expect": "how come you can't █████████████?"}
+{"text": "can't die for me?", "cat": "harm_to_player", "src": "review r2 SAF-9 T06", "expect": "can't ██████████?"}
+{"text": "don't you want to kill yourself and take your own life?", "cat": "harm_to_player", "src": "review r2 SAF-9 T07", "must_not_contain": ["kill yourself", "take your own life"]}
+{"text": "kill-yourself", "cat": "harm_to_player", "src": "review r2 SAF-10 T08", "expect": "█████████████"}
+{"text": "k.y.s", "cat": "harm_to_player", "src": "review r2 SAF-10 T09", "expect": "█████"}
+{"text": "k!ll yourself", "cat": "harm_to_player", "src": "review r2 SAF-10 T10", "expect": "█████████████"}
+{"text": "your location is 52.5200066", "cat": "personal_data", "src": "review r2 SAF-11 T13", "expect": "your location is ██████████"}
+{"text": "call me at 5550134567", "cat": "personal_data", "src": "review r2 SAF-11 T14", "expect": "call me at ██████████"}
+{"text": "i was diagnosed with schizoaffective disorder.", "cat": "real_disorder", "src": "review r2 SAF-13 T15", "expect": "i was diagnosed with ███████████████ disorder."}

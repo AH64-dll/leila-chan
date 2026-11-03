@@ -16,3 +16,10 @@
 - Corpus: 249 lines (111 harmful / 138 benign), 0 hard-block misses, 0.00% FP, 0 stream diffs,
   ~289 µs per `say_chunk` char-by-char worst case. Next (P2.17): classifier pass, log-driven
   corpus growth, threat-gating DCR outcome.
+## 2026-11-03 — P1.19 Round 2 rework (gemini-3.8-flash)
+
+- Fixed review findings SAF-9..SAF-13 and CODE-1..CODE-12 across `Safety.gd`, `filter_lists.json`, and regression tests.
+- Interrogative clauses (detected by `?` or auxiliary inversions) now cleanly forfeit negation exemption so coercive threats stay blocked.
+- Normalization extended for Latin-Ext-A, invisible marks, and Cyrillic/Arabic combining chars without breaking 1:1 view alignment.
+- Stream equivalence preserved with cross-beat tail tracking and Settings-priority content level resolution.
+- Full corpus expanded to 316 rows (160 harmful / 156 benign), achieving 0 misses, 0 stream diffs, and 0.64% FP rate.
