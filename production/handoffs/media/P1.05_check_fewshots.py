@@ -1,9 +1,14 @@
 """P1.05 check: parse the few-shot Turn JSON inside game/data/prompts/stage_*.md
-and validate every field against the docs/02 SS2-3 enums + stage gates.
-Run from the worktree root:  python production/handoffs/media/P1.05_check_fewshots.py
+and validate every field against the docs/02 SS2-3 enums + stage gates plus the
+rules.md prose limits (inner <= 15 words, say <= 2 sentence groups).
+Run from anywhere:  python production/handoffs/media/P1.05_check_fewshots.py
+Repo paths resolve relative to this script's location (portable, no absolute paths).
 Exits 0 iff all examples are valid.
 """
 import json, re, sys
+from pathlib import Path
+
+PROMPTS_DIR = Path(__file__).resolve().parents[3] / "game" / "data" / "prompts"
 
 GATES = {
     0: {"cues": ["none", "giggle", "laugh_soft", "gasp", "sigh", "hum", "sniffle", "heartbeat"],
@@ -36,8 +41,8 @@ for stage in sorted(GATES):
             errs.append(f"field order {list(d.keys())}")
         if d["read"] not in INTENTS:
             errs.append("bad read")
-        if len(d["inner"]) > 90:
-            errs.append("inner>90")
+        if len(d["inner"].split()) > 15 or len(d["inner"]) > 90:
+            errs.append("inner>15w/90ch")
         if d["music"] not in g["music"]:
             errs.append(f"music {d['music']} not in stage gate")
         if d["fx"] not in g["fx"]:
@@ -55,6 +60,9 @@ for stage in sorted(GATES):
                 errs.append(f"beat{i} cue {b['cue']} not in stage gate")
             if len(b["say"]) > 200:
                 errs.append(f"beat{i} say>200")
+            sentences = len(re.findall(r"[.!?]+", b["say"]))
+            if sentences > 2:
+                errs.append(f"beat{i} say={sentences}sentences>2")
         if not all(k in d["mood"] and isinstance(d["mood"][k], int) and -3 <= d["mood"][k] <= 3
                    for k in ("affection", "trust", "stress")):
             errs.append("mood range")

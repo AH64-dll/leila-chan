@@ -460,6 +460,309 @@ def test_review_rejects_the_implementers_own_backend(tk):
                   "--report", report, "--reviewer", "swe2", "--allow-same") == 0
 
 
+# ---------------------------------------------------------------- backend metadata
+
+def _backend_report(tk: Tracker, name: str, backend: str,
+                    verdict: str = "VERDICT: APPROVED") -> str:
+    p = tk.prod / "reviews" / name
+    p.parent.mkdir(exist_ok=True)
+    p.write_text(f"{verdict}\n\n# review\n\n- Reviewer backend: {backend}\n\n## Summary\n",
+                 encoding="utf-8")
+    return f"production/reviews/{name}"
+
+
+def _handoff_with_agent(tk: Tracker, tid: str = "P0.03", agent: str = "swe2",
+                        round_: int = 1, extra: str = "") -> Path:
+    p = tk.root / "production" / "handoffs" / f"{tid}.md"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(f"# Handoff\n\n## Round {round_}  (2026-11-02, agent: {agent})\n{extra}\n",
+                 encoding="utf-8")
+    return p
+
+
+def _gate_report(tk: Tracker, backend: str = "swe2", name: str = "P0-gate-r1.md") -> str:
+    p = tk.prod / "gates" / name
+    p.parent.mkdir(exist_ok=True)
+    p.write_text(f"GATE: FAIL\n\n# gate\n\n- Date: 2026-11-02 · Reviewer backend: {backend} (Devin)\n",
+                 encoding="utf-8")
+    return f"production/gates/{name}"
+
+
+def test_declared_backend_reads_review_and_gate_headers(tk):
+    review = _backend_report(tk, "meta-review.md", "devin-native")
+    gate = _gate_report(tk)
+    assert tk.mod.declared_backend(tk.root / review) == "devin-native"
+    assert tk.mod.declared_backend(tk.root / gate) == "swe2"   # shares the date line
+
+
+def test_handoff_agents_ignores_appended_verification_sections(tk):
+    """P0.05 appends "## Round 1 — independent verification (agent: deepseek)";
+    that is not the implementer declaration and must not override round 1."""
+    p = _handoff_with_agent(tk, agent="swe2")
+    with p.open("a", encoding="utf-8") as f:
+        f.write("\n## Round 1 — independent verification (agent: deepseek, 2026-11-02)\n")
+    assert tk.mod.handoff_agents(p) == {1: "swe2"}
+
+
+def test_review_defaults_to_the_reports_declared_backend(tk):
+    st = base_state()
+    st["tasks"]["P0.03"] = Tracker.task("in_review", round=1, agent="swe2")
+    tk.write_state(st)
+    report = _backend_report(tk, "P0.03-code-r1.md", "devin-native")
+    assert tk.run("review", "P0.03", "code", "approved", "--report", report) == 0
+    entry = tk.state()["tasks"]["P0.03"]["reviews"][0]
+    assert entry["reviewer"] == "devin-native" and entry["declared"] == "devin-native"
+    assert "override" not in entry
+
+
+def test_review_accepts_matching_reviewer_metadata(tk):
+    st = base_state()
+    st["tasks"]["P0.03"] = Tracker.task("in_review", round=1, agent="swe2")
+    tk.write_state(st)
+    report = _backend_report(tk, "P0.03-code-r1.md", "deepseek")
+    assert tk.run("review", "P0.03", "code", "approved",
+                  "--report", report, "--reviewer", "deepseek") == 0
+    entry = tk.state()["tasks"]["P0.03"]["reviews"][0]
+    assert entry["reviewer"] == "deepseek" and entry["declared"] == "deepseek"
+
+
+def test_review_rejects_a_reviewer_that_contradicts_the_report(tk):
+    st = base_state()
+    st["tasks"]["P0.03"] = Tracker.task("in_review", round=1, agent="swe2")
+    tk.write_state(st)
+    report = _backend_report(tk, "P0.03-code-r1.md", "claude")
+    with pytest.raises(SystemExit, match="declares reviewer backend 'claude'"):
+        tk.run("review", "P0.03", "code", "approved", "--report", report, "--reviewer", "deepseek")
+    assert tk.state()["tasks"]["P0.03"]["reviews"] == []
+
+
+def test_review_records_an_explicit_override_for_mixed_backend_evidence(tk, capsys):
+    st = base_state()
+    st["tasks"]["P0.03"] = Tracker.task("in_review", round=1, agent="swe2")
+    tk.write_state(st)
+    report = _backend_report(tk, "P0.03-code-r1.md", "claude")
+    evidence = "subagent stderr: fell back from SWE-2 to DeepSeek"
+    assert tk.run("review", "P0.03", "code", "approved", "--report", report,
+                  "--reviewer", "deepseek", "--backend-override", evidence) == 0
+    entry = tk.state()["tasks"]["P0.03"]["reviews"][0]
+    assert entry["reviewer"] == "deepseek" and entry["declared"] == "claude"
+    assert entry["override"] == evidence
+    assert tk.run("validate") == 0
+    out = capsys.readouterr().out
+    assert "P0.03: code r1" not in out
+
+
+@pytest.mark.parametrize("reviewer,override", [
+    ("deepseek", "not needed"),                  # override without a contradiction
+    (None, "not needed"),                        # override without a reviewer
+])
+def test_backend_override_requires_a_real_contradiction(tk, reviewer, override):
+    st = base_state()
+    st["tasks"]["P0.03"] = Tracker.task("in_review", round=1, agent="swe2")
+    tk.write_state(st)
+    report = _backend_report(tk, "P0.03-code-r1.md", "deepseek")
+    argv = ["review", "P0.03", "code", "approved", "--report", report]
+    if reviewer:
+        argv += ["--reviewer", reviewer]
+    if override:
+        argv += ["--backend-override", override]
+    with pytest.raises(SystemExit, match="only applies when --reviewer differs"):
+        tk.run(*argv)
+
+
+def test_review_accepts_a_legacy_report_without_backend_metadata(tk):
+    st = base_state()
+    st["tasks"]["P0.03"] = Tracker.task("in_review", round=1, agent="swe2")
+    tk.write_state(st)
+    report = _report(tk)                          # no "Reviewer backend:" line
+    assert tk.run("review", "P0.03", "code", "approved",
+                  "--report", report, "--reviewer", "commandcode") == 0
+    entry = tk.state()["tasks"]["P0.03"]["reviews"][0]
+    assert entry["reviewer"] == "commandcode" and "declared" not in entry
+
+
+def test_review_uses_the_declared_backend_for_the_independence_rule(tk):
+    st = base_state()
+    st["tasks"]["P0.03"] = Tracker.task("in_review", round=1, agent="deepseek")
+    tk.write_state(st)
+    report = _backend_report(tk, "P0.03-code-r1.md", "deepseek")
+    with pytest.raises(SystemExit, match="implementer's backend"):
+        tk.run("review", "P0.03", "code", "approved", "--report", report)
+
+
+def test_review_records_a_parallel_kind_after_changes_without_bumping_the_round(tk):
+    st = base_state()
+    st["tasks"]["P0.02"] = Tracker.task("in_review", round=1, agent="swe2")
+    tk.write_state(st)
+    code = _backend_report(tk, "P0.02-code-r1.md", "deepseek", "VERDICT: CHANGES_REQUESTED")
+    design = _backend_report(tk, "P0.02-design-r1.md", "claude")
+    assert tk.run("review", "P0.02", "code", "changes", "--report", code) == 0
+    assert tk.run("review", "P0.02", "design", "approved", "--report", design) == 0
+    ts = tk.state()["tasks"]["P0.02"]
+    assert ts["status"] == "changes_requested"       # approval did not clear the rejection
+    assert ts["round"] == 1                          # same round, not bumped
+    assert [(r["kind"], r["verdict"]) for r in ts["reviews"]] == [
+        ("code", "changes"), ("design", "approved")]
+
+
+def test_review_changes_after_an_approval_still_requests_changes(tk):
+    st = base_state()
+    st["tasks"]["P0.02"] = Tracker.task("in_review", round=1, agent="swe2")
+    tk.write_state(st)
+    code = _backend_report(tk, "P0.02-code-r1.md", "deepseek")
+    design = _backend_report(tk, "P0.02-design-r1.md", "claude", "VERDICT: CHANGES_REQUESTED")
+    assert tk.run("review", "P0.02", "code", "approved", "--report", code) == 0
+    assert tk.state()["tasks"]["P0.02"]["status"] == "in_review"
+    assert tk.run("review", "P0.02", "design", "changes", "--report", design) == 0
+    ts = tk.state()["tasks"]["P0.02"]
+    assert ts["status"] == "changes_requested" and ts["round"] == 1
+
+
+def test_review_records_the_remaining_kind_while_blocked(tk):
+    st = base_state()
+    st["tasks"]["P0.02"] = Tracker.task("in_review", round=1, agent="swe2")
+    tk.write_state(st)
+    code = _backend_report(tk, "P0.02-code-r1.md", "deepseek", "VERDICT: BLOCKED")
+    design = _backend_report(tk, "P0.02-design-r1.md", "claude")
+    assert tk.run("review", "P0.02", "code", "blocked", "--report", code) == 0
+    assert tk.run("review", "P0.02", "design", "approved", "--report", design) == 0
+    ts = tk.state()["tasks"]["P0.02"]
+    assert ts["status"] == "blocked" and ts["round"] == 1
+
+
+def test_review_rejects_a_second_verdict_for_the_same_kind_while_not_in_review(tk):
+    st = base_state()
+    st["tasks"]["P0.03"] = Tracker.task("in_review", round=1, agent="swe2")
+    tk.write_state(st)
+    report = _backend_report(tk, "P0.03-code-r1.md", "deepseek", "VERDICT: CHANGES_REQUESTED")
+    assert tk.run("review", "P0.03", "code", "changes", "--report", report) == 0
+    with pytest.raises(SystemExit, match="already has a round 1 verdict"):
+        tk.run("review", "P0.03", "code", "approved", "--report", report)
+
+
+def test_set_in_review_adopts_the_handoff_agent(tk):
+    st = base_state()
+    st["tasks"]["P0.03"] = Tracker.task("in_progress", round=1)
+    tk.write_state(st)
+    _handoff_with_agent(tk, agent="swe2")
+    assert tk.run("set", "P0.03", "in_review") == 0
+    ts = tk.state()["tasks"]["P0.03"]
+    assert ts["status"] == "in_review" and ts["agent"] == "swe2"
+    assert any(h["event"] == "agent" and "adopted from handoff" in h["note"]
+               for h in tk.state()["history"])
+
+
+def test_set_in_review_rejects_a_contradicting_handoff_agent(tk):
+    st = base_state()
+    st["tasks"]["P0.03"] = Tracker.task("in_progress", round=1, agent="deepseek")
+    tk.write_state(st)
+    _handoff_with_agent(tk, agent="swe2")
+    with pytest.raises(SystemExit, match="handoff declares agent 'swe2'"):
+        tk.run("set", "P0.03", "in_review")
+    assert tk.state()["tasks"]["P0.03"]["status"] == "in_progress"
+    assert tk.run("set", "P0.03", "in_review", "--force") == 0
+    ts = tk.state()["tasks"]["P0.03"]
+    assert ts["agent"] == "deepseek" and ts["agent_declared"] == "swe2"
+
+
+def test_agent_correction_audits_a_contradicting_handoff(tk, capsys):
+    st = base_state()
+    st["tasks"]["P0.03"] = Tracker.task("in_progress", round=1)
+    tk.write_state(st)
+    _handoff_with_agent(tk, agent="swe2")
+    assert tk.run("agent", "P0.03", "deepseek") == 0
+    ts = tk.state()["tasks"]["P0.03"]
+    assert ts["agent"] == "deepseek" and ts["agent_declared"] == "swe2"
+    capsys.readouterr()
+    assert tk.run("validate") == 0
+    assert "P0.03:" not in capsys.readouterr().out
+
+
+def _done_task_with_review_drift(tk: Tracker) -> None:
+    st = base_state()
+    st["tasks"]["P0.03"] = Tracker.task("done", round=1, agent="swe2", reviews=[
+        {"kind": "code", "verdict": "approved", "round": 1, "reviewer": "deepseek",
+         "report": "production/reviews/P0.03-code-r1.md", "ts": "t"}])
+    tk.write_state(st)
+    _backend_report(tk, "P0.03-code-r1.md", "claude")
+    _handoff_with_agent(tk, agent="swe2")
+
+
+def test_validate_warns_and_strict_fails_on_done_task_drift(tk, capsys):
+    _done_task_with_review_drift(tk)
+    assert tk.run("validate") == 0
+    out = capsys.readouterr().out
+    assert "WARN  P0.03: code r1 reviewer recorded as 'deepseek'" in out
+    assert "1 backend-drift warning(s)" in out
+    assert tk.run("validate", "--strict") == 1
+
+
+def test_validate_does_not_block_on_in_flight_task_drift(tk, capsys):
+    st = base_state()
+    st["tasks"]["P0.03"] = Tracker.task("in_progress", round=1, agent="deepseek")
+    tk.write_state(st)
+    _handoff_with_agent(tk, agent="swe2")
+    assert tk.run("validate", "--strict") == 0
+    out = capsys.readouterr().out
+    assert "WARN  P0.03: agent recorded as 'deepseek' but handoff round 1 declares 'swe2'" in out
+    assert "1 backend-drift warning(s)" in out
+
+
+def test_validate_accepts_an_audited_legacy_drift(tk, capsys):
+    _done_task_with_review_drift(tk)
+    (tk.prod / "backend_audit.json").write_text(json.dumps(
+        {"reviews": {"P0.03/code/1": {"recorded": "deepseek", "declared": "claude"}}}),
+        encoding="utf-8")
+    assert tk.run("validate", "--strict") == 0
+    out = capsys.readouterr().out
+    assert "P0.03:" not in out
+    assert "0 backend-drift warning(s)" in out
+
+
+def test_validate_ignores_a_ledger_entry_for_an_absent_task(tk, capsys):
+    """A worktree's state.json lags main, so an entry for a task this snapshot
+    has never seen is not stale."""
+    st = base_state()
+    st["tasks"]["P0.03"] = Tracker.task("in_progress", round=1, agent="swe2")
+    tk.write_state(st)
+    (tk.prod / "backend_audit.json").write_text(json.dumps(
+        {"reviews": {"P9.01/code/1": {"recorded": "a", "declared": "b"}}}), encoding="utf-8")
+    assert tk.run("validate", "--strict") == 0
+    assert "P9.01" not in capsys.readouterr().out
+
+
+def test_validate_flags_a_stale_audit_entry(tk, capsys):
+    st = base_state()
+    st["tasks"]["P0.03"] = Tracker.task("done", round=1, agent="swe2")
+    tk.write_state(st)
+    _handoff_with_agent(tk, agent="swe2")
+    (tk.prod / "backend_audit.json").write_text(json.dumps(
+        {"reviews": {"P0.03/code/1": {"recorded": "deepseek", "declared": "claude"}}}),
+        encoding="utf-8")
+    assert tk.run("validate") == 0
+    out = capsys.readouterr().out
+    assert "backend_audit.json reviews entry 'P0.03/code/1' has no matching drift" in out
+
+
+def test_gate_defaults_to_the_declared_backend(tk):
+    tk.write_state(base_state())
+    report = _gate_report(tk, "swe2")
+    assert tk.run("gate", "P0", "fail", "--report", report) == 0
+    gate = tk.state()["phases"]["P0"]["gates"][0]
+    assert gate["reviewer"] == "swe2" and gate["declared"] == "swe2"
+
+
+def test_gate_requires_an_override_for_a_contradicting_reviewer(tk):
+    tk.write_state(base_state())
+    report = _gate_report(tk, "swe2")
+    with pytest.raises(SystemExit, match="declares reviewer backend 'swe2'"):
+        tk.run("gate", "P0", "fail", "--report", report, "--reviewer", "deepseek")
+    assert tk.run("gate", "P0", "fail", "--report", report,
+                  "--reviewer", "deepseek", "--backend-override", "gate dispatch log") == 0
+    gate = tk.state()["phases"]["P0"]["gates"][0]
+    assert gate["reviewer"] == "deepseek" and gate["override"] == "gate dispatch log"
+
+
 # ---------------------------------------------------------------- briefs
 
 def test_brief_renders_the_implement_template(tk, capsys):

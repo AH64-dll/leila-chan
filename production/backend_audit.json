@@ -1,0 +1,182 @@
+{
+  "_note": "Audited backend-identity overrides for legacy records that cannot be corrected without rewriting production/state.json or the reports (forbidden by the P1.26 brief). An entry blesses exactly one recorded/declared pair; validate flags entries whose drift no longer exists as stale. New reviews must use --backend-override instead. Maintained alongside state.json by the producer; do not add an entry without evidence.",
+  "reviews": {
+    "P0.02/code/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.03/code/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.04/code/2": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.04/design/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.04/design/2": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.05/design/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.06/code/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.07/code/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.08/code/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.08/design/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.09/design/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.09/design/2": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.11/code/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.12/code/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.13/code/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.13/design/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.14/code/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.16/code/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.16/code/2": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.16/design/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.16/design/2": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.17/code/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.18/code/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.18/code/2": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.19/code/1": {
+      "recorded": "deepseek",
+      "declared": "commandcode",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels commandcode while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.20/code/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): legacy record; the report self-labels claude while the tracker recorded deepseek. Reports and state.json are not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P1.01/design/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P1.26 brief: legacy report self-labels claude; confirmed CLI dispatch was deepseek. Reports and state.json are not rewritten, so the divergence is audited here."
+    },
+    "P1.05/content/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P1.26 brief: legacy report self-labels claude; confirmed CLI dispatch was deepseek. Reports and state.json are not rewritten, so the divergence is audited here."
+    },
+    "P1.05/design/1": {
+      "recorded": "deepseek",
+      "declared": "claude",
+      "evidence": "P1.26 brief: legacy report self-labels claude; confirmed CLI dispatch was deepseek. Reports and state.json are not rewritten, so the divergence is audited here."
+    }
+  },
+  "agents": {
+    "P0.05": {
+      "recorded": "deepseek",
+      "declared": "swe2",
+      "evidence": "P0 gate r1 §1/§4: mixed-backend task - the producer reassigned swe2 to deepseek at 19:23, swe2 finished first and deepseek verified/fixed; state records deepseek deliberately. Legacy record; state.json is not rewritten (P1.26 brief)."
+    },
+    "P0.11": {
+      "recorded": null,
+      "declared": "swe2",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): the handoff declares swe2 while the tracker recorded None. Legacy record; state.json is not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.17": {
+      "recorded": null,
+      "declared": "swe2",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): the handoff declares swe2 while the tracker recorded None. Legacy record; state.json is not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.18": {
+      "recorded": null,
+      "declared": "swe2",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): the handoff declares swe2 while the tracker recorded None. Legacy record; state.json is not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.19": {
+      "recorded": null,
+      "declared": "swe2",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): the handoff declares swe2 while the tracker recorded None. Legacy record; state.json is not rewritten (P1.26 brief), so the divergence is audited here."
+    },
+    "P0.20": {
+      "recorded": null,
+      "declared": "swe2",
+      "evidence": "P0 gate r1 §4 audit (P1.26 brief): the handoff declares swe2 while the tracker recorded None. Legacy record; state.json is not rewritten (P1.26 brief), so the divergence is audited here."
+    }
+  }
+}

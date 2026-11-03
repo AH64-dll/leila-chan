@@ -47,6 +47,27 @@ COLUMNS = ["id", "task", "role", "size", "deps", "review", "refs", "acceptance"]
 # validate() issue kinds — severity is carried by this tag, never by the message text
 ERR, MISSING_REF = "error", "missing_ref"
 
+# Review recording: a verdict may also be recorded while a task sits in
+# changes_requested/blocked, so a parallel review kind of the same round is not
+# lost (P1.26). Status effects are monotonic — a late approval never clears a
+# prior rejection and the round is never bumped from here.
+REVIEWABLE = {"in_review", "changes_requested", "blocked"}
+STATUS_RANK = {"in_review": 0, "changes_requested": 1, "blocked": 2}
+VERDICT_STATUS = {"approved": "in_review", "changes": "changes_requested", "blocked": "blocked"}
+
+# Self-declared backend metadata: "- Reviewer backend: X" in a review/gate
+# report (it may share the line with a date, as the gate template does), and
+# "## Round N  (<date>, agent: X)" in a handoff. Names are open-ended (swe2,
+# deepseek, claude, devin-native, commandcode, human, …) — never match against a
+# fixed list. An appended section such as "## Round 1 — independent verification
+# (agent: …)" is not an implementer declaration and must not override round 1.
+BACKEND_RE = re.compile(r"Reviewer backend\s*:\s*`?([A-Za-z0-9_.\-]+)", re.I)
+HANDOFF_AGENT_RE = re.compile(r"^#+\s*Round\s+(\d+)\s*\([^)]*?\bagent:\s*`?([A-Za-z0-9_.\-]+)", re.I)
+
+# Audited overrides for backend-identity drift that cannot be corrected in
+# state.json (legacy/mixed-backend evidence). See production/backend_audit.json.
+AUDIT_PATH = PROD / "backend_audit.json"
+
 
 # ---------------------------------------------------------------- plan + state
 
@@ -125,6 +146,63 @@ def resolve(path: str, tid: str | None = None) -> pathlib.Path | None:
         if c.exists():
             return c
     return None
+
+
+# ------------------------------------------------------- backend declarations
+
+def declared_backend(path: pathlib.Path) -> str | None:
+    """The reviewer backend a report declares in its header, or None for a
+    legacy report with no `- Reviewer backend:` line."""
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return None
+    for line in lines[:40]:
+        m = BACKEND_RE.search(line)
+        if m:
+            return m.group(1)
+    return None
+
+
+def handoff_agents(path: pathlib.Path) -> dict[int, str]:
+    """Round -> implementer backend declared in `## Round N (…, agent: X)` headers."""
+    out: dict[int, str] = {}
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return out
+    for line in lines:
+        m = HANDOFF_AGENT_RE.match(line)
+        if m:
+            out[int(m.group(1))] = m.group(2)
+    return out
+
+
+def load_backend_audit() -> dict:
+    if AUDIT_PATH.exists():
+        return json.loads(AUDIT_PATH.read_text(encoding="utf-8"))
+    return {}
+
+
+def audit_covers(audit: dict, section: str, key: str, recorded, declared) -> bool:
+    """A ledger entry blesses a drift only if it cites the exact recorded and
+    declared values — a stale entry audits nothing."""
+    ent = audit.get(section, {}).get(key)
+    return bool(ent) and ent.get("recorded") == recorded and ent.get("declared") == declared
+
+
+def resolve_reviewer(args, report: pathlib.Path, what: str) -> tuple[str | None, str | None]:
+    """Effective reviewer = --reviewer, falling back to the report's declared
+    backend. A disagreement needs --backend-override so the divergence is
+    recorded instead of silent (gate C6)."""
+    declared = declared_backend(report)
+    mismatch = args.reviewer and declared and args.reviewer != declared
+    if args.backend_override and not mismatch:
+        sys.exit("--backend-override only applies when --reviewer differs from the report's declared backend")
+    if mismatch and not args.backend_override:
+        sys.exit(f"{what} declares reviewer backend '{declared}' but --reviewer is "
+                 f"'{args.reviewer}'; pass --backend-override \"<evidence>\" for an audited override")
+    return args.reviewer or declared, declared
 
 
 # ---------------------------------------------------------------- progress
@@ -214,7 +292,61 @@ def cmd_validate(args) -> int:
     for tid in state["tasks"]:
         if tid not in plan:
             issues.append((ERR, f"state.json has unknown task {tid}"))
+    # backend-identity drift: recorded reviewer/agent vs the backend the
+    # report/handoff declares (gate C6). Drift needs an audit — an "override"
+    # note recorded at review time, "agent_declared" left by `track.py agent`,
+    # or a backend_audit.json ledger entry for legacy evidence. Drift on a done
+    # task is final, so --strict rejects it; on an open task it is a warning the
+    # producer can still correct before completion.
+    audit = load_backend_audit()
+    audited: set[tuple[str, str]] = set()
+    drift: list[tuple[str, bool]] = []  # (message, task is done)
+
+    def note(tid: str, message: str) -> None:
+        drift.append((message, state["tasks"][tid].get("status") == "done"))
+
+    for tid, ts in state["tasks"].items():
+        if tid not in plan:
+            continue
+        for r in ts.get("reviews", []):
+            rep = resolve(r.get("report", ""), tid)
+            key = f"{tid}/{r.get('kind')}/{r.get('round')}"
+            if not rep:
+                note(tid, f"{tid}: {r.get('kind')} r{r.get('round')} review report "
+                          f"{r.get('report')!r} not found (cannot audit its backend)")
+                continue
+            dec, rec = declared_backend(rep), r.get("reviewer")
+            if dec and dec != rec:
+                if r.get("override"):
+                    continue
+                if audit_covers(audit, "reviews", key, rec, dec):
+                    audited.add(("reviews", key))
+                    continue
+                note(tid, f"{tid}: {r.get('kind')} r{r.get('round')} reviewer recorded as "
+                          f"{rec!r} but {r.get('report')} declares {dec!r}")
+        hpath = resolve(ts.get("handoff") or f"production/handoffs/{tid}.md", tid)
+        if hpath:
+            dec = handoff_agents(hpath).get(ts.get("round"))
+            rec = ts.get("agent")
+            if dec and dec != rec:
+                if ts.get("agent_declared") == dec:
+                    pass
+                elif audit_covers(audit, "agents", tid, rec, dec):
+                    audited.add(("agents", tid))
+                else:
+                    note(tid, f"{tid}: agent recorded as {rec!r} but handoff round "
+                              f"{ts.get('round')} declares {dec!r}")
+    known = {("reviews", k) for k in audit.get("reviews", {})} | {("agents", k) for k in audit.get("agents", {})}
+    for section, key in sorted(known - audited):
+        # A worktree's state.json can lag the main tree, so a ledger entry for a
+        # task this snapshot has never seen is not stale — it may still apply.
+        tid = key.split("/", 1)[0]
+        if tid in state["tasks"]:
+            note(tid, f"backend_audit.json {section} entry {key!r} has no matching drift "
+                      f"(stale — correct the record or drop the entry)")
     warns = [m for kind, m in issues if kind == MISSING_REF]
+    drift_msgs = [m for m, _ in drift]
+    blocking = [m for m, done in drift if done]
     hard = [m for kind, m in issues if kind == ERR]
     for e in hard:
         print("ERROR " + e)
@@ -222,8 +354,14 @@ def cmd_validate(args) -> int:
         print("WARN  " + e)
     if len(warns) > 3 and not (args.verbose or args.strict):
         print(f"WARN  ... {len(warns) - 3} more missing-ref warnings (--verbose to list)")
-    print(f"{len(plan)} tasks in {len(PHASES)} phases; {len(hard)} error(s), {len(warns)} missing-ref warning(s)")
-    return 1 if hard or (warns and args.strict) else 0
+    for e in drift_msgs:
+        print("WARN  " + e)
+    summary = (f"{len(plan)} tasks in {len(PHASES)} phases; {len(hard)} error(s), {len(warns)} missing-ref "
+               f"warning(s), {len(drift_msgs)} backend-drift warning(s)")
+    if drift_msgs:
+        summary += " (done-task drift fails --strict; open-task drift is advisory)"
+    print(summary)
+    return 1 if hard or (warns and args.strict) or (blocking and args.strict) else 0
 
 
 def cmd_status(args) -> int:
@@ -309,9 +447,22 @@ def cmd_set(args) -> int:
         ts.setdefault("started", now())
     if new == "in_review":
         handoff = f"production/handoffs/{tid}.md"
-        if not resolve(handoff, tid):
+        hpath = resolve(handoff, tid)
+        if not hpath:
             sys.exit(f"{tid}: no handoff report at {handoff} (main tree or worktree)")
         ts["handoff"] = handoff
+        declared_agent = handoff_agents(hpath).get(ts["round"])
+        if declared_agent and not ts.get("agent"):
+            ts["agent"] = declared_agent
+            log(state, "agent", tid, f"adopted from handoff: {declared_agent}")
+        elif declared_agent and ts["agent"] != declared_agent and not args.force:
+            sys.exit(f"{tid}: handoff declares agent '{declared_agent}' but state records "
+                     f"'{ts['agent']}'; run `track.py agent {tid} <backend>` to correct, "
+                     f"or --force to keep the recorded value")
+        elif declared_agent and ts["agent"] != declared_agent:
+            ts["agent_declared"] = declared_agent
+            log(state, "agent-drift", tid,
+                f"handoff declares {declared_agent}; recorded {ts['agent']} kept (--force)")
     if new == "done":
         latest = latest_reviews(ts)
         missing = [k for k in t["review"] if latest.get(k, {}).get("verdict") != "approved"
@@ -336,6 +487,16 @@ def cmd_agent(args) -> int:
     ts = task_state(state, args.task)
     old = ts.get("agent")
     ts["agent"] = args.backend
+    # Keep the audit trail honest: if the handoff declares a different backend,
+    # remember what it claimed so `validate` sees the correction as deliberate.
+    hpath = resolve(ts.get("handoff") or f"production/handoffs/{args.task}.md", args.task)
+    declared = handoff_agents(hpath).get(ts.get("round", 0)) if hpath else None
+    if declared and declared != args.backend:
+        ts["agent_declared"] = declared
+        print(f"{args.task}: note - handoff round {ts.get('round')} declares agent '{declared}'; "
+              f"recorded '{args.backend}' as an audited override")
+    else:
+        ts.pop("agent_declared", None)
     log(state, "agent", args.task, f"{old} -> {args.backend}")
     save_state(state)
     print(f"{args.task}: implementer backend {old} -> {args.backend}")
@@ -352,18 +513,30 @@ def cmd_review(args) -> int:
     if verdict not in VERDICTS:
         sys.exit(f"verdict must be one of {sorted(VERDICTS)}")
     ts = task_state(state, tid)
-    if ts["status"] != "in_review":
+    if ts["status"] not in REVIEWABLE:
         sys.exit(f"{tid} is {ts['status']}, not in_review")
-    if not resolve(args.report, tid):
+    report = resolve(args.report, tid)
+    if not report:
         sys.exit(f"review report not found: {args.report}")
-    if args.reviewer and ts.get("agent") and args.reviewer == ts["agent"] and not args.allow_same:
-        sys.exit(f"reviewer {args.reviewer} is the implementer's backend; use another backend or --allow-same")
-    ts["reviews"].append({"kind": kind, "verdict": verdict, "round": ts["round"], "reviewer": args.reviewer,
-                          "report": args.report, "ts": now()})
+    reviewer, declared = resolve_reviewer(args, report, args.report)
+    if reviewer and ts.get("agent") and reviewer == ts["agent"] and not args.allow_same:
+        sys.exit(f"reviewer {reviewer} is the implementer's backend; use another backend or --allow-same")
+    if ts["status"] != "in_review" and any(r["kind"] == kind and r.get("round") == ts["round"]
+                                          for r in ts.get("reviews", [])):
+        sys.exit(f"{tid}: {kind} already has a round {ts['round']} verdict; "
+                 f"only remaining review kinds can be recorded while {ts['status']}")
+    entry = {"kind": kind, "verdict": verdict, "round": ts["round"], "reviewer": reviewer,
+             "report": args.report, "ts": now()}
+    if declared:
+        entry["declared"] = declared
+    if args.backend_override:
+        entry["override"] = args.backend_override
+    ts["reviews"].append(entry)
     log(state, f"review:{kind}:{verdict}", tid, args.report)
-    if verdict in ("changes", "blocked"):
-        ts["status"] = "changes_requested" if verdict == "changes" else "blocked"
-        log(state, f"in_review->{ts['status']}", tid, f"by {kind} review")
+    old = ts["status"]
+    if STATUS_RANK[VERDICT_STATUS[verdict]] > STATUS_RANK[old]:
+        ts["status"] = VERDICT_STATUS[verdict]
+        log(state, f"{old}->{ts['status']}", tid, f"by {kind} review")
     save_state(state)
     print(f"{tid}: {kind} review {verdict} (round {ts['round']})")
     return 0
@@ -374,14 +547,21 @@ def cmd_gate(args) -> int:
     pid = args.phase
     if phase_status(state, pid) != "active":
         sys.exit(f"{pid} is not active")
-    if not resolve(args.report):
+    report = resolve(args.report)
+    if not report:
         sys.exit(f"gate report not found: {args.report}")
+    reviewer, declared = resolve_reviewer(args, report, args.report)
     if args.verdict == "pass":
         open_ = [t for t in plan if plan[t]["phase"] == pid and task_state(state, t)["status"] != "done"]
         if open_:
             sys.exit(f"{pid} cannot pass: open tasks {', '.join(open_)}")
         state["phases"][pid].update({"status": "closed", "closed": now(), "gate_report": args.report})
-    state["phases"][pid].setdefault("gates", []).append({"verdict": args.verdict, "report": args.report, "ts": now()})
+    entry = {"verdict": args.verdict, "report": args.report, "ts": now(), "reviewer": reviewer}
+    if declared:
+        entry["declared"] = declared
+    if args.backend_override:
+        entry["override"] = args.backend_override
+    state["phases"][pid].setdefault("gates", []).append(entry)
     log(state, f"gate:{args.verdict}", pid, args.report)
     save_state(state)
     print(f"{pid}: gate {args.verdict}")
@@ -539,22 +719,31 @@ def cmd_report(args) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
-    s = sub.add_parser("validate", help="check the plan tables and state"); s.add_argument("--strict", action="store_true")
+    s = sub.add_parser("validate", help="check the plan tables and state")
+    s.add_argument("--strict", action="store_true",
+                   help="fail on missing refs and on backend drift for done tasks")
     s.add_argument("--verbose", action="store_true"); s.set_defaults(fn=cmd_validate)
     s = sub.add_parser("status", help="print progress"); s.add_argument("--phase"); s.set_defaults(fn=cmd_status)
     s = sub.add_parser("next", help="tasks ready to dispatch"); s.add_argument("--phase"); s.set_defaults(fn=cmd_next)
     s = sub.add_parser("start", help="activate a phase"); s.add_argument("phase", choices=PHASE_IDS)
     s.add_argument("--note"); s.add_argument("--force", action="store_true"); s.set_defaults(fn=cmd_start)
     s = sub.add_parser("set", help="change a task status"); s.add_argument("task"); s.add_argument("status")
-    s.add_argument("--agent", help="backend that does the work: swe2 | deepseek | claude | human")
+    s.add_argument("--agent", help="backend that does the work (swe2, deepseek, claude, devin-native, human, …)")
     s.add_argument("--note"); s.add_argument("--force", action="store_true"); s.set_defaults(fn=cmd_set)
     s = sub.add_parser("agent", help="correct the implementer backend of a task"); s.add_argument("task")
-    s.add_argument("backend", help="swe2 | deepseek | claude | human"); s.set_defaults(fn=cmd_agent)
+    s.add_argument("backend", help="any backend name; audited against the handoff's declared agent")
+    s.set_defaults(fn=cmd_agent)
     s = sub.add_parser("review", help="record a review verdict"); s.add_argument("task"); s.add_argument("kind")
-    s.add_argument("verdict"); s.add_argument("--report", required=True); s.add_argument("--reviewer")
+    s.add_argument("verdict"); s.add_argument("--report", required=True)
+    s.add_argument("--reviewer", help="reviewer backend; defaults to the report's declared 'Reviewer backend:'")
+    s.add_argument("--backend-override", help="audit note required when --reviewer differs from the "
+                   "report's declared backend (legacy/mixed-backend evidence)")
     s.add_argument("--allow-same", action="store_true"); s.set_defaults(fn=cmd_review)
     s = sub.add_parser("gate", help="record a phase-gate verdict"); s.add_argument("phase", choices=PHASE_IDS)
-    s.add_argument("verdict", choices=["pass", "fail"]); s.add_argument("--report", required=True); s.set_defaults(fn=cmd_gate)
+    s.add_argument("verdict", choices=["pass", "fail"]); s.add_argument("--report", required=True)
+    s.add_argument("--reviewer", help="gate reviewer backend; defaults to the report's declared backend")
+    s.add_argument("--backend-override", help="audit note when --reviewer differs from the declared backend")
+    s.set_defaults(fn=cmd_gate)
     s = sub.add_parser("brief", help="write an implement (or --kind review) brief"); s.add_argument("task")
     s.add_argument("--kind", help="review kind: code | design | content | safety"); s.set_defaults(fn=cmd_brief)
     s = sub.add_parser("gate-brief", help="write a phase-gate review brief"); s.add_argument("phase", choices=PHASE_IDS); s.set_defaults(fn=cmd_gate_brief)
