@@ -59,6 +59,7 @@ func test_step_0_telemetry_and_history_append() -> void:
 
 func test_steps_1_to_7_full_pipeline_success() -> void:
 	var chunk1 := '{"read":"greeting","inner":"Thinking...","music":"keep","fx":"none",'
+<<<<<<< HEAD
 	var chunk2 := (
 		'"beats":[{"feeling":"shy","intensity":2,"cue":"giggle","say":"Hello Senpai!"}],'
 	)
@@ -68,13 +69,28 @@ func test_steps_1_to_7_full_pipeline_success() -> void:
 	var completed_data := {}
 	Director.turn_completed.connect(
 		func(_idx: int, data: Dictionary) -> void: completed_data = data
+=======
+	var chunk2 := '"beats":[{"feeling":"shy","intensity":2,"cue":"giggle","say":"Hello Senpai!"}],'
+	var chunk3 := '"mood":{"affection":2,"trust":1,"stress":-1},"memory":"","action":"none"}'
+	_fake_backend.chunks = PackedStringArray([chunk1, chunk2, chunk3])
+
+	var completed_box := [{}]
+	Director.turn_completed.connect(
+		func(_idx: int, data: Dictionary) -> void: completed_box[0] = data
+>>>>>>> task/P1.08
 	)
 
 	var ok := Director.submit_player_input("Hello!")
 	assert_bool(ok).is_true()
 
+<<<<<<< HEAD
 	await _await_until(func() -> bool: return not completed_data.is_empty())
 
+=======
+	await _await_until(func() -> bool: return not (completed_box[0] as Dictionary).is_empty())
+
+	var completed_data: Dictionary = completed_box[0]
+>>>>>>> task/P1.08
 	assert_bool(completed_data.is_empty()).is_false()
 	assert_str(str(completed_data.get("read", ""))).is_equal("greeting")
 	assert_int(Director.history.size()).is_equal(2)
@@ -91,9 +107,13 @@ func test_recorded_turn_replay_turn_001() -> void:
 	_fake_backend.chunks = PackedStringArray([json_str])
 
 	var turn_done := [false]
+<<<<<<< HEAD
 	Director.turn_completed.connect(
 		func(_idx: int, _data: Dictionary) -> void: turn_done[0] = true
 	)
+=======
+	Director.turn_completed.connect(func(_idx: int, _data: Dictionary) -> void: turn_done[0] = true)
+>>>>>>> task/P1.08
 
 	Director.submit_player_input("Let's sit together.")
 	await _await_until(func() -> bool: return turn_done[0])
@@ -127,9 +147,16 @@ func test_memory_validation_rules() -> void:
 	assert_bool(Director.validate_memory("reads novels often", inputs, existing)).is_true()
 
 	# Rejects schema / meta words
+<<<<<<< HEAD
 	assert_bool(
 		Director.validate_memory("player mentioned jealousy_bait", inputs, existing)
 	).is_false()
+=======
+	(
+		assert_bool(Director.validate_memory("player mentioned jealousy_bait", inputs, existing))
+		. is_false()
+	)
+>>>>>>> task/P1.08
 	assert_bool(Director.validate_memory("json format in stage 0", inputs, existing)).is_false()
 
 	# Rejects invented facts (no shared word with inputs)
