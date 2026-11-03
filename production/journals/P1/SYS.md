@@ -79,6 +79,27 @@
   end index is inclusive; `RegEx.sub` accepts only string replacements; JSON ints parse as floats.
 - Not built (flagged in handoff): the literal "glitch filter" pass over partial say (fx glitch + text
   level is what exists), and the "typing indicator stuck for 3 s" is simplified to an immediate "..." close.
+
+## P1.09 Validation & fallbacks (round 2, deepseek)
+- Reworked per P1.09 r1 reviews (DES-1/2/3, CODE-1/3/4). `Director.META_WORDS` narrowed to the
+  prompt-lab-proven explicit-meta list (player, stage, json, schema, enum, prompt, label(s), request,
+  response, jealousy_bait, small_talk) so the stage-0 few-shot's own `gave me a music box` is stored —
+  a literal schema-key list was the P1.05 CON-2 trap. Keep this list in step with `tools/promptlab/lab.py`
+  (P1.20 owns extracting it to `game/data/`).
+- Pronoun repair now gates on "no other male referent": `TurnValidator.has_other_male_referent` scans the
+  say + the last 3 player messages against `male_referent_names` in `game/data/fallbacks.json`. It also
+  re-conjugates the verb (`He is`->`You are`, `He never listens`->`You never listen`); when no verb can be
+  safely adjusted it leaves the sentence alone and warns instead of emitting broken grammar.
+- Filter-once invariant: the `say_chunk` fallback paths now pass RAW text like `replace_beat` does — the UI
+  seam (`ChatUI.text_filter`) is the only place model text is scanned. Never pre-filter at a Director callsite.
+- gdlint caps a suite at 20 public methods: the §7 integration tests live in the new
+  `game/tests/DirectorFallbackTest.gd` (DirectorTest keeps steps 0-7, memory, transcript/replay).
+  `FakeLLMBackend.chunk_sets` scripts per-call chunk streams so one turn can generate twice (the retry).
+- Gotchas: stage-0's table dose is 0.0 so `dose_dict` is EMPTY there — assert the retry arithmetic at
+  stage 1 (2.5-2.0=0.5) and the clamp separately; consts must precede static vars or gdlint
+  `class-definitions-order` fails; `git merge main` brought a stale P1.09 snapshot in via the P1.21 merge
+  (non-canonical feelings, strict 4-gram) — this branch's version is the reviewed one.
+
 ## P1.07 TurnSchema (round 1, gemini-3.8-flash)
 - Built `game/llm/TurnSchema.gd` and autoload shim `game/autoload/TurnSchema.gd` with data tables in `game/data/stage_gates.json`.
 - Dynamic schema builds per-turn json_schema adhering to canonical property order: `read, inner, beats, mood, memory, action, music, fx, meta`.
