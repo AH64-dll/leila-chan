@@ -623,7 +623,7 @@
       "handoff": "production/handoffs/P1.19.md"
     },
     "P1.10": {
-      "status": "in_review",
+      "status": "done",
       "agent": "swe2",
       "round": 2,
       "reviews": [
@@ -655,7 +655,8 @@
         }
       ],
       "started": "2026-11-02T23:24:17+02:00",
-      "handoff": "production/handoffs/P1.10.md"
+      "handoff": "production/handoffs/P1.10.md",
+      "finished": "2026-11-03T07:58:18+02:00"
     },
     "P1.24": {
       "status": "done",
@@ -2057,6 +2058,12 @@
       "event": "review:code:approved",
       "ref": "P1.10",
       "note": "production/reviews/P1.10-code-r2.md"
+    },
+    {
+      "ts": "2026-11-03T07:58:18+02:00",
+      "event": "in_review->done",
+      "ref": "P1.10",
+      "note": ""
     }
   ]
 }
