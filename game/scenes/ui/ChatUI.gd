@@ -26,6 +26,7 @@ var _turn_open := false  # a turn is in flight (input locked, reply streaming)
 var _end_pending := false  # end_turn() arrived; waiting for the last beat to display
 var _log_open := true
 var _config := {}
+var _filter_warning_emitted_this_turn := false
 
 @onready var chat_log: ScrollContainer = $Margin/VBox/ChatLog
 @onready var text_box: PanelContainer = $Margin/VBox/TextBox
@@ -47,6 +48,7 @@ func apply_config(config: Dictionary) -> void:
 	if not input_box.submitted.is_connected(_on_input_submitted):
 		input_box.submitted.connect(_on_input_submitted)
 		input_box.pause_requested.connect(_on_pause_requested)
+		input_box.log_toggle_requested.connect(_toggle_log)
 		text_box.beat_displayed.connect(_on_beat_displayed)
 		text_box.all_displayed.connect(_on_all_displayed)
 	_log_open = true
@@ -83,6 +85,7 @@ func _on_input_submitted(text: String) -> void:
 func begin_turn_wait() -> void:
 	_turn_open = true
 	_end_pending = false
+	_filter_warning_emitted_this_turn = false
 	input_box.set_input_enabled(false)
 	text_box.reset()
 	text_box.set_speaker(_leila_name)
@@ -103,6 +106,10 @@ func say_chunk(beat_index: int, chunk: String) -> void:
 	var filtered := chunk
 	if text_filter.is_valid():
 		filtered = str(text_filter.call(chunk))
+	else:
+		if not _filter_warning_emitted_this_turn:
+			_filter_warning_emitted_this_turn = true
+			push_warning("ChatUI: text_filter unset — say chunk bypassed safety scan")
 	text_box.say_chunk(beat_index, filtered)
 
 
@@ -142,6 +149,7 @@ func _maybe_close_turn() -> void:
 		return
 	_turn_open = false
 	_end_pending = false
+	text_box.hide_typing_indicator()
 	_unlock_input()
 	turn_displayed.emit()
 

@@ -16,3 +16,11 @@
   hand-minted `.gd.uid` strings must use Godot's charset — query `ResourceLoader.get_resource_uid`
   after import, else "invalid UID" warnings; `edit`-tool patches on gdformatted files need full rewrites.
 - Next META task (P1.14): NewGame name rules — reuse `InputBox` + `ui.json` names.default_player.
+
+## P1.13 Round 3 (2026-11-03) — Rework fixes (CODE-1, CODE-2, CODE-3, DES-1, DES-2)
+
+- Capped `Typewriter._credit` at `1.0` during inter-chunk stalls (`_available() == 0`) to prevent burst reveals after network pause.
+- In `TextBox.end_turn()`, hide indicator and fire `all_displayed` when zero say tokens arrived so turns close cleanly.
+- In `InputBox._gui_input()`, handle `KEY_TAB` and emit `log_toggle_requested` with `accept_event()` so Tab toggles log even when LineEdit has focus.
+- In `ChatLog.append_entry()`, call `remove_child` before `queue_free` on trimming oldest node so child count syncs with entries immediately.
+- In `ChatUI.say_chunk()`, emit `push_warning` once per turn if `text_filter` is unset to warn about unwired safety filter.

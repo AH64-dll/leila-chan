@@ -77,8 +77,13 @@ func advance(delta: float) -> int:
 			break
 		_maybe_advance_beat()  # carry leftover credit over a beat boundary
 	_maybe_advance_beat()
-	if _available() == 0 and _beats.is_empty():
-		_credit = 0.0  # nothing to chew: don't bank a burst against future chunks
+	if _available() == 0:
+		# Nothing to chew: the queue is empty, or the front beat is fully
+		# revealed but still open — a server pause between say_chunks. Neither
+		# may bank credit, or the chunk that finally lands would burst out far
+		# faster than the 35–45 chars/s contract (docs/02 §4). Holding it at one
+		# character keeps the pause invisible and the burst impossible.
+		_credit = minf(_credit, 1.0)
 	return gained
 
 

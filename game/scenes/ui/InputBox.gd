@@ -12,6 +12,7 @@ signal draft_changed(text: String)  ## Every edit while composing (idle/deleted-
 ## The draft was erased without sending; carries the last words (docs/05 M21).
 signal draft_deleted(text: String)
 signal pause_requested  ## Esc — the owning scene opens the safe pause (docs/05 §0).
+signal log_toggle_requested  ## Tab — toggle scroll-back log even when focused (DES-1).
 
 var _enabled := true
 var _last_draft := ""
@@ -72,4 +73,16 @@ func _gui_input(event: InputEvent) -> void:
 	# moment, including mid-draft (docs/05 §0).
 	if event.is_action_pressed("ui_cancel"):
 		pause_requested.emit()
+		accept_event()
+	elif (
+		event is InputEventKey
+		and event.pressed
+		and not event.echo
+		and event.keycode == KEY_TAB
+		and not event.shift_pressed
+		and not event.ctrl_pressed
+		and not event.alt_pressed
+		and not event.meta_pressed
+	):
+		log_toggle_requested.emit()
 		accept_event()

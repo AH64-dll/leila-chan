@@ -93,9 +93,21 @@ func end_beat(beat_index: int) -> void:
 
 
 ## The whole turn's stream finished. Already-closed beats keep revealing.
+## If no say text arrived or all queued beats are already drained, clear the
+## typing indicator and signal that all displayed content is done.
 func end_turn() -> void:
 	if not _beats.is_empty():
 		_beats[_beats.size() - 1]["closed"] = true
+	if _writer != null:
+		_writer._maybe_advance_beat()
+	var has_pending_beats := false
+	for beat: Dictionary in _beats:
+		if not bool(beat.get("closed", false)) or str(beat.get("text", "")).length() > 0:
+			has_pending_beats = true
+			break
+	if not has_pending_beats or (_writer != null and _writer.is_complete()):
+		hide_typing_indicator()
+		all_displayed.emit()
 
 
 ## Abandon the queued beats (failed/cancelled turn) and clear the box.

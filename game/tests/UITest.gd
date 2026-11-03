@@ -96,6 +96,28 @@ func test_typewriter_reveal_rate_and_bounds() -> void:
 	assert_bool(w.is_complete()).is_true()
 
 
+func test_typewriter_stream_stall_does_not_burst() -> void:
+	# CODE-2: Cap credit when the front beat is fully revealed but still open.
+	# A 2.0 s pause between chunks must never bank credit past 1 char.
+	var w: Typewriter = WriterScr.new()
+	w.configure({"chars_per_second": 40, "pause_chars": {}})
+	var beat := {"i": 0, "text": "abcdef", "closed": false}
+	w.append_beat(beat)
+	w.advance(0.15)  # 6 chars revealed at 40/s -> "abcdef"
+	assert_str(w.get_visible_text()).is_equal("abcdef")
+
+	# 2.0 second stream pause
+	w.advance(2.0)
+	assert_str(w.get_visible_text()).is_equal("abcdef")
+
+	# Next chunk lands
+	beat["text"] = "abcdefXYZ"
+	# Advancing by 1 ms (0.001 s) should only reveal at most 1 char, not burst XYZ at once
+	var gained := w.advance(0.001)
+	assert_int(gained).is_equal(1)
+	assert_str(w.get_visible_text()).is_equal("abcdefX")
+
+
 func test_typewriter_punctuation_pauses_and_skip() -> void:
 	var w: Typewriter = WriterScr.new()
 	w.configure({"chars_per_second": 40, "pause_chars": {".": 240, ",": 0}})
@@ -287,6 +309,20 @@ func test_chatlog_scrolls_and_stores() -> void:
 	assert_bool(log.is_at_end()).is_true()
 
 
+func test_chatlog_child_count_matches_entries_on_trim() -> void:
+	# CODE-3: remove_child before queue_free when trimming past max_entries.
+	var log: ScrollContainer = ChatLogScene.instantiate()
+	log.max_entries = 3
+	add_child(auto_free(log))
+	await get_tree().process_frame
+	for i: int in 5:
+		log.append_entry("her", "Leila", "m%d" % i)
+	assert_int(log.entry_count()).is_equal(3)
+	var list: VBoxContainer = log.get_node("List")
+	assert_int(list.get_child_count()).is_equal(3)
+	assert_int(list.get_child_count()).is_equal(log.entry_count())
+
+
 func test_keyboard_only_play() -> void:
 	var ui := await _new_chat()
 	var pauses := [0]
@@ -319,6 +355,14 @@ func test_keyboard_only_play() -> void:
 	ui._unhandled_input(_key(KEY_TAB))
 	assert_bool(ui.is_log_open()).is_true()
 
+	# DES-1: Tab while InputBox has focus toggles the log via _gui_input
+	ui.input_box.grab_focus()
+	assert_bool(ui.input_box.has_focus()).is_true()
+	ui.input_box._gui_input(_key(KEY_TAB))
+	assert_bool(ui.is_log_open()).is_false()
+	ui.input_box._gui_input(_key(KEY_TAB))
+	assert_bool(ui.is_log_open()).is_true()
+
 	# PgUp/PgDn/Home/End scroll the log without the mouse.
 	for i: int in 30:
 		ui.chat_log.append_entry("her", "Leila", "filler %d" % i)
@@ -339,6 +383,24 @@ func test_keyboard_only_play() -> void:
 	assert_int(pauses[0]).is_equal(1)
 	ui.input_box._gui_input(_key(KEY_ESCAPE))
 	assert_int(pauses[0]).is_equal(2)
+
+
+func test_empty_turn_hides_indicator_and_drains() -> void:
+	# CODE-1: Turn with zero say tokens hides indicator and closes cleanly.
+	var ui := await _new_chat()
+	var turn_displayed_fired := [false]
+	ui.turn_displayed.connect(func() -> void: turn_displayed_fired[0] = true)
+	ui.begin_turn_wait()
+	assert_bool(ui.text_box.is_showing_indicator()).is_true()
+	assert_bool(ui.is_turn_open()).is_true()
+
+	ui.end_turn()
+	await get_tree().process_frame
+	assert_bool(ui.text_box.is_showing_indicator()).is_false()
+	assert_bool(ui.is_turn_open()).is_false()
+	assert_bool(ui.input_box.is_input_enabled()).is_true()
+	assert_bool(turn_displayed_fired[0]).is_true()
+	assert_str(ui.text_box.get_visible_text()).is_equal("")
 
 
 func test_text_filter_runs_before_display_and_log() -> void:

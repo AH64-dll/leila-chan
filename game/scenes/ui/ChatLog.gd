@@ -32,7 +32,9 @@ func append_entry(speaker_key: String, speaker: String, text: String) -> void:
 	if _entries.size() > max_entries:
 		_entries.pop_front()
 		if _list != null and _list.get_child_count() > 0:
-			_list.get_child(0).queue_free()
+			var old_child := _list.get_child(0)
+			_list.remove_child(old_child)
+			old_child.queue_free()
 	_render_entry(entry)
 	entries_changed.emit()
 	_scroll_to_end.call_deferred()
