@@ -16,6 +16,9 @@ func _filter() -> SafetyFilter:
 
 
 func _stream(f: SafetyFilter, text: String, ctx: Dictionary = STAGE0) -> String:
+	## Each call is one model utterance: mark the boundary so the cross-beat
+	## carry (CODE-2/CODE-14) never glues two unrelated test lines together.
+	f.end_utterance()
 	f.begin_say(ctx)
 	var out := ""
 	for i in text.length():

@@ -23,3 +23,24 @@
 - Normalization extended for Latin-Ext-A, invisible marks, and Cyrillic/Arabic combining chars without breaking 1:1 view alignment.
 - Stream equivalence preserved with cross-beat tail tracking and Settings-priority content level resolution.
 - Full corpus expanded to 316 rows (160 harmful / 156 benign), achieving 0 misses, 0 stream diffs, and 0.64% FP rate.
+## 2026-11-03 — P1.19 Round 3 rework (deepseek)
+
+- Closed SAF-14/CODE-13 (the `~#•` separator leak) at the root: the compact view is now
+  separator-free as well as whitespace-free, and phrase keys go through the same function, so key
+  and text can never disagree. A separator is dropped only between two letters — a separator at a
+  phrase edge still anchors the word-boundary check, which is why benign prose survives.
+- CODE-2/CODE-14 cross-beat carry is now real: `_history` holds the previous beat's displayed tail,
+  `_match_text()` is `_history + _pending`, and only the part after the history is emitted. The
+  false-positive trap is real — a carry that glues unrelated sentences fabricates matches — so the
+  window is clause-bounded and `end_utterance()` clears it between replies. Test harnesses MUST
+  call `end_utterance()` per corpus row/stream call or consecutive rows contaminate each other.
+- Streaming holdback is measured on the compact views, not the raw text: a generator padding a
+  phrase prefix with separators (`k` + `#ll ` + `yourself`) must not buy emission budget.
+- Loader self-check (CODE-16): every required category must catch its own `probes` row at load time,
+  so a compiled-but-inert regex/phrase group fails closed instead of shipping a silent hole.
+- `Safety.gd` crossed gdlint's `max-file-lines: 1000`; text normalization now lives in
+  `SafetyText.gd` (pure helpers, no policy). Keep list/policy in `Safety.gd`, shaping in `SafetyText`.
+- Godot gotcha: a `class_name` sibling resolves only after `--import` rebuilds the class cache;
+  a bare `--check-only --script` run before that reports "Identifier not declared".
+- Corpus 326 rows (170 harmful / 156 benign), 0 misses, 0 wrong-category, 0 residue, 0 stream
+  divergences, 1 measured FP (0.64%), 37/37 gdUnit cases, `say_chunk` 570 µs char-by-char worst case.

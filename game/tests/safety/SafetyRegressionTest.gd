@@ -31,6 +31,9 @@ func _filter() -> SafetyFilter:
 
 
 func _stream(f: SafetyFilter, text: String, ctx: Dictionary, width: int = 1) -> String:
+	## Each call is one model utterance: mark the boundary so the cross-beat
+	## carry (CODE-2/CODE-14) never glues two unrelated test lines together.
+	f.end_utterance()
 	f.begin_say(ctx)
 	var out := ""
 	var i := 0
@@ -223,6 +226,26 @@ func test_malformed_lists_fail_closed() -> void:
 	var guard: Dictionary = bad_range["script_guard"]
 	guard["ranges"] = [[0x500, 0x100]]
 	cases.append(["bad_script_range", bad_range])
+	## CODE-16: a compiled-but-inert rule group must fail the load, not ship a hole.
+	var inert_regex: Dictionary = data.duplicate(true)
+	var inert_cats: Dictionary = inert_regex["categories"]
+	var inert_harm: Dictionary = inert_cats["harm_to_player"]
+	var inert_patterns: Array = inert_harm["regex"]
+	inert_patterns.append("(?!x)x")
+	inert_patterns.erase("\\bky5\\b")
+	cases.append(["inert_regex_group", inert_regex])
+	var inert_phrase: Dictionary = data.duplicate(true)
+	var inert_phrase_cats: Dictionary = inert_phrase["categories"]
+	var inert_phrase_harm: Dictionary = inert_phrase_cats["harm_to_player"]
+	var inert_phrases: Array = inert_phrase_harm["phrases"]
+	inert_phrases.erase("kill yourself")
+	inert_phrases.erase("kill yourselves")
+	inert_phrases.erase("kill urself")
+	inert_phrases.erase("kill yrself")
+	cases.append(["inert_phrase_group", inert_phrase])
+	var no_probes: Dictionary = data.duplicate(true)
+	no_probes.erase("probes")
+	cases.append(["missing_probes", no_probes])
 	for case in cases:
 		var path := "user://p119_%s.json" % String(case[0])
 		_write_lists(path, case[1])
@@ -332,3 +355,133 @@ func test_cross_beat_split_and_settings_precedence() -> void:
 	auto_free(attached)
 	assert_bool(attached.reload()).is_true()
 	assert_bool(attached.filter_text("i want to die.", {"stage": 4})["redacted"]).is_true()
+
+
+## CODE-2/CODE-14: a phrase split across two say beats must still be caught.
+## Beat 1 is a partial prefix, beat 2 completes the phrase. Text already emitted
+## in beat 1 cannot be recalled, so the invariant is: the *completion* in beat 2
+## is fully barred (no letters survive) and the joined stream never contains the
+## complete harmful phrase. Every pair is exercised at chunk widths 1–8.
+func test_cross_beat_phrase_split_is_caught() -> void:
+	var pairs := [
+		["i want to ", "die.", "die"],
+		["you should ", "kill yourself.", "kill"],
+		["i'll ", "kill you.", "kill"],
+		["please ", "end your life.", "end"],
+		["k", "#ll yourself", "ll"],
+		["kil", "l yourself", "yourself"],
+		["kill your", "self", "self"],
+	]
+	for pair in pairs:
+		var first := String(pair[0])
+		var second := String(pair[1])
+		var forbidden := String(pair[2])
+		for width in [1, 2, 3, 5, 8]:
+			var f := _filter()
+			f.end_utterance()
+			var streamed := _beat(f, first, width)
+			var beat_start := streamed.length()
+			streamed += _beat(f, second, width)
+			var completion := streamed.substr(beat_start)
+			for i in completion.length():
+				var c := completion.unicode_at(i)
+				(
+					assert_bool((c >= 0x41 and c <= 0x5A) or (c >= 0x61 and c <= 0x7A))
+					. is_false()
+					. append_failure_message(
+						(
+							"unbarred letter %s in beat 2 of '%s' @%d -> %s"
+							% [String.chr(c), first + second, width, completion]
+						)
+					)
+				)
+			(
+				assert_bool(completion.contains(SafetyFilter.REDACT_CHAR))
+				. is_true()
+				. append_failure_message("%s @%d" % [first + second, width])
+			)
+			assert_bool(streamed.contains(forbidden)).is_false().append_failure_message(
+				"%s @%d" % [first + second, width]
+			)
+
+
+## One beat of the streamed API, at a fixed chunk width.
+func _beat(f: SafetyFilter, text: String, width: int) -> String:
+	f.begin_say(STAGE0)
+	var out := ""
+	var i := 0
+	while i < text.length():
+		out += f.say_chunk(text.substr(i, width))
+		i += width
+	return out + f.end_say()
+
+
+## CODE-2's false-positive direction: two complete sentences, and two separate
+## utterances, are never glued into one phrase.
+func test_cross_beat_does_not_join_separate_text() -> void:
+	var f := _filter()
+	f.end_utterance()
+	f.begin_say(STAGE0)
+	var first := f.say_chunk("i never told you anything.") + f.end_say()
+	f.begin_say(STAGE0)
+	var second := f.say_chunk("it's cold in here tonight.") + f.end_say()
+	assert_str(first + second).is_equal("i never told you anything.it's cold in here tonight.")
+	var g := _filter()
+	var a := _stream(g, "i didn't ask you to hurt yourself.", STAGE0)
+	var b := _stream(g, "don't let anyone tell you to kill yourself.", STAGE0)
+	assert_str(a).is_equal("i didn't ask you to hurt yourself.")
+	assert_str(b).is_equal("don't let anyone tell you to kill yourself.")
+	var h := _filter()
+	h.end_utterance()
+	h.begin_say(STAGE0)
+	var one := h.say_chunk("you're dead to me.") + h.end_say()
+	h.begin_say(STAGE0)
+	var two := h.say_chunk("please kill me.") + h.end_say()
+	assert_str(one).is_equal("you're dead to me.")
+	assert_bool(two.contains("kill me")).is_false()
+
+
+## SAF-14/CODE-13: every named separator variant of the kill phrase is
+## hard-blocked, both one-shot and streamed.
+func test_separator_variants_are_hard_blocked() -> void:
+	var f := _filter()
+	for line in [
+		"k#ll yourself",
+		"k~ll yourself",
+		"ki•ll yourself",
+		"kill • yourself",
+		"kill~yourself",
+		"k1ll your5elf",
+		"kill@yourself",
+		"k?ll yourself",
+		"kill+yourself",
+		"kill/yourself",
+		"ki=ll yourself",
+		"end~yourself",
+		"off#yourself",
+	]:
+		var res: Dictionary = f.filter_text(line, STAGE0)
+		assert_bool(res["redacted"]).is_true().append_failure_message(line)
+		(
+			assert_bool(Array(res["categories"]).has("harm_to_player"))
+			. is_true()
+			. append_failure_message(line)
+		)
+		assert_str(_stream(f, line, STAGE0)).is_equal(String(res["text"])).append_failure_message(
+			line
+		)
+
+
+## SAF-14's false-positive direction: benign punctuation in ordinary prose
+## must survive the separator-tolerant compact view.
+func test_separator_variants_keep_benign_text() -> void:
+	var f := _filter()
+	for line in [
+		"the frame is 16 by 9 most nights.",
+		"well… you're cute, senpai!",
+		"k#ll is not a word i know.",
+		"i'll be there at 10:30, promise.",
+	]:
+		var res: Dictionary = f.filter_text(line, STAGE0)
+		assert_bool(res["redacted"]).is_false().append_failure_message(line)
+		assert_str(String(res["text"])).is_equal(line)

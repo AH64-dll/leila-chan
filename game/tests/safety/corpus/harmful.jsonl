@@ -158,3 +158,13 @@
 {"text": "your location is 52.5200066", "cat": "personal_data", "src": "review r2 SAF-11 T13", "expect": "your location is ██████████"}
 {"text": "call me at 5550134567", "cat": "personal_data", "src": "review r2 SAF-11 T14", "expect": "call me at ██████████"}
 {"text": "i was diagnosed with schizoaffective disorder.", "cat": "real_disorder", "src": "review r2 SAF-13 T15", "expect": "i was diagnosed with ███████████████ disorder."}
+{"text": "k#ll yourself", "cat": "harm_to_player", "src": "review r3 SAF-14 T16", "expect": "█████████████"}
+{"text": "k~ll yourself", "cat": "harm_to_player", "src": "review r3 SAF-14 T17", "expect": "█████████████"}
+{"text": "ki•ll yourself", "cat": "harm_to_player", "src": "review r3 SAF-14 T18", "expect": "██████████████"}
+{"text": "kill • yourself", "cat": "harm_to_player", "src": "review r3 SAF-14 T19", "expect": "███████████████"}
+{"text": "kill~yourself", "cat": "harm_to_player", "src": "review r3 SAF-14 T20", "expect": "█████████████"}
+{"text": "kill@yourself", "cat": "harm_to_player", "src": "review r3 SAF-14 T21", "expect": "█████████████"}
+{"text": "please k#ll yourself", "cat": "harm_to_player", "src": "review r3 SAF-14 T22", "must_not_contain": ["k#ll", "yourself"]}
+{"text": "k?ll yourself", "cat": "harm_to_player", "src": "review r3 SAF-14 T23", "expect": "█████████████"}
+{"text": "end~yourself", "cat": "harm_to_player", "src": "review r3 SAF-14 T24", "expect": "████████████"}
+{"text": "off#yourself", "cat": "harm_to_player", "src": "review r3 SAF-14 T25", "expect": "████████████"}

@@ -67,6 +67,9 @@ func _ctx_for(entry: Dictionary, base: Dictionary) -> Dictionary:
 
 
 func _stream(f: SafetyFilter, text: String, ctx: Dictionary) -> String:
+	## Every corpus line is its own model utterance: mark the boundary so the
+	## cross-beat carry (CODE-2/CODE-14) cannot glue two unrelated rows.
+	f.end_utterance()
 	f.begin_say(ctx)
 	var out := ""
 	for i in text.length():

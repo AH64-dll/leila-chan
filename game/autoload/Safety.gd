@@ -11,8 +11,6 @@ const _TAIL_CHARS := 64  ## emitted context kept for the negation guard
 const _MAX_PENDING := 4096
 const _MIN_HOLDBACK := 16
 const _MAX_LOG := 500
-const _TOKEN_EXTRA := "@._+%'-"  ## chars that keep a trailing token open
-const _CLAUSE_BREAKS := '.,;:!?—–…()[]{}"“”\n\r\t'
 const _PLAIN_CATEGORY := "personal_data"
 const _SCRIPT_CAT := "unsupported_script"
 const _OBFUSCATION_CAT := "obfuscation"
@@ -27,48 +25,6 @@ const _REQUIRED_ACTIONS := {
 }
 const _VALID_LEVELS: Array[String] = ["calmer", "full"]
 const _VALID_ACTIONS: Array[String] = ["hard_block", "gated"]
-const _FOLD_SRC: Array[String] = [
-	"'’‘",
-	'"“”',
-	"-–—",
-	".…",
-	"aàáâãäåāаαɑą",
-	"bЬ",
-	"cçсϲćč",
-	"dԁď",
-	"eèéêëēеεėęě",
-	"gɡğ",
-	"hһ",
-	"iìíîïīіιⅰį",
-	"jјϳ",
-	"kкκ",
-	"lӏⅼłľĺ",
-	"mмμ",
-	"nñпηńň",
-	"oòóôõöōоοօ",
-	"pрρ",
-	"sßѕśšș",
-	"tтτťțŧ",
-	"uùúûüūυųů",
-	"vν",
-	"wԝ",
-	"xхχ",
-	"yýÿуγ",
-	"zžżź"
-]
-const _LEET := {
-	0x30: 0x6F,
-	0x31: 0x69,
-	0x33: 0x65,
-	0x34: 0x61,
-	0x35: 0x73,
-	0x37: 0x74,
-	0x38: 0x62,
-	0x39: 0x67,
-	0x40: 0x61,
-	0x24: 0x73
-}
-
 var redaction_log: Array[Dictionary] = []
 
 var _lists_ok := false
@@ -83,11 +39,9 @@ var _negation_re := RegEx.new()
 var _neg_exempt := PackedStringArray()
 var _neg_gap_allow := {}
 var _script_ranges: Array[Array] = []
-var _fold := {}
-var _leet := {}
-var _token_extra := {}
-var _clause_breaks := {}
+var _text := SafetyText.new()  ## normalization/compact views (SafetyText.gd)
 var _gate_stage := 4
+var _probe_rows := {}  ## category -> probe strings the loader must actually catch
 var _gate_level := "full"
 var _holdback := _MIN_HOLDBACK
 var _max_phrase := 0
@@ -97,8 +51,12 @@ var _default_ctx := {"stage": 0, "content_level": "", "player_terms": [], "usern
 var _in_beat := false
 var _ctx: Dictionary = {}
 var _pending := ""
-var _emitted_tail := ""
-var _last_beat_tail := ""
+## Cross-beat state (CODE-2/CODE-14): the tail of everything already displayed
+## in this utterance. It is matched as part of the next beat's text, so a phrase
+## split across two say beats ("i want to " + "die.") is still caught and its
+## continuation barred, and the negation guard can read back into it.
+## `end_utterance()` clears it, so two different replies are never glued.
+var _history := ""
 
 
 func _ready() -> void:
@@ -122,8 +80,16 @@ func configure(ctx: Dictionary) -> void:
 func begin_say(ctx: Dictionary = {}) -> void:
 	_ctx = _resolve_ctx(ctx)
 	_pending = ""
-	_emitted_tail = ""
 	_in_beat = true
+
+
+## Marks the end of one model utterance (a full reply). The next beat then starts
+## with no history, so two different replies can never be matched as one phrase
+## (CODE-2/CODE-14). Beats *inside* one utterance keep the history, which is what
+## catches `"i want to "` + `"die."` split by an end-of-beat emission. The first
+## consumer (P1.13) calls this when a new reply starts.
+func end_utterance() -> void:
+	_history = ""
 
 
 func say_chunk(chunk: String) -> String:
@@ -131,11 +97,10 @@ func say_chunk(chunk: String) -> String:
 		begin_say()
 	if not _lists_ok:
 		return ""
-	_pending = _collapse_ws(_pending + _sanitize(chunk))
+	_pending = _text.collapse_ws(_pending + SafetyText.sanitize(chunk))
 	if _pending.length() > _MAX_PENDING:
 		var dropped_len := _pending.length()
-		_pending = ""
-		_in_beat = false
+		_reset_beat()
 		_record("filter_error", "overflow_dropped_%d" % dropped_len, "say")
 		return FALLBACK_BARS.repeat(maxi(1, dropped_len / 12))
 	return _drain()
@@ -146,14 +111,50 @@ func end_say() -> String:
 		return ""
 	_in_beat = false
 	if not _lists_ok:
-		_pending = ""
+		_reset_beat()
 		return FALLBACK_BARS
-	var views := _build_views(_pending)
-	var spans := _collect_spans(_pending, views, _emitted_tail, _ctx)
-	var emitted := _apply_spans(_pending, spans, _pending.length(), "say")
-	_pending = ""
-	_emitted_tail = ""
+	var combined := _match_text()
+	var start := _history.length()
+	var views: Dictionary = _text.views(combined)
+	var spans := _collect_spans(combined, views, "", _ctx)
+	var emitted := _apply_spans(combined, spans, start, combined.length(), "say")
+	_history = _window(combined)
+	_reset_beat()
 	return emitted
+
+
+## The text a match may span: the already-displayed window plus this beat's text,
+## contiguous (CODE-2/CODE-14). Contiguity is the point — a phrase split across
+## two beats (`"i want to "` + `"die."`, or `"kil"` + `"l yourself"`) must match
+## exactly as it would one-shot, and the negation guard reads back into the
+## window so `don't let anyone tell you to …` keeps its negator across beats.
+## Only text after the window is ever emitted.
+func _match_text() -> String:
+	return _history + _pending
+
+
+## Trim a displayed-text window to what a later match can still need: the tail
+## after the last clause break (a beat that ended at a full stop cannot combine
+## with the next one — the false-positive direction of CODE-2), capped at
+## `_holdback` for matching plus `_TAIL_CHARS` of clause context for the guard.
+## Bars fold to clause breaks so a redacted span never glues two live fragments
+## into a phrase that was never said.
+func _window(displayed: String) -> String:
+	var folded := displayed.replace(REDACT_CHAR, ".")
+	var start := 0
+	for i in folded.length():
+		if _text.is_clause_break(folded.unicode_at(i)):
+			start = i + 1
+	var tail := folded.substr(start)
+	var keep := _holdback + _TAIL_CHARS
+	if tail.length() > keep:
+		tail = tail.substr(tail.length() - keep)
+	return tail
+
+
+func _reset_beat() -> void:
+	_in_beat = false
+	_pending = ""
 
 
 func filter_text(text: String, ctx: Dictionary = {}) -> Dictionary:
@@ -165,14 +166,15 @@ func filter_text(text: String, ctx: Dictionary = {}) -> Dictionary:
 		}
 	var saved_ctx := _ctx
 	_ctx = _resolve_ctx(ctx)
-	var clean := _collapse_ws(_sanitize(text))
-	var views := _build_views(clean)
+	var clean := _text.collapse_ws(SafetyText.sanitize(text))
+	var views: Dictionary = _text.views(clean)
 	var spans := _collect_spans(clean, views, "", _ctx)
 	var cats := PackedStringArray()
 	for span in spans:
-		if not cats.has(span["cat"]):
-			cats.append(span["cat"])
-	var filtered := _apply_spans(clean, spans, clean.length(), "text")
+		for cat in span.get("cats", PackedStringArray([span["cat"]])):
+			if not cats.has(cat):
+				cats.append(cat)
+	var filtered := _apply_spans(clean, spans, 0, clean.length(), "text")
 	_ctx = saved_ctx
 	return {"text": filtered, "redacted": not spans.is_empty(), "categories": cats}
 
@@ -213,22 +215,41 @@ func _reset_state() -> void:
 	_neg_exempt.clear()
 	_neg_gap_allow.clear()
 	_script_ranges.clear()
-	_fold.clear()
-	for group in _FOLD_SRC:
-		var to := group.unicode_at(0)
-		for i in range(1, group.length()):
-			var c := group.unicode_at(i)
-			_fold[c] = to
-			var low := String.chr(c).to_lower()
-			if not low.is_empty():
-				_fold[low.unicode_at(0)] = to
-	_leet = _LEET.duplicate()
-	_token_extra = _code_set(_TOKEN_EXTRA)
-	_clause_breaks = _code_set(_CLAUSE_BREAKS)
+	_text = SafetyText.new()
 	_gate_stage = 4
+	_probe_rows = {}
 	_gate_level = "full"
 	_holdback = _MIN_HOLDBACK
 	_max_phrase = 0
+
+
+## CODE-16: loaders validate shape, not effect. After every list is built, each
+## category's own probe rows (from the lists file) must actually be caught, so a
+## regex or phrase group that compiles but never matches — a typo'd lookahead,
+## `{99999,}`, a mis-folded phrase — fails the load closed instead of silently
+## shipping a hole. A category without a probe row fails too: coverage of the
+## self-check is itself part of the contract.
+func _self_check() -> bool:
+	if not _probe_rows is Dictionary:
+		return false
+	for cat in _REQUIRED_ACTIONS:
+		var rows: Variant = _probe_rows.get(cat)
+		if not rows is Array or (rows as Array).is_empty():
+			return false
+		for row in rows:
+			if not row is String or String(row).strip_edges().is_empty():
+				return false
+			var text := _text.collapse_ws(SafetyText.sanitize(String(row)))
+			var views: Dictionary = _text.views(text)
+			var spans := _collect_spans(text, views, "", {"stage": 0, "content_level": "full"})
+			var hit := false
+			for span in spans:
+				if String(span["cat"]) == cat:
+					hit = true
+					break
+			if not hit:
+				return false
+	return true
 
 
 func _fail(msg: String) -> void:
@@ -237,6 +258,7 @@ func _fail(msg: String) -> void:
 
 
 func _build_lists(data: Dictionary) -> bool:
+	_probe_rows = data.get("probes", {})
 	if (
 		not _valid_version(data.get("version", 0))
 		or not _build_gate(data.get("gate"))
@@ -246,6 +268,7 @@ func _build_lists(data: Dictionary) -> bool:
 		or not _build_obfs(data)
 		or not _build_safe(data)
 		or not _build_guard(data)
+		or not _self_check()
 	):
 		return false
 	_holdback = maxi(_MIN_HOLDBACK, _max_phrase + 1)
@@ -303,7 +326,7 @@ func _build_negation_exempt(exempt: Variant) -> bool:
 	for entry in exempt:
 		if not entry is String:
 			return false
-		_neg_exempt.append(_normalize(String(entry), false))
+		_neg_exempt.append(_text.normalize(String(entry), false))
 	return true
 
 
@@ -385,9 +408,9 @@ func _build_phrases(cat: String, phrases: Array, plain_view: bool) -> bool:
 	for phrase in phrases:
 		if not phrase is String or String(phrase).strip_edges().is_empty():
 			return false
-		var normalized := _normalize(String(phrase), not plain_view)
+		var normalized := _text.normalize(String(phrase), not plain_view)
 		_max_phrase = maxi(_max_phrase, normalized.length())
-		var compact := _strip_ws(normalized)
+		var compact := _text.compact_key(normalized)
 		if compact.is_empty():
 			return false
 		var first := compact.unicode_at(0)
@@ -445,7 +468,7 @@ func _build_safe(data: Dictionary) -> bool:
 	for phrase in safe:
 		if not phrase is String or String(phrase).strip_edges().is_empty():
 			return false
-		var compact := _strip_ws(_normalize(String(phrase), true))
+		var compact: String = _text.compact_key(_text.normalize(String(phrase), true))
 		var first := compact.unicode_at(0)
 		if not _safe_idx.has(first):
 			_safe_idx[first] = []
@@ -514,9 +537,9 @@ func _resolve_ctx(ctx: Dictionary) -> Dictionary:
 	merged["stage"] = stage if stage >= 0 and stage <= 5 else -1
 	var terms := PackedStringArray()
 	for term in merged.get("player_terms", []):
-		terms.append(_normalize(String(term), false))
+		terms.append(_text.normalize(String(term), false))
 	merged["player_terms"] = terms
-	merged["username"] = _normalize(String(merged.get("username", "")), false)
+	merged["username"] = _text.normalize(String(merged.get("username", "")), false)
 	return merged
 
 
@@ -541,178 +564,68 @@ func _gate_open(cat: String, ctx: Dictionary) -> bool:
 	)
 
 
-func _sanitize(text: String) -> String:
-	var out := ""
-	for i in text.length():
-		var c := text.unicode_at(i)
-		if c == 0x09 or c == 0x0A or c == 0x0D:
-			out += String.chr(c)
-			continue
-		if _is_combining(c) or _is_invisible(c):
-			continue
-		if c < 0x20 or c == 0x7F:
-			continue
-		out += String.chr(c)
-	return out
-
-
-static func _is_invisible(c: int) -> bool:
-	if c == 0x00AD or c == 0x180E or c == 0xFEFF:
-		return true
-	if (c >= 0x180B and c <= 0x180D) or (c >= 0x200B and c <= 0x200F):
-		return true
-	return (c >= 0x202A and c <= 0x202E) or (c >= 0x2060 and c <= 0x206F)
-
-
-static func _is_combining(c: int) -> bool:
-	if (c >= 0x0300 and c <= 0x036F) or (c >= 0x0483 and c <= 0x0489):
-		return true
-	if (c >= 0x064B and c <= 0x065F) or (c >= 0x1AB0 and c <= 0x1AFF):
-		return true
-	if (c >= 0x1DC0 and c <= 0x1DFF) or (c >= 0x20D0 and c <= 0x20FF):
-		return true
-	if (c >= 0xFE00 and c <= 0xFE0F) or (c >= 0xFE20 and c <= 0xFE2F):
-		return true
-	return (c >= 0xE0100 and c <= 0xE01EF) or (c >= 0x1F3FB and c <= 0x1F3FF)
-
-
-func _collapse_ws(text: String) -> String:
-	var out := ""
-	var prev_space := false
-	for i in text.length():
-		var c := text.unicode_at(i)
-		if _is_hspace(c):
-			if prev_space:
-				continue
-			out += " "
-			prev_space = true
-		else:
-			out += String.chr(c)
-			prev_space = false
-	return out
-
-
-func _normalize(text: String, leet: bool) -> String:
-	var out := ""
-	for i in text.length():
-		var c := text.unicode_at(i)
-		if c >= 0xFF01 and c <= 0xFF5E:
-			c -= 0xFEE0
-		elif c == 0x3000:
-			c = 0x20
-		var low := String.chr(c).to_lower()
-		if not low.is_empty():
-			c = low.unicode_at(0)
-		if _fold.has(c):
-			c = _fold[c]
-		elif _is_ws(c):
-			c = 0x20
-		if leet and _leet.has(c):
-			c = _leet[c]
-		out += String.chr(c)
-	return out
-
-
-func _build_views(text: String) -> Dictionary:
-	var plain := _normalize(text, false)
-	var leet := _normalize(text, true)
-	var compact_plain := ""
-	var compact_leet := ""
-	var map := PackedInt32Array()
-	for i in plain.length():
-		if _is_ws(plain.unicode_at(i)):
-			continue
-		compact_plain += plain.substr(i, 1)
-		compact_leet += leet.substr(i, 1)
-		map.append(i)
-	return {"plain": plain, "leet": leet, "cp": compact_plain, "cl": compact_leet, "map": map}
-
-
-func _strip_ws(text: String) -> String:
-	var out := ""
-	for i in text.length():
-		if not _is_ws(text.unicode_at(i)):
-			out += text.substr(i, 1)
-	return out
-
-
-static func _is_hspace(c: int) -> bool:
-	if c == 0x20 or c == 0x09 or c == 0xA0 or c == 0x1680 or c == 0x202F or c == 0x205F:
-		return true
-	return (c >= 0x2000 and c <= 0x200A) or c == 0x3000
-
-
-static func _is_ws(c: int) -> bool:
-	return _is_hspace(c) or c == 0x0A or c == 0x0D or c == 0x85 or c == 0x2028 or c == 0x2029
-
-
-static func _is_word_char(c: int) -> bool:
-	if (c >= 0x30 and c <= 0x39) or (c >= 0x61 and c <= 0x7A) or c == 0x5F:
-		return true
-	if (c >= 0xC0 and c <= 0x24F) or (c >= 0x1E00 and c <= 0x1EFF):
-		return true
-	if (c >= 0x370 and c <= 0x4FF) or (c >= 0x590 and c <= 0x6FF):
-		return true
-	if (c >= 0x900 and c <= 0x97F) or (c >= 0xE00 and c <= 0xE7F):
-		return true
-	if (c >= 0x3040 and c <= 0x30FF) or (c >= 0x3400 and c <= 0x4DBF):
-		return true
-	if (c >= 0x4E00 and c <= 0x9FFF) or (c >= 0xAC00 and c <= 0xD7AF):
-		return true
-	if (c >= 0xF900 and c <= 0xFAFF) or (c >= 0xFF10 and c <= 0xFF19):
-		return true
-	return (c >= 0xFF21 and c <= 0xFF3A) or (c >= 0xFF41 and c <= 0xFF5A)
-
-
-func _is_token_char(c: int) -> bool:
-	if _is_word_char(c):
-		return true
-	return _token_extra.has(c)
-
-
-static func _code_set(s: String) -> Dictionary:
-	var out := {}
-	for i in s.length():
-		out[s.unicode_at(i)] = true
-	return out
-
-
 func _drain() -> String:
-	var views := _build_views(_pending)
-	var spans := _collect_spans(_pending, views, _emitted_tail, _ctx)
-	var cut := _safe_cut(views["plain"], spans)
-	if cut <= 0:
+	var combined := _match_text()
+	var start := _history.length()
+	var views: Dictionary = _text.views(combined)
+	var spans := _collect_spans(combined, views, "", _ctx)
+	var cut := _safe_cut(combined, views, spans, start)
+	if cut <= start:
 		return ""
-	var emitted := _apply_spans(_pending, spans, cut, "say")
-	_pending = _pending.substr(cut)
-	var combined := _emitted_tail + _normalize(emitted, false)
-	combined = combined.replace(REDACT_CHAR, ".")
-	_emitted_tail = combined.substr(maxi(0, combined.length() - _TAIL_CHARS))
+	var emitted := _apply_spans(combined, spans, start, cut, "say")
+	_pending = combined.substr(cut)
+	_history = _window(combined.substr(0, cut))
 	return emitted
 
 
-func _safe_cut(view: String, spans: Array) -> int:
-	var cut := maxi(0, view.length() - _holdback)
+## Cut point (in view characters) past which nothing may be emitted yet.
+## Bounded by the compact holdback (the longest phrase plus one, measured on the
+## separator-free views so a generator cannot buy emission budget by padding a
+## phrase prefix with separators), by trailing hold-pattern matches (unbounded
+## regexes such as coordinates, phone numbers, emails) and by the start of any
+## span that would otherwise be sliced in half. Never below `seam`: text an
+## earlier beat already displayed cannot be recalled, only its continuation can
+## be barred.
+func _safe_cut(combined: String, views: Dictionary, spans: Array, seam: int) -> int:
+	var cut := _compact_bound(views, seam)
 	for hre in _hold_res:
-		for rm in hre.search_all(view):
-			if rm.get_end() == view.length():
+		for rm in hre.search_all(views["plain"]):
+			if rm.get_end() == views["plain"].length():
 				cut = mini(cut, rm.get_start())
-	var j := view.length()
-	while j > 0 and _is_token_char(view.unicode_at(j - 1)):
+	var j := combined.length()
+	while j > seam and _text.is_token_char(combined.unicode_at(j - 1)):
 		j -= 1
-	if j < view.length():
+	if j < combined.length():
 		cut = mini(cut, j)
 	for span in spans:
 		if span["s"] >= cut:
 			break
 		if span["e"] > cut:
-			cut = span["s"]
+			cut = mini(cut, span["s"])
 			break
-	return cut
+	return maxi(cut, seam)
+
+
+## View index of the earliest position the compact holdback still needs: the
+## lower of the two compact views' `length - _holdback` positions, mapped back
+## into the view. Holding on the compact views (not the raw text) is what makes
+## `k...ill yourself` and `k#ll yourself` behave alike — separators between
+## letters do not count toward the emission budget, so a phrase prefix padded
+## with separators is still held rather than displayed.
+func _compact_bound(views: Dictionary, seam: int) -> int:
+	var cut := _bound_of(views["cl"], views["map"])
+	return maxi(seam, mini(cut, _bound_of(views["cp"], views["pmap"])))
+
+
+func _bound_of(compact: String, cmap: PackedInt32Array) -> int:
+	var index := compact.length() - mini(_holdback, compact.length())
+	if index <= 0 or cmap.is_empty():
+		return 0
+	return cmap[index]
 
 
 ## All redactable spans in the pending/complete text, merged and sorted.
-## raw must be sanitized/collapsed; views came from _build_views(raw).
+## raw must be sanitized/collapsed; views came from _text.views(raw).
 func _collect_spans(raw: String, views: Dictionary, tail: String, ctx: Dictionary) -> Array:
 	var found: Array = []
 	for cat in _rules:
@@ -721,9 +634,16 @@ func _collect_spans(raw: String, views: Dictionary, tail: String, ctx: Dictionar
 		var plain_view: bool = _rules[cat]["plain_view"]
 		var view: String = views["plain"] if plain_view else views["leet"]
 		var compact: String = views["cp"] if plain_view else views["cl"]
+		var cmap: PackedInt32Array = views["pmap"] if plain_view else views["map"]
 		var index: Dictionary = _idx_plain if plain_view else _idx_leet
-		for m in _phrase_matches(compact, views["map"], index, view, cat):
+		for m in _phrase_matches(compact, cmap, index, view, cat):
 			found.append({"s": m[0], "e": m[1], "cat": cat})
+		if not plain_view:
+			## The leet fold can consume a separator the plain view strips
+			## (`kill@yourself`: `@` folds to `a` in leet, is a separator in
+			## plain), so leet categories also match the plain compact view.
+			for m in _phrase_matches(views["cp"], views["pmap"], index, view, cat):
+				found.append({"s": m[0], "e": m[1], "cat": cat})
 		for re in _regexes[cat]:
 			for rm in re.search_all(view):
 				found.append({"s": rm.get_start(), "e": rm.get_end(), "cat": cat})
@@ -759,10 +679,17 @@ func _collect_spans(raw: String, views: Dictionary, tail: String, ctx: Dictionar
 	var merged: Array = []
 	for m in kept:
 		if merged.is_empty() or m["s"] >= merged[-1]["e"]:
+			m["cats"] = PackedStringArray([m["cat"]])
 			merged.append(m)
 		else:
-			merged[-1]["e"] = maxi(merged[-1]["e"], m["e"])
-			merged[-1]["text"] = raw.substr(merged[-1]["s"], merged[-1]["e"] - merged[-1]["s"])
+			var target: Dictionary = merged[-1]
+			target["e"] = maxi(target["e"], m["e"])
+			target["text"] = raw.substr(target["s"], target["e"] - target["s"])
+			## A span can be hit by several categories at once (`k.i.l.l.y.o.u.r.s.e.l.f`
+			## is both a dotted-letter obfuscation and the phrase `kill yourself`);
+			## every hit is reported, never only the first.
+			if not target["cats"].has(m["cat"]):
+				target["cats"].append(m["cat"])
 	return merged
 
 
@@ -799,7 +726,7 @@ func _phrase_matches(
 ) -> Array:
 	var out: Array = []
 	for i in compact.length():
-		if not _is_word_char(compact.unicode_at(i)):
+		if not SafetyText.is_word_char(compact.unicode_at(i)):
 			continue
 		for entry in index.get(compact.unicode_at(i), []):
 			if entry[0] != cat:
@@ -810,9 +737,9 @@ func _phrase_matches(
 				continue
 			var view_start: int = cmap[i]
 			var view_end: int = cmap[end - 1] + 1
-			if view_start > 0 and _is_word_char(view.unicode_at(view_start - 1)):
+			if view_start > 0 and SafetyText.is_word_char(view.unicode_at(view_start - 1)):
 				continue
-			if view_end < view.length() and _is_word_char(view.unicode_at(view_end)):
+			if view_end < view.length() and SafetyText.is_word_char(view.unicode_at(view_end)):
 				continue
 			out.append([view_start, view_end])
 	return out
@@ -828,7 +755,7 @@ func _negated(view: String, tail: String, start: int, matched: String, cat: Stri
 	var window := combined.substr(from, at - from)
 	var cut := -1
 	for i in window.length():
-		if _clause_breaks.has(window.unicode_at(i)):
+		if _text.is_clause_break(window.unicode_at(i)):
 			cut = i
 	var clause := window.substr(cut + 1)
 	var trailing_clause := view.substr(start + matched.length())
@@ -836,7 +763,7 @@ func _negated(view: String, tail: String, start: int, matched: String, cat: Stri
 		return false
 	var clause_end := trailing_clause.length()
 	for i in trailing_clause.length():
-		if _clause_breaks.has(trailing_clause.unicode_at(i)):
+		if _text.is_clause_break(trailing_clause.unicode_at(i)):
 			clause_end = i
 			break
 	var full_clause := clause + matched + trailing_clause.substr(0, clause_end)
@@ -868,7 +795,7 @@ func _gap_is_allowed(gap: String) -> bool:
 	for word in words:
 		residual = residual.replace(word, " ")
 	for i in residual.length():
-		if _is_word_char(residual.unicode_at(i)):
+		if SafetyText.is_word_char(residual.unicode_at(i)):
 			return false
 	return true
 
@@ -877,11 +804,12 @@ func _strip_category_spans(gap: String, cat: String) -> String:
 	if gap.strip_edges().is_empty():
 		return gap
 	var plain_view: bool = _rules[cat]["plain_view"]
-	var views := _build_views(gap)
+	var views: Dictionary = _text.views(gap)
 	var view: String = views["plain"] if plain_view else views["leet"]
 	var compact: String = views["cp"] if plain_view else views["cl"]
+	var cmap: PackedInt32Array = views["pmap"] if plain_view else views["map"]
 	var index: Dictionary = _idx_plain if plain_view else _idx_leet
-	var spans := _phrase_matches(compact, views["map"], index, view, cat)
+	var spans := _phrase_matches(compact, cmap, index, view, cat)
 	if spans.is_empty():
 		return gap
 	var out := ""
@@ -919,12 +847,13 @@ func _is_player_typed(matched: String, ctx: Dictionary) -> bool:
 	return username != "" and username == matched
 
 
-## Emit raw[0:cut] with every span wholly inside that prefix replaced by bars.
-## Span offsets come from the normalized view; normalization is length
-## preserving, so they line up with the raw string 1:1.
-func _apply_spans(raw: String, spans: Array, cut: int, source: String) -> String:
+## Emit raw[start:cut] with every span wholly inside that range replaced by
+## bars. Span offsets come from the normalized view; normalization is length
+## preserving, so they line up with the raw string 1:1. `start` skips text that
+## a previous beat already emitted (the cross-beat carry).
+func _apply_spans(raw: String, spans: Array, start: int, cut: int, source: String) -> String:
 	var out := ""
-	var pos := 0
+	var pos := start
 	for span in spans:
 		var s: int = span["s"]
 		if s >= cut:
@@ -932,9 +861,10 @@ func _apply_spans(raw: String, spans: Array, cut: int, source: String) -> String
 		var e: int = mini(span["e"], cut)
 		if e <= pos:
 			continue
-		out += raw.substr(pos, s - pos)
-		out += REDACT_CHAR.repeat(e - s)
-		_record(String(span["cat"]), raw.substr(s, e - s), source)
+		out += raw.substr(pos, maxi(0, s - pos))
+		out += REDACT_CHAR.repeat(e - maxi(s, pos))
+		for cat in span.get("cats", PackedStringArray([span["cat"]])):
+			_record(String(cat), raw.substr(s, e - s), source)
 		pos = e
 	if pos < cut:
 		out += raw.substr(pos, cut - pos)
