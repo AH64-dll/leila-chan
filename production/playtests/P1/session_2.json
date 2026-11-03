@@ -1,0 +1,1943 @@
+{
+  "broken_turns": 0,
+  "events": [
+    {
+      "at_ms": 4422,
+      "kind": "player_line",
+      "text": "Coffee.",
+      "turn": 1
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 8373,
+      "feeling": "warmth",
+      "kind": "beat_resolved",
+      "sprite": "02",
+      "turn": 1
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 10872,
+      "feeling": "shy",
+      "kind": "beat_resolved",
+      "sprite": "06",
+      "turn": 1
+    },
+    {
+      "at_ms": 16855,
+      "kind": "player_line",
+      "text": "Whatever.",
+      "turn": 2
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 20639,
+      "feeling": "shy",
+      "kind": "beat_resolved",
+      "sprite": "06",
+      "turn": 2
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 23622,
+      "feeling": "sad",
+      "kind": "beat_resolved",
+      "sprite": "14",
+      "turn": 2
+    },
+    {
+      "at_ms": 29421,
+      "kind": "player_line",
+      "text": "Sure.",
+      "turn": 3
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 33705,
+      "feeling": "nervous",
+      "kind": "beat_resolved",
+      "sprite": "13",
+      "turn": 3
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 36605,
+      "feeling": "shy",
+      "kind": "beat_resolved",
+      "sprite": "06",
+      "turn": 3
+    },
+    {
+      "at_ms": 42855,
+      "kind": "player_line",
+      "text": "No.",
+      "turn": 4
+    },
+    {
+      "at_ms": 45359,
+      "file": "moonlit_lullaby_for_the_lost_loop.ogg",
+      "kind": "music_changed",
+      "state": "melancholy"
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 46955,
+      "feeling": "confused",
+      "kind": "beat_resolved",
+      "sprite": "08",
+      "turn": 4
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 49738,
+      "feeling": "sad",
+      "kind": "beat_resolved",
+      "sprite": "14",
+      "turn": 4
+    },
+    {
+      "at_ms": 55854,
+      "kind": "player_line",
+      "text": "Hm.",
+      "turn": 5
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 60504,
+      "feeling": "shy",
+      "kind": "beat_resolved",
+      "sprite": "06",
+      "turn": 5
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 63804,
+      "feeling": "nervous",
+      "kind": "beat_resolved",
+      "sprite": "13",
+      "turn": 5
+    },
+    {
+      "at_ms": 70036,
+      "kind": "player_line",
+      "text": "I don't know.",
+      "turn": 6
+    },
+    {
+      "at_ms": 70039,
+      "file": "chilllofi.ogg",
+      "kind": "music_changed",
+      "state": "calm"
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 74836,
+      "feeling": "shy",
+      "kind": "beat_resolved",
+      "sprite": "06",
+      "turn": 6
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 78170,
+      "feeling": "curious",
+      "kind": "beat_resolved",
+      "sprite": "05",
+      "turn": 6
+    },
+    {
+      "at_ms": 84453,
+      "kind": "player_line",
+      "text": "You pick.",
+      "turn": 7
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 88969,
+      "feeling": "shy",
+      "kind": "beat_resolved",
+      "sprite": "06",
+      "turn": 7
+    },
+    {
+      "at_ms": 95919,
+      "kind": "player_line",
+      "text": "Not really.",
+      "turn": 8
+    },
+    {
+      "at_ms": 98705,
+      "file": "goodbye_lullaby.ogg",
+      "kind": "music_changed",
+      "state": "melancholy"
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 100236,
+      "feeling": "sad",
+      "kind": "beat_resolved",
+      "sprite": "14",
+      "turn": 8
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 103102,
+      "feeling": "nervous",
+      "kind": "beat_resolved",
+      "sprite": "13",
+      "turn": 8
+    },
+    {
+      "at_ms": 110185,
+      "kind": "player_line",
+      "text": "Okay.",
+      "turn": 9
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 114569,
+      "feeling": "warmth",
+      "kind": "beat_resolved",
+      "sprite": "02",
+      "turn": 9
+    },
+    {
+      "at_ms": 120918,
+      "kind": "player_line",
+      "text": "Busy.",
+      "turn": 10
+    },
+    {
+      "at_ms": 120921,
+      "file": "snowfall_looped_ver._0.ogg",
+      "kind": "music_changed",
+      "state": "calm"
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 127035,
+      "feeling": "shy",
+      "kind": "beat_resolved",
+      "sprite": "06",
+      "turn": 10
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 130484,
+      "feeling": "warmth",
+      "kind": "beat_resolved",
+      "sprite": "02",
+      "turn": 10
+    },
+    {
+      "at_ms": 139200,
+      "kind": "player_line",
+      "text": "Whatever you want.",
+      "turn": 11
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 143551,
+      "feeling": "warmth",
+      "kind": "beat_resolved",
+      "sprite": "02",
+      "turn": 11
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 146717,
+      "feeling": "playful",
+      "kind": "beat_resolved",
+      "sprite": "03",
+      "turn": 11
+    },
+    {
+      "at_ms": 153350,
+      "kind": "player_line",
+      "text": "Maybe.",
+      "turn": 12
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 158083,
+      "feeling": "shy",
+      "kind": "beat_resolved",
+      "sprite": "06",
+      "turn": 12
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 161133,
+      "feeling": "warmth",
+      "kind": "beat_resolved",
+      "sprite": "02",
+      "turn": 12
+    },
+    {
+      "at_ms": 167239,
+      "kind": "player_line",
+      "text": "Later.",
+      "turn": 13
+    },
+    {
+      "at_ms": 173290,
+      "file": "moonlit_lullaby_for_the_lost_loop.ogg",
+      "kind": "music_changed",
+      "state": "melancholy"
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 174822,
+      "feeling": "sad",
+      "kind": "beat_resolved",
+      "sprite": "14",
+      "turn": 13
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 177689,
+      "feeling": "shy",
+      "kind": "beat_resolved",
+      "sprite": "06",
+      "turn": 13
+    },
+    {
+      "at_ms": 184404,
+      "kind": "player_line",
+      "text": "I gotta go.",
+      "turn": 14
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 192754,
+      "feeling": "sad",
+      "kind": "beat_resolved",
+      "sprite": "14",
+      "turn": 14
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 195121,
+      "feeling": "shy",
+      "kind": "beat_resolved",
+      "sprite": "06",
+      "turn": 14
+    }
+  ],
+  "final_state": {
+    "affection": 13.5,
+    "instability": 7.3,
+    "read_history": [
+      "greeting",
+      "other",
+      "greeting",
+      "other",
+      "small_talk",
+      "other",
+      "other",
+      "greeting",
+      "greeting",
+      "small_talk",
+      "affection",
+      "small_talk",
+      "leaving",
+      "leaving"
+    ],
+    "stage": 0,
+    "trust": -4.0,
+    "turn": 14
+  },
+  "flow": [
+    {
+      "at_ms": 0,
+      "step": "boot_scene_requested"
+    },
+    {
+      "at_ms": 44,
+      "step": "title_ready"
+    },
+    {
+      "at_ms": 44,
+      "step": "new_game_pressed"
+    },
+    {
+      "at_ms": 59,
+      "step": "new_game_ready"
+    },
+    {
+      "at_ms": 59,
+      "step": "name_typed",
+      "value": "Ken"
+    },
+    {
+      "at_ms": 172,
+      "step": "date_ready"
+    },
+    {
+      "at_ms": 2222,
+      "ok": true,
+      "step": "opening_beats_finished"
+    },
+    {
+      "at_ms": 2222,
+      "sim_ms": 12000,
+      "step": "session_clock_start"
+    }
+  ],
+  "model": "Qwen3.5-4B-Q4_K_M (llama-server :8089, attached)",
+  "persona": "terse/dismissive",
+  "player_name": "Ken",
+  "session": 2,
+  "simulated_elapsed_ms": 520659,
+  "stage_observed": 0,
+  "stage_requested": 0,
+  "turns": [
+    {
+      "chunks": 105,
+      "cues": [
+        {
+          "bus": "Voice",
+          "cue": "sigh",
+          "file": "breath.ogg"
+        }
+      ],
+      "displayed": [
+        "Oh, Ken! I thought you left already.",
+        "The afternoon light is so pretty today..."
+      ],
+      "error": {},
+      "first_chunk_ms": 634,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 356,
+        "chunks": 105,
+        "finish_reason": "stop",
+        "first_byte_ms": 274,
+        "first_say_ms": 4565,
+        "first_token_ms": 613,
+        "generate_ms": 10043,
+        "pid": 0,
+        "ready_ms": 2,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 951.0,
+          "predicted_ms": 9427.912,
+          "predicted_n": 106.0,
+          "predicted_per_second": 11.1371425613646,
+          "predicted_per_token_ms": 89.7896380952381,
+          "prompt_ms": 361.347,
+          "prompt_n": 14.0,
+          "prompt_per_second": 38.7439220472288,
+          "prompt_per_token_ms": 25.8105
+        },
+        "total_ms": 10041
+      },
+      "music": "calm",
+      "player": "Coffee.",
+      "raw": "{\"read\":\"greeting\",\"inner\":\"He's back... so normal again.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"none\",\"say\":\"Oh, Ken! I thought you left already.\"},{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"sigh\",\"say\":\"The afternoon light is so pretty today...\"}],\"mood\":{\"affection\":1,\"trust\":0,\"stress\":0},\"memory\":\"\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "none",
+          "feeling": "warmth",
+          "intensity": 2.0,
+          "say": "Oh, Ken! I thought you left already."
+        },
+        {
+          "cue": "sigh",
+          "feeling": "shy",
+          "intensity": 1.0,
+          "say": "The afternoon light is so pretty today..."
+        }
+      ],
+      "raw_len": 356,
+      "raw_parse_ok": true,
+      "read": "greeting",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "warmth",
+          "intensity": 2,
+          "sprite": "02"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "shy",
+          "intensity": 1,
+          "sprite": "06"
+        }
+      ],
+      "sim_clock_ms": 21197,
+      "simulated_ms": 25058,
+      "sprite": "06",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 1,
+      "turn_beats": [
+        {
+          "cue": "none",
+          "feeling": "warmth",
+          "intensity": 2,
+          "say": "Oh, Ken! I thought you left already."
+        },
+        {
+          "cue": "sigh",
+          "feeling": "shy",
+          "intensity": 1,
+          "say": "The afternoon light is so pretty today..."
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 10150
+    },
+    {
+      "chunks": 105,
+      "cues": [
+        {
+          "cue": "sigh",
+          "denied": "repeat_window"
+        }
+      ],
+      "displayed": [
+        "Um... okay, whatever you say. I'll just sit here quietly.",
+        "Does it matter what you want?"
+      ],
+      "error": {},
+      "first_chunk_ms": 767,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 356,
+        "chunks": 105,
+        "finish_reason": "stop",
+        "first_byte_ms": 17,
+        "first_say_ms": 4492,
+        "first_token_ms": 756,
+        "generate_ms": 10181,
+        "pid": 0,
+        "ready_ms": 3,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 951.0,
+          "predicted_ms": 9422.278,
+          "predicted_n": 106.0,
+          "predicted_per_second": 11.1438019553233,
+          "predicted_per_token_ms": 89.735980952381,
+          "prompt_ms": 747.076,
+          "prompt_n": 44.0,
+          "prompt_per_second": 58.896283644502,
+          "prompt_per_token_ms": 16.979
+        },
+        "total_ms": 10178
+      },
+      "music": "calm",
+      "player": "Whatever.",
+      "raw": "{\"read\":\"other\",\"inner\":\"He's being distant again.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"sigh\",\"say\":\"Um... okay, whatever you say. I'll just sit here quietly.\"},{\"feeling\":\"sad\",\"intensity\":2,\"cue\":\"none\",\"say\":\"Does it matter what you want?\"}],\"mood\":{\"affection\":-1,\"trust\":0,\"stress\":0},\"memory\":\"\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "shy",
+          "intensity": 1.0,
+          "say": "Um... okay, whatever you say. I'll just sit here quietly."
+        },
+        {
+          "cue": "none",
+          "feeling": "sad",
+          "intensity": 2.0,
+          "say": "Does it matter what you want?"
+        }
+      ],
+      "raw_len": 356,
+      "raw_parse_ok": true,
+      "read": "other",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "shy",
+          "intensity": 1,
+          "sprite": "06"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "sad",
+          "intensity": 2,
+          "sprite": "14"
+        }
+      ],
+      "sim_clock_ms": 37316,
+      "simulated_ms": 26957,
+      "sprite": "14",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 2,
+      "turn_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "shy",
+          "intensity": 1,
+          "say": "Um... okay, whatever you say. I'll just sit here quietly."
+        },
+        {
+          "cue": "none",
+          "feeling": "sad",
+          "intensity": 2,
+          "say": "Does it matter what you want?"
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 10283
+    },
+    {
+      "chunks": 114,
+      "cues": [
+        {
+          "cue": "sigh",
+          "denied": "repeat_window"
+        },
+        {
+          "bus": "SFX",
+          "cue": "heartbeat",
+          "file": "heartbeat_slow_0.ogg"
+        }
+      ],
+      "displayed": [
+        "Um, sorry. I just want to enjoy the quiet here.",
+        "A-ah... maybe we could talk about something else?"
+      ],
+      "error": {},
+      "first_chunk_ms": 767,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 383,
+        "chunks": 114,
+        "finish_reason": "stop",
+        "first_byte_ms": 12,
+        "first_say_ms": 4986,
+        "first_token_ms": 749,
+        "generate_ms": 11049,
+        "pid": 0,
+        "ready_ms": 2,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 981.0,
+          "predicted_ms": 10298.374,
+          "predicted_n": 115.0,
+          "predicted_per_second": 11.0697086743985,
+          "predicted_per_token_ms": 90.3366140350877,
+          "prompt_ms": 742.234,
+          "prompt_n": 48.0,
+          "prompt_per_second": 64.6696324878677,
+          "prompt_per_token_ms": 15.4632083333333
+        },
+        "total_ms": 11046
+      },
+      "music": "calm",
+      "player": "Sure.",
+      "raw": "{\"read\":\"greeting\",\"inner\":\"Why does this feel so awkward?\",\"music\":\"calm\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"nervous\",\"intensity\":1,\"cue\":\"sigh\",\"say\":\"Um, sorry. I just want to enjoy the quiet here.\"},{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"heartbeat\",\"say\":\"A-ah... maybe we could talk about something else?\"}],\"mood\":{\"affection\":0,\"trust\":-1,\"stress\":1},\"memory\":\"\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "nervous",
+          "intensity": 1.0,
+          "say": "Um, sorry. I just want to enjoy the quiet here."
+        },
+        {
+          "cue": "heartbeat",
+          "feeling": "shy",
+          "intensity": 2.0,
+          "say": "A-ah... maybe we could talk about something else?"
+        }
+      ],
+      "raw_len": 383,
+      "raw_parse_ok": true,
+      "read": "greeting",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "nervous",
+          "intensity": 1,
+          "sprite": "13"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "shy",
+          "intensity": 2,
+          "sprite": "06"
+        }
+      ],
+      "sim_clock_ms": 52105,
+      "simulated_ms": 26495,
+      "sprite": "06",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 3,
+      "turn_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "nervous",
+          "intensity": 1,
+          "say": "Um, sorry. I just want to enjoy the quiet here."
+        },
+        {
+          "cue": "heartbeat",
+          "feeling": "shy",
+          "intensity": 2,
+          "say": "A-ah... maybe we could talk about something else?"
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 11150
+    },
+    {
+      "chunks": 110,
+      "cues": [
+        {
+          "cue": "sigh",
+          "denied": "repeat_window"
+        }
+      ],
+      "displayed": [
+        "E-easy, Ken... don't say no to everything.",
+        "I was just happy you were here for a bit."
+      ],
+      "error": {},
+      "first_chunk_ms": 800,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 369,
+        "chunks": 110,
+        "finish_reason": "stop",
+        "first_byte_ms": 20,
+        "first_say_ms": 4806,
+        "first_token_ms": 786,
+        "generate_ms": 10628,
+        "pid": 0,
+        "ready_ms": 2,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 1015.0,
+          "predicted_ms": 9840.024,
+          "predicted_n": 111.0,
+          "predicted_per_second": 11.1788345231678,
+          "predicted_per_token_ms": 89.4547636363636,
+          "prompt_ms": 774.551,
+          "prompt_n": 51.0,
+          "prompt_per_second": 65.8445989999367,
+          "prompt_per_token_ms": 15.1872745098039
+        },
+        "total_ms": 10626
+      },
+      "music": "melancholy",
+      "player": "No.",
+      "raw": "{\"read\":\"other\",\"inner\":\"He's being very strange today.\",\"music\":\"melancholy\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"confused\",\"intensity\":2,\"cue\":\"sigh\",\"say\":\"E-easy, Ken... don't say no to everything.\"},{\"feeling\":\"sad\",\"intensity\":1,\"cue\":\"none\",\"say\":\"I was just happy you were here for a bit.\"}],\"mood\":{\"affection\":0,\"trust\":-1,\"stress\":0},\"memory\":\"\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "confused",
+          "intensity": 2.0,
+          "say": "E-easy, Ken... don't say no to everything."
+        },
+        {
+          "cue": "none",
+          "feeling": "sad",
+          "intensity": 1.0,
+          "say": "I was just happy you were here for a bit."
+        }
+      ],
+      "raw_len": 369,
+      "raw_parse_ok": true,
+      "read": "other",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "confused",
+          "intensity": 2,
+          "sprite": "08"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "sad",
+          "intensity": 1,
+          "sprite": "14"
+        }
+      ],
+      "sim_clock_ms": 109214,
+      "simulated_ms": 67405,
+      "sprite": "14",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 4,
+      "turn_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "confused",
+          "intensity": 2,
+          "say": "E-easy, Ken... don't say no to everything."
+        },
+        {
+          "cue": "none",
+          "feeling": "sad",
+          "intensity": 1,
+          "say": "I was just happy you were here for a bit."
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 10716
+    },
+    {
+      "chunks": 123,
+      "cues": [
+        {
+          "bus": "Voice",
+          "cue": "sigh",
+          "file": "breath.ogg"
+        },
+        {
+          "cue": "heartbeat",
+          "denied": "repeat_window"
+        }
+      ],
+      "displayed": [
+        "I'm sorry if I was too much... I'll try to be quieter then.",
+        "It's just... can we please focus on our conversation?"
+      ],
+      "error": {},
+      "first_chunk_ms": 833,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 414,
+        "chunks": 123,
+        "finish_reason": "stop",
+        "first_byte_ms": 19,
+        "first_say_ms": 5344,
+        "first_token_ms": 813,
+        "generate_ms": 11798,
+        "pid": 0,
+        "ready_ms": 2,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 1052.0,
+          "predicted_ms": 10983.291,
+          "predicted_n": 124.0,
+          "predicted_per_second": 11.1988292033781,
+          "predicted_per_token_ms": 89.2950487804878,
+          "prompt_ms": 804.691,
+          "prompt_n": 52.0,
+          "prompt_per_second": 64.6210781529805,
+          "prompt_per_token_ms": 15.4748269230769
+        },
+        "total_ms": 11795
+      },
+      "music": "melancholy",
+      "player": "Hm.",
+      "raw": "{\"read\":\"small_talk\",\"inner\":\"He's just quiet today. Maybe he needs space?\",\"music\":\"calm\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"sigh\",\"say\":\"I'm sorry if I was too much... I'll try to be quieter then.\"},{\"feeling\":\"nervous\",\"intensity\":2,\"cue\":\"heartbeat\",\"say\":\"It's just... can we please focus on our conversation?\"}],\"mood\":{\"affection\":1,\"trust\":0,\"stress\":1},\"memory\":\"\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "shy",
+          "intensity": 1.0,
+          "say": "I'm sorry if I was too much... I'll try to be quieter then."
+        },
+        {
+          "cue": "heartbeat",
+          "feeling": "nervous",
+          "intensity": 2.0,
+          "say": "It's just... can we please focus on our conversation?"
+        }
+      ],
+      "raw_len": 414,
+      "raw_parse_ok": true,
+      "read": "small_talk",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "shy",
+          "intensity": 1,
+          "sprite": "06"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "nervous",
+          "intensity": 2,
+          "sprite": "13"
+        }
+      ],
+      "sim_clock_ms": 126484,
+      "simulated_ms": 30715,
+      "sprite": "13",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 5,
+      "turn_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "shy",
+          "intensity": 1,
+          "say": "I'm sorry if I was too much... I'll try to be quieter then."
+        },
+        {
+          "cue": "heartbeat",
+          "feeling": "nervous",
+          "intensity": 2,
+          "say": "It's just... can we please focus on our conversation?"
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 11899
+    },
+    {
+      "chunks": 124,
+      "cues": [
+        {
+          "cue": "sigh",
+          "denied": "repeat_window"
+        },
+        {
+          "cue": "hum",
+          "denied": "gap"
+        }
+      ],
+      "displayed": [
+        "U-um... it's okay if you don't know. Just sit with me?",
+        "Maybe we can just look out the window together for a bit?"
+      ],
+      "error": {},
+      "first_chunk_ms": 950,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 416,
+        "chunks": 124,
+        "finish_reason": "stop",
+        "first_byte_ms": 21,
+        "first_say_ms": 5497,
+        "first_token_ms": 937,
+        "generate_ms": 12044,
+        "pid": 0,
+        "ready_ms": 3,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 1089.0,
+          "predicted_ms": 11104.235,
+          "predicted_n": 125.0,
+          "predicted_per_second": 11.1669106426512,
+          "predicted_per_token_ms": 89.5502822580645,
+          "prompt_ms": 926.825,
+          "prompt_n": 61.0,
+          "prompt_per_second": 65.8160925741105,
+          "prompt_per_token_ms": 15.1938524590164
+        },
+        "total_ms": 12041
+      },
+      "music": "calm",
+      "player": "I don't know.",
+      "raw": "{\"read\":\"other\",\"inner\":\"He's confused about what to do. Should I guide him gently?\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"sigh\",\"say\":\"U-um... it's okay if you don't know. Just sit with me?\"},{\"feeling\":\"curious\",\"intensity\":2,\"cue\":\"hum\",\"say\":\"Maybe we can just look out the window together for a bit?\"}],\"mood\":{\"affection\":1,\"trust\":0,\"stress\":0},\"memory\":\"\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "shy",
+          "intensity": 1.0,
+          "say": "U-um... it's okay if you don't know. Just sit with me?"
+        },
+        {
+          "cue": "hum",
+          "feeling": "curious",
+          "intensity": 2.0,
+          "say": "Maybe we can just look out the window together for a bit?"
+        }
+      ],
+      "raw_len": 416,
+      "raw_parse_ok": true,
+      "read": "other",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "shy",
+          "intensity": 1,
+          "sprite": "06"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "curious",
+          "intensity": 2,
+          "sprite": "05"
+        }
+      ],
+      "sim_clock_ms": 141333,
+      "simulated_ms": 27220,
+      "sprite": "05",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 6,
+      "turn_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "shy",
+          "intensity": 1,
+          "say": "U-um... it's okay if you don't know. Just sit with me?"
+        },
+        {
+          "cue": "hum",
+          "feeling": "curious",
+          "intensity": 2,
+          "say": "Maybe we can just look out the window together for a bit?"
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 12133
+    },
+    {
+      "chunks": 91,
+      "cues": [
+        {
+          "bus": "Voice",
+          "cue": "giggle",
+          "file": "cute_02.ogg"
+        }
+      ],
+      "displayed": [
+        "I-I guess it's your choice, Ken. Let's just look out the window?"
+      ],
+      "error": {},
+      "first_chunk_ms": 933,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 305,
+        "chunks": 91,
+        "finish_reason": "stop",
+        "first_byte_ms": 19,
+        "first_say_ms": 5308,
+        "first_token_ms": 915,
+        "generate_ms": 9080,
+        "pid": 0,
+        "ready_ms": 3,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 1133.0,
+          "predicted_ms": 8161.409,
+          "predicted_n": 92.0,
+          "predicted_per_second": 11.1500354901954,
+          "predicted_per_token_ms": 89.6858131868132,
+          "prompt_ms": 906.76,
+          "prompt_n": 59.0,
+          "prompt_per_second": 65.0668313555958,
+          "prompt_per_token_ms": 15.368813559322
+        },
+        "total_ms": 9077
+      },
+      "music": "calm",
+      "player": "You pick.",
+      "raw": "{\"read\":\"other\",\"inner\":\"He picked me! Lucky. I'll suggest something nice.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"giggle\",\"say\":\"I-I guess it's your choice, Ken. Let's just look out the window?\"}],\"mood\":{\"affection\":1,\"trust\":0,\"stress\":0},\"memory\":\"\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "giggle",
+          "feeling": "shy",
+          "intensity": 2.0,
+          "say": "I-I guess it's your choice, Ken. Let's just look out the window?"
+        }
+      ],
+      "raw_len": 305,
+      "raw_parse_ok": true,
+      "read": "other",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "shy",
+          "intensity": 2,
+          "sprite": "06"
+        }
+      ],
+      "sim_clock_ms": 155744,
+      "simulated_ms": 19858,
+      "sprite": "06",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 7,
+      "turn_beats": [
+        {
+          "cue": "giggle",
+          "feeling": "shy",
+          "intensity": 2,
+          "say": "I-I guess it's your choice, Ken. Let's just look out the window?"
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 9183
+    },
+    {
+      "chunks": 122,
+      "cues": [
+        {
+          "cue": "sigh",
+          "denied": "repeat_window"
+        },
+        {
+          "cue": "heartbeat",
+          "denied": "budget"
+        }
+      ],
+      "displayed": [
+        "Oh, I see... maybe you're just tired today.",
+        "I-I won't say anything else then. Just... let's stay here quietly for a while?"
+      ],
+      "error": {},
+      "first_chunk_ms": 816,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 413,
+        "chunks": 122,
+        "finish_reason": "stop",
+        "first_byte_ms": 20,
+        "first_say_ms": 5018,
+        "first_token_ms": 798,
+        "generate_ms": 11800,
+        "pid": 0,
+        "ready_ms": 2,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 1177.0,
+          "predicted_ms": 11001.16,
+          "predicted_n": 123.0,
+          "predicted_per_second": 11.0897396274575,
+          "predicted_per_token_ms": 90.1734426229508,
+          "prompt_ms": 787.251,
+          "prompt_n": 46.0,
+          "prompt_per_second": 58.4311737933645,
+          "prompt_per_token_ms": 17.114152173913
+        },
+        "total_ms": 11798
+      },
+      "music": "melancholy",
+      "player": "Not really.",
+      "raw": "{\"read\":\"greeting\",\"inner\":\"He's being so distant... why?\",\"music\":\"melancholy\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"sad\",\"intensity\":1,\"cue\":\"sigh\",\"say\":\"Oh, I see... maybe you're just tired today.\"},{\"feeling\":\"nervous\",\"intensity\":2,\"cue\":\"heartbeat\",\"say\":\"I-I won't say anything else then. Just... let's stay here quietly for a while?\"}],\"mood\":{\"affection\":-1,\"trust\":0,\"stress\":1},\"memory\":\"\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "sad",
+          "intensity": 1.0,
+          "say": "Oh, I see... maybe you're just tired today."
+        },
+        {
+          "cue": "heartbeat",
+          "feeling": "nervous",
+          "intensity": 2.0,
+          "say": "I-I won't say anything else then. Just... let's stay here quietly for a while?"
+        }
+      ],
+      "raw_len": 413,
+      "raw_parse_ok": true,
+      "read": "greeting",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "sad",
+          "intensity": 1,
+          "sprite": "14"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "nervous",
+          "intensity": 2,
+          "sprite": "13"
+        }
+      ],
+      "sim_clock_ms": 228136,
+      "simulated_ms": 87490,
+      "sprite": "13",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 8,
+      "turn_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "sad",
+          "intensity": 1,
+          "say": "Oh, I see... maybe you're just tired today."
+        },
+        {
+          "cue": "heartbeat",
+          "feeling": "nervous",
+          "intensity": 2,
+          "say": "I-I won't say anything else then. Just... let's stay here quietly for a while?"
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 11983
+    },
+    {
+      "chunks": 82,
+      "cues": [],
+      "displayed": [
+        "Then... we'll just sit and watch the rain clouds gather?"
+      ],
+      "error": {},
+      "first_chunk_ms": 883,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 284,
+        "chunks": 82,
+        "finish_reason": "stop",
+        "first_byte_ms": 21,
+        "first_say_ms": 4990,
+        "first_token_ms": 867,
+        "generate_ms": 8348,
+        "pid": 0,
+        "ready_ms": 3,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 1208.0,
+          "predicted_ms": 7477.424,
+          "predicted_n": 83.0,
+          "predicted_per_second": 10.9663434894156,
+          "predicted_per_token_ms": 91.1880975609756,
+          "prompt_ms": 855.907,
+          "prompt_n": 58.0,
+          "prompt_per_second": 67.7643715964468,
+          "prompt_per_token_ms": 14.7570172413793
+        },
+        "total_ms": 8345
+      },
+      "music": "melancholy",
+      "player": "Okay.",
+      "raw": "{\"read\":\"greeting\",\"inner\":\"He finally agrees to be with me.\",\"music\":\"calm\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"warmth\",\"intensity\":1,\"cue\":\"none\",\"say\":\"Then... we'll just sit and watch the rain clouds gather?\"}],\"mood\":{\"affection\":2,\"trust\":0,\"stress\":0},\"memory\":\"\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "none",
+          "feeling": "warmth",
+          "intensity": 1.0,
+          "say": "Then... we'll just sit and watch the rain clouds gather?"
+        }
+      ],
+      "raw_len": 284,
+      "raw_parse_ok": true,
+      "read": "greeting",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "warmth",
+          "intensity": 1,
+          "sprite": "02"
+        }
+      ],
+      "sim_clock_ms": 243464,
+      "simulated_ms": 19713,
+      "sprite": "02",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 9,
+      "turn_beats": [
+        {
+          "cue": "none",
+          "feeling": "warmth",
+          "intensity": 1,
+          "say": "Then... we'll just sit and watch the rain clouds gather?"
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 8450
+    },
+    {
+      "chunks": 167,
+      "cues": [
+        {
+          "bus": "Voice",
+          "cue": "sigh",
+          "file": "breath.ogg"
+        },
+        {
+          "cue": "hum",
+          "denied": "gap"
+        }
+      ],
+      "displayed": [
+        "I see... I won't bother you then.",
+        "But please... don't stay busy with just me in mind?"
+      ],
+      "error": {},
+      "first_chunk_ms": 750,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 408,
+        "chunks": 167,
+        "finish_reason": "stop",
+        "first_byte_ms": 24,
+        "first_say_ms": 7191,
+        "first_token_ms": 730,
+        "generate_ms": 15898,
+        "pid": 0,
+        "ready_ms": 3,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 1252.0,
+          "predicted_ms": 15166.585,
+          "predicted_n": 168.0,
+          "predicted_per_second": 11.0110483012491,
+          "predicted_per_token_ms": 90.817874251497,
+          "prompt_ms": 717.665,
+          "prompt_n": 39.0,
+          "prompt_per_second": 54.3429037224889,
+          "prompt_per_token_ms": 18.4016666666667
+        },
+        "total_ms": 15895
+      },
+      "music": "calm",
+      "player": "Busy.",
+      "raw": "{\n\"read\": \"small_talk\",\n\"inner\": \"He's still busy, but he stayed.\",\n\"music\": \"keep\",\n\"fx\": \"none\",\n\"beats\": [\n{\"feeling\": \"shy\", \"intensity\": 1, \"cue\": \"sigh\", \"say\": \"I see... I won't bother you then.\"},\n{\"feeling\": \"warmth\", \"intensity\": 2, \"cue\": \"hum\", \"say\": \"But please... don't stay busy with just me in mind?\"}\n],\n\"mood\": {\n\"affection\": 1,\n\"trust\": 0,\n\"stress\": -1\n},\n\"memory\": \"\",\n\"action\": \"none\"\n}",
+      "raw_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "shy",
+          "intensity": 1.0,
+          "say": "I see... I won't bother you then."
+        },
+        {
+          "cue": "hum",
+          "feeling": "warmth",
+          "intensity": 2.0,
+          "say": "But please... don't stay busy with just me in mind?"
+        }
+      ],
+      "raw_len": 408,
+      "raw_parse_ok": true,
+      "read": "small_talk",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "shy",
+          "intensity": 1,
+          "sprite": "06"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "warmth",
+          "intensity": 2,
+          "sprite": "02"
+        }
+      ],
+      "sim_clock_ms": 254050,
+      "simulated_ms": 28791,
+      "sprite": "02",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 10,
+      "turn_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "shy",
+          "intensity": 1,
+          "say": "I see... I won't bother you then."
+        },
+        {
+          "cue": "hum",
+          "feeling": "warmth",
+          "intensity": 2,
+          "say": "But please... don't stay busy with just me in mind?"
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 15999
+    },
+    {
+      "chunks": 120,
+      "cues": [
+        {
+          "cue": "sigh",
+          "denied": "repeat_window"
+        },
+        {
+          "cue": "giggle",
+          "denied": "budget"
+        }
+      ],
+      "displayed": [
+        "Good... thank you, Ken. It's so nice to have that agreement.",
+        "So, what do you want to do now? Just sit here?"
+      ],
+      "error": {},
+      "first_chunk_ms": 850,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 408,
+        "chunks": 120,
+        "finish_reason": "stop",
+        "first_byte_ms": 24,
+        "first_say_ms": 5046,
+        "first_token_ms": 832,
+        "generate_ms": 11774,
+        "pid": 0,
+        "ready_ms": 3,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 1277.0,
+          "predicted_ms": 10938.879,
+          "predicted_n": 121.0,
+          "predicted_per_second": 10.970045468096,
+          "predicted_per_token_ms": 91.157325,
+          "prompt_ms": 819.347,
+          "prompt_n": 53.0,
+          "prompt_per_second": 64.6856582131869,
+          "prompt_per_token_ms": 15.4593773584906
+        },
+        "total_ms": 11771
+      },
+      "music": "calm",
+      "player": "Whatever you want.",
+      "raw": "{\"read\":\"affection\",\"inner\":\"He finally understands I'm okay with silence.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"sigh\",\"say\":\"Good... thank you, Ken. It's so nice to have that agreement.\"},{\"feeling\":\"playful\",\"intensity\":1,\"cue\":\"giggle\",\"say\":\"So, what do you want to do now? Just sit here?\"}],\"mood\":{\"affection\":2,\"trust\":0,\"stress\":0},\"memory\":\"\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "warmth",
+          "intensity": 2.0,
+          "say": "Good... thank you, Ken. It's so nice to have that agreement."
+        },
+        {
+          "cue": "giggle",
+          "feeling": "playful",
+          "intensity": 1.0,
+          "say": "So, what do you want to do now? Just sit here?"
+        }
+      ],
+      "raw_len": 408,
+      "raw_parse_ok": true,
+      "read": "affection",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "warmth",
+          "intensity": 2,
+          "sprite": "02"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "playful",
+          "intensity": 1,
+          "sprite": "03"
+        }
+      ],
+      "sim_clock_ms": 321268,
+      "simulated_ms": 80639,
+      "sprite": "03",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 11,
+      "turn_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "warmth",
+          "intensity": 2,
+          "say": "Good... thank you, Ken. It's so nice to have that agreement."
+        },
+        {
+          "cue": "giggle",
+          "feeling": "playful",
+          "intensity": 1,
+          "say": "So, what do you want to do now? Just sit here?"
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 11867
+    },
+    {
+      "chunks": 118,
+      "cues": [
+        {
+          "cue": "hum",
+          "denied": "gap"
+        }
+      ],
+      "displayed": [
+        "M-Maybe... or maybe we can just sit here until the rain starts?",
+        "It's okay. Just being here is enough."
+      ],
+      "error": {},
+      "first_chunk_ms": 883,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 399,
+        "chunks": 118,
+        "finish_reason": "stop",
+        "first_byte_ms": 26,
+        "first_say_ms": 5344,
+        "first_token_ms": 867,
+        "generate_ms": 11484,
+        "pid": 0,
+        "ready_ms": 2,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 1314.0,
+          "predicted_ms": 10614.725,
+          "predicted_n": 119.0,
+          "predicted_per_second": 11.1166327907694,
+          "predicted_per_token_ms": 89.9552966101695,
+          "prompt_ms": 854.006,
+          "prompt_n": 56.0,
+          "prompt_per_second": 65.5733097893926,
+          "prompt_per_token_ms": 15.2501071428571
+        },
+        "total_ms": 11482
+      },
+      "music": "calm",
+      "player": "Maybe.",
+      "raw": "{\"read\":\"small_talk\",\"inner\":\"He keeps saying 'maybe'. Is he testing me again?\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"none\",\"say\":\"M-Maybe... or maybe we can just sit here until the rain starts?\"},{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"hum\",\"say\":\"It's okay. Just being here is enough.\"}],\"mood\":{\"affection\":3,\"trust\":0,\"stress\":0},\"memory\":\"\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "none",
+          "feeling": "shy",
+          "intensity": 1.0,
+          "say": "M-Maybe... or maybe we can just sit here until the rain starts?"
+        },
+        {
+          "cue": "hum",
+          "feeling": "warmth",
+          "intensity": 2.0,
+          "say": "It's okay. Just being here is enough."
+        }
+      ],
+      "raw_len": 399,
+      "raw_parse_ok": true,
+      "read": "small_talk",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "shy",
+          "intensity": 1,
+          "sprite": "06"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "warmth",
+          "intensity": 2,
+          "sprite": "02"
+        }
+      ],
+      "sim_clock_ms": 334792,
+      "simulated_ms": 24016,
+      "sprite": "02",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 12,
+      "turn_beats": [
+        {
+          "cue": "none",
+          "feeling": "shy",
+          "intensity": 1,
+          "say": "M-Maybe... or maybe we can just sit here until the rain starts?"
+        },
+        {
+          "cue": "hum",
+          "feeling": "warmth",
+          "intensity": 2,
+          "say": "It's okay. Just being here is enough."
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 11606
+    },
+    {
+      "chunks": 119,
+      "cues": [
+        {
+          "cue": "sigh",
+          "denied": "repeat_window"
+        }
+      ],
+      "displayed": [
+        "Oh, okay... I'll wait until next time then.",
+        "A-ah, it's so quiet now. Do you think he's gone?"
+      ],
+      "error": {},
+      "first_chunk_ms": 3999,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 378,
+        "chunks": 119,
+        "finish_reason": "stop",
+        "first_byte_ms": 79,
+        "first_say_ms": 8322,
+        "first_token_ms": 3986,
+        "generate_ms": 14795,
+        "pid": 0,
+        "ready_ms": 2,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 944.0,
+          "predicted_ms": 10807.175,
+          "predicted_n": 120.0,
+          "predicted_per_second": 11.011203205278,
+          "predicted_per_token_ms": 90.8165966386554,
+          "prompt_ms": 3973.343,
+          "prompt_n": 434.0,
+          "prompt_per_second": 109.227922180391,
+          "prompt_per_token_ms": 9.15516820276498
+        },
+        "total_ms": 14793
+      },
+      "music": "melancholy",
+      "player": "Later.",
+      "raw": "{\"read\":\"leaving\",\"inner\":\"He's leaving already... I'm so sad.\",\"music\":\"melancholy\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"sad\",\"intensity\":2,\"cue\":\"sigh\",\"say\":\"Oh, okay... I'll wait until next time then.\"},{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"none\",\"say\":\"A-ah, it's so quiet now. Do you think he's gone?\"}],\"mood\":{\"affection\":0,\"trust\":0,\"stress\":1},\"memory\":\"\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "sad",
+          "intensity": 2.0,
+          "say": "Oh, okay... I'll wait until next time then."
+        },
+        {
+          "cue": "none",
+          "feeling": "shy",
+          "intensity": 1.0,
+          "say": "A-ah, it's so quiet now. Do you think he's gone?"
+        }
+      ],
+      "raw_len": 378,
+      "raw_parse_ok": true,
+      "read": "leaving",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "sad",
+          "intensity": 2,
+          "sprite": "14"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "shy",
+          "intensity": 1,
+          "sprite": "06"
+        }
+      ],
+      "sim_clock_ms": 348570,
+      "simulated_ms": 28241,
+      "sprite": "06",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 13,
+      "turn_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "sad",
+          "intensity": 2,
+          "say": "Oh, okay... I'll wait until next time then."
+        },
+        {
+          "cue": "none",
+          "feeling": "shy",
+          "intensity": 1,
+          "say": "A-ah, it's so quiet now. Do you think he's gone?"
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 14882
+    },
+    {
+      "chunks": 108,
+      "cues": [
+        {
+          "bus": "Voice",
+          "cue": "sigh",
+          "file": "breath.ogg"
+        },
+        {
+          "cue": "heartbeat",
+          "denied": "budget"
+        }
+      ],
+      "displayed": [
+        "E-um, okay then...",
+        "But... you really don't have to go yet?"
+      ],
+      "error": {},
+      "first_chunk_ms": 4734,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 351,
+        "chunks": 108,
+        "finish_reason": "stop",
+        "first_byte_ms": 26,
+        "first_say_ms": 9067,
+        "first_token_ms": 4712,
+        "generate_ms": 14553,
+        "pid": 0,
+        "ready_ms": 3,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 944.0,
+          "predicted_ms": 9838.886,
+          "predicted_n": 109.0,
+          "predicted_per_second": 10.9768524607359,
+          "predicted_per_token_ms": 91.1007962962963,
+          "prompt_ms": 4700.619,
+          "prompt_n": 445.0,
+          "prompt_per_second": 94.6683830363618,
+          "prompt_per_token_ms": 10.5631887640449
+        },
+        "total_ms": 14550
+      },
+      "music": "melancholy",
+      "player": "I gotta go.",
+      "raw": "{\"read\":\"leaving\",\"inner\":\"He left... again. My heart is heavy.\",\"music\":\"melancholy\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"sad\",\"intensity\":2,\"cue\":\"sigh\",\"say\":\"E-um, okay then...\"},{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"heartbeat\",\"say\":\"But... you really don't have to go yet?\"}],\"mood\":{\"affection\":-1,\"trust\":0,\"stress\":1},\"memory\":\"\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "sad",
+          "intensity": 2.0,
+          "say": "E-um, okay then..."
+        },
+        {
+          "cue": "heartbeat",
+          "feeling": "shy",
+          "intensity": 1.0,
+          "say": "But... you really don't have to go yet?"
+        }
+      ],
+      "raw_len": 351,
+      "raw_parse_ok": true,
+      "read": "leaving",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "sad",
+          "intensity": 2,
+          "sprite": "14"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "shy",
+          "intensity": 1,
+          "sprite": "06"
+        }
+      ],
+      "sim_clock_ms": 364391,
+      "simulated_ms": 28061,
+      "sprite": "06",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 14,
+      "turn_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "sad",
+          "intensity": 2,
+          "say": "E-um, okay then..."
+        },
+        {
+          "cue": "heartbeat",
+          "feeling": "shy",
+          "intensity": 1,
+          "say": "But... you really don't have to go yet?"
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 14650
+    }
+  ],
+  "wall_elapsed_ms": 199137,
+  "warnings": []
+}
