@@ -88,8 +88,8 @@ var last_offered_actions: Array = []
 var last_read: String = ""
 var last_inner: String = ""
 
-var _overlay: CanvasLayer = null
 var transcript_logger: TranscriptLogger = null
+var _overlay: CanvasLayer = null
 
 var _active_stream: TurnStream = null
 var _parser: IncrementalJson = null

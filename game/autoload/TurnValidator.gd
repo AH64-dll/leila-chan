@@ -55,10 +55,7 @@ static func clear_cache() -> void:
 ## }
 static func detect_repetition_loop(text: String) -> Dictionary:
 	var res := {
-		"has_loop": false,
-		"clean_text": text,
-		"repeated_segment": "",
-		"cut_index": text.length()
+		"has_loop": false, "clean_text": text, "repeated_segment": "", "cut_index": text.length()
 	}
 	if text.strip_edges().is_empty():
 		return res
@@ -66,7 +63,7 @@ static func detect_repetition_loop(text: String) -> Dictionary:
 	# Tokenize words while tracking their character start/end positions in text
 	var token_regex := _get_word_regex()
 	var matches: Array[RegExMatch] = token_regex.search_all(text)
-	if matches.size() < 12: # Need at least 4-gram x 3 = 12 tokens
+	if matches.size() < 12:  # Need at least 4-gram x 3 = 12 tokens
 		return res
 
 	var words: Array[String] = []
@@ -118,23 +115,26 @@ static func repair_player_pronouns(say_text: String, player_name: String = "Senp
 	# Pattern: (^|(?<=[.!?]\s)|(?<=[.!?]["'”]\s)|(?<=[.!?]))\s*(He's|He|His|Him)\b
 	# Also handle case when sentence starts with quotes like: "He's being mean"
 	var reg := _get_sentence_start_male_regex()
-	var replaced := reg.sub(say_text, func(m: RegExMatch) -> String:
-		var prefix: String = m.get_string(1)
-		var pronoun: String = m.get_string(2)
-		var lower_pronoun := pronoun.to_lower()
+	var replaced := reg.sub(
+		say_text,
+		func(m: RegExMatch) -> String:
+			var prefix: String = m.get_string(1)
+			var pronoun: String = m.get_string(2)
+			var lower_pronoun := pronoun.to_lower()
 
-		match lower_pronoun:
-			"he's":
-				return prefix + "You're"
-			"he":
-				return prefix + "You"
-			"his":
-				return prefix + "Your"
-			"him":
-				return prefix + "You"
-			_:
-				return prefix + "You"
-	, true)
+			match lower_pronoun:
+				"he's":
+					return prefix + "You're"
+				"he":
+					return prefix + "You"
+				"his":
+					return prefix + "Your"
+				"him":
+					return prefix + "You"
+				_:
+					return prefix + "You",
+		true
+	)
 
 	# Replace literal "the player" with player_name or "you" depending on context
 	var player_regex := RegEx.new()
@@ -191,7 +191,8 @@ static func get_deflection_beat(player_name: String = "Senpai", seed_index: int 
 ## 4. Broken Stream / Truncated Fallback (docs/02 §7)
 ## Problem: Broken JSON (only seen at dose >= 8 unhardened)
 ## Detection: parse error
-## Handling: Show the partial `say` text through the glitch filter; sprite 29 (stage >= 3) or 00; log
+## Handling: Show the partial `say` text through the glitch filter; sprite 29 (stage >= 3) or 00;
+##   log
 ## -----------------------------------------------------------------------------
 static func get_broken_stream_fallback(partial_say: String, stage: int) -> Dictionary:
 	var data := _get_data()
@@ -203,7 +204,9 @@ static func get_broken_stream_fallback(partial_say: String, stage: int) -> Dicti
 		chosen_template = fallbacks.get("stage_0_2", {})
 
 	var fallback_say: String = str(chosen_template.get("say", "..."))
-	var feeling: String = str(chosen_template.get("feeling", "confusion" if stage < 3 else "glitch"))
+	var feeling: String = str(
+		chosen_template.get("feeling", "confusion" if stage < 3 else "glitch")
+	)
 	var intensity: int = int(chosen_template.get("intensity", 1 if stage < 3 else 3))
 	var cue: String = str(chosen_template.get("cue", "none" if stage < 3 else "static"))
 
