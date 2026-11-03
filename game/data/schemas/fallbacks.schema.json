@@ -10,6 +10,8 @@
     "broken_stream_fallbacks"
   ],
   "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "doc": { "type": "string" },
     "character_break_phrases": {
       "type": "array",
       "items": { "type": "string" },
@@ -54,6 +56,12 @@
           }
         }
       }
+    },
+    "male_referent_names": {
+      "description": "Lower-case names/nouns that mark a male referent other than the player. The docs/02 §7 pronoun repair only rewrites 'He' when none of these appears in the say or the recent player messages.",
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
     }
   },
   "additionalProperties": false

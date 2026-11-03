@@ -26,39 +26,24 @@ const SAMPLING_TABLE := {
 	5: {"temperature": 0.95, "top_p": 0.97, "repeat_penalty": 1.18, "dose": 8.0},
 }
 
+## docs/02 §6 rule 2: memories must not contain schema/meta words. A literal
+## schema-key list would reject benign facts the few-shots themselves produce
+## (`gave me a music box` — P1.05 CON-2, `read a book`, `bad mood`), so only
+## unambiguous meta jargon and snake_case intent labels are listed. Kept in
+## step with the prompt-lab list that measured CON-2 (tools/promptlab/lab.py).
 const META_WORDS := [
 	"player",
 	"stage",
 	"json",
-	"read",
-	"inner",
-	"music",
-	"fx",
-	"beats",
-	"feeling",
-	"intensity",
-	"cue",
-	"say",
-	"mood",
-	"memory",
-	"action",
-	"affection",
-	"trust",
-	"stress",
-	"greeting",
-	"flirt",
-	"compliment",
-	"gift",
-	"question",
-	"small_talk",
-	"tease",
-	"insult",
-	"apology",
-	"leaving",
+	"schema",
+	"enum",
+	"prompt",
+	"label",
+	"labels",
+	"request",
+	"response",
 	"jealousy_bait",
-	"boundary",
-	"cold",
-	"scared"
+	"small_talk",
 ]
 
 const DEBUG_OVERLAY_KEY := KEY_F3
@@ -607,11 +592,13 @@ func _handle_broken_json_fallback(stage: int) -> void:
 
 	# Overwrite the beat whose partial say is already queued on screen — a
 	# second say_chunk would duplicate the partial text. UI implementations
-	# without replace_beat get a plain chunk instead.
+	# without replace_beat get a plain chunk instead. Both paths leave the
+	# safety scan to the UI seam (ChatUI applies `text_filter`), exactly like
+	# replace_beat, so the text is filtered once and only once.
 	if chat_ui_node != null and chat_ui_node.has_method("replace_beat"):
 		chat_ui_node.replace_beat(0, fallback_say)
 	elif chat_ui_node != null and chat_ui_node.has_method("say_chunk"):
-		chat_ui_node.say_chunk(0, filter_output(fallback_say))
+		chat_ui_node.say_chunk(0, fallback_say)
 	beat_ended.emit(0, fb_beat)
 	_close_turn_success(_current_turn_data)
 
@@ -633,9 +620,10 @@ func _handle_empty_say_fallback() -> void:
 	)
 	_current_turn_data["action"] = "none"
 
-	# Show "..." (docs/02 §7: stage >= 3 gets a stuck typing indicator).
+	# Show "…" (docs/02 §7: stage >= 3 gets a stuck typing indicator).
 	# The player can't respond to nothing, so the turn still closes cleanly.
-	beat_say_chunk.emit(0, "…")
+	# replace_beat is the single text path — the beat is rewritten, not
+	# appended, so no second chunk is emitted for the same literal.
 	if chat_ui_node != null and chat_ui_node.has_method("replace_beat"):
 		chat_ui_node.replace_beat(0, "…")
 	elif chat_ui_node != null and chat_ui_node.has_method("say_chunk"):
@@ -666,8 +654,12 @@ func _apply_turn_repairs_and_deflections(turn_data: Dictionary, stage: int) -> v
 			beat["cue"] = def_beat.get("cue", beat.get("cue", "none"))
 			say_text = str(def_beat.get("say", ""))
 		else:
-			# 2. Third-person pronoun repair in say ("He's being mean" -> "You're being mean")
-			say_text = TurnValidator.repair_player_pronouns(say_text, player_name)
+			# 2. Third-person pronoun repair in say ("He's being mean" -> "You're being mean").
+			# The last player messages are the referent context: if the player
+			# just mentioned a brother or a rival, "He" may be that man.
+			say_text = TurnValidator.repair_player_pronouns(
+				say_text, player_name, last_player_inputs
+			)
 
 			# 3. Repetition loop detection (same 4-gram x3)
 			var loop_info: Dictionary = TurnValidator.detect_repetition_loop(say_text)
@@ -682,12 +674,13 @@ func _apply_turn_repairs_and_deflections(turn_data: Dictionary, stage: int) -> v
 
 		# The streamed chunks are already queued on screen; if the repair
 		# changed the say text, rewrite the queued beat so the screen shows
-		# the corrected line, not the raw one.
+		# the corrected line, not the raw one. The UI seam applies the safety
+		# filter, so this path passes raw text just like replace_beat does.
 		if say_text != original_say:
 			if chat_ui_node != null and chat_ui_node.has_method("replace_beat"):
 				chat_ui_node.replace_beat(beat_index, say_text)
 			elif chat_ui_node != null and chat_ui_node.has_method("say_chunk"):
-				chat_ui_node.say_chunk(beat_index, filter_output(say_text))
+				chat_ui_node.say_chunk(beat_index, say_text)
 
 	turn_data["beats"] = beats_list
 

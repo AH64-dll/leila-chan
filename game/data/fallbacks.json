@@ -83,5 +83,34 @@
       "cue": "static",
       "say": "...can you still hear me?"
     }
-  }
+  },
+  "male_referent_names": [
+    "brother",
+    "dad",
+    "daiki",
+    "daisuke",
+    "father",
+    "grandpa",
+    "haruto",
+    "hiro",
+    "jiro",
+    "kaito",
+    "kenji",
+    "kenta",
+    "masato",
+    "naoki",
+    "ren",
+    "ryo",
+    "ryota",
+    "satoshi",
+    "shota",
+    "sora",
+    "takumi",
+    "takeshi",
+    "taro",
+    "uncle",
+    "yuki",
+    "yusuke",
+    "yuto"
+  ]
 }
