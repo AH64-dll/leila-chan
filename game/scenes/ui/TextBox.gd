@@ -84,6 +84,25 @@ func say_chunk(beat_index: int, chunk: String) -> void:
 	push_warning("TextBox: say_chunk for unknown beat %d ignored" % beat_index)
 
 
+## Overwrite a beat's queued text (docs/02 §7 post-stream repairs: deflections,
+## pronoun fixes, loop cuts and the broken-JSON fallback). The beat dict is
+## shared with the typewriter, so characters already revealed stay on screen
+## and the rest reveals the corrected line. If the beat drained already, the
+## visible line keeps the streamed text — the chat log gets the corrected one
+## via beat_drained.
+func replace_beat_text(beat_index: int, text: String) -> void:
+	for beat: Dictionary in _beats:
+		if int(beat["i"]) == beat_index:
+			beat["text"] = text
+			hide_typing_indicator()
+			return
+	# Unknown beat: queue one so the correction is not silently lost.
+	var beat := {"i": beat_index, "text": text, "closed": true}
+	_beats.append(beat)
+	_writer.append_beat(beat)
+	hide_typing_indicator()
+
+
 ## The beat's say string closed. The display catches up asynchronously.
 func end_beat(beat_index: int) -> void:
 	for beat: Dictionary in _beats:

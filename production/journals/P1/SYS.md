@@ -63,3 +63,19 @@
 - Goldens: `game/tests/fixtures/prompts/*.json`, cases in `tests/helpers/PromptGoldenCases.gd`, regenerate via
   `tests/tools/prompt_builder_goldens.gd`. A prompt-file edit now fails `test_goldens_match_…` on purpose.
 - Measured: stage-1 loaded system message 990 estimated tokens (882 fixed + 108 dynamic) vs docs/07's ~900 line.
+
+
+## P1.09 Validation & fallbacks (round 1, swe2)
+- Implemented `game/autoload/TurnValidator.gd` + `game/data/fallbacks.json` for docs/02 §7: broken JSON,
+  empty say, repetition loop, pronoun repair, early AI-break deflection. `Director` dispatches all of them
+  at turn close (`_on_llm_completed`), per §4 step 6.
+- Convention: turn-content pools/phrases are data (`res://data/fallbacks.json`), never code literals; the
+  validator is a static RefCounted reached via class_name, same pattern as TurnSchema.
+- Handling effects reach the screen via the new `ChatUI.replace_beat` -> `TextBox.replace_beat_text`
+  (the Typewriter shares TextBox's beat dicts); repairs mutate turn_data before `_close_turn_success`.
+- Empty say: stage < 3 retries once at dose -2 — applied to BOTH Steering and table dose (`_dose_offset`);
+  stage >= 3 (or a failed retry) gets the "..." beat so the turn still closes cleanly.
+- Gotchas: `IncrementalJson.finish()` -> TRUNCATED on a dead stream (treat as broken JSON); `Array.slice`
+  end index is inclusive; `RegEx.sub` accepts only string replacements; JSON ints parse as floats.
+- Not built (flagged in handoff): the literal "glitch filter" pass over partial say (fx glitch + text
+  level is what exists), and the "typing indicator stuck for 3 s" is simplified to an immediate "..." close.

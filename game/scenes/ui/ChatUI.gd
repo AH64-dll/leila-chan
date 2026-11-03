@@ -113,6 +113,19 @@ func say_chunk(beat_index: int, chunk: String) -> void:
 	text_box.say_chunk(beat_index, filtered)
 
 
+## Overwrite a queued beat's text (docs/02 §7 post-stream repairs). Runs the
+## same injected safety filter as say_chunk — corrected text is still model
+## text and must never bypass the scan.
+func replace_beat(beat_index: int, text: String) -> void:
+	var filtered := text
+	if text_filter.is_valid():
+		filtered = str(text_filter.call(text))
+	elif not _filter_warning_emitted_this_turn:
+		_filter_warning_emitted_this_turn = true
+		push_warning("ChatUI: text_filter unset — replace_beat bypassed safety scan")
+	text_box.replace_beat_text(beat_index, filtered)
+
+
 func end_beat(beat_index: int) -> void:
 	text_box.end_beat(beat_index)
 

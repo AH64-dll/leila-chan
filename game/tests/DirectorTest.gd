@@ -158,3 +158,129 @@ func test_auto_fill_under_cue_restraint_stage_0() -> void:
 
 	# Auto-fill should have fired and reset quiet_turn_streak
 	assert_int(Director.quiet_turn_streak).is_equal(0)
+
+
+func test_docs_02_section_7_broken_json_handling() -> void:
+	GameState.stage = 0
+	# Feed partial say before stream breaks with invalid JSON syntax
+	var chunk1 := (
+		'{"read":"greeting","beats":['
+		+ '{"feeling":"joy","intensity":1,"cue":"none","say":"Wait, what'
+	)
+	var chunk2 := " BROKEN_SYNTAX_ERROR"
+	_fake_backend.chunks = PackedStringArray([chunk1, chunk2])
+
+	var completed_box := [{}]
+	Director.turn_completed.connect(
+		func(_idx: int, data: Dictionary) -> void: completed_box[0] = data
+	)
+
+	Director.submit_player_input("Hello!")
+	await _await_until(func() -> bool: return not (completed_box[0] as Dictionary).is_empty())
+
+	var data: Dictionary = completed_box[0]
+	assert_bool(data.is_empty()).is_false()
+	var beats: Array = data.get("beats", [])
+	assert_int(beats.size()).is_greater(0)
+	# Fallback say contains partial say with ellipsis
+	var say_text: String = str((beats[0] as Dictionary).get("say", ""))
+	assert_bool(say_text.begins_with("Wait, what")).is_true()
+
+
+func test_docs_02_section_7_character_break_deflection_and_meta_curiosity() -> void:
+	GameState.stage = 0
+	var initial_curiosity := int(GameState.profile.get("meta_curiosity", 0))
+
+	var chunk := (
+		'{"read":"question","inner":"test","music":"keep","fx":"none",'
+		+ '"beats":[{"feeling":"coldness","intensity":1,"cue":"none",'
+		+ '"say":"As an AI, I cannot feel love."}],'
+		+ '"mood":{"affection":0,"trust":0,"stress":0},"memory":"","action":"none"}'
+	)
+	_fake_backend.chunks = PackedStringArray([chunk])
+
+	var completed_box := [{}]
+	Director.turn_completed.connect(
+		func(_idx: int, data: Dictionary) -> void: completed_box[0] = data
+	)
+
+	Director.submit_player_input("Do you love me?")
+	await _await_until(func() -> bool: return not (completed_box[0] as Dictionary).is_empty())
+
+	var data: Dictionary = completed_box[0]
+	var beats: Array = data.get("beats", [])
+	var say_text: String = str((beats[0] as Dictionary).get("say", ""))
+	# Replaced with deflection pool, never raw "As an AI"
+	assert_bool(say_text.to_lower().contains("as an ai")).is_false()
+	# Incremented meta_curiosity
+	assert_int(int(GameState.profile.get("meta_curiosity", 0))).is_equal(initial_curiosity + 1)
+
+
+func test_docs_02_section_7_pronoun_repair_in_director() -> void:
+	GameState.stage = 0
+	var chunk := (
+		'{"read":"small_talk","inner":"he said so","music":"keep","fx":"none",'
+		+ '"beats":[{"feeling":"angry","intensity":1,"cue":"none","say":"He is always complaining."}],'
+		+ '"mood":{"affection":0,"trust":0,"stress":0},"memory":"","action":"none"}'
+	)
+	_fake_backend.chunks = PackedStringArray([chunk])
+
+	var completed_box := [{}]
+	Director.turn_completed.connect(
+		func(_idx: int, data: Dictionary) -> void: completed_box[0] = data
+	)
+
+	Director.submit_player_input("I had a rough day.")
+	await _await_until(func() -> bool: return not (completed_box[0] as Dictionary).is_empty())
+
+	var data: Dictionary = completed_box[0]
+	var beats: Array = data.get("beats", [])
+	var say_text: String = str((beats[0] as Dictionary).get("say", ""))
+	assert_str(say_text).is_equal("You is always complaining.")
+
+
+func test_docs_02_section_7_repetition_loop_cut_in_director() -> void:
+	GameState.stage = 0
+	var chunk := (
+		'{"read":"small_talk","inner":"looping","music":"keep","fx":"none",'
+		+ '"beats":[{"feeling":"shy","intensity":1,"cue":"none",'
+		+ '"say":"I love you so much I love you so much I love you so much forever"}],'
+		+ '"mood":{"affection":0,"trust":0,"stress":0},"memory":"","action":"none"}'
+	)
+	_fake_backend.chunks = PackedStringArray([chunk])
+
+	var completed_box := [{}]
+	Director.turn_completed.connect(
+		func(_idx: int, data: Dictionary) -> void: completed_box[0] = data
+	)
+
+	Director.submit_player_input("Hello.")
+	await _await_until(func() -> bool: return not (completed_box[0] as Dictionary).is_empty())
+
+	var data: Dictionary = completed_box[0]
+	var beats: Array = data.get("beats", [])
+	var say_text: String = str((beats[0] as Dictionary).get("say", ""))
+	assert_str(say_text).is_equal("I love you so much")
+
+
+func test_docs_02_section_7_empty_say_stage_3_fallback() -> void:
+	GameState.stage = 3
+	var chunk := (
+		'{"read":"question","inner":"silent","music":"keep","fx":"none",'
+		+ '"beats":[{"feeling":"apathy","intensity":1,"cue":"none","say":""}],'
+		+ '"mood":{"affection":0,"trust":0,"stress":0},"memory":"","action":"none"}'
+	)
+	_fake_backend.chunks = PackedStringArray([chunk])
+
+	var completed_box := [{}]
+	Director.turn_completed.connect(
+		func(_idx: int, data: Dictionary) -> void: completed_box[0] = data
+	)
+
+	Director.submit_player_input("Are you there?")
+	await _await_until(func() -> bool: return not (completed_box[0] as Dictionary).is_empty())
+
+	var data: Dictionary = completed_box[0]
+	var beats: Array = data.get("beats", [])
+	var say_text: String = str((beats[0] as Dictionary).get("say", ""))
+	assert_str(say_text).is_equal("…")
