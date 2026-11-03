@@ -4,13 +4,15 @@ constrains output with the docs/02 §3 turn schema (stage 0 / stage 1 gates),
 and prints each raw turn for transcript evidence.
 """
 import json, sys, time, urllib.request
+from pathlib import Path
 
-PROMPTS = r"D:\lila-wt\P1.05\game\data\prompts"
+ROOT = Path(__file__).resolve().parents[3]
+PROMPTS = ROOT / "game" / "data" / "prompts"
 PLAYER = "Ren"
 PORT = 8089
 
 def read(name):
-    with open(f"{PROMPTS}\\{name}", encoding="utf-8") as f:
+    with open(PROMPTS / name, encoding="utf-8") as f:
         return f.read().strip()
 
 def system_prompt(stage):

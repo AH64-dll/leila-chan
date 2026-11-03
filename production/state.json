@@ -817,7 +817,26 @@
       "status": "in_review",
       "agent": "gemini-3.8-flash",
       "round": 3,
-      "reviews": [],
+      "reviews": [
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 3,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.28-code-r3.md",
+          "ts": "2026-11-03T08:11:48+02:00",
+          "declared": "grok-4.6"
+        },
+        {
+          "kind": "content",
+          "verdict": "approved",
+          "round": 3,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.28-content-r3.md",
+          "ts": "2026-11-03T08:16:05+02:00",
+          "declared": "grok-4.6"
+        }
+      ],
       "started": "2026-11-03T02:02:41+02:00",
       "handoff": "production/handoffs/P1.28.md"
     },
@@ -825,7 +844,17 @@
       "status": "in_review",
       "agent": "gemini-3.8-flash",
       "round": 1,
-      "reviews": [],
+      "reviews": [
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.20-code-r1.md",
+          "ts": "2026-11-03T08:11:55+02:00",
+          "declared": "grok-4.6"
+        }
+      ],
       "started": "2026-11-03T07:13:08+02:00",
       "handoff": "production/handoffs/P1.20.md"
     },
@@ -851,11 +880,19 @@
       "started": "2026-11-03T07:41:07+02:00"
     },
     "P1.23": {
+      "status": "in_review",
+      "agent": "swe2",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-03T07:59:41+02:00",
+      "handoff": "production/handoffs/P1.23.md"
+    },
+    "P1.11": {
       "status": "in_progress",
       "agent": "swe2",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-03T07:59:41+02:00"
+      "started": "2026-11-03T08:12:19+02:00"
     }
   },
   "history": [
@@ -2166,6 +2203,36 @@
       "event": "in_progress->in_review",
       "ref": "P1.28",
       "note": ""
+    },
+    {
+      "ts": "2026-11-03T08:11:48+02:00",
+      "event": "review:code:approved",
+      "ref": "P1.28",
+      "note": "production/reviews/P1.28-code-r3.md"
+    },
+    {
+      "ts": "2026-11-03T08:11:55+02:00",
+      "event": "review:code:approved",
+      "ref": "P1.20",
+      "note": "production/reviews/P1.20-code-r1.md"
+    },
+    {
+      "ts": "2026-11-03T08:12:19+02:00",
+      "event": "todo->in_progress",
+      "ref": "P1.11",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T08:14:10+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P1.23",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T08:16:05+02:00",
+      "event": "review:content:approved",
+      "ref": "P1.28",
+      "note": "production/reviews/P1.28-content-r3.md"
     }
   ]
 }

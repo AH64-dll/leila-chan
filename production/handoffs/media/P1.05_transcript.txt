@@ -1,4 +1,4 @@
-=== stage 0 | player: Hi Leila-chan! This café is nice. How did you find it? | 2.76s | VALID
+=== stage 0 | player: Hi Leila-chan! This cafÃ© is nice. How did you find it? | 2.76s | VALID
 {"read":"greeting","inner":"He's talking about me too. A bit of a crush already.","music":"keep","fx":"none","beats":[{"feeling":"warmth","intensity":2,"cue":"none","say":"I picked it out yesterday... it was just so quiet and cozy, like home."}],"mood":{"affection":1,"trust":0,"stress":0},"memory":"","action":"none"}
     > [warmth2|none] I picked it out yesterday... it was just so quiet and cozy, like home.
 
