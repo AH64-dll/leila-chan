@@ -10,12 +10,17 @@ var fail_after := -1
 var block_until_cancel := false
 var poll_ms := 1
 var raw_result := {}  # non-empty: returned verbatim, bypassing all script logic
+var metrics := {}
 
 var calls := 0
 var seen_request: TurnRequest
 var saw_cancel := false
 var worker_thread_id := -1
 
+
+
+func last_metrics() -> Dictionary:
+	return metrics.duplicate(true)
 
 func generate(request: TurnRequest, on_token: Callable, cancel: LLMCancelToken) -> Dictionary:
 	calls += 1

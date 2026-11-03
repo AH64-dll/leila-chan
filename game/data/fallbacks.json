@@ -1,0 +1,59 @@
+{
+  "character_break_phrases": [
+    "as an ai",
+    "as an artificial intelligence",
+    "as a language model",
+    "i am an ai",
+    "i am a language model",
+    "i'm an ai",
+    "i'm a language model",
+    "as a large language model",
+    "i am just an ai",
+    "i'm just an ai",
+    "my programming",
+    "openai",
+    "anthropic",
+    "qwen",
+    "my training data"
+  ],
+  "deflection_pool": [
+    {
+      "feeling": "confusion",
+      "intensity": 1,
+      "cue": "giggle",
+      "say": "S-sorry, my mind wandered for a second... What were we talking about, {player_name}?"
+    },
+    {
+      "feeling": "shyness",
+      "intensity": 2,
+      "cue": "none",
+      "say": "Don't tease me like that! I'm right here in front of you."
+    },
+    {
+      "feeling": "smugness",
+      "intensity": 1,
+      "cue": "none",
+      "say": "Are you trying to confuse me on purpose? You know that won't work!"
+    },
+    {
+      "feeling": "confusion",
+      "intensity": 2,
+      "cue": "none",
+      "say": "Wait, did you say something strange? Sometimes the café noise makes it hard to hear."
+    }
+  ],
+  "broken_stream_fallbacks": {
+    "stage_0_2": {
+      "feeling": "confusion",
+      "intensity": 1,
+      "cue": "none",
+      "say": "...Sorry, I lost my train of thought for a moment."
+    },
+    "stage_3_plus": {
+      "feeling": "glitch",
+      "intensity": 3,
+      "cue": "static",
+      "say": "...Wait... something didn't connect... who are you looking at?"
+    }
+  }
+}

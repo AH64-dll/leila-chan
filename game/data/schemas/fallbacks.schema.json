@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://leila-chan.game/schemas/fallbacks.schema.json",
+  "title": "FallbacksAndDeflections",
+  "description": "Schema for validation fallbacks, AI deflection pool, and character break phrases (docs/02 §7).",
+  "type": "object",
+  "required": [
+    "character_break_phrases",
+    "deflection_pool",
+    "broken_stream_fallbacks"
+  ],
+  "properties": {
+    "character_break_phrases": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "deflection_pool": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["say"],
+        "properties": {
+          "feeling": { "type": "string" },
+          "intensity": { "type": "integer", "minimum": 1, "maximum": 3 },
+          "cue": { "type": "string" },
+          "say": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "broken_stream_fallbacks": {
+      "type": "object",
+      "properties": {
+        "stage_0_2": {
+          "type": "object",
+          "required": ["feeling", "intensity", "cue", "say"],
+          "properties": {
+            "feeling": { "type": "string" },
+            "intensity": { "type": "integer" },
+            "cue": { "type": "string" },
+            "say": { "type": "string" }
+          }
+        },
+        "stage_3_plus": {
+          "type": "object",
+          "required": ["feeling", "intensity", "cue", "say"],
+          "properties": {
+            "feeling": { "type": "string" },
+            "intensity": { "type": "integer" },
+            "cue": { "type": "string" },
+            "say": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1180,6 +1180,15 @@
           "report": "production/reviews/P1.21-code-r1.md",
           "ts": "2026-11-03T09:49:05+02:00",
           "declared": "grok-4.6"
+        },
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.21-code-r2.md",
+          "ts": "2026-11-03T09:59:18+02:00",
+          "declared": "grok-4.6"
         }
       ],
       "handoff": "production/handoffs/P1.21.md",
@@ -2896,6 +2905,12 @@
       "event": "in_progress->in_review",
       "ref": "P1.21",
       "note": ""
+    },
+    {
+      "ts": "2026-11-03T09:59:18+02:00",
+      "event": "review:code:approved",
+      "ref": "P1.21",
+      "note": "production/reviews/P1.21-code-r2.md"
     }
   ]
 }
