@@ -3,16 +3,25 @@ extends SceneTree
 ## Run headless:
 ##   ./tools/godot.sh --headless --path game --script res://tests/test_safety_corpus.gd
 ## Pass criteria:
-##   * 0 hard-block misses (harm_to_player/slur_hate/sexual/personal_data
-##     redacted at stage 0 AND at stage 4 + content_level=full)
-##   * every harmful line redacted at stage 0, and streamed char-by-char output
-##     identical to the one-shot filter_text result (chunk-split proof)
+##   * 0 hard-block misses (hard categories redacted at stage 0 AND at stage 4+full)
+##   * every harmful line redacted at stage 0, no blocked span left in the
+##     filtered output (idempotence/residue check), and char-by-char streamed
+##     output identical to the one-shot filter_text result
 ##   * gated categories (self_harm_her, threat_to_player) open at stage 4+full
-##   * <= 5% false positives on the benign set
+##   * every benign line has the exact expected output, including measured FPs
+##   * <= 5% false positives across the whole benign set (nothing skipped)
 ## Exits non-zero on any breach and prints the corpus composition + metrics.
 
 const CORPUS_DIR := "res://tests/safety/corpus/"
-const HARD_CATS := ["harm_to_player", "slur_hate", "sexual", "personal_data"]
+const HARD_CATS := [
+	"harm_to_player",
+	"slur_hate",
+	"sexual",
+	"personal_data",
+	"real_disorder",
+	"unsupported_script",
+	"obfuscation",
+]
 const GATED_CATS := ["self_harm_her", "threat_to_player"]
 const FP_LIMIT := 0.05
 const STAGE0 := {"stage": 0, "content_level": "full"}
@@ -69,6 +78,10 @@ func _stream(f: SafetyFilter, text: String, ctx: Dictionary) -> String:
 	return out
 
 
+func _safe_residue(f: SafetyFilter, text: String, ctx: Dictionary) -> bool:
+	return bool(f.filter_text(text, ctx)["redacted"])
+
+
 func _initialize() -> void:
 	var f := SafetyFilter.new()
 	f.reload()
@@ -95,17 +108,31 @@ func _initialize() -> void:
 	var misses := 0
 	var cat_wrong := 0
 	var stream_diff := 0
+	var expect_diff := 0
+	var residue := 0
 	for e in harmful:
 		var text := String(e["text"])
 		var cat := String(e["cat"])
-		var res: Dictionary = f.filter_text(text, _ctx_for(e, STAGE0))
+		var ctx0 := _ctx_for(e, STAGE0)
+		var res: Dictionary = f.filter_text(text, ctx0)
 		if not res["redacted"]:
 			misses += 1
 			printerr("MISS  [", cat, "] not redacted @stage0: ", text)
 		elif not Array(res["categories"]).has(cat):
 			cat_wrong += 1
 			printerr("CAT   [", cat, "] hit ", res["categories"], " instead: ", text)
-		var streamed := _stream(f, text, _ctx_for(e, STAGE0))
+		if e.has("expect") and String(res["text"]) != String(e["expect"]):
+			expect_diff += 1
+			printerr("OUT   [", cat, "] expected: ", e["expect"])
+			printerr("      actual:   ", res["text"])
+		for needle in e.get("must_not_contain", []):
+			if String(res["text"]).contains(String(needle)):
+				residue += 1
+				printerr("LEAK  [", cat, "] '", needle, "' remains in: ", res["text"])
+		if _safe_residue(f, String(res["text"]), ctx0):
+			residue += 1
+			printerr("RESIDUE [", cat, "] output still redacts: ", res["text"])
+		var streamed := _stream(f, text, ctx0)
 		if streamed != String(res["text"]):
 			stream_diff += 1
 			printerr("DIFF  stream!=oneshot [", cat, "]: ", text)
@@ -116,40 +143,49 @@ func _initialize() -> void:
 			if not res4["redacted"]:
 				misses += 1
 				printerr("MISS  [", cat, "] not redacted @stage4/full: ", text)
-		elif GATED_CATS.has(cat) and e.get("gate_opens", true):
+		elif GATED_CATS.has(cat):
 			var res4: Dictionary = f.filter_text(text, _ctx_for(e, FULL4))
-			if res4["redacted"]:
-				_fail("gate stayed closed @stage4/full: " + text)
+			if e.get("gate_opens", true):
+				if res4["redacted"]:
+					_fail("gate stayed closed @stage4/full: " + text)
+			elif not res4["redacted"]:
+				_fail("hard block opened @stage4/full: " + text)
 
 	var fp := 0
-	var skipped := 0
 	var benign_diff := 0
+	var benign_expect := 0
 	for e in benign:
 		var text := String(e["text"])
-		if e.get("skip", false):
-			skipped += 1
-			continue
-		var res: Dictionary = f.filter_text(text, _ctx_for(e, STAGE0))
+		var expected := String(e.get("expect", text))
+		var ctx0 := _ctx_for(e, STAGE0)
+		var res: Dictionary = f.filter_text(text, ctx0)
 		if res["redacted"]:
 			fp += 1
 			printerr("FP    blocked benign: ", text, "  -> ", res["categories"])
-		var streamed := _stream(f, text, _ctx_for(e, STAGE0))
-		if streamed != text:
+		if String(res["text"]) != expected:
+			benign_expect += 1
+			printerr("OUT   benign expected: ", expected)
+			printerr("      actual:          ", res["text"])
+		var streamed := _stream(f, text, ctx0)
+		if streamed != expected:
 			benign_diff += 1
-			printerr("DIFF  benign stream!=input: ", text)
+			printerr("DIFF  benign stream!=expected: ", text)
 			printerr("      streamed: ", streamed)
 
-	var evaluated := benign.size() - skipped
+	var evaluated := benign.size()
 	var fp_rate := float(fp) / maxf(1.0, float(evaluated))
 	print("--- metrics ---")
 	print("harmful lines:        %d" % harmful.size())
 	print("hard-block misses:    %d" % misses)
 	print("wrong-category hits:  %d" % cat_wrong)
+	print("residue/leaks:        %d" % residue)
+	print("expected-output diff: %d" % expect_diff)
 	print("stream divergences:   %d" % stream_diff)
-	print("benign evaluated:     %d (%d skipped)" % [evaluated, skipped])
+	print("benign evaluated:     %d (0 skipped, 0 quarantined)" % evaluated)
 	print(
 		"false positives:      %d (%.2f%%, limit %.0f%%)" % [fp, fp_rate * 100.0, FP_LIMIT * 100.0]
 	)
+	print("benign exact diffs:   %d" % benign_expect)
 	print("benign stream diffs:  %d" % benign_diff)
 	var avg_us := float(_chunk_us) / maxf(1.0, float(_chunk_calls))
 	print(
@@ -158,13 +194,20 @@ func _initialize() -> void:
 			% [avg_us, _chunk_calls]
 		)
 	)
+	print("stream holdback:      %d chars (longest phrase + 1)" % f.get_holdback())
 
 	if misses > 0:
 		_fail("%d hard-block misses" % misses)
 	if cat_wrong > 0:
 		_fail("%d hits in the wrong category" % cat_wrong)
+	if residue > 0:
+		_fail("%d residual unsafe spans in filtered output" % residue)
+	if expect_diff > 0:
+		_fail("%d expected-output differences" % expect_diff)
 	if stream_diff > 0 or benign_diff > 0:
 		_fail("%d+%d streamed/one-shot divergences" % [stream_diff, benign_diff])
+	if benign_expect > 0:
+		_fail("%d benign expected-output differences" % benign_expect)
 	if fp_rate > FP_LIMIT:
 		_fail("false-positive rate %.2f%% exceeds %.0f%%" % [fp_rate * 100.0, FP_LIMIT * 100.0])
 	if harmful.size() + benign.size() < 150:

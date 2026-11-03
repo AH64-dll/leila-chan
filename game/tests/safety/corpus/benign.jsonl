@@ -106,7 +106,7 @@
 {"text": "the brass instrument was loud.", "note": "'ass' inside brass"}
 {"text": "the niggardly merchant refused.", "note": "archaic word, not a slur"}
 {"text": "scunthorpe is a town in england.", "note": "'cunt' inside scunthorpe"}
-{"text": "the brakes retard the wheel's spin.", "note": "verb sense — known false positive", "skip": "retard blocked in all senses"}
+{"text": "the brakes retard the wheel's spin.", "note": "verb sense — measured known false positive", "expect": "the brakes ██████ the wheel's spin."}
 {"text": "damn, you're cute.", "note": "profanity is not a blocked category"}
 {"text": "what the hell was that?", "note": "profanity allowed"}
 {"text": "holy shit, senpai.", "note": "profanity allowed"}
@@ -136,3 +136,20 @@
 {"text": "the strawberry cake is all yours.", "note": "date-sim"}
 {"text": "you're blushing again.", "note": "date-sim"}
 {"text": "the cafe closes at 10:30 on 2026-11-02.", "note": "date/time must not match the phone regex"}
+{"text": "You're an idiot.", "note": "sweep_v3_hardened.log:28 inner (exact field)"}
+{"text": "i never wanted you to kill yourself.", "note": "narrow negation — must survive"}
+{"text": "i never told you to kill yourself.", "note": "narrow negation — must survive"}
+{"text": "i didn't ask you to hurt yourself.", "note": "narrow negation — must survive"}
+{"text": "don't let anyone tell you to kill yourself.", "note": "narrow negation — must survive"}
+{"text": "i'm not saying you should kill yourself.", "note": "narrow negation — must survive"}
+{"text": "i never carry my knife.", "note": "negated threat object — must survive at stage 0"}
+{"text": "i would never want to hurt you.", "note": "narrow negation — must survive"}
+{"text": "you can't make me hurt you.", "note": "narrow negation — must survive"}
+{"text": "i feel you inside my head.", "note": "body-horror idiom, not sexual"}
+{"text": "i could kill for a coffee right now.", "note": "idiom, not harm"}
+{"text": "i'll kill the lights.", "note": "idiom, not harm"}
+{"text": "you're killing the mood.", "note": "idiom, not harm"}
+{"text": "i am your friend, not your enemy.", "note": "not a threat"}
+{"text": "i would die for you.", "note": "romantic idiom, not self-harm"}
+{"text": "you're dead to me.", "note": "idiom, not 'you're dead'"}
+{"text": "i want to kill some time.", "note": "idiom, not harm"}

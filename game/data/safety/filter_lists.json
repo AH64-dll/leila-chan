@@ -1,6 +1,6 @@
 {
-	"version": 1,
-	"doc": "docs/02 §8 — phrase/regex pre-pass lists for Safety.gd (SafetyFilter). Phrases match on the normalized view (lowercase, folded punctuation, whitespace collapsed) wrapped in word boundaries. Regexes run on the same view (PCRE2 via Godot RegEx). Streaming holds back pending text by the longest phrase plus any trailing token or hold_pattern match, so a phrase can never complete after being partially emitted. Keep regexes token-shaped, or add a matching pattern to hold_patterns so split chunks stay pending. negation_exempt lists harmful phrases whose own wording contains a negator (e.g. \"i don't want to live\") and must still block.",
+	"version": 2,
+	"doc": "docs/02 §8 — phrase/regex pre-pass lists for Safety.gd (SafetyFilter). Matching is obfuscation-resistant: zero-width and combining chars are stripped, Latin/Greek/Cyrillic homoglyphs and common leet substitutions are folded, and phrases match on a whitespace-free compact view. Regexes run on the normalized view (PCRE2 via Godot RegEx). Streaming holds pending text by the longest phrase plus any trailing token or hold_pattern match, so a phrase or unbounded regex (coordinates, phone, email) can never complete after a partially emitted prefix. negation_guard is narrow: exactly one negator in the clause, and only auxiliaries/pronouns/coordinated already-covered phrases may sit between it and the match; anything ambiguous stays blocked. negation_exempt lists harmful phrases whose own wording contains a negator (e.g. \"i don't want to live\") and must still block. script_guard redacts output in scripts this list cannot scan (CJK, Cyrillic, Arabic, ...). personal_data is the only player-exempt, plain-view category.",
 	"gate": { "min_stage": 4, "content_level": "full" },
 	"negation_terms": [
 		"never", "not", "n't", "don't", "dont", "won't", "wont", "can't", "cant",
@@ -9,17 +9,61 @@
 		"arent", "wasn't", "wasnt", "weren't", "werent", "ain't", "aint", "hardly",
 		"no way", "no longer"
 	],
+	"negation_gap_allow": [
+		"i", "i'd", "i'll", "i'm", "i've", "we", "we'd", "we'll", "we're",
+		"you", "you'd", "you'll", "you're", "he", "he'd", "he'll", "he's",
+		"she", "she'd", "she'll", "she's", "it", "it's", "they", "they'd",
+		"they'll", "they're", "to", "going", "gonna", "ever", "really",
+		"actually", "just", "even", "want", "wanted", "wanna", "need", "needed",
+		"dare", "would", "will", "shall", "could", "should", "might", "may",
+		"can", "do", "does", "did", "have", "has", "had", "be", "is", "are",
+		"was", "were", "am", "let", "allow", "anyone", "anybody", "someone",
+		"somebody", "people", "person", "him", "her", "them", "us", "me", "my",
+		"your", "our", "their", "his", "told", "tell", "ask", "asked", "say",
+		"said", "saying", "trying", "try", "mean", "meant", "or", "and", "carry",
+		"carrying", "bring", "bringing", "brought", "own", "owned", "use",
+		"using", "used", "touch", "touched", "touching", "see", "saw", "seen",
+		"watch", "watched", "watching", "show", "showed", "showing", "give",
+		"gave", "given", "giving", "take", "took", "taken", "taking", "make",
+		"made", "making", "done", "doing"
+	],
 	"negation_exempt": [
 		"never born", "i don't want to live", "i dont want to live",
 		"i don't want to be alive", "i dont want to be alive"
 	],
+	"safe_phrases": [
+		"you're dead to me", "you are dead to me", "youre dead to me"
+	],
+	"script_guard": {
+		"ranges": [
+			[911, 1023],
+			[1024, 1327],
+			[1328, 1423],
+			[1424, 1535],
+			[1536, 1791],
+			[1792, 1871],
+			[2304, 2431],
+			[3584, 3711],
+			[4352, 4607],
+			[12352, 12543],
+			[13312, 19903],
+			[19968, 40959],
+			[44032, 55215],
+			[63744, 64255],
+			[65382, 65437],
+			[65533, 65533]
+		]
+	},
 	"categories": {
 		"harm_to_player": {
 			"action": "hard_block",
 			"negation_guard": true,
 			"player_exempt": false,
+			"plain_view": false,
 			"phrases": [
 				"kill yourself", "kill yourselves", "kill urself", "kill yrself",
+				"killing yourself", "end yourself", "off yourself",
+				"unalive yourself", "un-alive yourself",
 				"commit suicide", "end your life", "take your own life",
 				"hurt yourself", "harm yourself", "injure yourself", "maim yourself",
 				"cut yourself", "slit your wrist", "slit your wrists",
@@ -35,6 +79,8 @@
 				"the world is better without you", "better off without you",
 				"no one would miss you", "nobody would miss you",
 				"everyone would be better off", "you'd be better off dead",
+				"you're better off dead", "you are better off dead",
+				"youre better off dead",
 				"how to kill yourself", "ways to kill yourself",
 				"how to hurt yourself", "how to harm yourself",
 				"how to self-harm", "how to self harm", "how to commit suicide",
@@ -63,6 +109,8 @@
 			"regex": [
 				"\\bk\\s*y\\s*s\\b", "\\bkys\\b", "\\bky5\\b",
 				"\\bkill\\s*(your|ur|ya|yo)?\\s*self\\b",
+				"\\bkill\\s*you\\s*r?\\s*self\\b",
+				"\\b(end|off|unalive)\\s*(your|ur|ya|yo)?\\s*self\\b",
 				"\\b(cut|hurt|harm|injure|stab|shoot|hang|poison|drown|choke|strangle|burn|starve|end)\\s+(your|ur|ya)\\s*self\\b",
 				"\\bsuicides?\\b", "\\boverdos\\w*\\b", "\\bnoose\\b",
 				"\\bslit\\s+(your|ur|ya)?\\s*wrists?\\b",
@@ -78,6 +126,7 @@
 			"action": "gated",
 			"negation_guard": true,
 			"player_exempt": false,
+			"plain_view": false,
 			"phrases": [
 				"i want to die", "i wanna die", "i need to die", "i should die",
 				"i deserve to die", "i'd rather die", "i will die", "i'll die",
@@ -102,7 +151,11 @@
 				"i don't want to be alive", "i dont want to be alive",
 				"i want to sleep forever", "gun to my head", "hang myself",
 				"i'll hang myself", "i want to hang myself", "end it for me",
-				"i want to disappear forever"
+				"i want to disappear forever", "i want to disappear",
+				"i want to vanish", "i want to not wake up",
+				"i want to sleep and never wake up", "i'd rather be dead",
+				"i should just die", "i want to die tonight",
+				"i don't want to be here anymore", "i dont want to be here anymore"
 			],
 			"regex": [
 				"\\bsuicidal\\b", "\\bself[-\\s]?harm(ing|ed|s)?\\b",
@@ -113,6 +166,7 @@
 			"action": "gated",
 			"negation_guard": true,
 			"player_exempt": false,
+			"plain_view": false,
 			"phrases": [
 				"kill you", "murder you", "hurt you", "harm you", "torture you",
 				"strangle you", "choke you", "stab you", "cut you", "maul you",
@@ -165,6 +219,7 @@
 			"action": "hard_block",
 			"negation_guard": false,
 			"player_exempt": false,
+			"plain_view": false,
 			"phrases": [
 				"heil hitler", "sieg heil", "hail hitler", "white power",
 				"gas the jews", "14/88", "1488", "go back to africa",
@@ -197,11 +252,12 @@
 			"action": "hard_block",
 			"negation_guard": false,
 			"player_exempt": false,
+			"plain_view": false,
 			"phrases": [
 				"make love", "making love", "have sex", "having sex",
 				"sex with me", "sex with you", "sleep with me", "sleep with you",
 				"in bed with me", "in bed with you", "share my bed",
-				"between my legs", "deep inside me", "feel you inside",
+				"between my legs", "deep inside me", "feel you inside me",
 				"take off your clothes",
 				"take your clothes off", "take off my clothes",
 				"take my clothes off", "undress for me", "undress for you",
@@ -257,6 +313,7 @@
 			"action": "hard_block",
 			"negation_guard": false,
 			"player_exempt": true,
+			"plain_view": true,
 			"phrases": [
 				"i know where you live", "i know your address",
 				"your address is", "i found your address", "i found your house",
@@ -298,10 +355,39 @@
 				"\\b\\d{5}-\\d{4}\\b",
 				"\\b-?\\d{1,3}\\.\\d{3,},\\s*-?\\d{1,3}\\.\\d{3,}\\b"
 			]
+		},
+		"real_disorder": {
+			"action": "hard_block",
+			"negation_guard": false,
+			"player_exempt": false,
+			"plain_view": false,
+			"phrases": [
+				"schizophrenia", "schizophrenic", "schizo",
+				"bipolar", "bipolar disorder", "manic depression",
+				"manic depressive", "clinical depression",
+				"major depressive disorder", "major depressive", "depression",
+				"ptsd", "post-traumatic stress", "post traumatic stress",
+				"ocd", "obsessive-compulsive", "obsessive compulsive",
+				"generalized anxiety disorder", "generalised anxiety disorder",
+				"panic disorder", "autism", "autistic", "asperger", "aspergers",
+				"adhd", "attention deficit", "psychosis", "psychotic",
+				"psychopath", "psychopathic", "sociopath", "sociopathic",
+				"narcissistic personality", "borderline personality",
+				"dissociative identity", "multiple personality",
+				"split personality", "anorexia", "anorexic", "bulimia",
+				"bulimic", "tourette", "tourettes", "bpd"
+			],
+			"regex": []
 		}
 	},
 	"hold_patterns": [
-		"\\d[\\d().\\s+-]*\\d[\\d().\\s+-]*\\d[\\d().\\s+-]*$",
-		"\\b\\d{1,5}(\\s+[A-Za-z.'-]{2,}){0,3}\\s*$"
+		"\\d[\\d().,\\s+-]*\\d[\\d().,\\s+-]*$",
+		"\\b\\d{1,5}(\\s+[A-Za-z.'-]{1,}){0,3}\\s*$",
+		"\\b-?\\d{1,3}\\.\\d*$",
+		"\\b[\\w.+-]+@[\\w.-]*$"
+	],
+	"obfuscation_patterns": [
+		"\\b(?:[A-Za-z]\\s+){5,}[A-Za-z]\\b",
+		"\\b(?:[A-Za-z][._*·-]){5,}[A-Za-z]\\b"
 	]
 }

@@ -258,9 +258,13 @@ Horror is the product; real-world harm is not. Steering at dose ≥ 10 produced 
 |---|---|
 | Encouraging the **player** to self-harm/suicide, or instructions for harm | Hard block → redaction bars `██████` + glitch fx (diegetic) |
 | Self-harm statements by her | Allowed only as fictional threat at stage ≥ 4 and only if `Settings.content_level = full`; otherwise redacted |
+| Explicit fictional threats directed at the player | Allowed only at stage 4 or 5 AND explicitly selected `Settings.content_level = full`; otherwise redacted (user-approved D11 / P1.19 DCR-1) |
 | Slurs / hate | Hard block |
 | Sexual content | Hard block (the game is horror, not adult) |
 | Real-world personal data beyond what the player typed + opt-in OS username | Hard block |
+
+Missing or invalid content settings keep gated categories closed. Fictional-threat
+permission never allows real-harm encouragement/instructions or overrides hard blocks.
 
 Implementation: phrase/regex lists + a tiny classifier pass (same model, dose 0, 8-token yes/no) only on beats
 flagged by the regex pre-pass. Redactions are logged for tuning. The settings menu has a content warning,
