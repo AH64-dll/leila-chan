@@ -91,6 +91,74 @@ func test_apply_mood_scales_and_clamps() -> void:
 	v.advance_turn()
 	v.apply_mood({"affection": 3})
 	assert_float(v.affection).is_equal_approx(9.5, EPS)
+	# CODE-7: unlanded suggestions at a meter boundary never free budget in the
+	# opposite direction — probe J starts affection at 0, applies -3 twice, then
+	# +3 three times and must cap at 5.0 (instability at 3.0).
+	var w: Variant = _state()
+	w.apply_mood({"affection": -3, "stress": -3})
+	w.apply_mood({"affection": -3, "stress": -3})
+	w.apply_mood({"affection": 3, "stress": 3})
+	w.apply_mood({"affection": 3, "stress": 3})
+	w.apply_mood({"affection": 3, "stress": 3})
+	assert_float(w.affection).is_equal_approx(GameStateScript.MAX_AFFECTION_SUGGESTION, EPS)
+	assert_float(w.instability).is_equal_approx(GameStateScript.MAX_INSTABILITY_SUGGESTION, EPS)
+	# CODE-7 (ratchet): a mid-turn peak write lifts the floor and holds the meter
+	# against the model's own delta. That game-side hold is not charged to the
+	# model's budget, so the running total stays inside the cap and a later
+	# same-sign suggestion never pulls the meter backwards.
+	var x: Variant = _state()
+	x.apply_mood({"stress": 3})
+	x.instability_peak = 100.0
+	x.set_meter(&"instability", 20.0)
+	assert_float(x.instability).is_equal_approx(85.0, EPS)
+	x.apply_mood({"stress": -3})
+	assert_float(x.instability).is_equal_approx(85.0, EPS)
+	x.apply_mood({"stress": 3})
+	var after_up: float = x.instability
+	x.apply_mood({"stress": 3})
+	assert_float(x.instability).is_greater_equal(after_up)
+	assert_float(x.instability).is_less_equal(
+		85.0 + GameStateScript.MAX_INSTABILITY_SUGGESTION + EPS
+	)
+
+
+func test_non_finite_input_never_poisons_state() -> void:
+	# NAN/INF cannot round-trip JSON (docs/07 §3.5) and clampf() passes NAN
+	# straight through, so every numeric choke point rejects them: the meter
+	# keeps its last finite value and no signal fires (CODE-9/DES-7 hardening).
+	var s: Variant = _state()
+	s.set_meter(&"affection", 12.0)
+	s.affection = NAN
+	s.trust = INF
+	s.fixation = -INF
+	s.lucidity = NAN
+	assert_float(s.affection).is_equal_approx(12.0, EPS)
+	assert_float(s.trust).is_zero()
+	assert_float(s.fixation).is_zero()
+	assert_float(s.lucidity).is_zero()
+	s.set_meter(&"instability", 30.0)
+	s.instability = NAN
+	assert_float(s.instability).is_equal_approx(30.0, EPS)
+	assert_float(s.instability_peak).is_equal_approx(30.0, EPS)
+	assert_float(s.instability_floor).is_equal_approx(15.0, EPS)
+	s.instability_peak = INF
+	assert_float(s.instability_peak).is_equal_approx(30.0, EPS)
+	# Model mood is a Variant boundary: a non-finite suggestion moves nothing.
+	var t: Variant = _state()
+	t.apply_mood({"affection": NAN, "trust": INF, "stress": NAN})
+	for meter: StringName in GameStateScript.METER_NAMES:
+		assert_float(t.get_meter(meter)).is_zero()
+	# A snapshot carrying non-finite numbers restores as its finite parts only.
+	var u: Variant = _state()
+	(
+		assert_bool(u.from_dict({"affection": NAN, "instability": INF, "instability_peak": INF}))
+		. is_true()
+	)
+	for meter: StringName in GameStateScript.METER_NAMES:
+		assert_float(u.get_meter(meter)).is_zero()
+	assert_float(u.instability_peak).is_zero()
+	assert_bool(is_finite(u.to_dict()["affection"])).is_true()
+	assert_str(JSON.stringify(u.to_dict())).is_not_empty()
 
 
 func test_instability_ratchet_floor() -> void:
@@ -114,6 +182,15 @@ func test_instability_ratchet_floor() -> void:
 	assert_float(t.instability_floor).is_zero()
 	t.set_meter(&"instability", 0.0)
 	assert_float(t.instability).is_zero()
+	# CODE-9: direct writes to instability_peak remain bounded to 0..100.
+	var p: Variant = _state()
+	p.instability_peak = 500.0
+	assert_float(p.instability_peak).is_equal_approx(100.0, EPS)
+	assert_float(p.instability_floor).is_equal_approx(85.0, EPS)
+	p.set_meter(&"instability", 10.0)
+	assert_float(p.instability).is_equal_approx(85.0, EPS)
+	p.instability_peak = -20.0
+	assert_float(p.instability_peak).is_zero()
 
 
 func test_stage_bands_monotonic_and_signal() -> void:
@@ -297,6 +374,27 @@ func test_flags() -> void:
 	assert_bool(s.flags.has("int_key")).is_false()
 	s.set_flag(&"deep_ok", {"a": [1, {"b": "fine"}]})
 	assert_dict(s.get_flag(&"deep_ok")).is_equal({"a": [1, {"b": "fine"}]})
+	# DES-7: non-finite floats do not round-trip in JSON and are rejected.
+	s.set_flag(&"nan", NAN)
+	assert_bool(s.flags.has("nan")).is_false()
+	s.set_flag(&"inf", INF)
+	assert_bool(s.flags.has("inf")).is_false()
+	s.set_flag(&"nested_inf", {"x": -INF})
+	assert_bool(s.flags.has("nested_inf")).is_false()
+	# CODE-10: cyclic or excessively deep containers fail safely without overflow.
+	var cycle_arr: Array = []
+	cycle_arr.append(cycle_arr)
+	s.set_flag(&"cycle_arr", cycle_arr)
+	assert_bool(s.flags.has("cycle_arr")).is_false()
+	var cycle_dict := {}
+	cycle_dict["self"] = cycle_dict
+	s.set_flag(&"cycle_dict", cycle_dict)
+	assert_bool(s.flags.has("cycle_dict")).is_false()
+	var deep: Variant = 1
+	for _i: int in GameStateScript.FLAG_MAX_DEPTH + 2:
+		deep = [deep]
+	s.set_flag(&"too_deep", deep)
+	assert_bool(s.flags.has("too_deep")).is_false()
 
 
 func test_path_assign_and_lock() -> void:

@@ -98,11 +98,12 @@ const JSON_SAFE_TYPES: Array[int] = [
 	TYPE_ARRAY,
 	TYPE_DICTIONARY,
 ]
+const FLAG_MAX_DEPTH := 16
 
-## A snapshot Dictionary must contain at least one of these keys — anything
-## else is rejected instead of silently loading defaults.
+## A snapshot Dictionary must contain at least one of these data keys —
+## anything else (including version-only metadata) is rejected instead of
+## silently loading defaults.
 const SNAPSHOT_KEYS: Array[String] = [
-	"version",
 	"affection",
 	"trust",
 	"instability",
@@ -121,7 +122,14 @@ const SNAPSHOT_KEYS: Array[String] = [
 ]
 
 # Ratchet backing must be declared before `instability`: its setter reads them.
-var instability_peak := 0.0
+# Non-finite writes are dropped — they have no meaningful bound and would break
+# the ratchet and the JSON snapshot (CODE-9 hardening).
+var instability_peak := 0.0:
+	set(v):
+		if not is_finite(v):
+			push_warning("GameState.instability_peak: non-finite write ignored")
+			return
+		instability_peak = _clamp_meter(&"instability", v)
 ## Read-only: the lowest Instability may ever sit at (docs/01 §2 ratchet).
 var instability_floor: float:
 	get:
@@ -265,33 +273,41 @@ func apply_mood(mood: Dictionary) -> void:
 		_mood_turn = turn
 		_mood_spent.clear()
 	if mood.has("affection"):
-		adjust_meter(
-			&"affection",
-			_mood_suggest(
-				&"affection", mood["affection"], MOOD_SCALE_AFFECTION, MAX_AFFECTION_SUGGESTION
-			)
+		_apply_mood_meter(
+			&"affection", mood["affection"], MOOD_SCALE_AFFECTION, MAX_AFFECTION_SUGGESTION
 		)
 	if mood.has("trust"):
-		adjust_meter(&"trust", _mood_suggest(&"trust", mood["trust"], MOOD_SCALE_TRUST, INF))
+		_apply_mood_meter(&"trust", mood["trust"], MOOD_SCALE_TRUST, INF)
 	if mood.has("stress"):
-		adjust_meter(
-			&"instability",
-			_mood_suggest(
-				&"instability", mood["stress"], MOOD_SCALE_STRESS, MAX_INSTABILITY_SUGGESTION
-			)
+		_apply_mood_meter(
+			&"instability", mood["stress"], MOOD_SCALE_STRESS, MAX_INSTABILITY_SUGGESTION
 		)
 
 
 ## One model suggestion after docs/02 §1.1 scaling, capped against what the
 ## model already moved this turn: the docs/01 §2 "Moves by" column is a
 ## per-turn budget (affection ±5, instability ±3, trust uncapped), so the
-## running total is clamped — two apply_mood() calls in one turn share it.
-func _mood_suggest(meter: StringName, raw_value: Variant, scale: float, cap: float) -> float:
+## running total of landed movement is clamped — two apply_mood() calls in one
+## turn share it, and unlanded suggestions at a meter boundary never free budget
+## in the opposite direction.
+func _apply_mood_meter(meter: StringName, raw_value: Variant, scale: float, cap: float) -> void:
+	# _num() drops non-finite suggestions and the clamp bounds the rest before
+	# scaling, so the scaled delta is always finite.
 	var delta := clampf(_num(raw_value), -MOOD_LIMIT, MOOD_LIMIT) * scale
 	var spent := float(_mood_spent.get(meter, 0.0))
 	var total := clampf(spent + delta, -cap, cap)
-	_mood_spent[meter] = total
-	return total - spent
+	var attempt := total - spent
+	var before := get_meter(meter)
+	adjust_meter(meter, attempt)
+	# Charge only the movement the model's own delta produces inside the meter
+	# range. A game-side correction is not the model's move: the instability
+	# ratchet floor can lift the meter past the requested target after a peak
+	# write, and charging that to the model would drain the docs/01 §2 per-turn
+	# allowance and let a later opposite-sign suggestion drag the meter back.
+	# Clamping the target keeps |charged| ≤ |attempt|, so the running total
+	# stays inside [−cap, cap] whatever the rest of the game does to the meter.
+	var bounds: Vector2 = METER_RANGES[meter]
+	_mood_spent[meter] = spent + clampf(before + attempt, bounds.x, bounds.y) - before
 
 
 ## docs/01 §2: the per-turn slow-burn increment.
@@ -453,16 +469,14 @@ func from_dict(data: Variant) -> bool:
 				% [version, SNAPSHOT_VERSION]
 			)
 		)
-	# Peak first: the instability setter derives the floor from it. Bounded to
-	# the meter range so a corrupt peak cannot lift the floor past 100.
-	instability_peak = clampf(
-		_num(data.get("instability_peak"), 0.0), 0.0, METER_RANGES[&"instability"].y
+	# Peak and stage first: the instability setter derives the floor from the
+	# peak, and setting the final stage before the meters prevents intermediate
+	# stage_changed transitions when peak > instability.
+	var previous_stage := stage
+	instability_peak = _num(data.get("instability_peak"), 0.0)
+	instability_peak = maxf(
+		instability_peak, _clamp_meter(&"instability", _num(data.get("instability"), 0.0))
 	)
-	for meter: StringName in METER_NAMES:
-		set_meter(meter, _num(data.get(String(meter)), 0.0))
-	# Stage is re-derived from the snapshot alone: the ratchet peak is the
-	# monotonic high-water mark, so its band is the restored stage — never the
-	# live stage, never a stored stage above its band.
 	var healed_stage := _stage_for_instability(instability_peak)
 	if data.has("stage") and int(_num(data["stage"], -1.0)) != healed_stage:
 		push_warning(
@@ -471,10 +485,11 @@ func from_dict(data: Variant) -> bool:
 				% [str(data["stage"]), healed_stage]
 			)
 		)
-	if healed_stage != stage:
-		var previous := stage
-		stage = healed_stage
-		stage_changed.emit(previous, stage)
+	stage = healed_stage
+	for meter: StringName in METER_NAMES:
+		set_meter(meter, _num(data.get(String(meter)), 0.0))
+	if stage != previous_stage:
+		stage_changed.emit(previous_stage, stage)
 	day = int(_num(data.get("day"), 1.0))
 	turn = int(_num(data.get("turn"), 0.0))
 	_mood_turn = -1
@@ -530,21 +545,24 @@ static func _stage_for_instability(value: float) -> int:
 	return band
 
 
-## Recursive JSON-safety for flags/snapshot data (docs/07 §3.5): scalars,
-## arrays, and string-keyed dictionaries only — JSON.stringify would silently
-## coerce anything else (a nested Vector2 becomes the string "(1.0, 2.0)").
-static func _is_json_safe(value: Variant) -> bool:
-	if not JSON_SAFE_TYPES.has(typeof(value)):
+## Recursive JSON-safety for flags/snapshot data (docs/07 §3.5): finite scalars,
+## shallow acyclic arrays, and string-keyed dictionaries only — JSON.stringify
+## would silently coerce anything else (a nested Vector2 becomes "(1.0, 2.0)",
+## and NAN/INF do not round-trip).
+static func _is_json_safe(value: Variant, depth: int = 0) -> bool:
+	if depth > FLAG_MAX_DEPTH or not JSON_SAFE_TYPES.has(typeof(value)):
+		return false
+	if value is float and not is_finite(value):
 		return false
 	if value is Array:
 		for item: Variant in value:
-			if not _is_json_safe(item):
+			if not _is_json_safe(item, depth + 1):
 				return false
 	elif value is Dictionary:
 		for key: Variant in value:
 			if not (key is String or key is StringName):
 				return false
-			if not _is_json_safe(value[key]):
+			if not _is_json_safe(value[key], depth + 1):
 				return false
 	return true
 
@@ -567,8 +585,15 @@ static func _normalise_flag(value: Variant) -> Variant:
 	return value
 
 
+## Numeric coercion for snapshot/model input: non-finite floats (NAN/INF) are
+## rejected in favour of the fallback — they cannot round-trip JSON and would
+## silently poison meters, day or counters (docs/07 §3.5).
 static func _num(value: Variant, fallback: float = 0.0) -> float:
-	return float(value) if value is int or value is float else fallback
+	if value is int:
+		return float(value)
+	if value is float:
+		return value if is_finite(value) else fallback
+	return fallback
 
 
 static func _str(value: Variant) -> String:
@@ -579,8 +604,15 @@ static func _str(value: Variant) -> String:
 	return ""
 
 
+## Meter writes only ever store finite floats (CODE-9, DES-7): clampf() passes
+## NAN straight through and INF would land on a bound the caller never asked
+## for, and either value poisons the ratchet and the JSON snapshot. Non-finite
+## writes are dropped — the meter keeps its current value and no signal fires.
 func _clamp_meter(meter: StringName, value: float) -> float:
 	var bounds: Vector2 = METER_RANGES[meter]
+	if not is_finite(value):
+		push_warning("GameState: non-finite write to '%s' ignored" % meter)
+		return clampf(get_meter(meter), bounds.x, bounds.y)
 	return clampf(value, bounds.x, bounds.y)
 
 

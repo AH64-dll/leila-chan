@@ -21,6 +21,8 @@ func test_from_dict_restores_onto_dirty_state() -> void:
 	s.bump_profile(&"warmth", 5)
 	s.set_flag(&"leftover", true)
 	assert_int(s.stage).is_equal(5)
+	var resets: Array = []
+	s.state_reset.connect(func() -> void: resets.append(true))
 	var ok: bool = (
 		s
 		. from_dict(
@@ -35,6 +37,8 @@ func test_from_dict_restores_onto_dirty_state() -> void:
 		)
 	)
 	assert_bool(ok).is_true()
+	# CODE-12: successful load emits state_reset exactly once.
+	assert_array(resets).is_equal([true])
 	assert_float(s.instability).is_equal_approx(55.0, EPS)
 	assert_int(s.stage).is_equal(3)
 	assert_int(s.day).is_equal(6)
@@ -59,6 +63,15 @@ func test_from_dict_bounds_peak_and_stage() -> void:
 	var t: Variant = _state()
 	assert_bool(t.from_dict({"instability": 5.0, "stage": 5})).is_true()
 	assert_int(t.stage).is_equal(0)
+	# CODE-11: restoring peak 100 / instability 85 emits no intermediate stage 4.
+	var u: Variant = _state()
+	var stage_signals: Array = []
+	u.stage_changed.connect(
+		func(previous: int, current: int) -> void: stage_signals.append([previous, current])
+	)
+	assert_bool(u.from_dict({"instability_peak": 100.0, "instability": 85.0})).is_true()
+	assert_int(u.stage).is_equal(5)
+	assert_array(stage_signals).is_equal([[0, 5]])
 
 
 func test_from_dict_partial_profile_resets() -> void:
@@ -91,18 +104,42 @@ func test_from_dict_rejects_unrelated_dict() -> void:
 	# defaults would look like a successful restore (CODE-1).
 	var s: Variant = _state()
 	s.set_meter(&"affection", 42.0)
+	var resets: Array = []
+	s.state_reset.connect(func() -> void: resets.append(true))
 	assert_bool(s.from_dict({"unrelated": 1, "data": [1, 2]})).is_false()
 	assert_float(s.affection).is_equal_approx(42.0, EPS)
+	# CODE-8: version-only metadata cannot reset a live save.
+	assert_bool(s.from_dict({"version": 1})).is_false()
+	assert_float(s.affection).is_equal_approx(42.0, EPS)
+	assert_array(resets).is_empty()
 
 
 func test_from_dict_drops_unsafe_flags() -> void:
 	# Flags are validated recursively on load, same rule as set_flag()
 	# (CODE-4/DES-5): a corrupt save cannot park a Vector2 in the snapshot.
 	var s: Variant = _state()
-	var ok: bool = s.from_dict(
-		{"flags": {"good": {"a": [1, 2]}, "bad": {"v": Vector2(1, 2)}, "worse": {1: "x"}}}
+	var cycle_arr: Array = []
+	cycle_arr.append(cycle_arr)
+	var ok: bool = (
+		s
+		. from_dict(
+			{
+				"flags":
+				{
+					"good": {"a": [1, 2]},
+					"bad": {"v": Vector2(1, 2)},
+					"worse": {1: "x"},
+					"nan": NAN,
+					"inf": INF,
+					"cycle": cycle_arr,
+				}
+			}
+		)
 	)
 	assert_bool(ok).is_true()
 	assert_dict(s.get_flag(&"good")).is_equal({"a": [1, 2]})
 	assert_bool(s.flags.has("bad")).is_false()
 	assert_bool(s.flags.has("worse")).is_false()
+	assert_bool(s.flags.has("nan")).is_false()
+	assert_bool(s.flags.has("inf")).is_false()
+	assert_bool(s.flags.has("cycle")).is_false()
