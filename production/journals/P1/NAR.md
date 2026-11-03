@@ -18,3 +18,11 @@
 - Gotcha: `write` tool's `/tmp` ≠ Git Bash `/tmp` (= C:/Users/lain/AppData/Local/Temp). Tool writes to D:/tmp.
 - Live check works great as evidence: llama-server dose-0 + real files + docs/02 §3 schema → 6/6 valid turns,
   stage-1 cracks (false shared memories, clock_tick on slip beats) showed up without steering.
+
+## P1.28 — P1.05 review follow-ups: prompt example limits & portable evidence (round 3, 2026-11-03)
+- Fixed stage 0 ex1 say to obey the 2-sentence limit ("Oh — n-no, it's free. Sit with me?"), keeping sys_s0 token budget at 857.
+- Added sentence count (<= 2 per say) and word count (<= 15 per inner) validation to `P1.05_check_fewshots.py` and new unit test `tests/test_prompts.py`.
+- Made script paths portable via `Path(__file__).resolve().parents[3]`, re-encoded transcript as clean UTF-8 without trailing EOF blank line.
+- Verified loaded prompt budget reproduces at 942 tokens using the exact 4-line dynamic layer (café date, goal, 3 memories, Sarah trigger).
+- Convention: all future few-shot authored turns must be strictly tested against sentence/word boundaries in addition to character limits.
+- Gotcha: interjections with terminal marks ('!') inside spoken text count as sentences in split checks; use dashes or commas for mid-sentence flustered hesitations.

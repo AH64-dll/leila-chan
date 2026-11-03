@@ -4,7 +4,10 @@ Run from the worktree root:  python production/handoffs/media/P1.05_check_fewsho
 Exits 0 iff all examples are valid.
 """
 import json, re, sys
+from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[3]
+PROMPTS = ROOT / "game" / "data" / "prompts"
 GATES = {
     0: {"cues": ["none", "giggle", "laugh_soft", "gasp", "sigh", "hum", "sniffle", "heartbeat"],
         "music": ["keep", "romantic", "playful", "calm", "melancholy"],
@@ -26,7 +29,7 @@ ORDER = ["read", "inner", "music", "fx", "beats", "mood", "memory", "action"]
 fail = 0
 for stage in sorted(GATES):
     g = GATES[stage]
-    text = open(f"game/data/prompts/stage_{stage}.md", encoding="utf-8").read()
+    text = (PROMPTS / f"stage_{stage}.md").read_text(encoding="utf-8")
     jsons = re.findall(r'^You: (\{.*\})$', text, re.M)
     print(f"stage_{stage}.md: {len(jsons)} example turns")
     for j, raw in enumerate(jsons, 1):
@@ -38,6 +41,8 @@ for stage in sorted(GATES):
             errs.append("bad read")
         if len(d["inner"]) > 90:
             errs.append("inner>90")
+        if len(d["inner"].split()) > 15:
+            errs.append(f"inner words > 15 ({len(d['inner'].split())})")
         if d["music"] not in g["music"]:
             errs.append(f"music {d['music']} not in stage gate")
         if d["fx"] not in g["fx"]:
@@ -55,6 +60,9 @@ for stage in sorted(GATES):
                 errs.append(f"beat{i} cue {b['cue']} not in stage gate")
             if len(b["say"]) > 200:
                 errs.append(f"beat{i} say>200")
+            sentences = [s.strip() for s in re.split(r"[.!?]+", b["say"]) if s.strip()]
+            if len(sentences) > 2:
+                errs.append(f"beat{i} say sentences > 2 ({len(sentences)})")
         if not all(k in d["mood"] and isinstance(d["mood"][k], int) and -3 <= d["mood"][k] <= 3
                    for k in ("affection", "trust", "stress")):
             errs.append("mood range")
