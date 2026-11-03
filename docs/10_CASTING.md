@@ -149,6 +149,31 @@ Sprite cells are `i1–2 / i3`. Tiers: T0 = stage 0–1, T1 = 2, T2 = 3, T3 = 4�
 Cues `hum`, `sniffle` and `sob` are cast but have no files yet (voice-actor gap, docs/04 §8.4); until then the
 AudioDirector skips them silently.
 
+### 2.2 Screen-effect rules (docs/02 §2.3 + §5)
+
+`fx.none` is the default (no effect). `gate` is the minimum stage; `cooldown_turns` is how many turns
+after a firing stay locked (earliest refire = gap + 1); `max_per` is the doc's extra per-window cap.
+FX.gd reads this table and drops over-gate/over-budget picks silently; the debug menu (F6) can force
+any implemented effect.
+
+| Effect | Gate stage | Cooldown (turns) | Extra cap |
+|---|---|---|---|
+| blush_glow | 0 | 3 | — |
+| hearts | 0 | 3 | — |
+| sparkle | 0 | 3 | — |
+| shake_small | 0 | 3 | — |
+| zoom_face | 0 | 3 | — |
+| rain | 1 | 3 | — |
+| shake_big | 3 | 3 | max 1 per 2 turns |
+| flicker | 3 | 3 | — |
+| darken | 3 | 3 | — |
+| vignette_red | 3 | 3 | — |
+| glitch | 3 | 3 | max 1 per 2 turns |
+| text_bleed | 4 | 3 | — |
+| invert_flash | 4 | 3 | — |
+| her_eyes | 5 | 3 | — |
+| none | 0 | — | — |
+
 ## 3. Sprite on-enter events
 
 | Sprite | Extra when it appears |

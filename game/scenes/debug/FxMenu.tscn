@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/debug/FxMenu.gd" id="1_menu"]
+
+[node name="FxMenu" type="CanvasLayer"]
+visible = false
+layer = 64
+script = ExtResource("1_menu")
