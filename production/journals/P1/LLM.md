@@ -35,3 +35,9 @@
 - Empty say = no chunk, only `beat_field(i,"say","")`; `synth_empty_say.json` + oracle skip + explicit test.
 - Corpus 75 recorded + 5 synthetic = 80; escapes 4 recorded + 2 synthetic. Don't overstate counts.
 - DCR-1 (docs/07 §3.2 payload table + docs/02 step-5 no-replay note) is in handoff Round 2; producer decides.
+
+## P1.07 TurnSchema (round 1, gemini-3.8-flash)
+- Built `game/llm/TurnSchema.gd` with stage-gate data table `game/data/stage_gates.json` and canonical feelings from `game/data/casting.json`.
+- Implemented `build_turn_schema(ctx, offered_actions)` producing llama-server json_schema with canonical property order (`read`, `inner`, `beats`, `mood`, `memory`, `action`, `music`, `fx`, `meta`), stage gates across 0–5, `meta` null/gated for stages 0–2 vs unlocked at 3+, and C9 minLength:1 on `inner`/`say`.
+- Provided semantic validation helper `validate_turn(turn, stage, offered_actions, options)` for Director and test suites.
+- Tests: `game/tests/TurnSchemaTest.gd` with 15 gdUnit4 cases covering schema structure, stages 0–5 enums and gates, meta gating, action offers, string limits, mood bounds, and data loading.

@@ -23,3 +23,10 @@
 - Gotchas: `stage` setter can't emit (fires during member init before connections) — bulk changes
   signal via state_reset or an explicit stage_changed. Keep test_* count ≤20/suite (gdlint
   max-public-methods); split restore regressions into GameStateRestoreTest.gd.
+
+## P1.07 TurnSchema (round 1, gemini-3.8-flash)
+- Built `game/llm/TurnSchema.gd` and autoload shim `game/autoload/TurnSchema.gd` with data tables in `game/data/stage_gates.json`.
+- Dynamic schema builds per-turn json_schema adhering to canonical property order: `read, inner, beats, mood, memory, action, music, fx, meta`.
+- Gates enforced across stages 0–5: `meta` null/gated for 0–2 vs unlocked object/null at 3+; C9 `inner` and `say` minLength:1.
+- `validate_turn()` provides runtime validation for Director and tests.
+- Gotchas: Godot's GDScript parser treats `var x := variant` inference as a hard compilation error under strict warnings — always explicitly type `var cues: Array = ...`.
