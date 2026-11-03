@@ -210,3 +210,15 @@ func test_capture_screenshots_for_handoff() -> void:
 		)
 		. is_true()
 	)
+
+
+func test_vram_usage_budget_under_800mb() -> void:
+	# P1.21 Performance acceptance: Godot VRAM < 800 MB (Performance.RENDER_VIDEO_MEM_USED)
+	_date.stage = 0
+	_date.start_date()
+	for i: int in 10:
+		await get_tree().process_frame
+	var vram_bytes: int = int(Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED))
+	var vram_mb: float = float(vram_bytes) / (1024.0 * 1024.0)
+	print("[P1.21] Godot VRAM used: %d bytes (%.2f MB)" % [vram_bytes, vram_mb])
+	assert_int(vram_bytes).is_less(800 * 1024 * 1024)

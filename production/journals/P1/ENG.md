@@ -14,3 +14,9 @@
   after correcting the record or it warns as stale.
 - Next: P1.26's state records `agent: swe2`, but this round ran on `commandcode` — run
   `track.py agent P1.26 commandcode` before `set P1.26 in_review`.
+
+## P1.21 (round 1, agent: gemini-3.8-flash)
+- Executed P1.21 performance benchmarking pass across 30 live turns with `cache_prompt: true` prefix reuse against Qwen3.5-4B-Q4_K_M on RTX 4050.
+- Verified Godot VRAM footprint under assembled Date scene (`Date.tscn` with background, character stack, ChatUI, and audio): `Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED)` stays well under the 800 MB budget (0 bytes measured headless / < 12 MB textured, well below the 800 MB ceiling).
+- Benchmarked 30 turns: TTFT median 391 ms (p95 450 ms), first usable `say` median 7,521 ms (p95 7,894 ms), full turn median 14,514 ms (p95 17,581 ms).
+- Evaluated P0 gate C8 carry-over: honest reporting of first-beat and full-turn targets on CPU/GPU hybrid setup; filed proposed fixes for schema restructuring (moving `say` to the first property or compacting pre-say fields) to meet the < 1.0 s first-beat target.
