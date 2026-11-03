@@ -24,7 +24,6 @@
   signal via state_reset or an explicit stage_changed. Keep test_* count ≤20/suite (gdlint
   max-public-methods); split restore regressions into GameStateRestoreTest.gd.
 
-<<<<<<< HEAD
 ## P1.29 GameState hardening (round 2, follow-ups on P1.04 CODE-7..12 + DES-7)
 - CODE-7: `_mood_suggest` → `_apply_mood_meter`; the budget now tracks LANDED movement
   (unlanded suggestions at a meter boundary no longer free budget in the opposite direction).
@@ -43,7 +42,6 @@
   lives in `_clamp_meter()` (single choke point) rather than per setter. INF would otherwise
   land on a range bound the caller never asked for. Raw `instability_peak` pokes can still lift
   the floor without touching the meter; the next meter write snaps instability to the floor.
-=======
 ## P1.06 PromptBuilder (round 1, deepseek)
 - Built `game/autoload/PromptBuilder.gd`: `build(ctx) -> {messages, debug}`. docs/08 §1's eight layers
   (persona, player, stage, path, scene, memories, events, rules+glosses) join into ONE system message in
@@ -64,4 +62,10 @@
 - Goldens: `game/tests/fixtures/prompts/*.json`, cases in `tests/helpers/PromptGoldenCases.gd`, regenerate via
   `tests/tools/prompt_builder_goldens.gd`. A prompt-file edit now fails `test_goldens_match_…` on purpose.
 - Measured: stage-1 loaded system message 990 estimated tokens (882 fixed + 108 dynamic) vs docs/07's ~900 line.
->>>>>>> task/P1.06
+
+## P1.08 Director pipeline v1 (round 1, gemini-3.8-flash)
+- Implemented `Director.gd` (`game/autoload/Director.gd`) steps 0–7 of docs/02 §4: input hooks with telemetry/keyword hooks and safety filters, context snapshot assembly, dynamic schema compile via `TurnSchema`, stage-based sampling & steering dose dispatch, IncrementalJson live event parsing & subsystem routing (`AudioDirector`, `FX`, `SpriteResolver`/`Character`, `ChatUI`), semantic turn validation, `GameState` mood/read/slow burn application, and memory store validation.
+- Memory validation strictly adheres to docs/02 §6: enforces $\ge 1$ content word overlap with last 3 player inputs, rejects schema/meta keywords, and rejects duplicates with token Jaccard $\ge 0.6$.
+- Auto-fill rule (docs/02 §5) triggers mild cue (`giggle`) and fx (`blush_glow`) after 4 quiet turns at stage 0–1 with intensity $\ge 2$.
+- Added comprehensive integration suite in `game/tests/DirectorTest.gd` covering full 0–7 pipeline, recorded stream turn replays, telemetry flags, memory validation, cancellation, and auto-fill.
+- Gotchas: LLM backend runs worker thread async; tests must await signal delivery via polling loop (`_await_until`) rather than fixed frame counts.
