@@ -149,6 +149,19 @@ func abort_turn() -> void:
 	_unlock_input()
 
 
+## A line that never became a turn (docs/02 §4 step 0 safety rejection): the
+## submit locked the input, so the refusal is shown as one short beat and the
+## turn is ended — the same unlock path her reply takes. Self-sufficient: it
+## drops whatever an earlier turn left queued, so a driver never has to clear
+## the box first. The Director passes text it already scanned; no second scan.
+func reject_turn(text: String) -> void:
+	text_box.reset()
+	begin_beat(0)
+	replace_beat(0, text)
+	end_beat(0)
+	end_turn()
+
+
 func _on_beat_displayed(beat_index: int) -> void:
 	var spoken := str(text_box.get_beat_text(beat_index))
 	if not spoken.is_empty():
