@@ -85,6 +85,11 @@ def _validate_scenario_structure(data: dict, schema: dict) -> list[str]:
         errors.append("stage_variants must be an object")
     if not isinstance(data.get("path_twists"), dict):
         errors.append("path_twists must be an object")
+    else:
+        canonical = schema["properties"]["path_twists"]["propertyNames"]["enum"]
+        for p in data["path_twists"]:
+            if p not in canonical:
+                errors.append(f"Invalid path_twist key {p!r}; must be one of {canonical}")
 
     return errors
 
@@ -113,16 +118,19 @@ def test_d02_narrative_variants_and_twists() -> None:
     variants = d02["stage_variants"]
     assert "0" in variants, "Missing stage 0 variant in D02_cafe.json"
     assert "1" in variants, "Missing stage 1 variant in D02_cafe.json"
+    assert "2" in variants, "Missing stage 2 variant in D02_cafe.json"
     assert "3" in variants, "Missing stage 3 variant in D02_cafe.json"
     assert "5" in variants, "Missing stage 5 variant in D02_cafe.json"
 
-    # Stage 0: asks what he likes / Stage 1: already ordered
+    # Stage 0: asks what he likes / Stage 1: already ordered / Stage 2: leaks then corrects
     assert "sweet drinks" in variants["0"] or "likes" in variants["0"]
     assert "already ordered" in variants["1"]
+    assert "wrote his order" in variants["2"] or "normal thing" in variants["2"]
 
-    # Role playbook requires at least 2 path twists
+    # Role playbook requires at least 2 path twists (docs/01 §4 canonical 6 paths)
     twists = d02["path_twists"]
     assert len(twists) >= 2, f"Expected >= 2 path twists, got {len(twists)}"
+    assert "YANDERE" in twists, "Expected YANDERE path twist"
     assert "HOLLOW" in twists or "AWAKE" in twists
 
 

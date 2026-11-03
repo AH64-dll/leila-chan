@@ -83,6 +83,9 @@
     },
     "path_twists": {
       "type": "object",
+      "propertyNames": {
+        "enum": ["YANDERE", "SPLIT", "TSUN", "HOLLOW", "AWAKE", "ANCHOR"]
+      },
       "additionalProperties": { "type": "string" }
     },
     "events": {

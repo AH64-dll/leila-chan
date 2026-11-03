@@ -53,3 +53,8 @@
 - Integrated with `PromptBuilder.gd` to assemble `goal`, `prompt`, `variant`, and `event` into the scene layer; keeps golden fixtures completely backward-compatible.
 - Conventions chosen: opening beats are partitioned by stage with `{player_name}` interpolation; scene layer keeps tokens (~73 tokens) well within the 150-token dynamic budget.
 - Gotcha: feeling names in beats must match `casting.json` feelings (e.g. `joy`, not sprite asset stems like `radiant_joy`).
+
+## P1.15 — Scenario loader + D02 café scenario JSON (round 2, 2026-11-03)
+- Fixed CON-1: Renamed `"OBSESSION"` path twist to `"YANDERE"` and restricted schema `path_twists` to the 6 canonical paths (`YANDERE`, `SPLIT`, `TSUN`, `HOLLOW`, `AWAKE`, `ANCHOR`).
+- Fixed CON-2: Authored stage 2 variant for D02 ("You wrote his order on your hand so you could not forget it. That is a normal thing to do.") matching docs/08 §3 *Leaks*.
+- Fixed CON-3: Documented stage × path token-budget breakdown in the handoff. D02 scene block is 67–84 tokens across stages 0–1, well inside the ~150-token scene budget.
