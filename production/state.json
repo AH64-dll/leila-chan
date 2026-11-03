@@ -647,39 +647,53 @@
       "handoff": "production/handoffs/P1.26.md"
     },
     "P1.12": {
-      "status": "todo",
+      "status": "in_progress",
       "agent": "swe2",
-      "round": 1,
+      "round": 2,
       "reviews": [],
       "started": "2026-11-03T02:02:40+02:00"
     },
     "P1.13": {
-      "status": "todo",
+      "status": "in_progress",
       "agent": "swe2",
-      "round": 1,
+      "round": 2,
       "reviews": [],
       "started": "2026-11-03T02:02:40+02:00"
     },
     "P1.25": {
-      "status": "todo",
+      "status": "in_progress",
       "agent": "swe2",
-      "round": 1,
+      "round": 2,
       "reviews": [],
       "started": "2026-11-03T02:02:40+02:00"
     },
     "P1.27": {
-      "status": "todo",
+      "status": "in_progress",
       "agent": "swe2",
-      "round": 1,
+      "round": 2,
       "reviews": [],
       "started": "2026-11-03T02:02:40+02:00"
     },
     "P1.28": {
-      "status": "todo",
+      "status": "in_progress",
+      "agent": "swe2",
+      "round": 2,
+      "reviews": [],
+      "started": "2026-11-03T02:02:41+02:00"
+    },
+    "P1.20": {
+      "status": "in_progress",
       "agent": "swe2",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-03T02:02:41+02:00"
+      "started": "2026-11-03T07:13:08+02:00"
+    },
+    "P1.29": {
+      "status": "in_progress",
+      "agent": "swe2",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-03T07:14:04+02:00"
     }
   },
   "history": [
@@ -1695,6 +1709,48 @@
       "ts": "2026-11-03T07:12:56+02:00",
       "event": "in_review->done",
       "ref": "P1.04",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T07:13:08+02:00",
+      "event": "todo->in_progress",
+      "ref": "P1.12",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T07:13:08+02:00",
+      "event": "todo->in_progress",
+      "ref": "P1.13",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T07:13:08+02:00",
+      "event": "todo->in_progress",
+      "ref": "P1.20",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T07:14:04+02:00",
+      "event": "todo->in_progress",
+      "ref": "P1.25",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T07:14:04+02:00",
+      "event": "todo->in_progress",
+      "ref": "P1.27",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T07:14:04+02:00",
+      "event": "todo->in_progress",
+      "ref": "P1.28",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T07:14:04+02:00",
+      "event": "todo->in_progress",
+      "ref": "P1.29",
       "note": ""
     }
   ]
