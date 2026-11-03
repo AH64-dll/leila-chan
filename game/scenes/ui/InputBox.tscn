@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://c5bo0hpqy65g"]
+
+[ext_resource type="Script" uid="uid://c3l6eatcpibd" path="res://scenes/ui/InputBox.gd" id="1_in"]
+
+[node name="InputBox" type="LineEdit"]
+custom_minimum_size = Vector2(0, 30)
+focus_mode = 2
+max_length = 400
+placeholder_text = "Say something…"
+script = ExtResource("1_in")

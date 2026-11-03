@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://cb5gv4mntvrh"]
+
+[ext_resource type="Script" uid="uid://clvy7vdno3va" path="res://scenes/ui/ChatLog.gd" id="1_log"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_log"]
+bg_color = Color(0.03, 0.03, 0.04, 0.75)
+content_margin_left = 8.0
+content_margin_top = 6.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
+
+[node name="ChatLog" type="ScrollContainer"]
+custom_minimum_size = Vector2(0, 96)
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_log")
+horizontal_scroll_mode = 0
+script = ExtResource("1_log")
+
+[node name="List" type="VBoxContainer" parent="."]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 2

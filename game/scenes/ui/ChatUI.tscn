@@ -1,0 +1,34 @@
+[gd_scene load_steps=5 format=3 uid="uid://ch24064wenna"]
+
+[ext_resource type="Script" uid="uid://c3glvbrwtsfe" path="res://scenes/ui/ChatUI.gd" id="1_ui"]
+[ext_resource type="PackedScene" uid="uid://cb5gv4mntvrh" path="res://scenes/ui/ChatLog.tscn" id="2_log"]
+[ext_resource type="PackedScene" uid="uid://ca6wg7gdla0c" path="res://scenes/ui/TextBox.tscn" id="3_box"]
+[ext_resource type="PackedScene" uid="uid://c5bo0hpqy65g" path="res://scenes/ui/InputBox.tscn" id="4_in"]
+
+[node name="ChatUI" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ui")
+
+[node name="Margin" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="Margin"]
+theme_override_constants/separation = 6
+
+[node name="ChatLog" parent="Margin/VBox" instance=ExtResource("2_log")]
+
+[node name="TextBox" parent="Margin/VBox" instance=ExtResource("3_box")]
+
+[node name="InputBox" parent="Margin/VBox" instance=ExtResource("4_in")]
