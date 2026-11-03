@@ -35,3 +35,10 @@
 - Empty say = no chunk, only `beat_field(i,"say","")`; `synth_empty_say.json` + oracle skip + explicit test.
 - Corpus 75 recorded + 5 synthetic = 80; escapes 4 recorded + 2 synthetic. Don't overstate counts.
 - DCR-1 (docs/07 §3.2 payload table + docs/02 step-5 no-replay note) is in handoff Round 2; producer decides.
+
+## P1.06 PromptBuilder (round 1, deepseek; brief role SYS, dispatched as LLM)
+- Full entry in `production/journals/P1/SYS.md`. LLM-facing contract: `build(ctx) -> {messages, debug}` produces
+  exactly the `TurnRequest.messages` array the facade forwards verbatim — system block, history pairs (assistant
+  as spoken text), current player turn, opt-in prefill; `debug` is JSON-safe for P1.18's transcript.
+- For P1.02/P4.05: `set_token_counter(Callable)` takes a real tokenizer (llama-server `/tokenize`); without it the
+  report uses `ceil(chars/3.6)`. P1.08 owns building `ctx`; the schema side stays P1.07's.
