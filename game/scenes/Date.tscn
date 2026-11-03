@@ -1,0 +1,45 @@
+[gd_scene load_steps=6 format=3 uid="uid://df7w8y1ka2b3c"]
+
+[ext_resource type="Script" uid="uid://c3x77a4m0vdal" path="res://scenes/Date.gd" id="1_date"]
+[ext_resource type="Texture2D" uid="uid://v5nhv4xqb1xy" path="res://assets/bg/cafe.png" id="2_bg"]
+[ext_resource type="PackedScene" uid="uid://bvgg0q0ywnavf" path="res://scenes/character/Character.tscn" id="3_char"]
+[ext_resource type="Script" uid="uid://cc2cpmh35414q" path="res://scenes/DateFX.gd" id="4_fx"]
+[ext_resource type="PackedScene" uid="uid://ch24064wenna" path="res://scenes/ui/ChatUI.tscn" id="5_ui"]
+
+[node name="Date" type="Node2D"]
+script = ExtResource("1_date")
+
+[node name="Background" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("2_bg")
+centered = false
+
+[node name="Character" parent="." instance=ExtResource("3_char")]
+
+[node name="FXLayer" type="CanvasLayer" parent="."]
+layer = 1
+
+[node name="FX" type="Control" parent="FXLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("4_fx")
+
+[node name="Overlay" type="ColorRect" parent="FXLayer/FX"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 0)
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="ChatUI" parent="UILayer" instance=ExtResource("5_ui")]
