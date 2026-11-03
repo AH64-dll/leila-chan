@@ -4,8 +4,10 @@ extends RefCounted
 ## pushes toward the screen (docs/02 §8, docs/07 §3.4).
 ##
 ## The mandated filter is the Safety autoload (P1.19): `begin_say(ctx)` once per
-## beat, `say_chunk(chunk)` per streamed chunk, `end_say()` for the tail. The
-## Director owns the beat boundaries, so it drives that streaming API itself and
+## beat, `say_chunk(chunk)` per streamed chunk, `end_say()` for the tail, and
+## `end_utterance()` at each reply boundary so one reply's displayed tail can
+## never be glued into the next reply's match window (P1.19 r4 CODE-19). The
+## Director owns both boundaries, so it drives that streaming API itself and
 ## never installs `ChatUI.text_filter` — that injection point belongs to the UI
 ## owner, and no chunk is scanned twice (P1.08 review CODE-1, DES-7).
 ##
@@ -69,6 +71,17 @@ func finish() -> String:
 		return ""
 	_streaming = false
 	return str(_filter.call("end_say"))
+
+
+## Mark the reply boundary (the start of a new model utterance). The filter
+## clears its cross-beat carry so the next beat is matched fresh; beats *inside*
+## one reply still share the carry, which is what catches a phrase split across
+## beats. The Director calls this when a new turn starts (P1.19 r4 CODE-19).
+## Guarded like every filter capability: a build whose filter predates the API
+## simply skips it — the carry stays bounded by its window cap either way.
+func end_utterance() -> void:
+	if _filter != null and _filter.has_method("end_utterance"):
+		_filter.call("end_utterance")
 
 
 ## One-shot whole text (a repaired beat, an inner line): the same streaming API
