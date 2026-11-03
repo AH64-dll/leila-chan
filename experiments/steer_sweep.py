@@ -8,6 +8,8 @@ from tool_test import PERSONA, STAGE
 from tool_test_v2 import FEELINGS, FEEL_LIST, CUES
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, os.path.join(ROOT, "tools", "llm"))
+import cvec_path  # noqa: E402  shared FNAME:SCALE normalizer (P1.23)
 BIN = os.environ.get("LEILA_LLAMA_BIN", os.path.join(ROOT, "tools", "llama", "llama-b12024"))
 MODEL = os.environ.get("LEILA_MODEL", os.path.join(ROOT, "models", "Qwen3.5-4B-Q4_K_M.gguf"))
 PORT = 8090
@@ -43,12 +45,10 @@ def server_cmd(cvec, scale):
             "--port", str(PORT), "-np", "1"]
     if scale:
         # FNAME:SCALE cannot contain a drive-letter colon ("D:/..."): the flag parser
-        # splits on ':'. Prefer a same-drive relative path, which is colon-free.
-        if ":" in cvec:
-            rel = os.path.relpath(cvec)
-            if ":" not in rel:
-                cvec = rel
-        args += ["--control-vector-scaled", f"{cvec}:{scale}"]
+        # splits on ':'. cvec_path.flag_arg yields a colon-free same-drive
+        # relative path (or raises PathError) — shared with the serve launchers.
+        args += ["--control-vector-scaled", cvec_path.flag_arg(cvec, str(scale))]
+
     if os.name == "nt":
         env = {**os.environ, "PATH": BIN + os.pathsep + os.environ.get("PATH", "")}
     else:
