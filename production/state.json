@@ -547,7 +547,7 @@
     },
     "P1.03": {
       "status": "done",
-      "agent": "deepseek",
+      "agent": "swe2",
       "round": 2,
       "reviews": [
         {
@@ -641,23 +641,34 @@
     },
     "P1.02": {
       "status": "in_review",
-      "agent": "deepseek",
+      "agent": "commandcode",
       "round": 1,
       "reviews": [],
       "started": "2026-11-02T23:47:56+02:00",
       "handoff": "production/handoffs/P1.02.md"
     },
     "P1.30": {
-      "status": "in_review",
-      "agent": "deepseek",
+      "status": "done",
+      "agent": "claude",
       "round": 1,
-      "reviews": [],
+      "reviews": [
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.30-code-r1.md",
+          "ts": "2026-11-03T07:22:32+02:00",
+          "declared": "grok-4.6"
+        }
+      ],
       "started": "2026-11-03T00:02:44+02:00",
-      "handoff": "production/handoffs/P1.30.md"
+      "handoff": "production/handoffs/P1.30.md",
+      "finished": "2026-11-03T07:22:57+02:00"
     },
     "P1.26": {
       "status": "done",
-      "agent": "swe2",
+      "agent": "commandcode",
       "round": 1,
       "reviews": [
         {
@@ -1808,6 +1819,42 @@
       "ts": "2026-11-03T07:20:46+02:00",
       "event": "in_review->done",
       "ref": "P1.26",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T07:22:30+02:00",
+      "event": "agent",
+      "ref": "P1.03",
+      "note": "deepseek -> swe2"
+    },
+    {
+      "ts": "2026-11-03T07:22:30+02:00",
+      "event": "agent",
+      "ref": "P1.02",
+      "note": "deepseek -> commandcode"
+    },
+    {
+      "ts": "2026-11-03T07:22:31+02:00",
+      "event": "agent",
+      "ref": "P1.30",
+      "note": "deepseek -> claude"
+    },
+    {
+      "ts": "2026-11-03T07:22:31+02:00",
+      "event": "agent",
+      "ref": "P1.26",
+      "note": "swe2 -> commandcode"
+    },
+    {
+      "ts": "2026-11-03T07:22:32+02:00",
+      "event": "review:code:approved",
+      "ref": "P1.30",
+      "note": "production/reviews/P1.30-code-r1.md"
+    },
+    {
+      "ts": "2026-11-03T07:22:57+02:00",
+      "event": "in_review->done",
+      "ref": "P1.30",
       "note": ""
     }
   ]
