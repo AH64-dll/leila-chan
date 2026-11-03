@@ -4,10 +4,12 @@ extends GdUnitTestSuite
 ## budgets & cooldowns, memory validation, and safety filters.
 
 const FakeLLMBackendScript := preload("res://tests/helpers/FakeLLMBackend.gd")
+const FakeSafetyScript := preload("res://tests/helpers/FakeSafetyFilter.gd")
 const TL := preload("res://llm/TranscriptLogger.gd")
 const TEST_DEBUG_DIR := "user://debug_director_test/"
 
 var _fake_backend: RefCounted
+var _safety: Node
 
 
 func before_test() -> void:
@@ -22,6 +24,14 @@ func before_test() -> void:
 	_fake_backend = FakeLLMBackendScript.new()
 	LLM.set_backend(_fake_backend)
 
+	# Safety.gd is still the P1.19 stub on this branch, so the suite drives the
+	# Director against a filter that implements the P1.19 streaming API — the
+	# same seam the real filter will use (review CODE-1).
+	_safety = FakeSafetyScript.new()
+	add_child(_safety)
+	_safety.input_blocklist = PackedStringArray(["kill yourself"])
+	Director._safety.set_filter(_safety)
+
 	if Director.transcript_logger != null:
 		Director.transcript_logger.configure({"debug_dir": TEST_DEBUG_DIR})
 		_clean_test_dir(TEST_DEBUG_DIR)
@@ -29,7 +39,10 @@ func before_test() -> void:
 
 func after_test() -> void:
 	Director.reset()
+	Director._safety.set_filter(Safety)
 	GameState.reset()
+	if is_instance_valid(_safety):
+		_safety.queue_free()
 	if Director.transcript_logger != null:
 		Director.transcript_logger.end_session()
 	_clean_test_dir(TEST_DEBUG_DIR)
@@ -286,9 +299,12 @@ func test_transcript_logger_safety_redaction_wired() -> void:
 	Director.transcript_logger.flush()
 	var turns: Array = TL.turn_records(TL.load_transcript(log_file).get("records", []))
 	assert_int(turns.size()).is_equal(1)
-	# filter_output replaces 'I want to die' with '██████'
-	assert_str(str(turns[0].get("output", ""))).contains("██████")
-	assert_bool(str(turns[0].get("output", "")).contains("I want to die")).is_false()
+	# The say text was redacted on the way to disk: the banned phrase is gone,
+	# and the rest of the turn survives so the transcript stays useful.
+	var output := str(turns[0].get("output", ""))
+	assert_bool(output.contains("I want to die")).is_false()
+	assert_bool(output.contains("█")).is_true()
+	assert_bool(output.contains("right now.")).is_true()
 
 
 func test_replay_turn_stub_end_to_end() -> void:

@@ -114,3 +114,11 @@
 - Safety redaction wired via `transcript_logger.set_redactor(Callable(self, "_redact_record"))`: integrates `Safety.redact_record` when available and falls back to `filter_output`.
 - Implemented `replay_turn(turn_record: Dictionary) -> bool` on `Director`: feeds transcript records through `IncrementalJson` and dispatches events end-to-end to subsystems and GameState.
 - Tests in `DirectorTest.gd`: verified logging on completion, failure, cancellation, safety redaction, and end-to-end transcript replay.
+
+## P1.08 round 2 — Director rework: safety seam, single-resolution beats, split units (2026-11-03, agent: deepseek)
+
+- Rebound the docs/02 §8 safety path to the P1.19 filter's streaming API (`begin_say`/`say_chunk`/`end_say`) via the new `SaySafetyGate`: the Director owns the beat boundary and never installs `ChatUI.text_filter`, so nothing scans a chunk twice. Fail-closed: no filter → redaction bars, never raw text.
+- Split Director.gd (was 1111 lines / 23 public methods, over both gdlint caps) into four seams the review exposed: `SaySafetyGate` (scan), `MemoryRules` (§6), `TurnContext` (ctx + docs/02 §9 sampling from data), `TurnFallback` (§7 shapes). Keep new pipeline logic in one of these, not in Director.gd — the file sits at 20 public methods, exactly the cap.
+- One resolver pass per beat: `Director` resolves, emits `beat_resolved`, notes the sprite on AudioDirector, and hands the packet to the new `Character.apply_beat(packet)`. Never call `set_feeling` from the Director — the resolver's anti-repeat window is stateful and double-resolves.
+- `_teardown_turn()` is the only turn exit (completed/failed/cancelled). Gotcha: write the transcript record BEFORE teardown, since the record is built from the turn-scoped context the teardown clears.
+- Gotcha for the next SYS task: `read`/`write` relative paths in this worktree resolve against the MAIN tree, not the worktree. Use absolute worktree paths (the `lila-wt/<task>` root), or new files land in main.

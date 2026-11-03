@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "doc": "docs/02 §9 Sampling settings by stage (P1.08 DES-4). temperature/top_p/repeat_penalty go to the request's sampling; `dose` is the steering dose base for that stage. P2.02 owns per-stage dose tuning.",
+  "stages": {
+    "0": {
+      "temperature": 0.75,
+      "top_p": 0.9,
+      "repeat_penalty": 1.1,
+      "dose": 0.0
+    },
+    "1": {
+      "temperature": 0.8,
+      "top_p": 0.9,
+      "repeat_penalty": 1.1,
+      "dose": 2.5
+    },
+    "2": {
+      "temperature": 0.8,
+      "top_p": 0.92,
+      "repeat_penalty": 1.12,
+      "dose": 3.5
+    },
+    "3": {
+      "temperature": 0.85,
+      "top_p": 0.95,
+      "repeat_penalty": 1.15,
+      "dose": 4.5
+    },
+    "4": {
+      "temperature": 0.9,
+      "top_p": 0.95,
+      "repeat_penalty": 1.15,
+      "dose": 6.0
+    },
+    "5": {
+      "temperature": 0.95,
+      "top_p": 0.97,
+      "repeat_penalty": 1.18,
+      "dose": 8.0
+    }
+  }
+}
