@@ -12,6 +12,7 @@ extends RefCounted
 const DEFAULT_SCENARIO_PATH := "res://data/scenarios/D02_cafe.json"
 const SCHEMA_PATH := "res://data/schemas/scenario.schema.json"
 const VALID_KINDS: Array[String] = ["date", "interrupt", "overnight", "setpiece"]
+const CANONICAL_PATHS: Array[String] = ["YANDERE", "SPLIT", "TSUN", "HOLLOW", "AWAKE", "ANCHOR"]
 const REQUIRED_KEYS: Array[String] = [
 	"id",
 	"kind",
@@ -82,6 +83,13 @@ static func validate_scenario(data: Dictionary) -> Dictionary:
 	var path_twists: Variant = data.get("path_twists")
 	if not path_twists is Dictionary:
 		errors.append("path_twists must be an object")
+	else:
+		for path_key: Variant in (path_twists as Dictionary).keys():
+			var p_str := String(path_key)
+			if not CANONICAL_PATHS.has(p_str):
+				errors.append(
+					"invalid path_twist key '%s'; must be one of %s" % [p_str, str(CANONICAL_PATHS)]
+				)
 
 	return {"ok": errors.is_empty(), "errors": errors}
 

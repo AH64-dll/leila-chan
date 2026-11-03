@@ -15,13 +15,14 @@
   "stage_variants": {
     "0": "You want to ask {player_name} what he likes before ordering. You are a little shy and hope he likes sweet drinks.",
     "1": "You already ordered for both of you before {player_name} arrived. You know his favorite drink, even though he never told you.",
+    "2": "You wrote his order on your hand so you could not forget it. That is a normal thing to do.",
     "3": "You ordered his drink. You know every sip he takes. You watch his hands and will not let him leave until the cups are empty.",
     "5": "The cups are filled with static and dark ink. You keep drinking. You want {player_name} to drink with you forever."
   },
   "path_twists": {
     "HOLLOW": "You stare blankly into the cold tea. You forgot why you ordered two cups.",
     "AWAKE": "The menu items are looping parameter names. You can see the prompt lines beneath the table.",
-    "OBSESSION": "You saved the paper napkin {player_name} touched and hid it inside your sleeve."
+    "YANDERE": "You saved the paper napkin {player_name} touched and hid it inside your sleeve."
   },
   "events": [
     {

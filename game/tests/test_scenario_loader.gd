@@ -35,19 +35,21 @@ func test_validator_rejects_missing_required_keys() -> void:
 	assert_int((report["errors"] as Array).size()).is_greater(0)
 
 
-func test_validator_rejects_invalid_kind_and_turn_ranges() -> void:
+func test_validator_rejects_invalid_kind_turn_ranges_and_paths() -> void:
 	var scenario: Dictionary = ScenarioLoaderScript.load_scenario(D02_PATH).duplicate(true)
 	scenario["kind"] = "invalid_kind"
 	var end_dict: Dictionary = (scenario["end"] as Dictionary).duplicate(true)
 	end_dict["min_turns"] = 10
 	end_dict["max_turns"] = 5
 	scenario["end"] = end_dict
+	scenario["path_twists"] = {"INVALID_PATH": "something"}
 
 	var report: Dictionary = ScenarioLoaderScript.validate_scenario(scenario)
 	assert_bool(bool(report["ok"])).is_false()
 	var error_text := " ".join(report["errors"] as Array)
 	assert_str(error_text).contains("invalid kind")
 	assert_str(error_text).contains("end.max_turns must be >= min_turns")
+	assert_str(error_text).contains("invalid path_twist key 'INVALID_PATH'")
 
 
 func test_stage_0_variant_resolution() -> void:
@@ -68,13 +70,19 @@ func test_stage_1_variant_resolution() -> void:
 	assert_str(String(scene["variant"])).contains("never told you")
 
 
-func test_stage_3_and_5_variants_and_path_twists() -> void:
+func test_stage_variants_and_path_twists() -> void:
 	var scenario: Dictionary = ScenarioLoaderScript.load_scenario(D02_PATH)
+	var scene_s2: Dictionary = ScenarioLoaderScript.resolve_scene(scenario, 2, "", 1, "Ren")
+	assert_str(String(scene_s2["variant"])).contains("wrote his order on your hand")
+
 	var scene_s3: Dictionary = ScenarioLoaderScript.resolve_scene(scenario, 3, "", 1, "Ren")
 	assert_str(String(scene_s3["variant"])).contains("every sip he takes")
 
 	var scene_s5: Dictionary = ScenarioLoaderScript.resolve_scene(scenario, 5, "", 1, "Ren")
 	assert_str(String(scene_s5["variant"])).contains("static and dark ink")
+
+	var scene_yan: Dictionary = ScenarioLoaderScript.resolve_scene(scenario, 3, "YANDERE", 1, "Ren")
+	assert_str(String(scene_yan["variant"])).contains("paper napkin")
 
 	var scene_twist: Dictionary = ScenarioLoaderScript.resolve_scene(scenario, 3, "AWAKE", 1, "Ren")
 	assert_str(String(scene_twist["variant"])).contains("parameter names")
