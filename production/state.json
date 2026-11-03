@@ -742,7 +742,7 @@
       "finished": "2026-11-03T07:20:46+02:00"
     },
     "P1.12": {
-      "status": "in_review",
+      "status": "done",
       "agent": "swe2",
       "round": 2,
       "reviews": [
@@ -754,15 +754,25 @@
           "report": "production/reviews/P1.12-code-r2.md",
           "ts": "2026-11-03T08:08:15+02:00",
           "declared": "grok-4.6"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.12-design-r2.md",
+          "ts": "2026-11-03T08:42:54+02:00",
+          "declared": "grok-4.6"
         }
       ],
       "started": "2026-11-03T02:02:40+02:00",
-      "handoff": "production/handoffs/P1.12.md"
+      "handoff": "production/handoffs/P1.12.md",
+      "finished": "2026-11-03T08:43:28+02:00"
     },
     "P1.13": {
-      "status": "in_progress",
+      "status": "in_review",
       "agent": "gemini-3.8-flash",
-      "round": 2,
+      "round": 3,
       "reviews": [
         {
           "kind": "code",
@@ -780,6 +790,15 @@
           "reviewer": "grok-4.6",
           "report": "production/reviews/P1.13-design-r2.md",
           "ts": "2026-11-03T07:56:38+02:00",
+          "declared": "grok-4.6"
+        },
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 3,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.13-code-r3.md",
+          "ts": "2026-11-03T08:40:01+02:00",
           "declared": "grok-4.6"
         }
       ],
@@ -909,11 +928,12 @@
       "finished": "2026-11-03T08:37:00+02:00"
     },
     "P1.06": {
-      "status": "in_progress",
+      "status": "in_review",
       "agent": "deepseek",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-03T07:38:04+02:00"
+      "started": "2026-11-03T07:38:04+02:00",
+      "handoff": "production/handoffs/P1.06.md"
     },
     "P1.07": {
       "status": "in_progress",
@@ -947,6 +967,12 @@
       "round": 1,
       "reviews": [],
       "started": "2026-11-03T08:12:19+02:00"
+    },
+    "P1.15": {
+      "status": "in_progress",
+      "agent": "gemini-3.8-flash",
+      "round": 1,
+      "reviews": []
     }
   },
   "history": [
@@ -2352,6 +2378,36 @@
       "ts": "2026-11-03T08:37:00+02:00",
       "event": "in_review->done",
       "ref": "P1.29",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T08:37:56+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P1.13",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T08:37:56+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P1.06",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T08:40:01+02:00",
+      "event": "review:code:approved",
+      "ref": "P1.13",
+      "note": "production/reviews/P1.13-code-r3.md"
+    },
+    {
+      "ts": "2026-11-03T08:42:54+02:00",
+      "event": "review:design:approved",
+      "ref": "P1.12",
+      "note": "production/reviews/P1.12-design-r2.md"
+    },
+    {
+      "ts": "2026-11-03T08:43:28+02:00",
+      "event": "in_review->done",
+      "ref": "P1.12",
       "note": ""
     }
   ]
