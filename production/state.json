@@ -1098,6 +1098,24 @@
           "report": "production/reviews/P1.16-design-r1.md",
           "ts": "2026-11-03T09:32:46+02:00",
           "declared": "grok-4.6"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.16-design-r2.md",
+          "ts": "2026-11-03T09:42:26+02:00",
+          "declared": "grok-4.6"
+        },
+        {
+          "kind": "content",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.16-content-r2.md",
+          "ts": "2026-11-03T09:47:32+02:00",
+          "declared": "grok-4.6"
         }
       ],
       "handoff": "production/handoffs/P1.16.md",
@@ -1132,10 +1150,11 @@
       "finished": "2026-11-03T09:33:29+02:00"
     },
     "P1.08": {
-      "status": "in_progress",
+      "status": "in_review",
       "agent": "gemini-3.8-flash",
       "round": 1,
-      "reviews": []
+      "reviews": [],
+      "handoff": "production/handoffs/P1.08.md"
     },
     "P1.21": {
       "status": "in_review",
@@ -1143,6 +1162,24 @@
       "round": 1,
       "reviews": [],
       "handoff": "production/handoffs/P1.21.md"
+    },
+    "P1.09": {
+      "status": "in_progress",
+      "agent": "gemini-3.8-flash",
+      "round": 1,
+      "reviews": []
+    },
+    "P1.17": {
+      "status": "in_progress",
+      "agent": "gemini-3.8-flash",
+      "round": 1,
+      "reviews": []
+    },
+    "P1.18": {
+      "status": "in_progress",
+      "agent": "gemini-3.8-flash",
+      "round": 1,
+      "reviews": []
     }
   },
   "history": [
@@ -2771,6 +2808,24 @@
       "event": "in_progress->in_review",
       "ref": "P1.16",
       "note": ""
+    },
+    {
+      "ts": "2026-11-03T09:42:26+02:00",
+      "event": "review:design:approved",
+      "ref": "P1.16",
+      "note": "production/reviews/P1.16-design-r2.md"
+    },
+    {
+      "ts": "2026-11-03T09:46:54+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P1.08",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T09:47:32+02:00",
+      "event": "review:content:approved",
+      "ref": "P1.16",
+      "note": "production/reviews/P1.16-content-r2.md"
     }
   ]
 }
