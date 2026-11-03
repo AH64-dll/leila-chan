@@ -63,3 +63,11 @@
 - Goldens: `game/tests/fixtures/prompts/*.json`, cases in `tests/helpers/PromptGoldenCases.gd`, regenerate via
   `tests/tools/prompt_builder_goldens.gd`. A prompt-file edit now fails `test_goldens_match_…` on purpose.
 - Measured: stage-1 loaded system message 990 estimated tokens (882 fixed + 108 dynamic) vs docs/07's ~900 line.
+
+## P1.18 — TranscriptLogger integration & replay stub (2026-11-03, agent: gemini-3.8-flash)
+
+- Integrated `TranscriptLogger` into `Director.gd` (`director.transcript_logger`): every completed, failed, and cancelled turn logs canonical turn record {prompt, schema, raw output, applied events, metrics, stage, path, dose, day, meta} to `user://debug/` JSONL.
+- Added `LLM.get_backend()` and `LLM.last_metrics()` facade pass-through to retrieve backend performance timings (`ready_ms`, `first_token_ms`, `generate_ms`).
+- Safety redaction wired via `transcript_logger.set_redactor(Callable(self, "_redact_record"))`: integrates `Safety.redact_record` when available and falls back to `filter_output`.
+- Implemented `replay_turn(turn_record: Dictionary) -> bool` on `Director`: feeds transcript records through `IncrementalJson` and dispatches events end-to-end to subsystems and GameState.
+- Tests in `DirectorTest.gd`: verified logging on completion, failure, cancellation, safety redaction, and end-to-end transcript replay.

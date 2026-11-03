@@ -26,6 +26,16 @@ func has_backend() -> bool:
 	return _backend != null
 
 
+func get_backend() -> LLMBackend:
+	return _backend
+
+
+func last_metrics() -> Dictionary:
+	if _backend != null and _backend.has_method("last_metrics"):
+		return _backend.last_metrics()
+	return {}
+
+
 ## P1.02: install the prototype llama-server transport (attach by default,
 ## `auto_start=true` to launch the pinned server). Returns it so the boot flow
 ## can start the watchdog or pre-warm. Boot wires this at startup.

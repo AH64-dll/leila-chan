@@ -80,6 +80,8 @@ var chat_ui_node: Node = null
 var quiet_turn_streak := 0
 var last_player_inputs: Array[String] = []
 
+var transcript_logger: TranscriptLogger = null
+
 var _active_stream: TurnStream = null
 var _parser: IncrementalJson = null
 var _current_turn_data: Dictionary = {}
@@ -88,6 +90,13 @@ var _current_beat_index := -1
 var _current_beat_data := {}
 var _turn_in_flight := false
 var _turn_index := 0
+var _current_prompt: Array = []
+var _current_schema: Dictionary = {}
+var _current_raw_output := ""
+var _current_applied_events: Array[Dictionary] = []
+var _current_dose: Dictionary = {}
+var _current_stage := 0
+var _current_path := ""
 
 
 func _ready() -> void:
@@ -99,6 +108,10 @@ func reset() -> void:
 	memories.clear()
 	last_player_inputs.clear()
 	quiet_turn_streak = 0
+	if transcript_logger != null and transcript_logger.is_enabled():
+		transcript_logger.end_session()
+	_init_transcript_logger()
+	_clear_turn_context()
 	_current_turn_data.clear()
 	_current_beats.clear()
 	_current_beat_index = -1
@@ -107,6 +120,39 @@ func reset() -> void:
 	_turn_index = 0
 	_parser = null
 	_active_stream = null
+
+
+func _init_transcript_logger() -> void:
+	if transcript_logger == null:
+		transcript_logger = TranscriptLogger.new()
+		_wire_safety_redactor()
+
+
+func _wire_safety_redactor() -> void:
+	if transcript_logger == null:
+		return
+	var redactor := Callable(self, "_redact_record")
+	transcript_logger.set_redactor(redactor)
+
+
+func _redact_record(record: Dictionary) -> Dictionary:
+	if Safety != null and Safety.has_method("redact_record"):
+		var res: Variant = Safety.call("redact_record", record)
+		if res is Dictionary:
+			return res
+	if record.has("output") and record["output"] is String:
+		record["output"] = filter_output(record["output"])
+	return record
+
+
+func _clear_turn_context() -> void:
+	_current_prompt = []
+	_current_schema = {}
+	_current_raw_output = ""
+	_current_applied_events.clear()
+	_current_dose = {}
+	_current_stage = 0
+	_current_path = ""
 
 
 func is_busy() -> bool:
@@ -174,6 +220,9 @@ func _start_turn(player_text: String) -> bool:
 	_current_beats = []
 	_current_beat_index = -1
 	_current_beat_data = {}
+	_clear_turn_context()
+	_current_stage = int(GameState.stage)
+	_current_path = String(GameState.path)
 
 	turn_started.emit(_turn_index, player_text)
 
@@ -207,6 +256,8 @@ func _start_turn(player_text: String) -> bool:
 
 	# Step 3: Schema assembly via TurnSchema
 	var schema: Dictionary = TurnSchema.build_turn_schema(ctx, offered_actions)
+	_current_prompt = messages.duplicate(true)
+	_current_schema = schema.duplicate(true)
 
 	# Step 4: Sampling and steering dose
 	var sampling_spec: Dictionary = SAMPLING_TABLE.get(stage, SAMPLING_TABLE[0])
@@ -222,6 +273,7 @@ func _start_turn(player_text: String) -> bool:
 	elif float(sampling_spec.get("dose", 0.0)) > 0.0:
 		dose_dict = {"base": float(sampling_spec.get("dose", 0.0))}
 
+	_current_dose = dose_dict.duplicate(true)
 	# Create LLM TurnRequest
 	var req := TurnRequest.new()
 	req.messages = messages
@@ -249,9 +301,11 @@ func _on_llm_token(token_text: String) -> void:
 		return
 
 	turn_chunk_received.emit(token_text)
+	_current_raw_output += token_text
 	var events: Array = _parser.feed(token_text)
 	for event: Dictionary in events:
 		_process_stream_event(event)
+		_current_applied_events.append(event.duplicate(true))
 
 
 func _process_stream_event(event: Dictionary) -> void:
@@ -368,6 +422,7 @@ func _on_llm_completed(_raw_text: String) -> void:
 	if not _current_turn_data.has("beats") and not _current_beats.is_empty():
 		_current_turn_data["beats"] = _current_beats
 
+	_current_raw_output = _raw_text
 	_close_turn_success(_current_turn_data)
 
 
@@ -434,6 +489,8 @@ func _close_turn_success(turn_data: Dictionary) -> void:
 	_parser = null
 
 	turn_completed.emit(_turn_index, turn_data)
+	_log_turn_record("completed")
+	_clear_turn_context()
 
 
 func _handle_auto_fill(turn_data: Dictionary, stage: int) -> void:
@@ -473,6 +530,8 @@ func _on_llm_failed(err_dict: Dictionary) -> void:
 	var code := str(err_dict.get("code", "unknown_error"))
 	var msg := str(err_dict.get("message", "generation failed"))
 	_abort_turn(code, msg)
+	_log_turn_record("failed", code, msg)
+	_clear_turn_context()
 
 
 func _on_llm_cancelled() -> void:
@@ -482,6 +541,8 @@ func _on_llm_cancelled() -> void:
 	if chat_ui_node != null and chat_ui_node.has_method("abort_turn"):
 		chat_ui_node.abort_turn()
 	turn_cancelled.emit(_turn_index)
+	_log_turn_record("cancelled")
+	_clear_turn_context()
 
 
 func cancel() -> void:
@@ -496,6 +557,79 @@ func _abort_turn(error_code: String, error_message: String) -> void:
 	if chat_ui_node != null and chat_ui_node.has_method("abort_turn"):
 		chat_ui_node.abort_turn()
 	turn_failed.emit(_turn_index, error_code, error_message)
+
+
+func _log_turn_record(status: String, err_code := "", err_msg := "") -> void:
+	if transcript_logger == null:
+		return
+	var metrics: Dictionary = {}
+	if LLM != null and LLM.has_method("last_metrics"):
+		metrics = LLM.last_metrics()
+
+	var error_dict := {}
+	if not err_code.is_empty() or not err_msg.is_empty():
+		error_dict = {"code": err_code, "message": err_msg}
+	elif status == "cancelled":
+		error_dict = {"code": "cancelled", "message": "turn cancelled by player or director"}
+
+	var record := {
+		"turn": _turn_index,
+		"prompt": _current_prompt,
+		"schema": _current_schema,
+		"output": _current_raw_output,
+		"metrics": metrics,
+		"events": _current_applied_events.duplicate(true),
+		"stage": _current_stage,
+		"path": _current_path,
+		"dose": _current_dose,
+		"day": int(GameState.day),
+		"meta": {"status": status},
+	}
+	if not error_dict.is_empty():
+		record["error"] = error_dict
+
+	transcript_logger.log_turn(record)
+
+
+## Replay stub (P1.18, docs/07 §5): re-feeds a transcript record or file back
+## to the Director by driving IncrementalJson events through the turn pipeline.
+func replay_turn(turn_record: Dictionary) -> bool:
+	if _turn_in_flight:
+		push_warning("Director: turn in flight; cannot replay")
+		return false
+
+	var raw_output: String = str(turn_record.get("output", ""))
+	var prompt_msgs: Variant = turn_record.get("prompt", [])
+	var player_text := ""
+	if prompt_msgs is Array:
+		for m: Variant in prompt_msgs:
+			if m is Dictionary and str(m.get("role", "")) == "user":
+				player_text = str(m.get("content", ""))
+
+	_turn_in_flight = true
+	_turn_index = int(turn_record.get("turn", GameState.turn))
+	_current_turn_data = {}
+	_current_beats = []
+	_current_beat_index = -1
+	_current_beat_data = {}
+	_clear_turn_context()
+	_current_prompt = prompt_msgs if prompt_msgs is Array else []
+	_current_schema = turn_record.get("schema", {})
+	_current_raw_output = raw_output
+	_current_stage = int(turn_record.get("stage", GameState.stage))
+	_current_path = String(turn_record.get("path", GameState.path))
+	_current_dose = turn_record.get("dose", {})
+
+	turn_started.emit(_turn_index, player_text)
+
+	_parser = IncrementalJson.new()
+	var events: Array = _parser.feed(raw_output)
+	for event: Dictionary in events:
+		_process_stream_event(event)
+		_current_applied_events.append(event.duplicate(true))
+
+	_on_llm_completed(raw_output)
+	return true
 
 
 ## -----------------------------------------------------------------------------
