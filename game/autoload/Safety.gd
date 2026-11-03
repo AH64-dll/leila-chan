@@ -87,8 +87,9 @@ func begin_say(ctx: Dictionary = {}) -> void:
 ## starts with no history, so two different replies are never matched as one
 ## phrase (CODE-2/CODE-14). Beats *inside* one utterance keep the history,
 ## which is what catches `"i want to "` + `"die."` split by an end-of-beat
-## emission. The production caller is the Director's SaySafetyGate: it calls
-## `end_utterance()` from `_start_turn` when a new reply begins (CODE-19).
+## emission. The production callers are the Director's SaySafetyGate: it calls
+## `end_utterance()` from `_start_turn` when a new reply begins (CODE-19) and
+## from `replay_turn` before a replayed reply re-streams (CODE-23/SAF-17).
 func end_utterance() -> void:
 	_history = ""
 

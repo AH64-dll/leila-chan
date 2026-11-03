@@ -935,6 +935,12 @@ func replay_turn(turn_record: Dictionary) -> bool:
 	_current_path = String(turn_record.get("path", GameState.path))
 	_current_dose = turn_record.get("dose", {})
 
+	# Reply boundary (P1.19 r5 CODE-23/SAF-17): a replayed turn re-streams a
+	# model utterance through the same say path, so it must cut the cross-beat
+	# carry exactly like `_start_turn` does. Without this the first replayed
+	# beat could be matched together with the previous reply's displayed tail.
+	_safety.end_utterance()
+
 	turn_started.emit(_turn_index, player_text)
 
 	_parser = IncrementalJson.new()

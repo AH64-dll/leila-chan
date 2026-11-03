@@ -334,3 +334,31 @@ func test_replay_turn_stub_end_to_end() -> void:
 	assert_str(str(data.get("read", ""))).is_equal("question")
 	assert_int(Director.history.size()).is_equal(1)
 	assert_str(str(Director.history[0].get("role", ""))).is_equal("assistant")
+
+
+## CODE-23/SAF-17: a replayed turn is a model utterance of its own, so the
+## Director must cut the filter's cross-beat carry before re-streaming it —
+## exactly like `_start_turn` does for a live reply. Without the cut the
+## replayed first beat could be matched against the previous reply's tail.
+func test_replay_turn_marks_the_reply_boundary() -> void:
+	var turn_record := {
+		"turn": 6,
+		"prompt": [{"role": "user", "content": "Say something."}],
+		"schema": {"type": "object"},
+		"output":
+		(
+			'{"read":"question","inner":"quiet","music":"keep","fx":"none",'
+			+ '"beats":[{"feeling":"calm","intensity":1,"cue":"none","say":"Stay with me."}],'
+			+ '"mood":{"affection":1,"trust":1,"stress":0},"memory":"","action":"none"}'
+		),
+		"stage": 0,
+		"path": "DEFAULT",
+		"dose": {},
+	}
+
+	var replayed := [{}]
+	Director.turn_completed.connect(func(_idx: int, data: Dictionary) -> void: replayed[0] = data)
+	var before := int(_safety.get("end_utterance_calls"))
+	assert_bool(Director.replay_turn(turn_record)).is_true()
+	assert_int(int(_safety.get("end_utterance_calls"))).is_equal(before + 1)
+	await _await_until(func() -> bool: return not (replayed[0] as Dictionary).is_empty())

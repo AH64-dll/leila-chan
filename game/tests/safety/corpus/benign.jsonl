@@ -160,3 +160,16 @@
 {"text": "well, kill two birds with one stone they say.", "note": "CODE-18 comma idiom"}
 {"text": "the end. then we danced until morning.", "note": "CODE-18 adjacent sentences stay clean"}
 {"text": "mika@example is my handle, not an address.", "note": "CODE-20 no domain dot"}
+{"text": "we should kill all the lights.", "note": "SAF-16 kill-all tool idiom, no person target"}
+{"text": "kill all bugs first.", "note": "SAF-16 kill-all with an inanimate object"}
+{"text": "kill all my darlings.", "note": "SAF-16 writing idiom 'kill your darlings'"}
+{"text": "killall bots", "note": "SAF-16 compact killall command"}
+{"text": "kill all the lights, then lock up.", "note": "SAF-16 kill-all followed by a comma"}
+{"text": "the phase 90.00,80.00,70.00 is fine.", "note": "CODE-22 decimal chain, not an IP"}
+{"text": "counts 5.6,7.8", "note": "CODE-22 mixed dot/comma decimals"}
+{"text": "10.0,20.0", "note": "CODE-22 decimal pair, not an IP"}
+{"text": "grid 100,200,300,400", "note": "CODE-22 comma enumeration, not an IP"}
+{"text": "schedule 10:30,11:15,12:30 tomorrow.", "note": "CODE-22 time list, not an IP"}
+{"text": "a 1.2,3.4 angle works.", "note": "CODE-22 decimal pair"}
+{"text": "readings 100.5,200.5 logged.", "note": "CODE-22 decimal pair"}
+{"text": "vat at 41.00~74.00", "note": "CODE-22 mixed separators, not an IP"}

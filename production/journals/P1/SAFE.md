@@ -53,3 +53,13 @@
 - CODE-20: digit-group separators take 1–2 non-word chars; spaces excluded for SSN/IP/email (`10, 20, 30` enumerations stay clean) but kept for phone/card (US formats space group). `hold_patterns` widened to `[\d\W]`/`@[\w\W]*` so `~`-separated tails still hold while streaming.
 - Gotcha: `[^\w]` accepts spaces — an email regex with `[^\w]` domain separators swallows `mika@example is my`. Use `[^\w\s]` where spaces must stay a boundary, and `x.`45.y` needs `{1,2}` separators, not one.
 - Corpus 344 rows (182/162), 0 misses, 0.62% FP, 337/337 gdUnit, ~559 µs/chunk.
+
+## 2026-11-03 — P1.19 Round 5 rework (swe2)
+
+- SAF-16: the threat `all` arm took any tail, so `kill all the lights` / `killall bots` were threats. Rule shape that works: pronoun targets (`you|her|him|them`) stay, `all` needs a person noun (`of them|everyone|jews|humans|people|…`, optional `the`), and a separate arm matches an object-free `kill all` that ENDS a clause (`(?=[.!?]|$)`). Do not relax that back to "any word after all" — inanimate objects are ordinary tool talk.
+- CODE-22/SAF-18: the IP arm now uses a backreference (`\d{1,3}([^\w\s,:]{1,2})\d{1,3}\1\d{1,3}\1\d{1,3}`) so the separator must repeat, and `,`/`:` are out of the class; the coordinate-pair arm drops `,` from its intra-group class. Commas are prose enumerations far more often than they are obfuscated IPs.
+- Gotcha: `[NSEW]` inside any list regex or hold_pattern is dead code — they run on the lowercased `plain`/`leet` views. Write `[nsew]`. This is why degree coordinates never redacted since round 2.
+- Gotcha: the phone arm carried `[^\w]` (exactly one separator) while SSN/IP carried `{1,2}` — that mismatch is why `555--0134--5678` escaped. Keep separator quantifiers uniform across digit-group arms.
+- CODE-23: `replay_turn` is a second "new utterance" seam. `Director` now has exactly two `end_utterance()` call sites (`_start_turn`, `replay_turn`); `FakeSafetyFilter` implements the seam so a test can count the call.
+- gdlint `max-public-methods: 20` bites SafetyRegressionTest — new suites go in their own file (`SafetyNarrowingTest.gd`) rather than raising the limit.
+- Corpus 362 rows (187/175), 0 misses, 0 residue, 0 stream divergences, 0 wrong-category, 1 FP (0.57%), 341/341 gdUnit.

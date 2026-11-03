@@ -1,9 +1,10 @@
 extends Node
 ## Scripted stand-in for the P1.19 Safety filter (game/autoload/Safety.gd),
 ## which is still a stub on this branch. Implements the streaming API the
-## Director drives — begin_say / say_chunk / end_say / filter_text / check_input
-## — so the suite can prove the wiring: the Director's beat boundary calls, the
-## single-scan rule, and the fail-closed path when no filter can stream.
+## Director drives — begin_say / say_chunk / end_say / end_utterance /
+## filter_text / check_input — so the suite can prove the wiring: the Director's
+## beat boundary calls, the reply boundary calls, the single-scan rule, and the
+## fail-closed path when no filter can stream.
 ##
 ## The scanner is deliberately trivial (a phrase list plus a holdback) — the
 ## real filter's own suite owns detection quality; this one owns the seam.
@@ -16,6 +17,7 @@ var input_blocklist: PackedStringArray = PackedStringArray()
 
 var begin_say_calls := 0
 var end_say_calls := 0
+var end_utterance_calls := 0  ## reply-boundary cuts (Director _start_turn/replay_turn)
 var beat_scans := 0  ## begin_say calls carrying ctx["beat"] (streamed beats only)
 var fed_chunks: PackedStringArray = PackedStringArray()
 var last_ctx: Dictionary = {}
@@ -49,6 +51,13 @@ func end_say() -> String:
 	var out := _drain(true)
 	_pending = ""
 	return out
+
+
+## Reply boundary (CODE-19/CODE-23): the Director must cut the cross-beat
+## carry before a new model utterance starts, including on transcript replay.
+func end_utterance() -> void:
+	end_utterance_calls += 1
+	_pending = ""
 
 
 ## Whole-text variant. Scans through the same accumulator so a caller that uses
