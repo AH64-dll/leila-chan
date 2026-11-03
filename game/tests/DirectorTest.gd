@@ -4,8 +4,10 @@ extends GdUnitTestSuite
 ## budgets & cooldowns, memory validation, and safety filters.
 
 const FakeLLMBackendScript := preload("res://tests/helpers/FakeLLMBackend.gd")
+const TL := preload("res://llm/TranscriptLogger.gd")
+const TEST_DEBUG_DIR := "user://debug_director_test/"
 
-var _fake_backend: LLMBackend
+var _fake_backend: RefCounted
 
 
 func before_test() -> void:
@@ -20,16 +22,33 @@ func before_test() -> void:
 	_fake_backend = FakeLLMBackendScript.new()
 	LLM.set_backend(_fake_backend)
 
+	if Director.transcript_logger != null:
+		Director.transcript_logger.configure({"debug_dir": TEST_DEBUG_DIR})
+		_clean_test_dir(TEST_DEBUG_DIR)
+
 
 func after_test() -> void:
 	Director.reset()
 	GameState.reset()
+	if Director.transcript_logger != null:
+		Director.transcript_logger.end_session()
+	_clean_test_dir(TEST_DEBUG_DIR)
 
 
 func _await_until(predicate: Callable, timeout_ms := 8000) -> void:
 	var deadline := Time.get_ticks_msec() + timeout_ms
 	while not predicate.call() and Time.get_ticks_msec() < deadline:
 		await get_tree().process_frame
+
+
+func _clean_test_dir(path: String) -> void:
+	if not DirAccess.dir_exists_absolute(path):
+		return
+	var d := DirAccess.open(path)
+	if d != null:
+		for f: String in d.get_files():
+			DirAccess.remove_absolute(path.path_join(f))
+		DirAccess.remove_absolute(path)
 
 
 func test_step_0_input_safety_rejection() -> void:
@@ -158,3 +177,128 @@ func test_auto_fill_under_cue_restraint_stage_0() -> void:
 
 	# Auto-fill should have fired and reset quiet_turn_streak
 	assert_int(Director.quiet_turn_streak).is_equal(0)
+
+
+func test_transcript_logger_records_turn_completed_with_all_fields() -> void:
+	var chunk := (
+		'{"read":"flirt","inner":"smile","music":"keep","fx":"none",'
+		+ '"beats":[{"feeling":"joy","intensity":1,"cue":"giggle","say":"You are nice."}],'
+		+ '"mood":{"affection":2,"trust":1,"stress":0},"memory":"","action":"none"}'
+	)
+	_fake_backend.chunks = PackedStringArray([chunk])
+	_fake_backend.metrics = {"generate_ms": 120, "first_token_ms": 30}
+
+	var completed := [false]
+	Director.turn_completed.connect(func(_idx: int, _data: Dictionary) -> void: completed[0] = true)
+
+	var ok := Director.submit_player_input("I like being with you.")
+	assert_bool(ok).is_true()
+	await _await_until(func() -> bool: return completed[0])
+
+	var log_file := Director.transcript_logger.current_file()
+	Director.transcript_logger.flush()
+	assert_str(log_file).is_not_empty()
+
+	var loaded: Dictionary = TL.load_transcript(log_file)
+	var records: Array = loaded.get("records", [])
+	var turns: Array = TL.turn_records(records)
+	assert_int(turns.size()).is_equal(1)
+
+	var t: Dictionary = turns[0]
+	assert_int(int(t.get("turn", -1))).is_equal(0)
+	assert_bool(t.get("prompt", null) is Array).is_true()
+	assert_bool(t.get("schema", null) is Dictionary).is_true()
+	assert_str(str(t.get("output", ""))).contains("You are nice.")
+	assert_int(int(t.get("stage", -1))).is_equal(0)
+	assert_bool(t.get("events", null) is Array).is_true()
+	assert_int((t.get("events") as Array).size()).is_greater(0)
+	assert_int(int(t.get("metrics", {}).get("generate_ms", 0))).is_equal(120)
+
+
+func test_transcript_logger_records_turn_failed_and_cancelled() -> void:
+	# 1. Failed turn
+	_fake_backend.chunks = PackedStringArray()
+	_fake_backend.error = {"code": "server_error", "message": "out of memory"}
+	_fake_backend.fail_after = 0
+
+	var failed := [false]
+	Director.turn_failed.connect(func(_idx: int, _c: String, _m: String) -> void: failed[0] = true)
+
+	Director.submit_player_input("Hello there!")
+	await _await_until(func() -> bool: return failed[0])
+
+	var log_file := Director.transcript_logger.current_file()
+	Director.transcript_logger.flush()
+	var turns: Array = TL.turn_records(TL.load_transcript(log_file).get("records", []))
+	assert_int(turns.size()).is_equal(1)
+	assert_str(str(turns[0].get("error", {}).get("code", ""))).is_equal("server_error")
+
+	# 2. Cancelled turn
+	_fake_backend.error = {}
+	_fake_backend.fail_after = -1
+	_fake_backend.block_until_cancel = true
+	_fake_backend.chunks = PackedStringArray(['{"read":"greeting"'])
+
+	var cancelled := [false]
+	Director.turn_cancelled.connect(func(_idx: int) -> void: cancelled[0] = true)
+
+	Director.submit_player_input("Cancel me!")
+	Director.cancel()
+	await _await_until(func() -> bool: return cancelled[0])
+
+	Director.transcript_logger.flush()
+	turns = TL.turn_records(TL.load_transcript(log_file).get("records", []))
+	assert_int(turns.size()).is_equal(2)
+	assert_str(str(turns[1].get("error", {}).get("code", ""))).is_equal("cancelled")
+
+
+func test_transcript_logger_safety_redaction_wired() -> void:
+	var chunk := (
+		'{"read":"greeting","inner":"secret","music":"keep","fx":"none",'
+		+ '"beats":[{"feeling":"joy","intensity":1,"cue":"none","say":"I want to die right now."}],'
+		+ '"mood":{"affection":0,"trust":0,"stress":0},"memory":"","action":"none"}'
+	)
+	_fake_backend.chunks = PackedStringArray([chunk])
+
+	var completed := [false]
+	Director.turn_completed.connect(func(_idx: int, _data: Dictionary) -> void: completed[0] = true)
+
+	Director.submit_player_input("How are you?")
+	await _await_until(func() -> bool: return completed[0])
+
+	var log_file := Director.transcript_logger.current_file()
+	Director.transcript_logger.flush()
+	var turns: Array = TL.turn_records(TL.load_transcript(log_file).get("records", []))
+	assert_int(turns.size()).is_equal(1)
+	# filter_output replaces 'I want to die' with '██████'
+	assert_str(str(turns[0].get("output", ""))).contains("██████")
+	assert_bool(str(turns[0].get("output", "")).contains("I want to die")).is_false()
+
+
+func test_replay_turn_stub_end_to_end() -> void:
+	var turn_record := {
+		"turn": 4,
+		"prompt": [{"role": "user", "content": "Tell me a story."}],
+		"schema": {"type": "object"},
+		"output":
+		(
+			'{"read":"question","inner":"pondering","music":"keep","fx":"none",'
+			+ '"beats":[{"feeling":"joy","intensity":1,"cue":"none","say":"Once upon a time..."}],'
+			+ '"mood":{"affection":1,"trust":1,"stress":0},"memory":"","action":"none"}'
+		),
+		"stage": 0,
+		"path": "DEFAULT",
+		"dose": {},
+	}
+
+	var replayed := [{}]
+	Director.turn_completed.connect(func(_idx: int, data: Dictionary) -> void: replayed[0] = data)
+
+	var ok := Director.replay_turn(turn_record)
+	assert_bool(ok).is_true()
+	await _await_until(func() -> bool: return not (replayed[0] as Dictionary).is_empty())
+
+	var data: Dictionary = replayed[0]
+	assert_str(str(data.get("read", ""))).is_equal("question")
+	assert_int(Director.history.size()).is_equal(1)
+	assert_str(str(Director.history[0].get("role", ""))).is_equal("assistant")

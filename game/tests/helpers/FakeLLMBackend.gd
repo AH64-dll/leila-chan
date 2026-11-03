@@ -21,7 +21,6 @@ var worker_thread_id := -1
 
 func last_metrics() -> Dictionary:
 	return metrics.duplicate(true)
-
 func generate(request: TurnRequest, on_token: Callable, cancel: LLMCancelToken) -> Dictionary:
 	calls += 1
 	seen_request = request
