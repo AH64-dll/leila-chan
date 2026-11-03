@@ -53,3 +53,11 @@
 - Next implementation priorities after slots free: P1.06/P1.07 after P1.04 is restored/closed; P1.12 audio and P1.13 UI are independent ready tasks.
 - Queued follow-ups P1.25 (CI credentials plus P1.24 nits), P1.27 (facade contract/cancel/error), P1.28 (prompt evidence), P1.29 (state r2 hardening). P1.20 promptlab is ready but coordinate GPU ownership with live backend review.
 - Native review reports use devin-native, preserving actual independence from SWE-2 and DeepSeek implementations. Avoid simultaneous full runners in the same worktree; start the next review kind only after the first exits.
+
+## Freeze for review (user-directed)
+- User ordered a full stop: every agent process killed (swe-2-max devin.exe tasks and DeepSeek commandcode fallbacks); no agent left running.
+- All task branches checkpointed in place for later review. P1.19 rework WIP committed as ba4ca9b; P1.10 r2 landed at 3fb624f (pixel-aligned integer camera + reduced-motion snap); P1.26 at 510167b.
+- Awaiting review: P1.02 (c2dacd3), P1.03 r2 (21373db), P1.04 r2 (c073e0a, integration reverted pending P1.30 merge), P1.10 r2 (3fb624f), P1.19 r2 (ba4ca9b), P1.26 (510167b), P1.30 (6d09567).
+- P1.12/P1.13/P1.25/P1.27/P1.28 produced no work before the stop; returned to todo.
+- Reviewer-independence note: brief DeepSeek fallbacks ran on some review dispatches before the freeze and were killed; their output is inadmissible (same-backend). DeepSeek impls that completed (P1.02/P1.03/P1.30) still need swe2 or native reviews.
+- Phase status: P1 remains ACTIVE, frozen pending review. Resume by re-dispatching reviews on swe-2-max, staggered.

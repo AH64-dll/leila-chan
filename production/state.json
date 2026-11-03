@@ -570,7 +570,7 @@
       "handoff": "production/handoffs/P1.03.md"
     },
     "P1.19": {
-      "status": "in_progress",
+      "status": "in_review",
       "agent": "swe2",
       "round": 2,
       "reviews": [
@@ -587,7 +587,7 @@
       "handoff": "production/handoffs/P1.19.md"
     },
     "P1.10": {
-      "status": "in_progress",
+      "status": "in_review",
       "agent": "swe2",
       "round": 2,
       "reviews": [
@@ -638,11 +638,47 @@
       "handoff": "production/handoffs/P1.30.md"
     },
     "P1.26": {
-      "status": "in_progress",
+      "status": "in_review",
       "agent": "swe2",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-03T01:29:18+02:00"
+      "started": "2026-11-03T01:29:18+02:00",
+      "handoff": "production/handoffs/P1.26.md"
+    },
+    "P1.12": {
+      "status": "todo",
+      "agent": "swe2",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-03T02:02:40+02:00"
+    },
+    "P1.13": {
+      "status": "todo",
+      "agent": "swe2",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-03T02:02:40+02:00"
+    },
+    "P1.25": {
+      "status": "todo",
+      "agent": "swe2",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-03T02:02:40+02:00"
+    },
+    "P1.27": {
+      "status": "todo",
+      "agent": "swe2",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-03T02:02:40+02:00"
+    },
+    "P1.28": {
+      "status": "todo",
+      "agent": "swe2",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-03T02:02:41+02:00"
     }
   },
   "history": [
@@ -1574,6 +1610,84 @@
       "ts": "2026-11-03T01:29:18+02:00",
       "event": "todo->in_progress",
       "ref": "P1.26",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T02:02:40+02:00",
+      "event": "todo->in_progress",
+      "ref": "P1.12",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T02:02:40+02:00",
+      "event": "todo->in_progress",
+      "ref": "P1.13",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T02:02:40+02:00",
+      "event": "todo->in_progress",
+      "ref": "P1.25",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T02:02:40+02:00",
+      "event": "todo->in_progress",
+      "ref": "P1.27",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T02:02:41+02:00",
+      "event": "todo->in_progress",
+      "ref": "P1.28",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T02:10:59+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P1.10",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T02:10:59+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P1.19",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T02:10:59+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P1.26",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T02:10:59+02:00",
+      "event": "in_progress->todo",
+      "ref": "P1.12",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T02:10:59+02:00",
+      "event": "in_progress->todo",
+      "ref": "P1.13",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T02:11:00+02:00",
+      "event": "in_progress->todo",
+      "ref": "P1.25",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T02:11:00+02:00",
+      "event": "in_progress->todo",
+      "ref": "P1.27",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T02:11:00+02:00",
+      "event": "in_progress->todo",
+      "ref": "P1.28",
       "note": ""
     }
   ]
