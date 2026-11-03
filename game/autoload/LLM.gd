@@ -41,6 +41,9 @@ func get_dose() -> Dictionary:
 ## docs/07 §3.1: generate(req) -> TurnStream. Never blocks — the stream
 ## answers through its signals while the turn runs on the worker. One turn at
 ## a time: while busy the returned stream fails with {"code": "busy"}.
+## TurnRequest instances are single-use per turn and owned by the in-flight
+## turn once passed to generate(); callers must not reuse or mutate them.
+## If req.dose is empty, it is filled with get_dose() and frozen for the turn.
 func generate(request: TurnRequest) -> TurnStream:
 	var stream := TurnStream.new()
 	stream.request = request
@@ -66,7 +69,9 @@ func generate(request: TurnRequest) -> TurnStream:
 
 
 ## Cancel the in-flight turn, if any. The stream answers with `cancelled`
-## once the worker has wound down.
+## once cancellation is honoured. Cancellation wins over completion or
+## failure: if cancelled before terminal delivery on the main thread, the
+## stream always emits `cancelled`.
 func cancel() -> void:
 	if _active != null:
 		_active.cancel()
@@ -94,8 +99,12 @@ func _worker_main(stream: TurnStream, transport: LLMBackend) -> void:
 	elif result.get("ok", false) == true and result.get("text") is String:
 		kind = &"completed"
 		payload = result["text"]
-	elif result.get("error") is Dictionary:
-		payload = result["error"]
+	elif result.get("error") is Dictionary and result["error"].get("code") is String:
+		var err_dict: Dictionary = result["error"]
+		if not (err_dict.get("message") is String):
+			err_dict = err_dict.duplicate()
+			err_dict["message"] = ""
+		payload = err_dict
 	_deliver_terminal.call_deferred(stream, kind, payload)
 
 
@@ -109,6 +118,9 @@ func _deliver_token(stream: TurnStream, text: String) -> void:
 func _deliver_terminal(stream: TurnStream, kind: StringName, payload: Variant) -> void:
 	if stream != _active or stream.is_finished():
 		return
+	if stream._cancel_token.is_cancelled():
+		kind = &"cancelled"
+		payload = null
 	stream._mark_terminal(kind == &"cancelled")
 	_active = null
 	var done_thread := _thread
@@ -131,6 +143,10 @@ func _deliver_terminal(stream: TurnStream, kind: StringName, payload: Variant) -
 func _defer_failed(stream: TurnStream, code: String, message: String) -> void:
 	var deliver := func() -> void:
 		if stream.is_finished():
+			return
+		if stream._cancel_token.is_cancelled():
+			stream._mark_terminal(true)
+			stream.cancelled.emit()
 			return
 		stream._mark_terminal(false)
 		stream.failed.emit({"code": code, "message": message})

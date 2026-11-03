@@ -4,6 +4,11 @@ extends RefCounted
 ## All signals are emitted on the main thread — the facade relays the worker's
 ## output through call_deferred. Exactly one of completed / cancelled / failed
 ## fires, once; after that no more signals are ever emitted.
+##
+## Helper methods:
+##   cancel() -> void: request cancellation (terminal delivery wins).
+##   is_cancelled() -> bool: true once cancellation was requested or honoured.
+##   is_finished() -> bool: true after the terminal signal has fired.
 
 signal token(text: String)  ## Raw stream chunk, in order.
 signal completed(full_text: String)  ## Turn finished cleanly; the whole raw output.
@@ -17,8 +22,9 @@ var _was_cancelled := false
 
 
 ## Request cancellation. Idempotent and safe at any time — after a terminal
-## signal it is a no-op. The turn ends with `cancelled` once the worker has
-## wound down (it may be a few frames; chunks already produced still arrive).
+## signal it is a no-op. The turn ends with `cancelled` once cancellation is
+## honoured. Cancellation wins over completion or failure: if cancelled before
+## terminal delivery on the main thread, the stream always emits `cancelled`.
 func cancel() -> void:
 	if not _finished:
 		_cancel_token.cancel()
