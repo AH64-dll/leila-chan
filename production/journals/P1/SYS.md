@@ -24,6 +24,7 @@
   signal via state_reset or an explicit stage_changed. Keep test_* count ≤20/suite (gdlint
   max-public-methods); split restore regressions into GameStateRestoreTest.gd.
 
+<<<<<<< HEAD
 ## P1.29 GameState hardening (round 2, follow-ups on P1.04 CODE-7..12 + DES-7)
 - CODE-7: `_mood_suggest` → `_apply_mood_meter`; the budget now tracks LANDED movement
   (unlanded suggestions at a meter boundary no longer free budget in the opposite direction).
@@ -42,3 +43,25 @@
   lives in `_clamp_meter()` (single choke point) rather than per setter. INF would otherwise
   land on a range bound the caller never asked for. Raw `instability_peak` pokes can still lift
   the floor without touching the meter; the next meter write snaps instability to the floor.
+=======
+## P1.06 PromptBuilder (round 1, deepseek)
+- Built `game/autoload/PromptBuilder.gd`: `build(ctx) -> {messages, debug}`. docs/08 §1's eight layers
+  (persona, player, stage, path, scene, memories, events, rules+glosses) join into ONE system message in
+  that order; then history pairs (assistant turns as spoken text only), the current player turn, and an
+  opt-in `ctx.prefill` block. Plus `spoken_text()`, `count_tokens()`/`estimate_tokens()`, `set_token_counter()`,
+  `clear_cache()`. P1.08 builds `ctx`; P1.07 hands the offered enums in `ctx.offered`.
+- Doc-silent choices, all tested: window = last 12 exchanges with pairs intact, then whole exchanges dropped
+  from the oldest end past the ~1500-token budget; memories keep the newest 8; a missing stage/path file is
+  reported in `debug.missing` and contributes nothing (never a silent stage-1 reuse); prefill OFF by default
+  because llama-server's template already ends the prompt with the non-thinking assistant header.
+- Budget report (P1.05 CON-1/DES-7): `debug.layers.<name>{tokens,chars,present,group,files}`, `tokens.fixed/
+  dynamic/system_message/total`, `budgets` (docs/07 §3.1) and `over_budget`. Estimate `ceil(chars/3.6)`,
+  calibrated on P1.05's real 857/873 and asserted within 5%; `set_token_counter()` takes the real one.
+- Gotchas for P1.07/P1.08: gdlint caps a class at 20 public methods and counts `test_*` → history cases live in
+  `test_prompt_builder_history.gd`; type test helpers by the preloaded script (`-> BuilderScript`) and annotate
+  indexed results (`var messages: Array = …["messages"]`) or `:=` inference fails; never chain `assert_x(...)`
+  with `override_failure_message(...)` across lines (parse error) — bind a local first.
+- Goldens: `game/tests/fixtures/prompts/*.json`, cases in `tests/helpers/PromptGoldenCases.gd`, regenerate via
+  `tests/tools/prompt_builder_goldens.gd`. A prompt-file edit now fails `test_goldens_match_…` on purpose.
+- Measured: stage-1 loaded system message 990 estimated tokens (882 fixed + 108 dynamic) vs docs/07's ~900 line.
+>>>>>>> task/P1.06

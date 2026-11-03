@@ -931,7 +931,26 @@
       "status": "in_review",
       "agent": "deepseek",
       "round": 1,
-      "reviews": [],
+      "reviews": [
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.06-code-r1.md",
+          "ts": "2026-11-03T08:44:46+02:00",
+          "declared": "grok-4.6"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.06-design-r1.md",
+          "ts": "2026-11-03T08:47:03+02:00",
+          "declared": "grok-4.6"
+        }
+      ],
       "started": "2026-11-03T07:38:04+02:00",
       "handoff": "production/handoffs/P1.06.md"
     },
@@ -2409,6 +2428,18 @@
       "event": "in_review->done",
       "ref": "P1.12",
       "note": ""
+    },
+    {
+      "ts": "2026-11-03T08:44:46+02:00",
+      "event": "review:code:approved",
+      "ref": "P1.06",
+      "note": "production/reviews/P1.06-code-r1.md"
+    },
+    {
+      "ts": "2026-11-03T08:47:03+02:00",
+      "event": "review:design:approved",
+      "ref": "P1.06",
+      "note": "production/reviews/P1.06-design-r1.md"
     }
   ]
 }

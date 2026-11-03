@@ -84,3 +84,10 @@
 - Gotcha: tests on Linux emulate Windows via `--platform windows`/`ntpath`; Git Bash must `cygpath -w`
   paths before calling python. `$VectorScale.ToString(InvariantCulture)` — `,` decimal cultures break F:S.
 - `LlamaServerProcess.gd` (P1.02) has the same `%s:%s` construction — reuse this rule in P2.03.
+
+## P1.06 PromptBuilder (round 1, deepseek; brief role SYS, dispatched as LLM)
+- Full entry in `production/journals/P1/SYS.md`. LLM-facing contract: `build(ctx) -> {messages, debug}` produces
+  exactly the `TurnRequest.messages` array the facade forwards verbatim — system block, history pairs (assistant
+  as spoken text), current player turn, opt-in prefill; `debug` is JSON-safe for P1.18's transcript.
+- For P1.02/P4.05: `set_token_counter(Callable)` takes a real tokenizer (llama-server `/tokenize`); without it the
+  report uses `ceil(chars/3.6)`. P1.08 owns building `ctx`; the schema side stays P1.07's.
