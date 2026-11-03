@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3 uid="uid://cu2tbdxoklff"]
+
+[ext_resource type="Script" uid="uid://cnioknh0k6jg" path="res://scenes/ui/NameTag.gd" id="1_tag"]
+
+[node name="NameTag" type="Label"]
+custom_minimum_size = Vector2(80, 14)
+theme_override_colors/font_color = Color(0.85, 0.45, 0.5, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 11
+text = "Leila"
+script = ExtResource("1_tag")
