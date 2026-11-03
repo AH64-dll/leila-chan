@@ -588,9 +588,9 @@
       "finished": "2026-11-03T07:20:33+02:00"
     },
     "P1.19": {
-      "status": "changes_requested",
+      "status": "in_review",
       "agent": "gemini-3.8-flash",
-      "round": 2,
+      "round": 4,
       "reviews": [
         {
           "kind": "safety",
@@ -626,10 +626,38 @@
           "report": "production/reviews/P1.19-code-r2.md",
           "ts": "2026-11-03T14:05:41+02:00",
           "declared": "grok-4.6"
+        },
+        {
+          "kind": "safety",
+          "verdict": "approved",
+          "round": 3,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.19-safety-r3.md",
+          "ts": "2026-11-03T19:00:57+02:00",
+          "declared": "grok-4.6"
+        },
+        {
+          "kind": "code",
+          "verdict": "changes",
+          "round": 3,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.19-code-r3.md",
+          "ts": "2026-11-03T19:24:01+02:00",
+          "declared": "grok-4.6"
+        },
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 4,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.19-code-r4.md",
+          "ts": "2026-11-03T21:55:09+02:00",
+          "declared": "grok-4.6"
         }
       ],
       "started": "2026-11-02T23:22:48+02:00",
-      "handoff": "production/handoffs/P1.19.md"
+      "handoff": "production/handoffs/P1.19.md",
+      "agent_declared": "swe2"
     },
     "P1.10": {
       "status": "done",
@@ -3217,6 +3245,60 @@
       "event": "in_review->done",
       "ref": "P1.08",
       "note": ""
+    },
+    {
+      "ts": "2026-11-03T19:00:57+02:00",
+      "event": "changes_requested->in_progress",
+      "ref": "P1.19",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T19:00:57+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P1.19",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T19:00:57+02:00",
+      "event": "review:safety:approved",
+      "ref": "P1.19",
+      "note": "production/reviews/P1.19-safety-r3.md"
+    },
+    {
+      "ts": "2026-11-03T19:24:01+02:00",
+      "event": "review:code:changes",
+      "ref": "P1.19",
+      "note": "production/reviews/P1.19-code-r3.md"
+    },
+    {
+      "ts": "2026-11-03T19:24:01+02:00",
+      "event": "in_review->changes_requested",
+      "ref": "P1.19",
+      "note": "by code review"
+    },
+    {
+      "ts": "2026-11-03T19:24:01+02:00",
+      "event": "changes_requested->in_progress",
+      "ref": "P1.19",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T21:55:09+02:00",
+      "event": "agent-drift",
+      "ref": "P1.19",
+      "note": "handoff declares swe2; recorded gemini-3.8-flash kept (--force)"
+    },
+    {
+      "ts": "2026-11-03T21:55:09+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P1.19",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T21:55:09+02:00",
+      "event": "review:code:approved",
+      "ref": "P1.19",
+      "note": "production/reviews/P1.19-code-r4.md"
     }
   ]
 }
