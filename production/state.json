@@ -824,6 +824,13 @@
       "round": 1,
       "reviews": [],
       "started": "2026-11-03T07:41:07+02:00"
+    },
+    "P1.23": {
+      "status": "in_progress",
+      "agent": "swe2",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-03T07:59:41+02:00"
     }
   },
   "history": [
@@ -2085,6 +2092,12 @@
       "ts": "2026-11-03T07:59:02+02:00",
       "event": "in_review->done",
       "ref": "P1.02",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T07:59:41+02:00",
+      "event": "todo->in_progress",
+      "ref": "P1.23",
       "note": ""
     }
   ]
