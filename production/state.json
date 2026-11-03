@@ -1137,10 +1137,11 @@
       "reviews": []
     },
     "P1.21": {
-      "status": "in_progress",
+      "status": "in_review",
       "agent": "gemini-3.8-flash",
       "round": 1,
-      "reviews": []
+      "reviews": [],
+      "handoff": "production/handoffs/P1.21.md"
     }
   },
   "history": [
@@ -2751,6 +2752,12 @@
       "event": "review:design:approved",
       "ref": "P1.15",
       "note": "production/reviews/P1.15-design-r2.md"
+    },
+    {
+      "ts": "2026-11-03T09:39:06+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P1.21",
+      "note": ""
     }
   ]
 }
