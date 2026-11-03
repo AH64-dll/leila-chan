@@ -227,7 +227,7 @@ func _path_layer(
 	return text + "\n" + line
 
 
-## docs/08 §1/§7: the scenario prompt, its resolved variant, and the current
+## docs/08 §1/§7: the scenario prompt, her goal, its resolved variant, and the current
 ## event when the loader resolved one for this turn.
 func _scene_layer(ctx: Dictionary) -> String:
 	var scene: Variant = ctx.get("scene", "")
@@ -236,10 +236,17 @@ func _scene_layer(ctx: Dictionary) -> String:
 	if not scene is Dictionary:
 		return ""
 	var parts: Array[String] = []
-	for key: String in ["prompt", "variant"]:
+	for key: String in ["goal", "prompt", "variant"]:
 		var value := String((scene as Dictionary).get(key, "")).strip_edges()
 		if not value.is_empty():
-			parts.append(value)
+			if (
+				key == "goal"
+				and not value.begins_with("Goal:")
+				and not value.begins_with("Your goal:")
+			):
+				parts.append("Goal: " + value)
+			else:
+				parts.append(value)
 	var event := String((scene as Dictionary).get("event", "")).strip_edges()
 	if not event.is_empty():
 		parts.append(EVENT_PREFIX + event)

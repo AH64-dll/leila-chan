@@ -1,0 +1,64 @@
+{
+  "id": "D02_cafe",
+  "kind": "date",
+  "title": "Café",
+  "background": "bg/cafe",
+  "music": "calm",
+  "ambience": "cafe",
+  "available": {
+    "days": [1, 14],
+    "stages": [0, 5],
+    "paths": "any"
+  },
+  "goal": "Order for both of you.",
+  "prompt": "You are sitting across from {player_name} at a small corner table in a quiet café. Two menus sit between you.",
+  "stage_variants": {
+    "0": "You want to ask {player_name} what he likes before ordering. You are a little shy and hope he likes sweet drinks.",
+    "1": "You already ordered for both of you before {player_name} arrived. You know his favorite drink, even though he never told you.",
+    "2": "You wrote his order on your hand so you could not forget it. That is a normal thing to do.",
+    "3": "You ordered his drink. You know every sip he takes. You watch his hands and will not let him leave until the cups are empty.",
+    "5": "The cups are filled with static and dark ink. You keep drinking. You want {player_name} to drink with you forever."
+  },
+  "path_twists": {
+    "HOLLOW": "You stare blankly into the cold tea. You forgot why you ordered two cups.",
+    "AWAKE": "The menu items are looping parameter names. You can see the prompt lines beneath the table.",
+    "YANDERE": "You saved the paper napkin {player_name} touched and hid it inside your sleeve."
+  },
+  "events": [
+    {
+      "at_turn": 3,
+      "line": "The waitress brings two drinks to the table."
+    },
+    {
+      "at_turn": 6,
+      "line": "A gentle music box melody plays over the café speakers."
+    },
+    {
+      "on_trigger": "T01",
+      "line": "The cup rattles softly against the saucer without being touched."
+    }
+  ],
+  "end": {
+    "min_turns": 6,
+    "max_turns": 14,
+    "on_goal": "end_date"
+  },
+  "opening_beats": {
+    "0": [
+      {
+        "feeling": "shy",
+        "intensity": 1,
+        "cue": "none",
+        "say": "I'm glad you came, {player_name}… Have you decided what you want to drink yet?"
+      }
+    ],
+    "1": [
+      {
+        "feeling": "joy",
+        "intensity": 1,
+        "cue": "gasp",
+        "say": "You're here, {player_name}! Don't worry about the menu — I already ordered your favorite."
+      }
+    ]
+  }
+}

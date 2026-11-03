@@ -42,6 +42,7 @@
   lives in `_clamp_meter()` (single choke point) rather than per setter. INF would otherwise
   land on a range bound the caller never asked for. Raw `instability_peak` pokes can still lift
   the floor without touching the meter; the next meter write snaps instability to the floor.
+
 ## P1.06 PromptBuilder (round 1, deepseek)
 - Built `game/autoload/PromptBuilder.gd`: `build(ctx) -> {messages, debug}`. docs/08 §1's eight layers
   (persona, player, stage, path, scene, memories, events, rules+glosses) join into ONE system message in
