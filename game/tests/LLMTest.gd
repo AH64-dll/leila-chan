@@ -192,8 +192,10 @@ func test_busy_second_turn_fails() -> void:
 	await _await_terminal(second_spy)
 	assert_str(String(second_spy["terminal"])).is_equal("failed")
 	assert_str(String(second_spy["payload"]["code"])).is_equal("busy")
+	var deadline := Time.get_ticks_msec() + 2000
+	while fake.calls < 1 and Time.get_ticks_msec() < deadline:
+		await get_tree().process_frame
 	assert_int(fake.calls).is_equal(1)
-
 	first.cancel()
 	await _await_terminal(first_spy)
 	assert_str(String(first_spy["terminal"])).is_equal("cancelled")

@@ -26,5 +26,27 @@
 	"input": {
 		"max_length": 400,
 		"placeholder": "Say something…"
+	},
+	"title": {
+		"game_title": "Leila-chan",
+		"subtitle": "A Dating Sim",
+		"btn_new_game": "New Game",
+		"btn_continue": "Continue",
+		"btn_settings": "Settings",
+		"btn_quit": "Quit"
+	},
+	"new_game": {
+		"prompt": "What's your name?",
+		"placeholder": "Enter your name...",
+		"hint": "1–16 characters (letters, spaces, - and ')",
+		"default_name": "Senpai",
+		"btn_confirm": "Confirm",
+		"btn_back": "Back",
+		"min_length": 1,
+		"max_length": 16,
+		"pout_unsafe": "That's not a real name… tell me your real one.",
+		"leila_special": "That's *my* name. …Do you want to be me?",
+		"invalid_characters": "Only letters, spaces, hyphens, and apostrophes are allowed.",
+		"too_long": "Name must be 16 characters or less."
 	}
 }

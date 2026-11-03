@@ -28,6 +28,30 @@ const DEFAULTS := {
 	},
 	"chat_log": {"max_entries": 200, "page_scroll_ratio": 0.9},
 	"input": {"max_length": 400, "placeholder": "Say something…"},
+	"title":
+	{
+		"btn_continue": "Continue",
+		"btn_new_game": "New Game",
+		"btn_quit": "Quit",
+		"btn_settings": "Settings",
+		"game_title": "Leila-chan",
+		"subtitle": "A Dating Sim",
+	},
+	"new_game":
+	{
+		"btn_back": "Back",
+		"btn_confirm": "Confirm",
+		"default_name": "Senpai",
+		"hint": "1–16 characters (letters, spaces, - and ')",
+		"invalid_characters": "Only letters, spaces, hyphens, and apostrophes are allowed.",
+		"leila_special": "That's *my* name. …Do you want to be me?",
+		"max_length": 16,
+		"min_length": 1,
+		"placeholder": "Enter your name...",
+		"pout_unsafe": "That's not a real name… tell me your real one.",
+		"prompt": "What's your name?",
+		"too_long": "Name must be 16 characters or less.",
+	},
 }
 
 

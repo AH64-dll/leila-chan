@@ -106,19 +106,33 @@ var prompt_dir := PROMPT_DIR
 
 var _cache := {}
 var _counter := Callable()
+var player_name := DEFAULT_PLAYER_NAME
+
+
+func set_player_name(new_name: String) -> void:
+	var cleaned := new_name.strip_edges()
+	player_name = cleaned if not cleaned.is_empty() else DEFAULT_PLAYER_NAME
+
+
+func get_player_name() -> String:
+	if has_node("/root/GameState"):
+		var gs: Node = get_node("/root/GameState")
+		if "player_name" in gs and not str(gs.player_name).strip_edges().is_empty():
+			return str(gs.player_name).strip_edges()
+	return player_name
 
 
 ## Build the message array and the debug report for one turn.
 ## Returns {"messages": Array[Dictionary], "debug": Dictionary}.
-func build(ctx: Dictionary) -> Dictionary:
+func build(ctx: Dictionary = {}) -> Dictionary:
 	var stage := int(ctx.get("stage", 0))
 	var path := String(ctx.get("path", ""))
-	var player_name := String(ctx.get("player_name", "")).strip_edges()
-	if player_name.is_empty():
-		player_name = DEFAULT_PLAYER_NAME
+	var resolved_name := String(ctx.get("player_name", "")).strip_edges()
+	if resolved_name.is_empty():
+		resolved_name = get_player_name()
 	var missing: Array[String] = []
 	var warnings: Array[String] = []
-	var layers := _assemble(stage, path, player_name, ctx, missing, warnings)
+	var layers := _assemble(stage, path, resolved_name, ctx, missing, warnings)
 	var window := _window(ctx.get("history", []), ctx, warnings)
 	var messages := _messages(layers, window["messages"], ctx, warnings)
 	var debug := _debug(ctx, stage, path, player_name, layers, window, messages, missing, warnings)
