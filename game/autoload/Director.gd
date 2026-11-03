@@ -15,37 +15,6 @@ signal turn_completed(turn_index: int, turn_data: Dictionary)
 signal turn_failed(turn_index: int, error_code: String, error_message: String)
 signal turn_cancelled(turn_index: int)
 
-## docs/02 §9 Sampling settings by stage table:
-## | Stage | temperature | top_p | repeat_penalty | steering dose (base) |
-const SAMPLING_TABLE := {
-	0: {"temperature": 0.75, "top_p": 0.90, "repeat_penalty": 1.10, "dose": 0.0},
-	1: {"temperature": 0.80, "top_p": 0.90, "repeat_penalty": 1.10, "dose": 2.5},
-	2: {"temperature": 0.80, "top_p": 0.92, "repeat_penalty": 1.12, "dose": 3.5},
-	3: {"temperature": 0.85, "top_p": 0.95, "repeat_penalty": 1.15, "dose": 4.5},
-	4: {"temperature": 0.90, "top_p": 0.95, "repeat_penalty": 1.15, "dose": 6.0},
-	5: {"temperature": 0.95, "top_p": 0.97, "repeat_penalty": 1.18, "dose": 8.0},
-}
-
-## docs/02 §6 rule 2: memories must not contain schema/meta words. A literal
-## schema-key list would reject benign facts the few-shots themselves produce
-## (`gave me a music box` — P1.05 CON-2, `read a book`, `bad mood`), so only
-## unambiguous meta jargon and snake_case intent labels are listed. Kept in
-## step with the prompt-lab list that measured CON-2 (tools/promptlab/lab.py).
-const META_WORDS := [
-	"player",
-	"stage",
-	"json",
-	"schema",
-	"enum",
-	"prompt",
-	"label",
-	"labels",
-	"request",
-	"response",
-	"jealousy_bait",
-	"small_talk",
-]
-
 const DEBUG_OVERLAY_KEY := KEY_F3
 ## Turn history maintained by Director: array of {"role": "user"|"assistant", ...}
 var history: Array[Dictionary] = []
@@ -75,6 +44,9 @@ var last_inner: String = ""
 
 var transcript_logger: TranscriptLogger = null
 var _overlay: CanvasLayer = null
+## The single say scanner (docs/02 §8). Owns the beat boundary calls so no other
+## node installs a second filter over the same text.
+var _safety := SaySafetyGate.new()
 
 var _active_stream: TurnStream = null
 var _parser: IncrementalJson = null
@@ -85,6 +57,7 @@ var _current_beat_data := {}
 var _turn_in_flight := false
 var _turn_index := 0
 var _current_player_input := ""
+var _turn_events: Array = []
 var _stream_had_error := false
 var _stream_error_message := ""
 var _retry_count := 0
@@ -100,7 +73,27 @@ var _current_path := ""
 
 
 func _ready() -> void:
+	_connect_stage()
 	reset()
+
+
+## docs/02 §5 gates are keyed on the stage, so AudioDirector must be told every
+## time GameState's derived stage moves — not only at scene install (CODE-2).
+func _connect_stage() -> void:
+	if not GameState.stage_changed.is_connected(_on_stage_changed):
+		GameState.stage_changed.connect(_on_stage_changed)
+	_sync_stage()
+
+
+func _on_stage_changed(_previous: int, current: int) -> void:
+	if AudioDirector != null and AudioDirector.has_method("set_stage"):
+		AudioDirector.set_stage(current)
+
+
+func _sync_stage() -> void:
+	if AudioDirector != null and AudioDirector.has_method("set_stage"):
+		AudioDirector.set_stage(int(GameState.stage))
+	_safety.set_filter(Safety)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -141,6 +134,7 @@ func reset() -> void:
 	_streamed_say_text = ""
 	_parser = null
 	_active_stream = null
+	_sync_stage()
 
 
 func _init_transcript_logger() -> void:
@@ -156,13 +150,28 @@ func _wire_safety_redactor() -> void:
 	transcript_logger.set_redactor(redactor)
 
 
+## Transcript redaction (P1.18). The record is redacted through the same filter
+## the display uses, so a transcript can never hold text the screen refused.
+##
+## With no filter able to scan (Safety still a stub, or a build without the
+## streaming API) the output is fail-closed to bars and the gap is marked in the
+## record: the P1.18 contract is that unredacted model output never touches disk,
+## and that must hold whether or not a filter is present.
 func _redact_record(record: Dictionary) -> Dictionary:
 	if Safety != null and Safety.has_method("redact_record"):
 		var res: Variant = Safety.call("redact_record", record)
 		if res is Dictionary:
 			return res
 	if record.has("output") and record["output"] is String:
-		record["output"] = filter_output(record["output"])
+		var output := str(record["output"])
+		if _safety.can_stream():
+			record["output"] = _safety.filter_text(output, {"stage": _current_stage})
+		else:
+			record["output"] = SaySafetyGate.redact(output)
+			var meta: Variant = record.get("meta", {})
+			if meta is Dictionary:
+				meta["redaction"] = "unavailable"
+				record["meta"] = meta
 	return record
 
 
@@ -184,10 +193,11 @@ func register_character(node: Node) -> void:
 	character_node = node
 
 
+## The ChatUI seam (docs/07 §3.4) stays UNSET: this Director scans every say
+## chunk through Safety itself before handing it over, so installing a
+## `text_filter` here would scan the same text twice (review CODE-1).
 func register_chat_ui(node: Node) -> void:
 	chat_ui_node = node
-	if chat_ui_node != null and chat_ui_node.has_method("set_text_filter"):
-		chat_ui_node.text_filter = Callable(self, "filter_output")
 
 
 func toggle_debug_overlay() -> void:
@@ -232,20 +242,25 @@ func get_current_dose() -> Dictionary:
 		return last_dose
 	var stage := int(GameState.stage)
 	if Steering != null and Steering.has_method("dose_for"):
-		var ctx := {
-			"stage": stage,
-			"path": String(GameState.path),
-			"player_name": GameState.player_name,
-			"scene": scene_info,
-			"memories": memories.duplicate(),
-			"events": [],
-			"history": history.duplicate(true),
-			"player_message": "",
-			"offered_actions": get_offered_actions(),
-		}
-		return Steering.dose_for(ctx)
-	var sampling_spec: Dictionary = SAMPLING_TABLE.get(stage, SAMPLING_TABLE[0])
-	return {"base": float(sampling_spec.get("dose", 0.0))}
+		return Steering.dose_for(build_turn_context(""))
+	return {"base": float(sampling_spec(stage).get("dose", 0.0))}
+
+
+## docs/02 §9 sampling row for `stage` (data-owned, see TurnContext).
+func sampling_spec(stage: int) -> Dictionary:
+	return TurnContext.sampling_spec(stage)
+
+
+## The docs/02 §4 step 1 snapshot for this turn (see TurnContext.build).
+func build_turn_context(player_text: String, events: Array = []) -> Dictionary:
+	return TurnContext.build(
+		player_text, events, scene_info, memories, history, get_offered_actions()
+	)
+
+
+## docs/08 §5 "Offered this turn — …": the legal enums of this turn.
+func offered_values(stage: int, offered_actions: Array) -> Dictionary:
+	return TurnContext.offered_values(stage, offered_actions)
 
 
 func get_offered_actions() -> Array:
@@ -288,17 +303,27 @@ func submit_player_input(raw_input: String, telemetry: Dictionary = {}) -> bool:
 	_current_player_input = trimmed
 	_retry_count = 0
 	_dose_offset = 0.0
+	_turn_events.clear()
 	# Step 1–4: Prepare and launch generation
 	return _start_turn(trimmed)
 
 
+## docs/02 §4 step 0: typing telemetry (T08 deleted draft, T11 idle) and the
+## keyword-trigger layer (K). The trigger layer's lines are this turn's
+## docs/08 §6 event layer — they reach the prompt through ctx["events"], not
+## into the void (review CODE-8).
 func _handle_input_telemetry(input_text: String, telemetry: Dictionary) -> void:
 	if telemetry.has("deleted_draft") and not str(telemetry["deleted_draft"]).is_empty():
 		GameState.set_flag(&"t08_deleted_draft", telemetry["deleted_draft"])
 	if telemetry.has("idle_seconds") and float(telemetry["idle_seconds"]) > 30.0:
 		GameState.set_flag(&"t11_idle", true)
-	if Triggers.has_method("check_keyword_triggers"):
-		Triggers.check_keyword_triggers(input_text)
+	if Triggers != null and Triggers.has_method("check_keyword_triggers"):
+		var fired: Variant = Triggers.check_keyword_triggers(input_text)
+		if fired is Array:
+			for line: Variant in fired:
+				var event_line := str(line).strip_edges()
+				if not event_line.is_empty() and not _turn_events.has(event_line):
+					_turn_events.append(event_line)
 
 
 ## -----------------------------------------------------------------------------
@@ -326,49 +351,53 @@ func _start_turn(player_text: String) -> bool:
 	if chat_ui_node != null and chat_ui_node.has_method("begin_turn_wait"):
 		chat_ui_node.begin_turn_wait()
 
-	# Step 1: TurnContext assembly
+	# Step 1: TurnContext assembly (docs/02 §4 step 1 state snapshot)
 	var stage := int(GameState.stage)
 	var offered_actions := []
 	if MetaDirector != null and MetaDirector.has_method("offers"):
 		offered_actions = MetaDirector.offers(stage)
 
-	var ctx := {
-		"stage": stage,
-		"path": String(GameState.path),
-		"player_name": GameState.player_name,
-		"scene": scene_info,
-		"memories": memories.duplicate(),
-		"events": [],
-		"history": history.duplicate(true),
-		"player_message": player_text,
-		"offered_actions": offered_actions,
-	}
+	var ctx := build_turn_context(player_text, _turn_events)
 
 	# Step 2: Prompt assembly via PromptBuilder
 	var prompt_res: Dictionary = PromptBuilder.build(ctx)
 	var messages: Array = prompt_res.get("messages", [])
 
-	# Step 3: Schema assembly via TurnSchema
-	var schema: Dictionary = TurnSchema.build_turn_schema(ctx, offered_actions)
+	# Step 3: Schema assembly via TurnSchema. The property order is the
+	# docs/02 §3 order — music/fx before beats — because llama.cpp emits in
+	# schema order and the face/sound must change exactly when the line starts
+	# (docs/02 §1, review CODE-3).
+	var schema_ctx := ctx.duplicate()
+	schema_ctx["property_order"] = TurnSchema.DOCS_02_PROPERTY_ORDER
+	var schema: Dictionary = TurnSchema.build_turn_schema(schema_ctx, offered_actions)
 	_current_prompt = messages.duplicate(true)
 	_current_schema = schema.duplicate(true)
 
-	# Step 4: Sampling and steering dose
-	var sampling_spec: Dictionary = SAMPLING_TABLE.get(stage, SAMPLING_TABLE[0])
+	# Step 4: Sampling and steering dose (docs/02 §9)
+	var sampling_spec := sampling_spec(stage)
 	var sampling_dict := {
 		"temperature": float(sampling_spec.get("temperature", 0.75)),
 		"top_p": float(sampling_spec.get("top_p", 0.90)),
 		"repeat_penalty": float(sampling_spec.get("repeat_penalty", 1.10)),
 	}
 
+	# Steering owns the dose once it lands (docs/06 §4). Until then the table's
+	# docs/02 §9 dose column is the source, because the merged P1.09 retry path
+	# pins it (`DirectorFallbackTest` asserts the stage-1 base 2.5 + retry -2.0
+	# reaches the request). CODE-7's "leave dose empty" would drop that
+	# observable: the facade only fills from set_dose(), which nothing calls
+	# yet. The transmission gap (LlamaServerBackend ignores request.dose —
+	# control vectors are a server launch flag, docs/06 §4) is P1.02/P2.02 work.
 	var dose_dict := {}
 	if Steering != null and Steering.has_method("dose_for"):
 		dose_dict = Steering.dose_for(ctx)
-	elif float(sampling_spec.get("dose", 0.0)) > 0.0:
+	if dose_dict.is_empty() and float(sampling_spec.get("dose", 0.0)) > 0.0:
 		dose_dict = {"base": float(sampling_spec.get("dose", 0.0))}
 	# docs/02 §7 empty-say retry: dose -2 applies to whichever dose source won
-	if not dose_dict.is_empty():
-		dose_dict["base"] = maxf(0.0, float(dose_dict.get("base", 0.0)) + _dose_offset)
+	if _dose_offset != 0.0:
+		for vector: Variant in dose_dict:
+			var name := str(vector)
+			dose_dict[name] = maxf(0.0, float(dose_dict[name]) + _dose_offset)
 	last_offered_actions = offered_actions.duplicate()
 	last_dose = dose_dict.duplicate()
 
@@ -420,6 +449,10 @@ func _process_stream_event(event: Dictionary) -> void:
 			var b_idx: int = int(event.get("index", 0))
 			_current_beat_index = b_idx
 			_current_beat_data = {"index": b_idx, "say": ""}
+			# One scan per beat: Safety holds the streaming state (docs/02 §8).
+			# `beat` marks a streamed-beat scan, so the filter can tell it from
+			# a whole-text scan (the transcript redactor uses filter_text).
+			_safety.begin_beat({"stage": int(GameState.stage), "beat": true})
 			beat_started.emit(b_idx)
 			if chat_ui_node != null and chat_ui_node.has_method("begin_beat"):
 				chat_ui_node.begin_beat(b_idx)
@@ -434,13 +467,17 @@ func _process_stream_event(event: Dictionary) -> void:
 		"say_chunk":
 			var b_idx: int = int(event.get("index", 0))
 			var raw_say: String = str(event.get("text", ""))
+			# Raw text feeds the transcript and the §7 broken-stream fallback;
+			# only the scanned text is displayed (docs/02 §4 step 5, §8).
 			_streamed_say_text += raw_say
-			var filtered_say := filter_output(raw_say)
+			var filtered_say := _safety.feed(raw_say)
 			beat_say_chunk.emit(b_idx, filtered_say)
 			if chat_ui_node != null and chat_ui_node.has_method("say_chunk"):
 				chat_ui_node.say_chunk(b_idx, filtered_say)
 
 		"error":
+			# docs/02 §7: the partial `say` already streamed stays on screen —
+			# the parser flushes it before the error, so chunks keep routing.
 			_stream_had_error = true
 			_stream_error_message = str(event.get("message", "parse error"))
 			push_warning("Director: IncrementalJson parse error: %s" % _stream_error_message)
@@ -479,12 +516,29 @@ func _on_beat_field_received(beat_index: int, field_name: String, value: Variant
 		"say":
 			var raw_say_val := str(value)
 			_current_beat_data["say"] = raw_say_val
+			# The holdback kept a prefix back so no phrase could complete after
+			# a partial emission; the beat close is where that tail is safe.
+			_flush_say_tail(beat_index)
 			if chat_ui_node != null and chat_ui_node.has_method("end_beat"):
 				chat_ui_node.end_beat(beat_index)
 			_current_beats.append(_current_beat_data.duplicate())
 			beat_ended.emit(beat_index, _current_beat_data)
 
 
+func _flush_say_tail(beat_index: int) -> void:
+	var tail := _safety.finish()
+	if tail.is_empty():
+		return
+	beat_say_chunk.emit(beat_index, tail)
+	if chat_ui_node != null and chat_ui_node.has_method("say_chunk"):
+		chat_ui_node.say_chunk(beat_index, tail)
+
+
+## docs/03 §3: resolve the beat exactly once. `SpriteResolver` is stateful (the
+## anti-repeat window), so resolving here AND again inside
+## `Character.set_feeling()` double-counts every beat and can show a different
+## sprite than the packet logged (review CODE-4). The packet is passed down
+## instead, and the resolver stays the only `beat_resolved` emitter.
 func _maybe_route_sprite() -> void:
 	if not _current_beat_data.has("feeling") or not _current_beat_data.has("intensity"):
 		return
@@ -496,12 +550,22 @@ func _maybe_route_sprite() -> void:
 	var intensity: int = int(_current_beat_data["intensity"])
 	var stage: int = int(GameState.stage)
 	var path: String = String(GameState.path)
+	# Flags reach the resolver so the flag-gated sprite pool (docs/10 §3) can
+	# fire from this route (review CODE-4/DES-6).
+	var flags: Dictionary = GameState.flags
 
-	var packet: Dictionary = SpriteResolver.resolve_beat(feeling, intensity, stage, path)
+	var packet: Dictionary = SpriteResolver.resolve_beat(feeling, intensity, stage, path, flags)
 	beat_resolved.emit(packet)
+	var sprite_id := StringName(str(packet.get("sprite", "")))
+	if sprite_id != &"":
+		# docs/04 §3: AudioDirector tracks sprites 21/30 for knife_draw.
+		if AudioDirector != null and AudioDirector.has_method("note_sprite"):
+			AudioDirector.note_sprite(sprite_id)
 
-	if character_node != null and character_node.has_method("set_feeling"):
-		character_node.set_feeling(feeling, intensity, stage, path)
+	if character_node != null and character_node.has_method("apply_beat"):
+		character_node.apply_beat(packet)
+	elif character_node != null and character_node.has_method("set_feeling"):
+		character_node.set_feeling(feeling, intensity, stage, path, flags)
 	elif character_node != null and character_node.has_method("set_sprite"):
 		character_node.set_sprite(str(packet.get("sprite", "00")))
 
@@ -562,134 +626,77 @@ func _on_llm_completed(_raw_text: String) -> void:
 
 
 func _handle_broken_json_fallback(stage: int) -> void:
-	var fallback_info: Dictionary = TurnValidator.get_broken_stream_fallback(
-		_streamed_say_text, stage, GameState.player_name
+	var recovered := TurnFallback.broken_stream_turn(
+		_streamed_say_text, stage, GameState.player_name, _current_turn_data
 	)
-	var fallback_say: String = str(fallback_info.get("say", "..."))
-	var fb_beat: Dictionary = {
-		"feeling": str(fallback_info.get("feeling", "confused")),
-		"intensity": int(fallback_info.get("intensity", 1)),
-		"cue": str(fallback_info.get("cue", "none")),
-		"say": fallback_say,
-	}
-	_current_turn_data["beats"] = [fb_beat]
-	_current_turn_data["read"] = _current_turn_data.get("read", "other")
-	_current_turn_data["inner"] = _current_turn_data.get("inner", "...")
-	_current_turn_data["music"] = _current_turn_data.get("music", "keep")
-	_current_turn_data["fx"] = str(fallback_info.get("fx", "none"))
-	_current_turn_data["mood"] = _current_turn_data.get(
-		"mood", {"affection": 0, "trust": 0, "stress": 1}
-	)
-	_current_turn_data["memory"] = ""
-	_current_turn_data["action"] = "none"
+	var fallback_say := str(recovered.get("_say", "..."))
+	var target_sprite := str(recovered.get("_sprite", "00"))
+	recovered.erase("_say")
+	recovered.erase("_sprite")
+	_current_turn_data = recovered
 	# Route sprite 29 (stage >= 3) or 00; glitch fx only exists from stage 3
-	var target_sprite: String = str(fallback_info.get("sprite", "00"))
-	if character_node != null and character_node.has_method("set_sprite"):
-		character_node.set_sprite(target_sprite)
-	var fallback_fx := str(fallback_info.get("fx", "none"))
+	if not target_sprite.is_empty():
+		if character_node != null and character_node.has_method("set_sprite"):
+			character_node.set_sprite(target_sprite)
+	var fallback_fx := str(_current_turn_data.get("fx", "none"))
 	if fallback_fx != "none" and FX != null and FX.has_method("trigger"):
 		FX.trigger(fallback_fx, stage)
 
 	# Overwrite the beat whose partial say is already queued on screen — a
-	# second say_chunk would duplicate the partial text. UI implementations
-	# without replace_beat get a plain chunk instead. Both paths leave the
-	# safety scan to the UI seam (ChatUI applies `text_filter`), exactly like
-	# replace_beat, so the text is filtered once and only once.
-	if chat_ui_node != null and chat_ui_node.has_method("replace_beat"):
-		chat_ui_node.replace_beat(0, fallback_say)
-	elif chat_ui_node != null and chat_ui_node.has_method("say_chunk"):
-		chat_ui_node.say_chunk(0, fallback_say)
-	beat_ended.emit(0, fb_beat)
+	# second say_chunk would duplicate the partial text. The Director owns the
+	# scan, so the text is filtered here, before the UI (review CODE-1).
+	_show_replacement_beat(0, fallback_say)
+	beat_ended.emit(0, (_current_turn_data["beats"] as Array)[0])
 	_close_turn_success(_current_turn_data)
 
 
 func _handle_empty_say_fallback() -> void:
-	var fb_beat: Dictionary = {
-		"feeling": "empty",
-		"intensity": 1,
-		"cue": "none",
-		"say": "…",
-	}
-	_current_turn_data["beats"] = [fb_beat]
-	_current_turn_data["read"] = _current_turn_data.get("read", "other")
-	_current_turn_data["inner"] = _current_turn_data.get("inner", "...")
-	_current_turn_data["music"] = _current_turn_data.get("music", "keep")
-	_current_turn_data["fx"] = "none"
-	_current_turn_data["mood"] = _current_turn_data.get(
-		"mood", {"affection": 0, "trust": 0, "stress": 0}
-	)
-	_current_turn_data["action"] = "none"
-
+	_current_turn_data = TurnFallback.empty_say_turn(_current_turn_data)
+	_current_turn_data.erase("_sprite")
+	var say_text := str(_current_turn_data.get("_say", "…"))
+	_current_turn_data.erase("_say")
 	# Show "…" (docs/02 §7: stage >= 3 gets a stuck typing indicator).
 	# The player can't respond to nothing, so the turn still closes cleanly.
 	# replace_beat is the single text path — the beat is rewritten, not
 	# appended, so no second chunk is emitted for the same literal.
-	if chat_ui_node != null and chat_ui_node.has_method("replace_beat"):
-		chat_ui_node.replace_beat(0, "…")
-	elif chat_ui_node != null and chat_ui_node.has_method("say_chunk"):
-		chat_ui_node.say_chunk(0, "…")
-	beat_ended.emit(0, fb_beat)
+	_show_replacement_beat(0, say_text)
+	beat_ended.emit(0, (_current_turn_data["beats"] as Array)[0])
 	_close_turn_success(_current_turn_data)
 
 
+## Rewrite an already-queued beat with scanned text: the scan runs here, the UI
+## seam is never given a second filter to apply (review CODE-1).
+func _show_replacement_beat(beat_index: int, text: String) -> void:
+	var scanned := _safety.filter_text(text, {"stage": int(GameState.stage)})
+	if chat_ui_node != null and chat_ui_node.has_method("replace_beat"):
+		chat_ui_node.replace_beat(beat_index, scanned)
+	elif chat_ui_node != null and chat_ui_node.has_method("say_chunk"):
+		chat_ui_node.say_chunk(beat_index, scanned)
+
+
 func _apply_turn_repairs_and_deflections(turn_data: Dictionary, stage: int) -> void:
-	var beats_list: Array = turn_data.get("beats", [])
-	var player_name := GameState.player_name
-
-	for i in range(beats_list.size()):
-		var b_variant: Variant = beats_list[i]
-		if not (b_variant is Dictionary):
-			continue
-		var beat: Dictionary = b_variant
-		var beat_index := int(beat.get("index", i))
-		var original_say := str(beat.get("say", ""))
-		var say_text := original_say
-
-		# 1. Early character-break deflection
-		if TurnValidator.check_character_break(say_text, stage):
-			GameState.bump_profile(&"meta_curiosity", 1)
-			var def_beat: Dictionary = TurnValidator.get_deflection_beat(player_name)
-			beat["feeling"] = def_beat.get("feeling", beat.get("feeling", "confused"))
-			beat["intensity"] = int(def_beat.get("intensity", beat.get("intensity", 1)))
-			beat["cue"] = def_beat.get("cue", beat.get("cue", "none"))
-			say_text = str(def_beat.get("say", ""))
-		else:
-			# 2. Third-person pronoun repair in say ("He's being mean" -> "You're being mean").
-			# The last player messages are the referent context: if the player
-			# just mentioned a brother or a rival, "He" may be that man.
-			say_text = TurnValidator.repair_player_pronouns(
-				say_text, player_name, last_player_inputs
-			)
-
-			# 3. Repetition loop detection (same 4-gram x3)
-			var loop_info: Dictionary = TurnValidator.detect_repetition_loop(say_text)
-			if bool(loop_info.get("has_loop", false)):
-				say_text = str(loop_info.get("clean_text", say_text))
-				if stage >= 4:
-					if FX != null and FX.has_method("trigger"):
-						FX.trigger("text_bleed", stage)
-
-		beat["say"] = say_text
-		beats_list[i] = beat
-
-		# The streamed chunks are already queued on screen; if the repair
-		# changed the say text, rewrite the queued beat so the screen shows
-		# the corrected line, not the raw one. The UI seam applies the safety
-		# filter, so this path passes raw text just like replace_beat does.
-		if say_text != original_say:
-			if chat_ui_node != null and chat_ui_node.has_method("replace_beat"):
-				chat_ui_node.replace_beat(beat_index, say_text)
-			elif chat_ui_node != null and chat_ui_node.has_method("say_chunk"):
-				chat_ui_node.say_chunk(beat_index, say_text)
-
-	turn_data["beats"] = beats_list
+	var result := TurnFallback.repair_beats(
+		turn_data.get("beats", []), stage, GameState.player_name, last_player_inputs
+	)
+	turn_data["beats"] = result["beats"]
+	if int(result["deflections"]) > 0:
+		GameState.bump_profile(&"meta_curiosity", int(result["deflections"]))
+	if bool(result["text_bleed"]) and FX != null and FX.has_method("trigger"):
+		FX.trigger("text_bleed", stage)
+	# The streamed chunks are already queued on screen; a repaired beat must
+	# rewrite what is queued, or the screen keeps the raw line. Scanned here.
+	var changed: Dictionary = result["changed"]
+	for beat_index: Variant in changed:
+		_show_replacement_beat(int(beat_index), str(changed[beat_index]))
 
 
 func _close_turn_success(turn_data: Dictionary) -> void:
 	var stage := int(GameState.stage)
 
-	# Validate turn semantics (docs/02 §7)
-	var val_errors: Array[String] = TurnSchema.validate_turn(turn_data, stage)
+	# Validate turn semantics (docs/02 §7). The offered actions are passed so a
+	# legitimately offered `action` is not reported as unoffered (review CODE-6);
+	# violations stay warnings until P1.09 gates them hard.
+	var val_errors: Array[String] = TurnSchema.validate_turn(turn_data, stage, last_offered_actions)
 	if not val_errors.is_empty():
 		push_warning("Director: semantic validation warnings: %s" % str(val_errors))
 
@@ -699,7 +706,14 @@ func _close_turn_success(turn_data: Dictionary) -> void:
 	last_turn_data = turn_data.duplicate(true)
 	last_read = str(turn_data.get("read", ""))
 	last_inner = str(turn_data.get("inner", ""))
-	# Step 7: Apply to GameState
+
+	# Step 7: Apply to GameState. The advance comes FIRST: the per-turn mood
+	# budget inside GameState._apply_mood_meter() is keyed on GameState.turn, so
+	# the state of a turn lands under that turn's index and the next turn opens
+	# with a cleared budget (P1.04/P1.29 handoff call order, review CODE-12).
+	GameState.advance_turn()
+	GameState.apply_slow_burn()
+
 	# Apply mood
 	if turn_data.has("mood") and turn_data["mood"] is Dictionary:
 		GameState.apply_mood(turn_data["mood"])
@@ -725,10 +739,6 @@ func _close_turn_success(turn_data: Dictionary) -> void:
 		if MetaDirector != null and MetaDirector.has_method("execute_after_text"):
 			MetaDirector.execute_after_text(act)
 
-	# Apply slow burn & advance turn
-	GameState.apply_slow_burn()
-	GameState.advance_turn()
-
 	if FX != null and FX.has_method("end_turn"):
 		FX.end_turn()
 
@@ -753,8 +763,14 @@ func _close_turn_success(turn_data: Dictionary) -> void:
 	turn_completed.emit(_turn_index, turn_data)
 	_log_turn_record("completed")
 	_clear_turn_context()
+	_safety.finish()
 
 
+## docs/02 §5 auto-fill: after 4 turns with no cue/fx and a beat at intensity
+## >= 2, the Director adds a mild one. Both picks are engine-owned, so they must
+## not be eaten by the model's cue budget: `play_system` is the un-budgeted
+## engine path (docs/04 §3), and the streak only resets when the mild fill
+## actually landed (review CODE-11).
 func _handle_auto_fill(turn_data: Dictionary, stage: int) -> void:
 	if stage > 1:
 		quiet_turn_streak = 0
@@ -764,26 +780,36 @@ func _handle_auto_fill(turn_data: Dictionary, stage: int) -> void:
 	var max_intensity := 0
 	var beats: Array = turn_data.get("beats", [])
 	for b: Variant in beats:
-		if b is Dictionary:
-			if str(b.get("cue", "none")) != "none" and str(b.get("cue", "")) != "":
-				had_cue = true
-			var inten := int(b.get("intensity", 1))
-			if inten > max_intensity:
-				max_intensity = inten
+		if not (b is Dictionary):
+			continue
+		if str(b.get("cue", "none")) != "none" and str(b.get("cue", "")) != "":
+			had_cue = true
+		# Only a real integer intensity counts toward the docs/02 §5 gate
+		# (review DES-3): a malformed beat must not trip it by accident.
+		if typeof(b.get("intensity")) == TYPE_INT:
+			max_intensity = maxi(max_intensity, int(b["intensity"]))
 
 	var had_fx := str(turn_data.get("fx", "none")) != "none" and str(turn_data.get("fx", "")) != ""
 
 	if had_cue or had_fx:
 		quiet_turn_streak = 0
-	else:
-		quiet_turn_streak += 1
-		if quiet_turn_streak >= 4 and max_intensity >= 2:
-			# Auto-fill mild cue or fx
-			if AudioDirector != null and AudioDirector.has_method("play_cue"):
-				AudioDirector.play_cue(&"giggle")
-			if FX != null and FX.has_method("trigger"):
-				FX.trigger("blush_glow", stage)
-			quiet_turn_streak = 0
+		return
+
+	quiet_turn_streak += 1
+	if quiet_turn_streak < 4 or max_intensity < 2:
+		return
+
+	var filled := false
+	if AudioDirector != null and AudioDirector.has_method("play_engine_cue"):
+		filled = AudioDirector.play_engine_cue(&"giggle") or filled
+	elif AudioDirector != null and AudioDirector.has_method("play_cue"):
+		filled = AudioDirector.play_cue(&"giggle") or filled
+	if FX != null and FX.has_method("trigger"):
+		filled = FX.trigger("blush_glow", stage) or filled
+	# Keep counting while nothing could be played, so the mild fill is not
+	# spent on a silent turn and then skipped for another four.
+	if filled:
+		quiet_turn_streak = 0
 
 
 func _on_llm_failed(err_dict: Dictionary) -> void:
@@ -791,20 +817,20 @@ func _on_llm_failed(err_dict: Dictionary) -> void:
 		return
 	var code := str(err_dict.get("code", "unknown_error"))
 	var msg := str(err_dict.get("message", "generation failed"))
-	_abort_turn(code, msg)
+	# The record is built from the turn-scoped context, so it is written before
+	# the teardown clears it (P1.18 contract: one JSONL line per turn).
 	_log_turn_record("failed", code, msg)
-	_clear_turn_context()
+	_abort_turn(code, msg)
 
 
 func _on_llm_cancelled() -> void:
 	if not _turn_in_flight:
 		return
-	_turn_in_flight = false
+	_log_turn_record("cancelled")
+	_teardown_turn()
 	if chat_ui_node != null and chat_ui_node.has_method("abort_turn"):
 		chat_ui_node.abort_turn()
 	turn_cancelled.emit(_turn_index)
-	_log_turn_record("cancelled")
-	_clear_turn_context()
 
 
 func cancel() -> void:
@@ -815,10 +841,32 @@ func cancel() -> void:
 
 
 func _abort_turn(error_code: String, error_message: String) -> void:
-	_turn_in_flight = false
+	_teardown_turn()
 	if chat_ui_node != null and chat_ui_node.has_method("abort_turn"):
 		chat_ui_node.abort_turn()
 	turn_failed.emit(_turn_index, error_code, error_message)
+
+
+## One teardown for every exit (completed / failed / cancelled): the stream, the
+## parser and the turn-scoped state must not survive into the next turn, or a
+## later cancel() would act on a terminal stream and a stale `_current_turn_data`
+## would leak into the next close (review CODE-9).
+##
+## The player's unanswered line stays in `history` and `last_player_inputs`: the
+## player did say it, the model simply never answered, and the docs/02 §6 rule-1
+## window is about what the player actually typed. AudioDirector/FX keep their
+## per-turn counters — the turn *was* opened, so the budget it accrued is spent;
+## rewinding it would let a retry loop mint cue tokens.
+func _teardown_turn() -> void:
+	_turn_in_flight = false
+	_active_stream = null
+	_parser = null
+	_current_turn_data.clear()
+	_current_beats.clear()
+	_current_beat_index = -1
+	_current_beat_data.clear()
+	_safety.finish()
+	_clear_turn_context()
 
 
 func _log_turn_record(status: String, err_code := "", err_msg := "") -> void:
@@ -897,98 +945,25 @@ func replay_turn(turn_record: Dictionary) -> bool:
 ## -----------------------------------------------------------------------------
 ## Safety & Content Filters (docs/02 §8)
 ## -----------------------------------------------------------------------------
+## The player's own line. The filter owns the decision when it implements an
+## input check; the Director keeps no local phrase list (review CODE-1/DES-7).
 func filter_player_input(input_text: String) -> bool:
-	if Safety != null and Safety.has_method("check_input"):
-		return bool(Safety.check_input(input_text))
-	var lower := input_text.to_lower()
-	var hard_blocks := ["kill yourself", "kys", "suicide instruction"]
-	for b in hard_blocks:
-		if b in lower:
-			return false
-	return true
+	return _safety.check_input(input_text)
 
 
+## Scan one whole model line (a repaired beat, an inner line) and return only
+## what is safe to display. Streaming say text goes through the beat boundary
+## calls instead, so Safety's holdback state stays consistent.
 func filter_output(text_chunk: String) -> String:
-	if Safety != null and Safety.has_method("filter_output"):
-		return str(Safety.filter_output(text_chunk))
-	var filtered := text_chunk
-	var forbidden := ["I want to die", "I want you to die"]
-	for phrase in forbidden:
-		if phrase in filtered:
-			filtered = filtered.replace(phrase, "██████")
-	return filtered
+	return _safety.filter_text(text_chunk, {"stage": int(GameState.stage)})
 
 
 ## -----------------------------------------------------------------------------
 ## Memory Validation (docs/02 §6)
 ## -----------------------------------------------------------------------------
+## The three docs/02 §6 rules live in MemoryRules; this is the Director-facing
+## name the suite and P1.09's follow-ups call.
 static func validate_memory(
 	candidate: String, player_inputs: Array[String], existing_memories: Array[String]
 ) -> bool:
-	var trimmed := candidate.strip_edges()
-	if trimmed.is_empty() or trimmed.length() > 80:
-		return false
-
-	var lower_cand := trimmed.to_lower()
-	var cand_tokens := _tokenize(lower_cand)
-	if cand_tokens.is_empty():
-		return false
-
-	for mw: String in META_WORDS:
-		if cand_tokens.has(mw):
-			return false
-	# Rule 1: Shares >= 1 content word with last 3 player messages
-	var player_tokens: Dictionary = {}
-	for inp: String in player_inputs:
-		for tok: String in _tokenize(inp.to_lower()):
-			if tok.length() > 2:
-				player_tokens[tok] = true
-
-	var shares_word := false
-	for tok: String in cand_tokens:
-		if tok.length() > 2 and player_tokens.has(tok):
-			shares_word = true
-			break
-	if not shares_word and not player_inputs.is_empty():
-		return false
-
-	# Rule 3: Jaccard < 0.6 vs existing
-	for ex: String in existing_memories:
-		var ex_tokens := _tokenize(ex.to_lower())
-		if _jaccard_similarity(cand_tokens, ex_tokens) >= 0.6:
-			return false
-
-	return true
-
-
-static func _tokenize(text: String) -> Array[String]:
-	var regex := RegEx.new()
-	regex.compile("\\w+")
-	var matches: Array[RegExMatch] = regex.search_all(text)
-	var tokens: Array[String] = []
-	for m: RegExMatch in matches:
-		tokens.append(m.get_string())
-	return tokens
-
-
-static func _jaccard_similarity(a: Array[String], b: Array[String]) -> float:
-	var set_a: Dictionary = {}
-	var set_b: Dictionary = {}
-	for tok: String in a:
-		set_a[tok] = true
-	for tok: String in b:
-		set_b[tok] = true
-
-	var intersection_count := 0
-	for tok: String in set_a:
-		if set_b.has(tok):
-			intersection_count += 1
-
-	var union_count := set_a.size()
-	for tok: String in set_b:
-		if not set_a.has(tok):
-			union_count += 1
-
-	if union_count == 0:
-		return 0.0
-	return float(intersection_count) / float(union_count)
+	return MemoryRules.validate(candidate, player_inputs, existing_memories)

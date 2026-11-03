@@ -144,11 +144,17 @@ func _process(delta: float) -> void:
 ## Beat entry point (Director -> beat.feel): swap sprite, apply the resolved
 ## motion preset, honour the intensity-3 camera push. Starts the crossfade now.
 func set_feeling(feeling: String, intensity: int, stage: int, path := "", flags := {}) -> void:
-	var packet := SpriteResolver.resolve_beat(feeling, intensity, stage, path, flags)
-	var sprite := String(packet["sprite"])
-	if sprite != current_sprite:
+	apply_beat(SpriteResolver.resolve_beat(feeling, intensity, stage, path, flags))
+
+
+## The Director's entry point when it has already resolved the beat: applying a
+## finished packet keeps the stateful resolver from running twice per beat
+## (anti-repeat window, second beat_resolved emission) — review CODE-4.
+func apply_beat(packet: Dictionary) -> void:
+	var sprite := String(packet.get("sprite", ""))
+	if not sprite.is_empty() and sprite != current_sprite:
 		_crossfade_to(sprite)
-	_apply_motion(String(packet["motion"]))
+	_apply_motion(String(packet.get("motion", "breathe")))
 	var push := String(packet.get("camera", ""))
 	_camera_to(push if not push.is_empty() else _cam_preset)
 	feeling_applied.emit(packet)

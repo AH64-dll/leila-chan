@@ -194,6 +194,28 @@ func play_system(key: StringName) -> bool:
 	return true
 
 
+## The Director's own docs/02 §5 auto-fill pick: plays a cue as the ENGINE, not
+## as a model request — so it skips the cue token bucket, the repeat window and
+## the stage gate the model's picks are subject to. The Director only reaches
+## for this after four quiet turns at intensity >= 2, i.e. exactly when the
+## model's restraint has starved the scene; charging it to the model's budget
+## would silently void the fill (review CODE-11). Asset existence still decides:
+## a cue with no importable file reports false and the fill stays owed.
+func play_engine_cue(cue: StringName) -> bool:
+	var entry: Dictionary = _cue_map.get("cues", {}).get(String(cue), {})
+	var files: Array = entry.get("files", [])
+	if files.is_empty():
+		_deny_cue(cue, &"unknown")
+		return false
+	var category := _cue_category(cue)
+	var paths := _existing_paths(files, category)
+	if paths.is_empty():
+		_deny_cue(cue, &"no_files")
+		return false
+	_fire_files(cue, files, paths, _cue_bus(cue), category)
+	return true
+
+
 ## Sprite on-enter hook (docs/04 §3): tracks sprites 21/30 for knife_draw.
 func note_sprite(sprite_id: StringName) -> void:
 	_sprites_seen[String(sprite_id)] = true
