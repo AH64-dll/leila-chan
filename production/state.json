@@ -677,7 +677,7 @@
       "finished": "2026-11-02T23:42:38+02:00"
     },
     "P1.02": {
-      "status": "in_review",
+      "status": "done",
       "agent": "commandcode",
       "round": 1,
       "reviews": [
@@ -689,10 +689,20 @@
           "report": "production/reviews/P1.02-code-r1.md",
           "ts": "2026-11-03T07:39:06+02:00",
           "declared": "grok-4.6"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.02-design-r1.md",
+          "ts": "2026-11-03T07:58:36+02:00",
+          "declared": "grok-4.6"
         }
       ],
       "started": "2026-11-02T23:47:56+02:00",
-      "handoff": "production/handoffs/P1.02.md"
+      "handoff": "production/handoffs/P1.02.md",
+      "finished": "2026-11-03T07:59:02+02:00"
     },
     "P1.30": {
       "status": "done",
@@ -2063,6 +2073,18 @@
       "ts": "2026-11-03T07:58:18+02:00",
       "event": "in_review->done",
       "ref": "P1.10",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T07:58:36+02:00",
+      "event": "review:design:approved",
+      "ref": "P1.02",
+      "note": "production/reviews/P1.02-design-r1.md"
+    },
+    {
+      "ts": "2026-11-03T07:59:02+02:00",
+      "event": "in_review->done",
+      "ref": "P1.02",
       "note": ""
     }
   ]
