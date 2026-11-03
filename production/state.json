@@ -928,7 +928,7 @@
       "finished": "2026-11-03T08:37:00+02:00"
     },
     "P1.06": {
-      "status": "in_review",
+      "status": "done",
       "agent": "deepseek",
       "round": 1,
       "reviews": [
@@ -952,7 +952,8 @@
         }
       ],
       "started": "2026-11-03T07:38:04+02:00",
-      "handoff": "production/handoffs/P1.06.md"
+      "handoff": "production/handoffs/P1.06.md",
+      "finished": "2026-11-03T08:47:30+02:00"
     },
     "P1.07": {
       "status": "in_progress",
@@ -2440,6 +2441,12 @@
       "event": "review:design:approved",
       "ref": "P1.06",
       "note": "production/reviews/P1.06-design-r1.md"
+    },
+    {
+      "ts": "2026-11-03T08:47:30+02:00",
+      "event": "in_review->done",
+      "ref": "P1.06",
+      "note": ""
     }
   ]
 }
