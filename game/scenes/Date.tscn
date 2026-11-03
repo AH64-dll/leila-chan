@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-[gd_scene format=3]
-
-[ext_resource type="Script" path="res://scenes/Date.gd" id="1_date"]
-[ext_resource type="PackedScene" path="res://scenes/ui/ChatUI.tscn" id="2_chatui"]
-
-[node name="Date" type="Control"]
-=======
 [gd_scene load_steps=6 format=3 uid="uid://df7w8y1ka2b3c"]
 
 [ext_resource type="Script" uid="uid://c3x77a4m0vdal" path="res://scenes/Date.gd" id="1_date"]
@@ -28,35 +20,22 @@ centered = false
 layer = 1
 
 [node name="FX" type="Control" parent="FXLayer"]
->>>>>>> task/P1.16
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-<<<<<<< HEAD
-script = ExtResource("1_date")
-
-[node name="Background" type="ColorRect" parent="."]
-=======
 mouse_filter = 2
 script = ExtResource("4_fx")
 
 [node name="Overlay" type="ColorRect" parent="FXLayer/FX"]
->>>>>>> task/P1.16
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-<<<<<<< HEAD
-color = Color(0.12, 0.1, 0.14, 1)
-
-[node name="ChatUI" parent="." instance=ExtResource("2_chatui")]
-layout_mode = 1
-=======
 mouse_filter = 2
 color = Color(1, 1, 1, 0)
 
@@ -64,4 +43,3 @@ color = Color(1, 1, 1, 0)
 layer = 2
 
 [node name="ChatUI" parent="UILayer" instance=ExtResource("5_ui")]
->>>>>>> task/P1.16

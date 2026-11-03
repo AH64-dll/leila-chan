@@ -1,38 +1,3 @@
-<<<<<<< HEAD
-extends Control
-## Date — the core conversation scene (P1.14 flow destination, assembled in P1.16).
-## Wires ChatUI with GameState and PromptBuilder.
-
-signal pause_requested
-
-@onready var chat_ui: Control = $ChatUI
-
-
-func _ready() -> void:
-	var player_name := "Senpai"
-	var tree: SceneTree = Engine.get_main_loop() as SceneTree
-	if tree != null and tree.root != null:
-		if tree.root.has_node("GameState"):
-			var gs: Node = tree.root.get_node("GameState")
-			player_name = str(gs.get("player_name"))
-			if player_name.is_empty():
-				player_name = "Senpai"
-
-		if tree.root.has_node("PromptBuilder"):
-			var pb: Node = tree.root.get_node("PromptBuilder")
-			if pb.has_method("set_player_name"):
-				pb.call("set_player_name", player_name)
-
-	if chat_ui != null:
-		chat_ui.set_player_name(player_name)
-		chat_ui.pause_requested.connect(_on_pause_requested)
-
-
-func get_player_name() -> String:
-	if chat_ui != null and chat_ui.has_method("get_player_name"):
-		return str(chat_ui.call("get_player_name"))
-	return "Senpai"
-=======
 extends Node2D
 ## Date — the core date scene assembly (docs/07 §2).
 ##
@@ -318,15 +283,21 @@ func _on_turn_displayed() -> void:
 		_opening_finished = true
 		opening_beats_finished.emit()
 	turn_completed.emit(_current_turn)
->>>>>>> task/P1.16
 
 
 func _on_pause_requested() -> void:
 	pause_requested.emit()
-<<<<<<< HEAD
-=======
 
 
 func _on_character_twitch_fired() -> void:
 	play_fx(&"twitch")
->>>>>>> task/P1.16
+
+
+func get_player_name() -> String:
+	if is_inside_tree() and has_node("/root/GameState"):
+		var gs: Node = get_node("/root/GameState")
+		if "player_name" in gs and not str(gs.player_name).strip_edges().is_empty():
+			return str(gs.player_name).strip_edges()
+	if chat_ui and chat_ui.has_method("get_player_name"):
+		return String(chat_ui.get_player_name())
+	return "Senpai"
