@@ -235,7 +235,7 @@ func test_name_reaches_prompt_builder_and_name_tag() -> void:
 	var built: Dictionary = PromptBuilder.build()
 	var system_content := String(built["messages"][0]["content"])
 	assert_bool(system_content.contains("Ren")).is_true()
-	assert_str(String(built.get("player_name", ""))).is_equal("Ren")
+	assert_str(String(built.get("debug", {}).get("player_name", ""))).is_equal("Ren")
 
 	# 3. ChatUI has player name and uses it for player lines in ChatLog
 	var chat: Control = date.chat_ui

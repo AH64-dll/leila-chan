@@ -103,10 +103,10 @@ const ROLE_ASSISTANT := "assistant"
 ## Prompt file directory; the prompt lab and the tests point this at a scratch
 ## copy so they never edit the shipped content.
 var prompt_dir := PROMPT_DIR
+var player_name := DEFAULT_PLAYER_NAME
 
 var _cache := {}
 var _counter := Callable()
-var player_name := DEFAULT_PLAYER_NAME
 
 
 func set_player_name(new_name: String) -> void:
@@ -115,7 +115,7 @@ func set_player_name(new_name: String) -> void:
 
 
 func get_player_name() -> String:
-	if has_node("/root/GameState"):
+	if is_inside_tree() and has_node("/root/GameState"):
 		var gs: Node = get_node("/root/GameState")
 		if "player_name" in gs and not str(gs.player_name).strip_edges().is_empty():
 			return str(gs.player_name).strip_edges()
@@ -135,7 +135,7 @@ func build(ctx: Dictionary = {}) -> Dictionary:
 	var layers := _assemble(stage, path, resolved_name, ctx, missing, warnings)
 	var window := _window(ctx.get("history", []), ctx, warnings)
 	var messages := _messages(layers, window["messages"], ctx, warnings)
-	var debug := _debug(ctx, stage, path, player_name, layers, window, messages, missing, warnings)
+	var debug := _debug(ctx, stage, path, resolved_name, layers, window, messages, missing, warnings)
 	return {"messages": messages, "debug": debug}
 
 
