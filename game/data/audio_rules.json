@@ -1,0 +1,116 @@
+{
+ "version": 1,
+ "doc": "AudioDirector v1 rule tables (P1.12). Sources: docs/04 §1-§2, docs/02 §2.1-§2.2, docs/02 §5. P1.07 consumes the *_gates tables for the dynamic schema; AudioDirector enforces them again at play time (never trust the model).",
+ "buses": {
+  "Music": {"parent": "Master", "expose": true},
+  "MusicA": {"parent": "Music", "expose": false},
+  "MusicB": {"parent": "Music", "expose": false},
+  "Ambience": {"parent": "Master", "expose": true},
+  "SFX": {"parent": "Master", "expose": true},
+  "Voice": {"parent": "Master", "expose": true},
+  "UI": {"parent": "Master", "expose": true}
+ },
+ "bus_for_category": {
+  "music": "Music",
+  "sfx": "SFX",
+  "vocal": "Voice",
+  "amb": "Ambience"
+ },
+ "vocal_cues": [
+  "giggle",
+  "laugh_soft",
+  "gasp",
+  "sigh",
+  "hum",
+  "sniffle",
+  "sob",
+  "laugh_unhinged",
+  "scream"
+ ],
+ "cue_gates": {
+  "none": 0,
+  "giggle": 0,
+  "laugh_soft": 0,
+  "gasp": 0,
+  "sigh": 0,
+  "hum": 0,
+  "sniffle": 0,
+  "sob": 1,
+  "heartbeat": 0,
+  "heartbeat_fast": 2,
+  "whisper": 2,
+  "breath_close": 3,
+  "music_box_note": 1,
+  "clock_tick": 1,
+  "phone_buzz": 1,
+  "knock": 2,
+  "door_slam": 3,
+  "glass_shatter": 3,
+  "static": 3,
+  "laugh_unhinged": 4,
+  "knife_draw": 4,
+  "scream": 5
+ },
+ "music_gates": {
+  "keep": 0,
+  "romantic": 0,
+  "playful": 0,
+  "calm": 0,
+  "melancholy": 0,
+  "tense": 2,
+  "music_box": 2,
+  "dread": 3,
+  "distorted": 3,
+  "silence": 2
+ },
+ "cue_budget": {
+  "doc": "docs/02 §5: stage 0-1 = 1 cue per 2 turns, 2-3 = 1 per turn, 4-5 = 2 per turn. Token bucket: every begin_turn adds per_turn, capped at cap; a played cue costs 1.0.",
+  "bands": [
+   {"stages": "0-1", "per_turn": 0.5, "cap": 1.0},
+   {"stages": "2-3", "per_turn": 1.0, "cap": 1.0},
+   {"stages": "4-5", "per_turn": 2.0, "cap": 2.0}
+  ]
+ },
+ "repeat_window_turns": 4,
+ "repeat_exempt": {"cue": "heartbeat", "min_stage": 4},
+ "rare_limits": {
+  "knife_draw": {"scene_cap": 1, "requires_sprites": ["21", "30"]},
+  "scream": {"session_cap": 1}
+ },
+ "silence_rule": {"min_stage": 3, "drop_rate": 0.1},
+ "music": {
+  "min_hold_seconds": 20.0,
+  "max_changes_per_turn": 1,
+  "crossfade_seconds": 1.5,
+  "silence_crossfade_seconds": 0.0,
+  "keep_restore_turns": 3
+ },
+ "randomisation": {
+  "cue_pitch_cents_range": 0.05,
+  "cue_volume_db_range": 2.0
+ },
+ "system_keys": {
+  "voice_blip.stage0_2": {"category": "vocal", "bus": "Voice"},
+  "voice_blip.stage3": {"category": "vocal", "bus": "Voice"},
+  "voice_blip.stage4": {"category": "vocal", "bus": "Voice"},
+  "voice_blip.stage5": {"category": "vocal", "bus": "Voice"},
+  "voice_blip.awake": {"category": "vocal", "bus": "Voice"},
+  "stinger.soft": {"category": "sfx", "bus": "SFX"},
+  "stinger.mid": {"category": "sfx", "bus": "SFX"},
+  "stinger.stage_change": {"category": "sfx", "bus": "SFX"},
+  "glitch": {"category": "sfx", "bus": "SFX"},
+  "weird": {"category": "sfx", "bus": "SFX"},
+  "distort_layer": {"category": "vocal", "bus": "Voice"},
+  "ui.click": {"category": "sfx", "bus": "UI"},
+  "ui.open_close": {"category": "sfx", "bus": "UI"},
+  "ui.switch": {"category": "sfx", "bus": "UI"},
+  "typing.player": {"category": "sfx", "bus": "UI"},
+  "typing.her": {"category": "sfx", "bus": "Voice"},
+  "typewriter.diary": {"category": "sfx", "bus": "SFX"},
+  "jingle.happy": {"category": "sfx", "bus": "UI"},
+  "jingle.success": {"category": "sfx", "bus": "UI"},
+  "jingle.wrong": {"category": "sfx", "bus": "UI"},
+  "bell": {"category": "sfx", "bus": "SFX"},
+  "amb.rain": {"category": "amb", "bus": "Ambience"}
+ }
+}
