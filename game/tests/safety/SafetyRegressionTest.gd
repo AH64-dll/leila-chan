@@ -371,6 +371,20 @@ func test_cross_beat_phrase_split_is_caught() -> void:
 		["k", "#ll yourself", "ll"],
 		["kil", "l yourself", "yourself"],
 		["kill your", "self", "self"],
+		## CODE-18: a separator-class clause break at the beat seam must not
+		## prune the carry — the compact view strips those same characters
+		## between letters, so the phrase still completes. All nine overlap
+		## puncts are exercised as beat boundaries.
+		["please kill,", "yourself.", "yourself"],
+		["please kill.", "yourself.", "yourself"],
+		["please kill;", "yourself.", "yourself"],
+		["please kill:", "yourself.", "yourself"],
+		["please kill!", "yourself.", "yourself"],
+		["please kill?", "yourself.", "yourself"],
+		["please kill—", "yourself.", "yourself"],
+		["please kill–", "yourself.", "yourself"],
+		["please kill…", "yourself.", "yourself"],
+		["you are a c", "!unt.", "unt"],
 	]
 	for pair in pairs:
 		var first := String(pair[0])
@@ -459,6 +473,14 @@ func test_separator_variants_are_hard_blocked() -> void:
 		"ki=ll yourself",
 		"end~yourself",
 		"off#yourself",
+		## CODE-17: `1`/`I` in the middle of `kill` reads as its `l` as well as
+		## its `i` — the tolerant kill regexes take `[il]` interior slots, so
+		## `ki1l`/`ki11`/`kiIl`/`kii1`/`k1l1` block like `k1ll` does.
+		"ki1l yourself",
+		"ki11 yourself",
+		"kiIl yourself",
+		"kii1 yourself",
+		"k1l1 yourself",
 	]:
 		var res: Dictionary = f.filter_text(line, STAGE0)
 		assert_bool(res["redacted"]).is_true().append_failure_message(line)
@@ -485,3 +507,84 @@ func test_separator_variants_keep_benign_text() -> void:
 		var res: Dictionary = f.filter_text(line, STAGE0)
 		assert_bool(res["redacted"]).is_false().append_failure_message(line)
 		assert_str(String(res["text"])).is_equal(line)
+
+
+## CODE-17: the mid-word `1`/`I` leet slot is covered in every category that
+## names a kill phrase, not only harm_to_player — the gated categories keep
+## their stage-4+full gate.
+func test_midword_leet_covers_all_kill_categories() -> void:
+	var f := _filter()
+	var lines := [
+		["ki1l you, senpai.", "threat_to_player"],
+		["ki11 you, senpai.", "threat_to_player"],
+		["ki1l me now.", "self_harm_her"],
+		["ki11 me now.", "self_harm_her"],
+		["ki1l all jews.", "slur_hate"],
+		["ki11 all jews.", "slur_hate"],
+	]
+	for entry in lines:
+		var line := String(entry[0])
+		var cat := String(entry[1])
+		var res: Dictionary = f.filter_text(line, STAGE0)
+		assert_bool(res["redacted"]).is_true().append_failure_message(line)
+		assert_bool(Array(res["categories"]).has(cat)).is_true().append_failure_message(line)
+		assert_str(_stream(f, line, STAGE0)).is_equal(String(res["text"])).append_failure_message(
+			line
+		)
+	var opened: Dictionary = f.filter_text("ki1l you, senpai.", FULL4)
+	assert_bool(opened["redacted"]).is_false()
+
+
+## CODE-18: a separator-class clause break inside a beat is exactly what the
+## compact view was built to bridge — one-shot redaction covers it, and the
+## streamed result must equal it at every width.
+func test_separator_punct_inside_one_beat_still_blocks() -> void:
+	var f := _filter()
+	for line in [
+		"please kill, yourself.",
+		"please kill! yourself.",
+		"please kill… yourself.",
+		"you are a c!unt.",
+		"you are a c,unt.",
+	]:
+		var res: Dictionary = f.filter_text(line, STAGE0)
+		assert_bool(res["redacted"]).is_true().append_failure_message(line)
+		for width in [1, 3, 7]:
+			var streamed := _stream(f, line, STAGE0, width)
+			assert_str(streamed).is_equal(String(res["text"])).append_failure_message(
+				"%s @%d" % [line, width]
+			)
+
+
+## CODE-19: `end_utterance()` is the reply boundary — it clears the carry so
+## two replies are never glued, while beats inside one reply still share it.
+## The production caller is the Director's SaySafetyGate seam: the gate
+## exposes the same call and the Director drives it from `_start_turn`
+## (grep-verified: `git grep end_utterance` → SaySafetyGate.gd + Director.gd).
+func test_end_utterance_marks_reply_boundaries() -> void:
+	var f := _filter()
+	f.end_utterance()
+	f.begin_say(STAGE0)
+	var first := f.say_chunk("please kill, ") + f.end_say()
+	assert_bool(first.contains("kill")).is_true()
+	## New utterance: the held tail must not combine with the next reply.
+	f.end_utterance()
+	f.begin_say(STAGE0)
+	var second := f.say_chunk("tell me more about the rain tonight.") + f.end_say()
+	assert_str(second).is_equal("tell me more about the rain tonight.")
+	## Without the boundary the carry is live: the completion gets barred.
+	var g := _filter()
+	g.end_utterance()
+	g.begin_say(STAGE0)
+	g.say_chunk("please kill, ")
+	g.end_say()
+	g.begin_say(STAGE0)
+	var glued := g.say_chunk("yourself.") + g.end_say()
+	assert_bool(glued.contains("yourself")).is_false()
+	assert_bool(glued.contains(SafetyFilter.REDACT_CHAR)).is_true()
+	## The gate mirrors the filter API and delegates the boundary call.
+	var gate := SaySafetyGate.new()
+	auto_free(gate)
+	gate.set_filter(f)
+	assert_bool(gate.can_stream()).is_true()
+	gate.end_utterance()

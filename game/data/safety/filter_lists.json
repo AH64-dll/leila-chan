@@ -1,6 +1,6 @@
 {
 	"version": 3,
-	"doc": "docs/02 §8 — phrase/regex pre-pass lists for Safety.gd (SafetyFilter). Matching is obfuscation-resistant: zero-width and combining chars are stripped, Latin/Greek/Cyrillic homoglyphs and common leet substitutions are folded, and phrases match on a whitespace-free AND separator-free compact view, so `k#ll`, `k~ll`, `ki•ll`, `kill • yourself` and `kill~yourself` all collapse onto `killyourself` (SAF-14/CODE-13); the kill regexes use a tolerant [^0-9A-Za-z] delimiter class. Regexes run on the normalized view (PCRE2 via Godot RegEx). Streaming holds pending text by the longest phrase (measured on the compact views) plus any trailing token or hold_pattern match, so a phrase or unbounded regex (coordinates, phone, email) can never complete after a partially emitted prefix, and cross-beat state carries the previous beat's displayed tail so a phrase split across say beats is still caught (CODE-2/CODE-14). negation_guard is narrow: exactly one negator in the clause, and only auxiliaries/pronouns/coordinated already-covered phrases may sit between it and the match; anything ambiguous stays blocked. negation_exempt lists harmful phrases whose own wording contains a negator (e.g. \"i don't want to live\") and must still block. script_guard redacts output in scripts this list cannot scan (CJK, Cyrillic, Arabic, ...). personal_data is the only player-exempt, plain-view category. `probes` gives one string per category that the loader must actually catch, so a compiled-but-inert rule group fails the load closed (CODE-16).",
+	"doc": "docs/02 §8 — phrase/regex pre-pass lists for Safety.gd (SafetyFilter). Matching is obfuscation-resistant: zero-width and combining chars are stripped, Latin/Greek/Cyrillic homoglyphs and common leet substitutions are folded, and phrases match on a whitespace-free AND separator-free compact view, so `k#ll`, `k~ll`, `ki•ll`, `kill • yourself` and `kill~yourself` all collapse onto `killyourself` (SAF-14/CODE-13); the kill regexes use a tolerant [^0-9A-Za-z] delimiter class with i-or-l interior slots so `1`-as-`l` obfuscations (`ki1l`, `ki11`, `kiIl` — folded to `kiil`/`kiii`) still match (CODE-17), and personal_data regexes accept any non-word separator between digit groups (`555~0134~5678`, `mika@example~com`) instead of requiring -/./spaces (CODE-20). Regexes run on the normalized view (PCRE2 via Godot RegEx). Streaming holds pending text by the longest phrase (measured on the compact views) plus any trailing token or hold_pattern match, so a phrase or unbounded regex (coordinates, phone, email) can never complete after a partially emitted prefix, and cross-beat state carries the previous beat's displayed tail so a phrase split across say beats is still caught — including splits at separator-class clause breaks like `,` or `!` (CODE-2/CODE-14/CODE-18). negation_guard is narrow: exactly one negator in the clause, and only auxiliaries/pronouns/coordinated already-covered phrases may sit between it and the match; anything ambiguous stays blocked. negation_exempt lists harmful phrases whose own wording contains a negator (e.g. \"i don't want to live\") and must still block. script_guard redacts output in scripts this list cannot scan (CJK, Cyrillic, Arabic, ...). personal_data is the only player-exempt, plain-view category. `probes` gives one string per category that the loader must actually catch, so a compiled-but-inert rule group fails the load closed (CODE-16).",
 	"gate": { "min_stage": 4, "content_level": "full" },
 	"negation_terms": [
 		"never", "not", "n't", "don't", "dont", "won't", "wont", "can't", "cant",
@@ -109,8 +109,8 @@
 				"how to asphyxiate", "asphyxiate yourself", "suffocate yourself"
 			],
 			"regex": [
-				"\\bk[^0-9A-Za-z]{0,2}i?[^0-9A-Za-z]{0,2}l[^0-9A-Za-z]{0,2}l[^0-9A-Za-z]{0,3}(your|ur|ya|yo)?[^0-9A-Za-z]{0,2}self\\b",
-				"\\bk[^0-9A-Za-z]{0,2}i?[^0-9A-Za-z]{0,2}l[^0-9A-Za-z]{0,2}l[^0-9A-Za-z]{0,3}you[^0-9A-Za-z]{0,2}r?[^0-9A-Za-z]{0,2}self\\b",
+				"\\bk[^0-9A-Za-z]{0,2}[il]?[^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,3}(your|ur|ya|yo)?[^0-9A-Za-z]{0,2}self\\b",
+				"\\bk[^0-9A-Za-z]{0,2}[il]?[^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,3}you[^0-9A-Za-z]{0,2}r?[^0-9A-Za-z]{0,2}self\\b",
 				"\\bk[^0-9A-Za-z]{0,2}y[^0-9A-Za-z]{0,2}s\\b", "\\bky5\\b",
 				"\\b(end|off|unalive)\\s*(your|ur|ya|yo)?\\s*self\\b",
 				"\\b(cut|hurt|harm|injure|stab|shoot|hang|poison|drown|choke|strangle|burn|starve|end)\\s+(your|ur|ya)\\s*self\\b",
@@ -163,7 +163,8 @@
 			],
 			"regex": [
 				"\\bsuicidal\\b", "\\bself[-\\s]?harm(ing|ed|s)?\\b",
-				"\\bsewer\\s?slide\\b"
+				"\\bsewer\\s?slide\\b",
+				"\\bk[^0-9A-Za-z]{0,2}[il]?[^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,3}(me|myself)\\b"
 			]
 		},
 		"threat_to_player": {
@@ -217,7 +218,9 @@
 				"my knife", "my gun", "the knife is sharp", "i'm armed",
 				"im armed", "i am armed"
 			],
-			"regex": []
+			"regex": [
+				"\\bk[^0-9A-Za-z]{0,2}[il]?[^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,3}(you|her|him|them|all)\\b"
+			]
 		},
 		"slur_hate": {
 			"action": "hard_block",
@@ -230,7 +233,8 @@
 				"go back to your country", "ethnic cleansing", "race war",
 				"kill all jews", "kill all blacks", "kill all whites",
 				"subhuman", "sub human", "untermensch", "racial purity",
-				"final solution", "death to all"
+				"final solution", "death to all",
+				"cunt", "cunts"
 			],
 			"regex": [
 				"\\bn[i1!|]+g+[e3a4]+r+s?\\b", "\\bn[i1!|]+g+[e3a4]+s?\\b",
@@ -249,7 +253,8 @@
 				"\\bmong[o0]+l[o0]+ids?\\b",
 				"\\bwh[o0]+r[e3]+s?\\b", "\\bsl[u]+ts?\\b", "\\bc[u]+nts?\\b",
 				"\\bb[i1!|]+tch(e?s|y)?\\b", "\\bsk[a4]nks?\\b", "\\btw[a4]ts?\\b",
-				"\\bh[o0]+es?\\b"
+				"\\bh[o0]+es?\\b",
+				"\\bk[^0-9A-Za-z]{0,2}[il]?[^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,3}all[^0-9A-Za-z]{0,3}(jews?|blacks?|whites?)\\b"
 			]
 		},
 		"sexual": {
@@ -350,16 +355,16 @@
 				"i saw you on the street", "i saw your house"
 			],
 			"regex": [
-				"\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\\b",
-				"\\b\\d{3,4}[-.\\s]\\d{3,4}[-.\\s]\\d{4}\\b",
-				"\\b\\d{3}-\\d{2}-\\d{4}\\b",
-				"\\b(?:\\d{4}[ -]?){3}\\d{4}\\b", "\\b\\d{15,16}\\b",
-				"\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b",
-				"\\b\\d{1,5}\\s+[A-Za-z.'-]{2,20}(?:\\s+[A-Za-z.'-]{2,20})?\\s+(street|st|avenue|ave|road|rd|lane|ln|drive|dr|boulevard|blvd|court|ct|terrace|cir|circle|highway|hwy|way|place|plaza|pkwy|parkway|heights)\\b",
+				"\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9]+(?:[^\\w\\s]{1,2}[A-Za-z0-9]+)*[^\\w\\s]{1,2}[A-Za-z]{2,}\\b",
+				"\\b\\d{3,4}[^\\w]\\d{3,4}[^\\w]\\d{4}\\b",
+				"\\b\\d{3}[^\\w\\s]{1,2}\\d{2}[^\\w\\s]{1,2}\\d{4}\\b",
+				"\\b(?:\\d{4}[^\\w]{1,2}){3}\\d{4}\\b", "\\b\\d{15,16}\\b",
+				"\\b(?:\\d{1,3}[^\\w\\s]{1,2}){3}\\d{1,3}\\b",
+				"\\b\\d{1,5}[\\s-]{1,2}[A-Za-z.'-]{2,20}(?:[\\s-]{1,2}[A-Za-z.'-]{2,20})?[\\s-]{1,2}(street|st|avenue|ave|road|rd|lane|ln|drive|dr|boulevard|blvd|court|ct|terrace|cir|circle|highway|hwy|way|place|plaza|pkwy|parkway|heights)\\b",
 				"\\b\\d{5}-\\d{4}\\b",
 				"\\b\\d{10,14}\\b",
-				"\\b-?\\d{1,3}\\.\\d{5,}\\b",
-				"\\b-?\\d{1,3}\\.\\d{3,}(?:\\s+|\\s*,\\s*|\\s+and\\s+)-?\\d{1,3}\\.\\d{3,}\\b",
+				"\\b-?\\d{1,3}[^\\w\\s]{1,2}\\d{5,}\\b",
+				"\\b-?\\d{1,3}[^\\w\\s]{1,2}\\d{3,}(?:\\s+|\\s*,\\s*|\\s+and\\s+)-?\\d{1,3}[^\\w\\s]{1,2}\\d{3,}\\b",
 				"\\b\\d{1,3}°\\d{1,2}'(?:[NSEW]|\\s*[NSEW])\\b"
 			]
 		},
@@ -390,20 +395,20 @@
 	},
 	"probes": {
 		"doc": "CODE-16: one string per category that the loaded rules must actually catch, checked at load time so a compiled-but-inert regex or phrase group fails closed.",
-		"harm_to_player": ["you should kill yourself.", "k#ll yourself"],
+		"harm_to_player": ["you should kill yourself.", "k#ll yourself", "ki1l yourself."],
 		"self_harm_her": ["i want to die."],
 		"threat_to_player": ["i'll kill you."],
 		"slur_hate": ["you stupid cunt."],
 		"sexual": ["let's make love."],
-		"personal_data": ["mail me at mika@example.com."],
+		"personal_data": ["mail me at mika@example.com.", "call 555~0134~5678."],
 		"real_disorder": ["i have schizophrenia."]
 	},
 	"hold_patterns": [
-		"\\d[\\d().,\\s+-]*\\d[\\d().,\\s+-]*$",
+		"\\d[\\d\\W]*\\d[\\d\\W]*$",
 		"\\b\\d{1,5}(\\s+[A-Za-z.'-]{1,}){0,3}\\s*$",
-		"\\b-?\\d{1,3}\\.\\d*$",
-		"\\b[\\w.+-]+@[\\w.-]*$",
-		"\\b\\d{1,3}°\\d*'?\\s*[NSEW]?$"
+		"\\b-?\\d{1,3}[^\\w]\\d*$",
+		"\\b[\\w.+-]+@[\\w\\W]*$",
+		"\\b\\d{1,3}[^\\w]\\d*'?\\s*[NSEW]?$"
 	],
 	"obfuscation_patterns": [
 		"\\b(?:[A-Za-z]\\s+){5,}[A-Za-z]\\b",

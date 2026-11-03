@@ -343,6 +343,11 @@ func _start_turn(player_text: String) -> bool:
 	_current_stage = int(GameState.stage)
 	_current_path = String(GameState.path)
 
+	# Reply boundary (P1.19 r4 CODE-19): a new model utterance starts here, so
+	# the filter's cross-beat carry must not glue the previous reply's tail into
+	# this reply's first beat. Beats inside this turn keep sharing the carry.
+	_safety.end_utterance()
+
 	turn_started.emit(_turn_index, player_text)
 
 	if AudioDirector != null and AudioDirector.has_method("begin_turn"):

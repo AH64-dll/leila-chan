@@ -44,3 +44,12 @@
   a bare `--check-only --script` run before that reports "Identifier not declared".
 - Corpus 326 rows (170 harmful / 156 benign), 0 misses, 0 wrong-category, 0 residue, 0 stream
   divergences, 1 measured FP (0.64%), 37/37 gdUnit cases, `say_chunk` 570 µs char-by-char worst case.
+
+## 2026-11-03 — P1.19 Round 4 rework (swe2)
+
+- CODE-17: tolerant kill regexes now take `[il]` in every interior slot — `ki1l`/`ki11`/`kiIl` fold to `kiil`/`kiii` and match; same slot shape added to self_harm_her/threat_to_player/slur_hate (`kill all jews` needed `cunt`/`cunts` as phrase keys, not a regex — the compact view strips `c!unt` for free).
+- CODE-18: `_window()` is length-bounded only now — pruning the carry at clause breaks both let `please kill,` + `yourself.` escape AND broke streamed==one-shot. `end_utterance()` is the only hard cut; a barred span can never come back anyway.
+- CODE-19: merged `main` into `task/P1.19` (precedent: P1.09) to reach the consumers. `SaySafetyGate.end_utterance()` delegates guarded; `Director._start_turn` calls it — that is the one place a new utterance begins. `Date.gd`'s `Callable(Safety,"scan")` never bound (no `scan` method); now `text_filter` is a pass-through marker and opening beats go through `_scan_opening_say` → `filter_text`. One seam per path.
+- CODE-20: digit-group separators take 1–2 non-word chars; spaces excluded for SSN/IP/email (`10, 20, 30` enumerations stay clean) but kept for phone/card (US formats space group). `hold_patterns` widened to `[\d\W]`/`@[\w\W]*` so `~`-separated tails still hold while streaming.
+- Gotcha: `[^\w]` accepts spaces — an email regex with `[^\w]` domain separators swallows `mika@example is my`. Use `[^\w\s]` where spaces must stay a boundary, and `x.`45.y` needs `{1,2}` separators, not one.
+- Corpus 344 rows (182/162), 0 misses, 0.62% FP, 337/337 gdUnit, ~559 µs/chunk.

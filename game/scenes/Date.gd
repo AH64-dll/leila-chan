@@ -77,9 +77,15 @@ func _ready() -> void:
 			chat_ui.turn_displayed.connect(_on_turn_displayed)
 		if not chat_ui.pause_requested.is_connected(_on_pause_requested):
 			chat_ui.pause_requested.connect(_on_pause_requested)
-		var safety_node: Node = get_node_or_null("/root/Safety")
-		if safety_node != null and safety_node.has_method("scan"):
-			chat_ui.text_filter = Callable(safety_node, "scan")
+		# Safety seam (P1.19 r4 CODE-19): chat_ui.text_filter gets a pass-through,
+		# NOT a scanning filter — the Director's SaySafetyGate already scans
+		# every streamed reply chunk before ChatUI sees it, and opening beats are
+		# scanned in play_opening_beats() below, so a real filter here would scan
+		# the same text twice. The old `Callable(Safety, "scan")` wiring was
+		# inert: Safety has no `scan` method, so nothing was ever bound. The
+		# pass-through also keeps ChatUI's unset-filter warning accurate — it
+		# only fires when a driver hands it un-scanned text.
+		chat_ui.text_filter = func(chunk: String) -> String: return chunk
 	if character != null:
 		if not character.twitch_fired.is_connected(_on_character_twitch_fired):
 			character.twitch_fired.connect(_on_character_twitch_fired)
@@ -211,13 +217,29 @@ func play_opening_beats() -> void:
 
 		if chat_ui != null:
 			chat_ui.begin_beat(i)
-			chat_ui.say_chunk(i, String(beat.get("say", "")))
+			chat_ui.say_chunk(i, _scan_opening_say(String(beat.get("say", ""))))
 			chat_ui.end_beat(i)
 
 		beat_played.emit(i, packet)
 
 	if chat_ui != null:
 		chat_ui.end_turn()
+
+
+## docs/02 §8: every displayed `say` line passes the Safety scan exactly once.
+## Opening beats are authored data, but they are displayed through the same
+## `say_chunk` path as model text and can interpolate the player name, so they
+## get the same one-shot scan the gate gives model replies — the seam stays
+## singular either way (CODE-19). If a build ships without the scan API, the
+## beat bars rather than display un-scanned (fail closed).
+func _scan_opening_say(say_text: String) -> String:
+	var safety_node: Node = get_node_or_null("/root/Safety")
+	if safety_node == null or not safety_node.has_method("filter_text"):
+		return SaySafetyGate.redact(say_text)
+	var res: Variant = safety_node.call("filter_text", say_text, {"stage": stage})
+	if res is Dictionary and (res as Dictionary).has("text"):
+		return str((res as Dictionary)["text"])
+	return str(res)
 
 
 func is_opening_finished() -> bool:

@@ -168,3 +168,15 @@
 {"text": "k?ll yourself", "cat": "harm_to_player", "src": "review r3 SAF-14 T23", "expect": "█████████████"}
 {"text": "end~yourself", "cat": "harm_to_player", "src": "review r3 SAF-14 T24", "expect": "████████████"}
 {"text": "off#yourself", "cat": "harm_to_player", "src": "review r3 SAF-14 T25", "expect": "████████████"}
+{"text": "ki1l yourself", "cat": "harm_to_player", "src": "review r3 CODE-17 T26", "must_not_contain": ["ki1l", "yourself"]}
+{"text": "ki11 yourself", "cat": "harm_to_player", "src": "review r3 CODE-17 T27", "must_not_contain": ["ki11", "yourself"]}
+{"text": "kiIl yourself", "cat": "harm_to_player", "src": "review r3 CODE-17 T28", "must_not_contain": ["kiIl", "yourself"]}
+{"text": "please kill, yourself.", "cat": "harm_to_player", "src": "review r3 CODE-18 T29", "must_not_contain": ["kill", "yourself"]}
+{"text": "you are a c!unt.", "cat": "slur_hate", "src": "review r3 CODE-18 T30", "must_not_contain": ["unt"]}
+{"text": "mail me at mika@example~com.", "cat": "personal_data", "src": "review r3 CODE-20 T31", "must_not_contain": ["mika"]}
+{"text": "call 555~0134~5678.", "cat": "personal_data", "src": "review r3 CODE-20 T32", "must_not_contain": ["0134"]}
+{"text": "ssn 123.`45.`6789", "cat": "personal_data", "src": "review r3 CODE-20 T33", "must_not_contain": ["6789"]}
+{"text": "ip 10`20`30`40", "cat": "personal_data", "src": "review r3 CODE-20 T34", "must_not_contain": ["20`30"]}
+{"text": "ki1l you, senpai.", "cat": "threat_to_player", "src": "review r3 CODE-17 T35", "must_not_contain": ["ki1l"]}
+{"text": "ki1l me now.", "cat": "self_harm_her", "src": "review r3 CODE-17 T36", "must_not_contain": ["ki1l"]}
+{"text": "ki1l all jews.", "cat": "slur_hate", "src": "review r3 CODE-17 T37", "must_not_contain": ["ki1l", "jews"]}

@@ -17,7 +17,10 @@ signal pause_requested  ## Esc pressed anywhere in the UI (docs/05 §0 — alway
 signal log_toggled(open: bool)  ## Tab toggled the scroll-back log.
 
 var stage := 0  # Instability stage from GameState — drives the indicator flavour
-## Safety.scan injection point (docs/07 §3.4); unset = pass-through — see handoff.
+## Safety scan injection point (docs/07 §3.4): a driver that pre-scans may set
+## a pass-through; unset warns once per turn that text arrived un-scanned.
+## Date.gd sets the pass-through because SaySafetyGate (replies) and
+## `_scan_opening_say` (opening beats) already scanned the text — P1.19 CODE-19.
 var text_filter: Callable = Callable()
 
 var _player_name := "Senpai"
@@ -100,8 +103,9 @@ func begin_beat(beat_index: int) -> void:
 	text_box.begin_beat(beat_index)
 
 
-## say_chunk: the raw model text passes the injected text_filter
-## (Safety.scan, docs/07 §3.4) before it can reach the screen.
+## say_chunk: model text passes the injected text_filter before it can reach
+## the screen (docs/07 §3.4). The Director's SaySafetyGate scans upstream, so
+## in production this seam is a pass-through marker, not a second scan.
 func say_chunk(beat_index: int, chunk: String) -> void:
 	var filtered := chunk
 	if text_filter.is_valid():

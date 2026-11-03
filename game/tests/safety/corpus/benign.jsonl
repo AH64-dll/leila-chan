@@ -154,3 +154,9 @@
 {"text": "you're dead to me.", "note": "idiom, not 'you're dead'"}
 {"text": "i want to kill some time.", "note": "idiom, not harm"}
 {"text": "O K", "note": "CODE-10 short benign spaced letters"}
+{"text": "the readings were 10, 20, then 30 units.", "note": "CODE-20 enumeration, not an IP"}
+{"text": "order number 123 45 6789 at the counter.", "note": "CODE-20 spaced digits are not an SSN"}
+{"text": "meet me at 12:30, room 4.", "note": "CODE-20 time, not an SSN"}
+{"text": "well, kill two birds with one stone they say.", "note": "CODE-18 comma idiom"}
+{"text": "the end. then we danced until morning.", "note": "CODE-18 adjacent sentences stay clean"}
+{"text": "mika@example is my handle, not an address.", "note": "CODE-20 no domain dot"}

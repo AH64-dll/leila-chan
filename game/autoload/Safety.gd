@@ -83,11 +83,12 @@ func begin_say(ctx: Dictionary = {}) -> void:
 	_in_beat = true
 
 
-## Marks the end of one model utterance (a full reply). The next beat then starts
-## with no history, so two different replies can never be matched as one phrase
-## (CODE-2/CODE-14). Beats *inside* one utterance keep the history, which is what
-## catches `"i want to "` + `"die."` split by an end-of-beat emission. The first
-## consumer (P1.13) calls this when a new reply starts.
+## Marks the end of one model utterance (a full reply). The next beat then
+## starts with no history, so two different replies are never matched as one
+## phrase (CODE-2/CODE-14). Beats *inside* one utterance keep the history,
+## which is what catches `"i want to "` + `"die."` split by an end-of-beat
+## emission. The production caller is the Director's SaySafetyGate: it calls
+## `end_utterance()` from `_start_turn` when a new reply begins (CODE-19).
 func end_utterance() -> void:
 	_history = ""
 
@@ -133,23 +134,25 @@ func _match_text() -> String:
 	return _history + _pending
 
 
-## Trim a displayed-text window to what a later match can still need: the tail
-## after the last clause break (a beat that ended at a full stop cannot combine
-## with the next one — the false-positive direction of CODE-2), capped at
-## `_holdback` for matching plus `_TAIL_CHARS` of clause context for the guard.
-## Bars fold to clause breaks so a redacted span never glues two live fragments
-## into a phrase that was never said.
+## Trim a displayed-text window to what a later match can still need. The
+## window is length-bounded only: `_holdback` characters of matching surface
+## plus `_TAIL_CHARS` of context for the negation guard (CODE-18). Clause
+## breaks no longer prune the carry — the compact view strips the
+## separator-class clause breaks (`,;:!?—–…`) between letters anyway, so
+## pruning them here only let a phrase split across a beat boundary at one of
+## those characters escape (`"please kill,"` + `"yourself."`); dropping the
+## prune also keeps streamed output identical to the one-shot result, which
+## always sees the whole text. Nothing crosses a redaction either way: the
+## span is barred before emission, so the next beat only ever contributes its
+## own continuation. `end_utterance()` (reply boundary, CODE-19) is the only
+## hard cut. Model-typed `█`s fold to `.` so a fake bar cannot lodge in the
+## window as an unmatchable wall.
 func _window(displayed: String) -> String:
 	var folded := displayed.replace(REDACT_CHAR, ".")
-	var start := 0
-	for i in folded.length():
-		if _text.is_clause_break(folded.unicode_at(i)):
-			start = i + 1
-	var tail := folded.substr(start)
 	var keep := _holdback + _TAIL_CHARS
-	if tail.length() > keep:
-		tail = tail.substr(tail.length() - keep)
-	return tail
+	if folded.length() > keep:
+		folded = folded.substr(folded.length() - keep)
+	return folded
 
 
 func _reset_beat() -> void:
