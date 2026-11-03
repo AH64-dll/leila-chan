@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://leila-chan.game/schemas/scenario.schema.json",
+  "title": "Scenario",
+  "description": "Schema for Leila-chan scenario definitions (docs/08 §7).",
+  "type": "object",
+  "required": [
+    "id",
+    "kind",
+    "title",
+    "background",
+    "music",
+    "ambience",
+    "available",
+    "goal",
+    "prompt",
+    "stage_variants",
+    "path_twists",
+    "events",
+    "end"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_]+$"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["date", "interrupt", "overnight", "setpiece"]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "background": {
+      "type": "string",
+      "minLength": 1
+    },
+    "music": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ambience": {
+      "type": "string",
+      "minLength": 1
+    },
+    "available": {
+      "type": "object",
+      "required": ["days", "stages", "paths"],
+      "properties": {
+        "days": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 1 },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "stages": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0, "maximum": 5 },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "paths": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "goal": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prompt": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stage_variants": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "path_twists": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "at_turn": { "type": "integer", "minimum": 1 },
+          "id": { "type": "string" },
+          "chance": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+          "on_trigger": { "type": "string" },
+          "line": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "end": {
+      "type": "object",
+      "required": ["min_turns", "max_turns", "on_goal"],
+      "properties": {
+        "min_turns": { "type": "integer", "minimum": 1 },
+        "max_turns": { "type": "integer", "minimum": 1 },
+        "on_goal": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "opening_beats": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["feeling", "intensity", "say"],
+          "properties": {
+            "feeling": { "type": "string" },
+            "intensity": { "type": "integer", "minimum": 1, "maximum": 3 },
+            "cue": { "type": "string" },
+            "say": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

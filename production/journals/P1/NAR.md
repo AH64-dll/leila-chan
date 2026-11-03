@@ -46,3 +46,10 @@
 - Verified loaded prompt budget reproduces at 942 tokens using the exact 4-line dynamic layer (café date, goal, 3 memories, Sarah trigger).
 - Convention: all future few-shot authored turns must be strictly tested against sentence/word boundaries in addition to character limits.
 - Gotcha: interjections with terminal marks ('!') inside spoken text count as sentences in split checks; use dashes or commas for mid-sentence flustered hesitations.
+
+## P1.15 — Scenario loader + D02 café scenario JSON (round 1, 2026-11-03)
+- Wrote `game/data/schemas/scenario.schema.json` and `game/data/scenarios/D02_cafe.json` with stage 0, 1, 3, 5 variants, 3 path twists, opening beats, and turn bounds [6, 14].
+- Built `game/scenario/ScenarioLoader.gd`: scenario validation, resolution into `ctx.scene`, opening beats retrieval, and turn limits enforcement (`can_end`, `must_end`, `should_end`).
+- Integrated with `PromptBuilder.gd` to assemble `goal`, `prompt`, `variant`, and `event` into the scene layer; keeps golden fixtures completely backward-compatible.
+- Conventions chosen: opening beats are partitioned by stage with `{player_name}` interpolation; scene layer keeps tokens (~73 tokens) well within the 150-token dynamic budget.
+- Gotcha: feeling names in beats must match `casting.json` feelings (e.g. `joy`, not sprite asset stems like `radiant_joy`).
