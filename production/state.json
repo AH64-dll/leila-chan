@@ -15,7 +15,7 @@
     },
     "P1": {
       "status": "active",
-      "started": "2026-11-02T23:10:08+02:00"
+      "started": "2026-11-03T15:50:09+02:00"
     }
   },
   "tasks": {
@@ -1143,7 +1143,7 @@
     },
     "P1.14": {
       "status": "done",
-      "agent": "gemini-3.8-flash",
+      "agent": "swe2",
       "round": 1,
       "reviews": [
         {
@@ -1170,9 +1170,9 @@
       "finished": "2026-11-03T09:33:29+02:00"
     },
     "P1.08": {
-      "status": "changes_requested",
-      "agent": "gemini-3.8-flash",
-      "round": 1,
+      "status": "in_review",
+      "agent": "deepseek",
+      "round": 2,
       "reviews": [
         {
           "kind": "code",
@@ -1191,9 +1191,28 @@
           "report": "production/reviews/P1.08-design-r1.md",
           "ts": "2026-11-03T14:05:41+02:00",
           "declared": "grok-4.6"
+        },
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.08-code-r2.md",
+          "ts": "2026-11-03T18:19:56+02:00",
+          "declared": "grok-4.6"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.08-design-r2.md",
+          "ts": "2026-11-03T18:25:35+02:00",
+          "declared": "grok-4.6"
         }
       ],
-      "handoff": "production/handoffs/P1.08.md"
+      "handoff": "production/handoffs/P1.08.md",
+      "started": "2026-11-03T18:19:56+02:00"
     },
     "P1.21": {
       "status": "done",
@@ -1225,7 +1244,7 @@
     },
     "P1.09": {
       "status": "done",
-      "agent": "swe2",
+      "agent": "deepseek",
       "round": 2,
       "reviews": [
         {
@@ -1304,6 +1323,13 @@
       ],
       "handoff": "production/handoffs/P1.18.md",
       "finished": "2026-11-03T14:09:14+02:00"
+    },
+    "P1.22": {
+      "status": "in_progress",
+      "agent": null,
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-03T15:50:10+02:00"
     }
   },
   "history": [
@@ -3130,6 +3156,60 @@
       "event": "in_review->done",
       "ref": "P1.09",
       "note": ""
+    },
+    {
+      "ts": "2026-11-03T15:50:09+02:00",
+      "event": "phase_start",
+      "ref": "P1",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T15:50:10+02:00",
+      "event": "todo->in_progress",
+      "ref": "P1.22",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T18:19:56+02:00",
+      "event": "changes_requested->in_progress",
+      "ref": "P1.08",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T18:19:56+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P1.08",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T18:19:56+02:00",
+      "event": "review:code:approved",
+      "ref": "P1.08",
+      "note": "production/reviews/P1.08-code-r2.md"
+    },
+    {
+      "ts": "2026-11-03T18:25:35+02:00",
+      "event": "review:design:approved",
+      "ref": "P1.08",
+      "note": "production/reviews/P1.08-design-r2.md"
+    },
+    {
+      "ts": "2026-11-03T18:26:44+02:00",
+      "event": "agent",
+      "ref": "P1.14",
+      "note": "gemini-3.8-flash -> swe2"
+    },
+    {
+      "ts": "2026-11-03T18:26:44+02:00",
+      "event": "agent",
+      "ref": "P1.08",
+      "note": "gemini-3.8-flash -> deepseek"
+    },
+    {
+      "ts": "2026-11-03T18:26:44+02:00",
+      "event": "agent",
+      "ref": "P1.09",
+      "note": "swe2 -> deepseek"
     }
   ]
 }
