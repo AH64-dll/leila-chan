@@ -966,7 +966,7 @@
       "finished": "2026-11-03T08:47:30+02:00"
     },
     "P1.07": {
-      "status": "in_review",
+      "status": "done",
       "agent": "gemini-3.8-flash",
       "round": 1,
       "reviews": [
@@ -990,7 +990,8 @@
         }
       ],
       "started": "2026-11-03T07:41:07+02:00",
-      "handoff": "production/handoffs/P1.07.md"
+      "handoff": "production/handoffs/P1.07.md",
+      "finished": "2026-11-03T09:53:52+02:00"
     },
     "P1.23": {
       "status": "done",
@@ -1086,7 +1087,7 @@
       "finished": "2026-11-03T09:41:17+02:00"
     },
     "P1.16": {
-      "status": "in_review",
+      "status": "done",
       "agent": "gemini-3.8-flash",
       "round": 2,
       "reviews": [
@@ -1128,7 +1129,8 @@
         }
       ],
       "handoff": "production/handoffs/P1.16.md",
-      "started": "2026-11-03T09:32:46+02:00"
+      "started": "2026-11-03T09:32:46+02:00",
+      "finished": "2026-11-03T09:53:52+02:00"
     },
     "P1.14": {
       "status": "done",
@@ -1166,7 +1168,7 @@
       "handoff": "production/handoffs/P1.08.md"
     },
     "P1.21": {
-      "status": "in_progress",
+      "status": "in_review",
       "agent": "gemini-3.8-flash",
       "round": 2,
       "reviews": [
@@ -2876,6 +2878,24 @@
       "event": "review:design:approved",
       "ref": "P1.07",
       "note": "production/reviews/P1.07-design-r1.md"
+    },
+    {
+      "ts": "2026-11-03T09:53:52+02:00",
+      "event": "in_review->done",
+      "ref": "P1.16",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T09:53:52+02:00",
+      "event": "in_review->done",
+      "ref": "P1.07",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T09:53:52+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P1.21",
+      "note": ""
     }
   ]
 }

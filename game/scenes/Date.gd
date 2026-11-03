@@ -60,7 +60,17 @@ func _ready() -> void:
 		if "reduced_motion" in settings_node:
 			reduced_motion = bool(settings_node.reduced_motion)
 
+	var gs_node: Node = get_node_or_null("/root/GameState")
+	if gs_node != null and "player_name" in gs_node:
+		var gs_name := String(gs_node.player_name).strip_edges()
+		if not gs_name.is_empty():
+			player_name = gs_name
+	var pb_node: Node = get_node_or_null("/root/PromptBuilder")
+	if pb_node != null and pb_node.has_method("set_player_name"):
+		pb_node.set_player_name(player_name)
 	if chat_ui != null:
+		if chat_ui.has_method("set_player_name"):
+			chat_ui.set_player_name(player_name)
 		if not chat_ui.player_turn_sent.is_connected(_on_player_turn_sent):
 			chat_ui.player_turn_sent.connect(_on_player_turn_sent)
 		if not chat_ui.turn_displayed.is_connected(_on_turn_displayed):
