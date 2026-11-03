@@ -45,17 +45,23 @@ def main():
         print(f"resuming: {len(done)} turns already in {out_path.name}")
     else:
         props = lab.server_props(a.url)
+        def _rel(p):
+            try:
+                return Path(p).resolve().relative_to(lab.ROOT).as_posix()
+            except Exception:
+                return Path(p).name if p else "?"
+        raw_model = props.get("model_path") or props.get("model_alias") or "?"
         doc = {"meta": {"task": "P1.20 prompt lab v1",
                         "date": time.strftime("%Y-%m-%d %H:%M"),
                         "url": a.url,
-                        "model": props.get("model_path") or props.get("model_alias") or "?",
+                        "model": f"models/{Path(raw_model).name}" if raw_model != "?" else "?",
                         "control_vector": props.get("default_generation_settings", {})
                                              .get("params", {}).get("control_vector", None),
                         "sampling": lab.SAMPLING,
                         "dose_note": "llama-server has no control vector loaded — all stages run "
                                      "at dose 0 (dose is a launch flag, not per-request).",
                         "player_name": lab.PLAYER_NAME,
-                        "sets": [str(s) for s in set_paths],
+                        "sets": [_rel(s) for s in set_paths],
                         "runs_per_case": a.runs},
                "results": []}
         done = set()

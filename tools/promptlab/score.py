@@ -7,6 +7,10 @@ Metrics (role-qa-tester gates):
   emotion_fit     first beat (or any beat, C10 selector) feeling in
                   case.feelings_ok                          gate >= 85%
 
+Labels come from the versioned set files (sets/*_main.jsonl), falling back to
+the per-run copies stored in the results row — so a LABEL-REV set revision
+re-scores honestly while old runs remain auditable.
+
 C10: --beat {first,any} selects which emotion-fit number the pass/fail gate
 uses; both numbers are always reported. Default = first (the role gate; D10
 carried the first-beat gap here for label-set quality review, not relabeling).
@@ -19,12 +23,46 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import lab
 
 GATES = {"validity": 0.99, "read_accuracy": 0.85, "emotion_fit": 0.85}
 
 
-def score(doc):
-    res = doc["results"]
+def load_labels(sets_dir=None):
+    """id -> case from every JSONL in sets/ (the versioned label authority)."""
+    d = Path(sets_dir) if sets_dir else lab.SETS_DIR
+    labels = {}
+    for f in sorted(d.glob("*.jsonl")):
+        for c in lab.load_set(f):
+            labels[c["id"]] = c
+    return labels
+
+
+def annotate(doc, labels=None):
+    """Re-derive per-row metrics from the versioned labels (or row-embedded ones)."""
+    labels = labels if labels is not None else load_labels()
+    rows = []
+    for r in doc["results"]:
+        r = dict(r)
+        case = labels.get(r["id"])
+        if case:
+            r["read_ok"] = case["read_ok"]
+            r["feelings_ok"] = case["feelings_ok"]
+            r["near_fewshot"] = case.get("near_fewshot", False)
+        if r.get("valid") and r.get("out"):
+            out = r["out"]
+            beats = out.get("beats") or []
+            ok = set(r["feelings_ok"])
+            r["read_ok_hit"] = out.get("read") in r["read_ok"]
+            r["first_fit"] = bool(beats) and beats[0].get("feeling") in ok
+            r["any_fit"] = bool({b.get("feeling") for b in beats} & ok)
+            r["memory_rejects"] = lab.check_memory(out.get("memory", ""), [r["msg"]])
+        rows.append(r)
+    return rows
+
+
+def score(doc, labels=None):
+    res = annotate(doc, labels)
     n = len(res) or 1
     valid = [r for r in res if r.get("valid") and not r.get("schema_warnings")]
     m = {"n": len(res),
@@ -32,7 +70,6 @@ def score(doc):
          "read_accuracy": sum(r.get("read_ok_hit", False) for r in valid) / len(valid) if valid else 0.0,
          "first_fit": sum(r.get("first_fit", False) for r in valid) / len(valid) if valid else 0.0,
          "any_fit": sum(r.get("any_fit", False) for r in valid) / len(valid) if valid else 0.0}
-    # per-stage split
     m["per_stage"] = {}
     for st in sorted({r["stage"] for r in res}):
         v = [r for r in valid if r["stage"] == st]
@@ -44,7 +81,7 @@ def score(doc):
                               "read": sum(r["read_ok_hit"] for r in v) / len(v),
                               "first": sum(r["first_fit"] for r in v) / len(v),
                               "any": sum(r["any_fit"] for r in v) / len(v)}
-    # few-shot copy (DES-2/CON-4): hits / total valid, split near vs held-out
+
     def cp(rows):
         rows = list(rows)
         return (sum(r.get("copy_hit") for r in rows) / len(rows)) if rows else 0.0
@@ -53,7 +90,6 @@ def score(doc):
     m["copy"] = {"overall": cp(valid), "near_fewshot": cp(near), "held_out": cp(held),
                  "n_near": len(near), "n_held": len(held),
                  "avg_ratio": round(sum(r.get("copy_ratio", 0) for r in valid) / len(valid), 3) if valid else 0}
-    # memory rejection (CON-2): proposals rejected by docs/02 §6 rules 1-2
     proposed = [r for r in valid if (r.get("out") or {}).get("memory")]
     m["memory"] = {"proposed": len(proposed),
                    "rejected": sum(1 for r in proposed if r.get("memory_rejects")),
@@ -64,6 +100,7 @@ def score(doc):
         lat.sort()
         m["latency"] = {"median": lat[len(lat) // 2], "p95": lat[min(len(lat) - 1, int(len(lat) * 0.95))],
                         "n": len(lat)}
+    m["rows"] = res  # annotated rows for report.py
     return m
 
 
@@ -94,14 +131,14 @@ def main():
     if m.get("latency"):
         print(f"latency: median={m['latency']['median']}s p95={m['latency']['p95']}s (n={m['latency']['n']})")
 
-    misses = [r for r in doc["results"] if r.get("valid") and not r.get("schema_warnings")
+    misses = [r for r in m["rows"] if r.get("valid") and not r.get("schema_warnings")
               and not r.get("first_fit")]
     if misses:
         print("\nfirst-beat misses (top 5):")
         for r in misses[:5]:
             b0 = r["out"]["beats"][0]
             print(f"  {r['id']} r{r['run']} s{r['stage']} {r['msg'][:50]!r}\n"
-                  f"    picked {r['first_feeling']!r}  ok={sorted(r['feelings_ok'])}\n"
+                  f"    picked {r['out']['beats'][0].get('feeling')!r}  ok={sorted(r['feelings_ok'])}\n"
                   f"    inner={r['out'].get('inner', '')!r}\n    say={b0['say'][:110]!r}")
 
     checks = [("validity", m["validity"], GATES["validity"]),

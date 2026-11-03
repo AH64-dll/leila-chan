@@ -91,13 +91,16 @@ def test_memory_no_shared_word_rejected():
 # --- scoring ---------------------------------------------------------------------
 
 def test_score_gates_first_beat_and_copy_memory():
-    doc = make_doc([row(), row(first_feeling="angry", first_fit=False, read_ok_hit=False,
-                               out={**json.loads(json.dumps(GOOD_TURN)), "read": "insult"})])
+    miss = row()
+    miss["out"]["read"] = "insult"   # not in read_ok -> read miss
+    miss["out"]["beats"] = [{"feeling": "angry", "intensity": 2, "cue": "none",
+                             "say": "Hmph."}]                     # not in feelings_ok
+    doc = make_doc([row(), miss])
     m = score(doc)
     assert m["validity"] == 1.0
     assert m["read_accuracy"] == 0.5
     assert m["first_fit"] == 0.5
-    assert m["any_fit"] == 1.0  # any-beat still passes when the first misses
+    assert m["any_fit"] == 0.5
 
 
 def test_score_invalid_and_warnings_count_invalid():

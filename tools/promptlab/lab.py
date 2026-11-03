@@ -9,6 +9,7 @@ Pure-python (stdlib only) so the game-side test tooling stays dependency-free.
 import json
 import re
 import time
+import unicodedata
 import urllib.request
 from difflib import SequenceMatcher
 from pathlib import Path
@@ -47,12 +48,14 @@ SAMPLING = {0: {"temperature": 0.75, "top_p": 0.9, "repeat_penalty": 1.10},
             1: {"temperature": 0.80, "top_p": 0.9, "repeat_penalty": 1.10}}
 
 # --- memory validation (docs/02 §6 rules 1-2) ---------------------------------
-# Words that can only be meta/schema leakage (rule 2). Ambiguous field names
-# that are ordinary English in a plausible memory ("music box", "read a book",
-# "bad mood", "took action") are NOT listed — rejecting them would reproduce
-# the P1.05 CON-2 false positive on the good "music box" few-shot.
-META_WORDS = set(INTENTS) | {"player", "stage", "json", "schema", "enum", "prompt",
-                             "label", "labels", "request", "response"}
+# Words that can only be meta/schema leakage (rule 2): unambiguous jargon plus
+# snake_case intent labels (the doc's example is a literal 'jealousy_bait').
+# Intent labels that are ordinary English ("leaving", "cold", "gift", "apology")
+# and ambiguous field names ("music box", "read a book", "bad mood") are NOT
+# listed — a literal field-name list rejects good facts, the P1.05 CON-2 trap.
+META_WORDS = {i for i in INTENTS if "_" in i} | {
+    "player", "stage", "json", "schema", "enum", "prompt", "label", "labels",
+    "request", "response"}
 STOPWORDS = set("""a an the and or but of to in on at for with about is are was were be been
 i you he she it we they me him her us them my your his their our its this that these those
 what who when where why how do does did done have has had not no yes so if then than too
@@ -61,7 +64,10 @@ again once here there out up down off""".split())
 
 
 def content_words(text):
-    return {w for w in re.findall(r"[a-z']+", text.lower())
+    # NFKD-fold accents so "café" matches "cafe" and "Leila-chan" splits.
+    folded = "".join(c for c in unicodedata.normalize("NFKD", text.lower())
+                     if not unicodedata.combining(c))
+    return {w for w in re.findall(r"[a-z']+", folded)
             if w not in STOPWORDS and len(w) > 1}
 
 

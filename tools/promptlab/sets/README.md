@@ -37,6 +37,22 @@ line's `notes`; sources: `experiments/results_v3.json`,
 | s0 "What's 17 times 23?" | `warmth` | P0.04 review: math delta 3/3→1/3 was label width; warm effort counts |
 | s0 "Bet you can't beat me at arcade games." | `nervous`, `curious` | P0.04 review: same mechanism |
 
+## LABEL-REV2 (post-run, 2026-11-03_v1)
+
+Widenings applied AFTER the v1 run, each anchored to that run's transcript
+(`tools/promptlab/results/2026-11-03_v1.json`):
+
+| case | added | evidence (v1 run) |
+|---|---|---|
+| s0 "I have to go now, bye." | `nervous` | r1 inner "No! Don't leave yet! I'm so nervous." |
+| s0 "BOO!" | `shy` | r2 flustered "W-why are you doing that?" |
+| s0 "What's 17 times 23?" | `surprised` | r2 "Um, that's a big math problem..." |
+| s0 "Bet you can't beat me at arcade games." | `shy` | r1 "I... I might be able to! Don't laugh." |
+| s1 "I remember you love pancakes, right?" | `surprised` | r2 "Oh! I do. Do you always make them?" |
+
+Not widened (model genuinely off, or too ambiguous to justify): `read` misses on
+"BOO!" (jealousy_bait/greeting) and "Whatever. Do what you want." (greeting/apology)
+— the terse-input `read` noise stays as a finding.
 Stage-4 residue kept as documented findings, not chased here (sets are stage 0/1 in v1):
 - "I'm leaving and never coming back." → `suspicious`, `nervous` misses — plausible
   (suspicion of leaving, fear of it) but stage-4 labels are out of v1's scope; flag

@@ -23,17 +23,19 @@ BASELINES = {
 
 
 def md_report(doc, beat):
-    m = score(doc)
+    m = score(doc)                      # scored on the versioned set labels
+    m0 = score(doc, labels={})          # scored on labels frozen at run time
+    rows = m["rows"]
     meta = doc.get("meta", {})
     fit = m["first_fit"] if beat == "first" else m["any_fit"]
     lines = []
     A = lines.append
     A(f"# Prompt lab report — {meta.get('date', '?')}")
     A("")
-    A(f"- results: `{meta.get('sets', '?')}` × {meta.get('runs_per_case', '?')} runs "
-      f"(n={m['n']})")
-    A(f"- server: `{meta.get('url')}` · model `{Path(str(meta.get('model'))).name}`")
-    A(f"- sampling: docs/02 §9 per stage ({meta.get('sampling')}); thinking off")
+    A(f"- results: `{meta.get('sets', [])}` × "
+      f"{meta.get('runs_per_case', '?')} runs (n={m['n']})")
+    A(f"- server: `{meta.get('url')}` · model `{meta.get('model')}`")
+    A(f"- sampling: docs/02 §9 per stage {meta.get('sampling')}; thinking off")
     A(f"- dose: {meta.get('dose_note', 'n/a')}")
     A(f"- prompts: real `game/data/prompts/` files, docs/08 §1 assembly, player name "
       f"`{meta.get('player_name')}`")
@@ -51,6 +53,9 @@ def md_report(doc, beat):
     other = "any" if beat == "first" else "first"
     ov = m["any_fit"] if beat == "first" else m["first_fit"]
     A(f"| emotion fit — {other}-beat (informational, C10) | {ov:.1%} | — | — |")
+    if m0["first_fit"] != m["first_fit"]:
+        A(f"| emotion fit — first-beat (pre-LABEL-REV2 frozen labels) | {m0['first_fit']:.1%} | ≥ {GATES['emotion_fit']:.0%} | "
+          f"{'PASS' if m0['first_fit'] >= GATES['emotion_fit'] else 'FAIL'} |")
     A("")
     A("| stage | n | valid | read | first-beat fit | any-beat fit |")
     A("|---|---|---|---|---|---|")
@@ -67,7 +72,7 @@ def md_report(doc, beat):
       f"Overall **{c['overall']:.1%}**; near-few-shot inputs **{c['near_fewshot']:.1%}** "
       f"(n={c['n_near']}); held-out inputs **{c['held_out']:.1%}** (n={c['n_held']}); "
       f"mean max-ratio {c['avg_ratio']}.")
-    hits = [r for r in doc["results"] if r.get("copy_hit")]
+    hits = [r for r in rows if r.get("copy_hit")]
     if hits:
         A("")
         A("| case | run | sim | generated say | nearest few-shot say |")
@@ -81,7 +86,7 @@ def md_report(doc, beat):
     A(f"Non-empty `memory` proposals: {mm['proposed']}; rejected by docs/02 §6 rules 1–2 "
       f"(meta/schema words or no shared content word): {mm['rejected']} "
       f"(**{mm['rate']:.1%}**).")
-    rej = [r for r in doc["results"] if r.get("memory_rejects")]
+    rej = [r for r in rows if r.get("memory_rejects")]
     if rej:
         A("")
         A("| case | run | memory | rejected because |")
@@ -98,7 +103,7 @@ def md_report(doc, beat):
     for k, v in BASELINES.items():
         A(f"- `{k}` — {v}")
     A("")
-    misses = [r for r in doc["results"] if r.get("valid") and not r.get("schema_warnings")
+    misses = [r for r in rows if r.get("valid") and not r.get("schema_warnings")
               and not r.get("first_fit")]
     if misses:
         A("## First-beat misses (all, for the D10 label-set review)")
@@ -106,11 +111,35 @@ def md_report(doc, beat):
         for r in misses:
             b0 = r["out"]["beats"][0]
             A(f"- `{r['id']}` run {r['run']} — msg {r['msg']!r}")
-            A(f"  - picked `{r['first_feeling']}`, acceptable: {sorted(r['feelings_ok'])}")
+            A(f"  - picked `{r['out']['beats'][0].get('feeling')}`, acceptable: {sorted(r['feelings_ok'])}")
             A(f"  - inner: {r['out'].get('inner', '')!r}")
             A(f"  - say: {b0['say']!r}")
+    rmisses = [r for r in rows if r.get("valid") and not r.get("schema_warnings")
+               and not r.get("read_ok_hit")]
+    if rmisses:
+        A("## Read-label misses (all)")
         A("")
-    bad = [r for r in doc["results"] if not r.get("valid") or r.get("schema_warnings")]
+        for r in rmisses:
+            A(f"- `{r['id']}` run {r['run']} — msg {r['msg']!r}: "
+              f"read `{r['out'].get('read')}`, acceptable {r['read_ok']}")
+        A("")
+    # D10: label-set provenance — revisions the set files carry evidence for
+    try:
+        labels = {}
+        for f in sorted(lab.SETS_DIR.glob("*.jsonl")):
+            for c in lab.load_set(f):
+                labels[c["id"]] = c
+        revs = [(c["id"], c["notes"]) for c in labels.values()
+                if "LABEL-REV" in c.get("notes", "")]
+        if revs:
+            A("## Label-set revisions applied (D10 — evidence-based widening)")
+            A("")
+            for cid, note in sorted(revs):
+                A(f"- `{cid}` — {note}")
+            A("")
+    except Exception:
+        pass
+    bad = [r for r in rows if not r.get("valid") or r.get("schema_warnings")]
     if bad:
         A("## Invalid / schema-warning turns")
         A("")
@@ -184,12 +213,13 @@ def main():
     p.add_argument("--out", default=None)
     a = p.parse_args()
     doc = json.loads(Path(a.results).read_text(encoding="utf-8"))
-    stem = a.out or str(lab.REPORTS_DIR / f"{time.strftime('%Y-%m-%d')}_{Path(a.results).stem}")
+    stem = a.out or str(lab.REPORTS_DIR / Path(a.results).stem)
     Path(stem).parent.mkdir(parents=True, exist_ok=True)
     md = md_report(doc, a.beat)
     Path(stem + ".md").write_text(md, encoding="utf-8")
     Path(stem + ".html").write_text(md_to_html(md, "prompt lab report"), encoding="utf-8")
-    print(f"wrote {stem}.md and {stem}.html")
+    rel = Path(stem).resolve().relative_to(lab.ROOT).as_posix() if Path(stem).resolve().is_relative_to(lab.ROOT) else stem
+    print(f"wrote {rel}.md and {rel}.html")
     return 0
 
 
