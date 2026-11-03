@@ -992,7 +992,7 @@
       "finished": "2026-11-03T08:30:14+02:00"
     },
     "P1.11": {
-      "status": "in_review",
+      "status": "done",
       "agent": "gemini-3.8-flash",
       "round": 1,
       "reviews": [
@@ -1016,7 +1016,8 @@
         }
       ],
       "started": "2026-11-03T08:12:19+02:00",
-      "handoff": "production/handoffs/P1.11.md"
+      "handoff": "production/handoffs/P1.11.md",
+      "finished": "2026-11-03T09:08:29+02:00"
     },
     "P1.15": {
       "status": "in_review",
@@ -2556,6 +2557,12 @@
       "event": "review:design:approved",
       "ref": "P1.11",
       "note": "production/reviews/P1.11-design-r1.md"
+    },
+    {
+      "ts": "2026-11-03T09:08:29+02:00",
+      "event": "in_review->done",
+      "ref": "P1.11",
+      "note": ""
     }
   ]
 }
