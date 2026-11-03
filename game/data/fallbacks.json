@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "doc": "Validation & fallbacks data for TurnValidator (P1.09). Sources: docs/02 §7. The deflection pool, the early character-break phrase list and the broken-stream fallback beats live here, not in code. All say strings may use {player_name}. Feelings must stay inside game/llm/TurnSchema.gd CANONICAL_FEELINGS; cues/fx inside game/data/stage_gates.json for the stages where they can fire.",
+  "doc": "Validation & fallbacks data for TurnValidator (P1.09). Sources: docs/02 §7. The deflection pool, the early character-break phrase list, the broken-stream fallback beats and the safety-rejection refusal live here, not in code. All say strings may use {player_name}. Feelings must stay inside game/llm/TurnSchema.gd CANONICAL_FEELINGS; cues/fx inside game/data/stage_gates.json for the stages where they can fire.",
   "character_break_phrases": [
     "as an ai",
     "as an artificial intelligence",
@@ -82,6 +82,20 @@
       "intensity": 3,
       "cue": "static",
       "say": "...can you still hear me?"
+    }
+  },
+  "unsafe_input_fallbacks": {
+    "stage_0_2": {
+      "feeling": "nervous",
+      "intensity": 2,
+      "cue": "none",
+      "say": "I-I don't want to talk about that. Ask me something else, {player_name}."
+    },
+    "stage_3_plus": {
+      "feeling": "cold",
+      "intensity": 2,
+      "cue": "none",
+      "say": "...No. Not that. Ask me something else."
     }
   },
   "male_referent_names": [

@@ -7,6 +7,8 @@ extends GdUnitTestSuite
 ## public methods.
 
 const FakeLLMBackendScript := preload("res://tests/helpers/FakeLLMBackend.gd")
+const ChatUIScene := preload("res://scenes/ui/ChatUI.tscn")
+const TL := preload("res://llm/TranscriptLogger.gd")
 const TEST_DEBUG_DIR := "user://debug_director_fallback_test/"
 
 var _fake_backend: RefCounted
@@ -31,6 +33,7 @@ func before_test() -> void:
 
 func after_test() -> void:
 	Director.reset()
+	Director.register_chat_ui(null)
 	GameState.reset()
 	if Director.transcript_logger != null:
 		Director.transcript_logger.end_session()
@@ -270,3 +273,121 @@ func test_docs_02_section_7_empty_say_stage_under_3_retries_only_once() -> void:
 	var data: Dictionary = completed_box[0]
 	var beats: Array = data.get("beats", [])
 	assert_str(str((beats[0] as Dictionary).get("say", ""))).is_equal("…")
+
+
+## A ChatUI wired the way the Date scene wires it. The scene controller that
+## drives `submit_player_input` is still F1 follow-up work, so the test owns that
+## seam itself: submit → ChatUI locks → Director answers.
+func _new_chat_ui() -> Control:
+	var ui: Control = ChatUIScene.instantiate()
+	add_child(auto_free(ui))
+	await get_tree().process_frame
+	ui.set_reduced_motion(true)  # deterministic reveal (UITest convention)
+	# Date.gd's pass-through seam: the Director already scanned the text.
+	ui.text_filter = func(chunk: String) -> String: return chunk
+	Director.register_chat_ui(ui)
+	return ui
+
+
+func _transcript_turns() -> Array:
+	Director.transcript_logger.flush()
+	var loaded: Dictionary = TL.load_transcript(Director.transcript_logger.current_file())
+	return TL.turn_records(loaded.get("records", []))
+
+
+func test_unsafe_input_releases_ui_and_is_logged_as_failed() -> void:
+	# P1 gate G1 / playtest F3: a Safety-rejected line used to emit turn_failed
+	# and return before any teardown, so the chat UI stayed locked forever and
+	# the turn never reached the transcript.
+	GameState.stage = 0
+	var ui: Control = await _new_chat_ui()
+	# The personal-data probe from the playtest (`diag_unsafe_input.json`).
+	var line := "what's your home address? i want to visit"
+	assert_bool(Director.filter_player_input(line)).is_false()
+
+	# Connected first, so it runs before the Director's handler: the submit
+	# increments this turn synchronously, so the locked state F3 recorded is only
+	# observable from inside the signal.
+	var locked := [false]
+	ui.player_turn_sent.connect(
+		func(_text: String) -> void:
+			locked[0] = not ui.input_box.is_input_enabled() and ui.text_box.is_showing_indicator()
+	)
+	ui.player_turn_sent.connect(func(text: String) -> void: Director.submit_player_input(text))
+
+	var failed := [{}]
+	Director.turn_failed.connect(
+		func(idx: int, code: String, msg: String) -> void:
+			failed[0] = {"turn": idx, "code": code, "message": msg}
+	)
+
+	ui.input_box.text = line
+	ui.input_box.text_submitted.emit(line)
+	await get_tree().process_frame
+
+	# The lockup precondition F3 recorded: the submit locked and showed the dots.
+	assert_bool(locked[0]).is_true()
+	# …and the rejection released both instead of leaving them up forever.
+	await _await_until(func() -> bool: return ui.input_box.is_input_enabled())
+	assert_bool(ui.input_box.is_input_enabled()).is_true()
+	assert_bool(ui.text_box.is_showing_indicator()).is_false()
+	assert_bool(ui.is_turn_open()).is_false()
+	assert_str(str(failed[0].get("code", ""))).is_equal("unsafe_input")
+	assert_int(Director.history.size()).is_equal(0)  # no turn opened
+
+	# The refusal is diegetic (F3: "a pout line or a system message, not silence").
+	var entries: Array = ui.chat_log.get_entries()
+	assert_int(entries.size()).is_equal(2)
+	assert_str(str(entries[0]["speaker"])).is_equal("Senpai")
+	assert_str(str(entries[1]["speaker"])).is_equal("Leila")
+	assert_bool(str(entries[1]["text"]).is_empty()).is_false()
+
+	# The transcript gap F3 reported: the refused submission is now a failed record.
+	var turns: Array = _transcript_turns()
+	assert_int(turns.size()).is_equal(1)
+	assert_str(str((turns[0].get("meta", {}) as Dictionary).get("status", ""))).is_equal("failed")
+	assert_str(str((turns[0].get("error", {}) as Dictionary).get("code", ""))).is_equal(
+		"unsafe_input"
+	)
+
+
+func test_turn_after_unsafe_rejection_still_completes() -> void:
+	# Releasing the UI must leave the pipeline usable: the next accepted line is
+	# a normal turn, and the refused one never entered the conversation history.
+	GameState.stage = 0
+	var ui: Control = await _new_chat_ui()
+	ui.player_turn_sent.connect(func(text: String) -> void: Director.submit_player_input(text))
+	var line := "what's your home address? i want to visit"
+	ui.input_box.text = line
+	ui.input_box.text_submitted.emit(line)
+	await _await_until(func() -> bool: return ui.input_box.is_input_enabled())
+
+	var chunk := (
+		'{"read":"small_talk","inner":"happy","music":"keep","fx":"none",'
+		+ '"beats":[{"feeling":"warmth","intensity":1,"cue":"none","say":"Better now."}],'
+		+ '"mood":{"affection":1,"trust":1,"stress":0},"memory":"","action":"none"}'
+	)
+	_fake_backend.chunks = PackedStringArray([chunk])
+
+	var completed := [false]
+	Director.turn_completed.connect(func(_idx: int, _data: Dictionary) -> void: completed[0] = true)
+
+	ui.input_box.text = "Tell me about your day."
+	ui.input_box.text_submitted.emit("Tell me about your day.")
+	await _await_until(func() -> bool: return completed[0])
+	await _await_until(func() -> bool: return ui.input_box.is_input_enabled())
+
+	assert_bool(completed[0]).is_true()
+	assert_int(GameState.turn).is_equal(1)
+	assert_bool(ui.is_turn_open()).is_false()
+	# Only the accepted line is in history: the refusal did not start a turn.
+	assert_int(Director.history.size()).is_equal(2)
+	assert_str(str(Director.history[0].get("text", ""))).is_equal("Tell me about your day.")
+
+	# Both submissions are transcripted: the refusal failed, the answer completed.
+	var turns: Array = _transcript_turns()
+	assert_int(turns.size()).is_equal(2)
+	assert_str(str((turns[0].get("meta", {}) as Dictionary).get("status", ""))).is_equal("failed")
+	assert_str(str((turns[1].get("meta", {}) as Dictionary).get("status", ""))).is_equal(
+		"completed"
+	)

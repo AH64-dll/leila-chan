@@ -424,6 +424,29 @@ static func get_broken_stream_fallback(
 
 
 ## -----------------------------------------------------------------------------
+## 5. Safety-Rejected Player Input (docs/02 §4 step 0.1 / §8)
+## Problem: the player's own line is refused, so there is no turn to answer it
+## Detection: Director.filter_player_input() → false
+## Handling: one in-fiction refusal beat, so the screen is never silent with the
+## input still locked (P1 gate G1 / playtest F3)
+## -----------------------------------------------------------------------------
+## Returns the refusal beat {feeling, intensity, cue, say}. Cue stays "none":
+## the refusal is an input-path event, not a streamed reply, so it must not spend
+## the turn's docs/02 §5 cue budget.
+static func get_input_refusal(stage: int, player_name: String = "Senpai") -> Dictionary:
+	var fallbacks: Dictionary = _get_data().get("unsafe_input_fallbacks", {})
+	var template: Dictionary = fallbacks.get("stage_3_plus" if stage >= 3 else "stage_0_2", {})
+	var fallback_say := "Let's talk about something else, %s." % player_name
+	var say_str := str(template.get("say", fallback_say))
+	return {
+		"feeling": str(template.get("feeling", "cold" if stage >= 3 else "nervous")),
+		"intensity": int(template.get("intensity", 2)),
+		"cue": str(template.get("cue", "none")),
+		"say": say_str.replace("{player_name}", player_name),
+	}
+
+
+## -----------------------------------------------------------------------------
 ## Helper RegEx accessors
 ## -----------------------------------------------------------------------------
 static func _get_word_regex() -> RegEx:

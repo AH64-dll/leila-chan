@@ -16,6 +16,8 @@ signal turn_failed(turn_index: int, error_code: String, error_message: String)
 signal turn_cancelled(turn_index: int)
 
 const DEBUG_OVERLAY_KEY := KEY_F3
+const UNSAFE_INPUT_CODE := "unsafe_input"
+const UNSAFE_INPUT_MESSAGE := "Input blocked by safety policy"
 ## Turn history maintained by Director: array of {"role": "user"|"assistant", ...}
 var history: Array[Dictionary] = []
 ## Validated player memories (docs/02 §6)
@@ -286,7 +288,7 @@ func submit_player_input(raw_input: String, telemetry: Dictionary = {}) -> bool:
 
 	# Step 0.1: Safety check on player input
 	if not filter_player_input(trimmed):
-		turn_failed.emit(_turn_index, "unsafe_input", "Input blocked by safety policy")
+		_reject_unsafe_input()
 		return false
 
 	# Step 0.2: Telemetry / Typing hooks (docs/02 §4 step 0)
@@ -306,6 +308,23 @@ func submit_player_input(raw_input: String, telemetry: Dictionary = {}) -> bool:
 	_turn_events.clear()
 	# Step 1–4: Prepare and launch generation
 	return _start_turn(trimmed)
+
+
+## docs/02 §4 step 0.1 (P1 gate G1 / playtest F3): a refused line never opens a
+## turn, so the submit's input lock and typing indicator would never be released.
+## Answer with an in-character refusal through the UI's beat path (docs/02 §8
+## refuses the line, it never freezes the game) and log the failed record.
+func _reject_unsafe_input() -> void:
+	_turn_index = GameState.turn  # the record identity: this never-started turn
+	_current_stage = int(GameState.stage)
+	_current_path = String(GameState.path)
+	_log_turn_record("failed", UNSAFE_INPUT_CODE, UNSAFE_INPUT_MESSAGE)
+	var refusal: Dictionary = TurnValidator.get_input_refusal(_current_stage, GameState.player_name)
+	_safety.end_utterance()  # reply boundary (P1.19 CODE-19): a new utterance
+	if chat_ui_node != null and chat_ui_node.has_method("reject_turn"):
+		var scanned := _safety.filter_text(str(refusal.get("say", "")), {"stage": _current_stage})
+		chat_ui_node.reject_turn(scanned)
+	turn_failed.emit(_turn_index, UNSAFE_INPUT_CODE, UNSAFE_INPUT_MESSAGE)
 
 
 ## docs/02 §4 step 0: typing telemetry (T08 deleted draft, T11 idle) and the
