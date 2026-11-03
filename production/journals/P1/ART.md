@@ -23,3 +23,16 @@
 - Gotcha: In GDScript typed for-loops (`for fake: Node in _fakes:`), if an instance was freed earlier, GDScript raises an error upon assignment before `is_instance_valid` can be evaluated; keep iteration variables untyped when dealing with potentially freed nodes.
 - Gotcha: `queue_free()` retains nodes in parent child lists until frame end; call `remove_child(child)` before `queue_free()` in `_cut_fx_motion()` so child counts drop synchronously on reduced-motion cuts.
 - Next: P1.16 Date scene integration and UI binding; P2.15 stage shaders for later stage effects (`rain`, `shake_big`, `flicker`, etc.).
+## P1.16 — Date scene assembly + café background art (2026-11-03)
+- Built `Date.tscn` and `Date.gd`: composite assembly wiring `Background` (`res://assets/bg/cafe.png`), `Character.tscn`, `DateFX.gd` overlay, and `ChatUI.tscn` (holding `TextBox`, `InputBox`, `ChatLog`).
+- Generated `game/assets/bg/cafe.png` via deterministic generator `tools/art/generate_cafe_bg.py`: native 384×688 pixel art depicting the cozy corner café table, window, counter, and menus in exact palette colors (28 colors used, 0 off-palette pixels).
+- Integrated `ScenarioLoader`: loads scenario metadata, sets scene music (`calm`), plays opening beats in sequence (resolving feeling via `SpriteResolver`, noting sprite and cues in `AudioDirector`, feeding typewriter).
+- Conventions: UI components live on `CanvasLayer` (layer 2) so camera zoom/pan does not move the dialogue interface; background and character live in world space and zoom cohesively.
+- Gotcha: native methods like `get_node_or_null` cannot be overridden in Godot 4.7 (treated as warning-error); provide direct property accessors (`text_box`, `input_box`, `chat_ui`, `character`, `fx`) and `find_component()`.
+- Gotcha: `AudioDirector.begin_turn()` takes 0 arguments; set stage beforehand with `AudioDirector.set_stage(stage)`.
+
+## P1.16 — Round 2 rework (2026-11-03)
+- Addressed CON-1, DES-1 through DES-5, and CON-3.
+- Gate C5 window sizing evaluated: set `window_width_override=384` and `window_height_override=688` in `project.godot`. 1× native launch fits a 1080p desktop with taskbar headroom; integer scaling scales cleanly to 2× on 1440p/4K.
+- Wired `photosensitive` from `Settings` to `DateFX` (disables twitch flash) and forwarded scenario `ambience` to `AudioDirector.play_system()`.
+- Re-captured stills after 25 frames (>400 ms) so Character's 140 ms crossfade settles completely at 100% opacity.

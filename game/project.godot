@@ -36,8 +36,8 @@ Settings="*res://autoload/Settings.gd"
 
 window/size/viewport_width=384
 window/size/viewport_height=688
-window/size/window_width_override=768
-window/size/window_height_override=1376
+window/size/window_width_override=384
+window/size/window_height_override=688
 window/stretch/mode="canvas_items"
 window/stretch/aspect="keep"
 window/stretch/scale_mode="integer"

@@ -79,3 +79,17 @@
   end index is inclusive; `RegEx.sub` accepts only string replacements; JSON ints parse as floats.
 - Not built (flagged in handoff): the literal "glitch filter" pass over partial say (fx glitch + text
   level is what exists), and the "typing indicator stuck for 3 s" is simplified to an immediate "..." close.
+## P1.07 TurnSchema (round 1, gemini-3.8-flash)
+- Built `game/llm/TurnSchema.gd` and autoload shim `game/autoload/TurnSchema.gd` with data tables in `game/data/stage_gates.json`.
+- Dynamic schema builds per-turn json_schema adhering to canonical property order: `read, inner, beats, mood, memory, action, music, fx, meta`.
+- Gates enforced across stages 0–5: `meta` null/gated for 0–2 vs unlocked object/null at 3+; C9 `inner` and `say` minLength:1.
+- `validate_turn()` provides runtime validation for Director and tests.
+- Gotchas: Godot's GDScript parser treats `var x := variant` inference as a hard compilation error under strict warnings — always explicitly type `var cues: Array = ...`.
+
+## P1.18 — TranscriptLogger integration & replay stub (2026-11-03, agent: gemini-3.8-flash)
+
+- Integrated `TranscriptLogger` into `Director.gd` (`director.transcript_logger`): every completed, failed, and cancelled turn logs canonical turn record {prompt, schema, raw output, applied events, metrics, stage, path, dose, day, meta} to `user://debug/` JSONL.
+- Added `LLM.get_backend()` and `LLM.last_metrics()` facade pass-through to retrieve backend performance timings (`ready_ms`, `first_token_ms`, `generate_ms`).
+- Safety redaction wired via `transcript_logger.set_redactor(Callable(self, "_redact_record"))`: integrates `Safety.redact_record` when available and falls back to `filter_output`.
+- Implemented `replay_turn(turn_record: Dictionary) -> bool` on `Director`: feeds transcript records through `IncrementalJson` and dispatches events end-to-end to subsystems and GameState.
+- Tests in `DirectorTest.gd`: verified logging on completion, failure, cancellation, safety redaction, and end-to-end transcript replay.

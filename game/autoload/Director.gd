@@ -61,6 +61,7 @@ const META_WORDS := [
 	"scared"
 ]
 
+const DEBUG_OVERLAY_KEY := KEY_F3
 ## Turn history maintained by Director: array of {"role": "user"|"assistant", ...}
 var history: Array[Dictionary] = []
 ## Validated player memories (docs/02 §6)
@@ -80,6 +81,16 @@ var chat_ui_node: Node = null
 var quiet_turn_streak := 0
 var last_player_inputs: Array[String] = []
 
+## Last turn state accessible to dev tools, overlay, and inspection
+var last_turn_data: Dictionary = {}
+var last_dose: Dictionary = {}
+var last_offered_actions: Array = []
+var last_read: String = ""
+var last_inner: String = ""
+
+var transcript_logger: TranscriptLogger = null
+var _overlay: CanvasLayer = null
+
 var _active_stream: TurnStream = null
 var _parser: IncrementalJson = null
 var _current_turn_data: Dictionary = {}
@@ -94,10 +105,27 @@ var _stream_error_message := ""
 var _retry_count := 0
 var _dose_offset := 0.0
 var _streamed_say_text := ""
+var _current_prompt: Array = []
+var _current_schema: Dictionary = {}
+var _current_raw_output := ""
+var _current_applied_events: Array[Dictionary] = []
+var _current_dose: Dictionary = {}
+var _current_stage := 0
+var _current_path := ""
 
 
 func _ready() -> void:
 	reset()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if OS.has_feature("release"):
+		return
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo or key.keycode != DEBUG_OVERLAY_KEY:
+		return
+	toggle_debug_overlay()
+	get_viewport().set_input_as_handled()
 
 
 func reset() -> void:
@@ -105,6 +133,15 @@ func reset() -> void:
 	memories.clear()
 	last_player_inputs.clear()
 	quiet_turn_streak = 0
+	last_turn_data.clear()
+	last_dose.clear()
+	last_offered_actions.clear()
+	last_read = ""
+	last_inner = ""
+	if transcript_logger != null and transcript_logger.is_enabled():
+		transcript_logger.end_session()
+	_init_transcript_logger()
+	_clear_turn_context()
 	_current_turn_data.clear()
 	_current_beats.clear()
 	_current_beat_index = -1
@@ -121,6 +158,39 @@ func reset() -> void:
 	_active_stream = null
 
 
+func _init_transcript_logger() -> void:
+	if transcript_logger == null:
+		transcript_logger = TranscriptLogger.new()
+		_wire_safety_redactor()
+
+
+func _wire_safety_redactor() -> void:
+	if transcript_logger == null:
+		return
+	var redactor := Callable(self, "_redact_record")
+	transcript_logger.set_redactor(redactor)
+
+
+func _redact_record(record: Dictionary) -> Dictionary:
+	if Safety != null and Safety.has_method("redact_record"):
+		var res: Variant = Safety.call("redact_record", record)
+		if res is Dictionary:
+			return res
+	if record.has("output") and record["output"] is String:
+		record["output"] = filter_output(record["output"])
+	return record
+
+
+func _clear_turn_context() -> void:
+	_current_prompt = []
+	_current_schema = {}
+	_current_raw_output = ""
+	_current_applied_events.clear()
+	_current_dose = {}
+	_current_stage = 0
+	_current_path = ""
+
+
 func is_busy() -> bool:
 	return _turn_in_flight
 
@@ -133,6 +203,73 @@ func register_chat_ui(node: Node) -> void:
 	chat_ui_node = node
 	if chat_ui_node != null and chat_ui_node.has_method("set_text_filter"):
 		chat_ui_node.text_filter = Callable(self, "filter_output")
+
+
+func toggle_debug_overlay() -> void:
+	if OS.has_feature("release"):
+		return
+	if _overlay == null or not is_instance_valid(_overlay):
+		var scene := load("res://scenes/debug/DebugOverlay.tscn") as PackedScene
+		if scene != null:
+			_overlay = scene.instantiate() as CanvasLayer
+			get_tree().root.add_child(_overlay)
+	if _overlay != null:
+		if _overlay.has_method("toggle"):
+			_overlay.toggle()
+		else:
+			_overlay.visible = not _overlay.visible
+			if _overlay.visible and _overlay.has_method("refresh"):
+				_overlay.refresh()
+
+
+func is_debug_overlay_open() -> bool:
+	return _overlay != null and is_instance_valid(_overlay) and _overlay.visible
+
+
+func get_debug_overlay() -> CanvasLayer:
+	return _overlay
+
+
+func set_debug_overlay(overlay: CanvasLayer) -> void:
+	_overlay = overlay
+
+
+func get_last_read() -> String:
+	return last_read
+
+
+func get_last_inner() -> String:
+	return last_inner
+
+
+func get_current_dose() -> Dictionary:
+	if not last_dose.is_empty():
+		return last_dose
+	var stage := int(GameState.stage)
+	if Steering != null and Steering.has_method("dose_for"):
+		var ctx := {
+			"stage": stage,
+			"path": String(GameState.path),
+			"player_name": GameState.player_name,
+			"scene": scene_info,
+			"memories": memories.duplicate(),
+			"events": [],
+			"history": history.duplicate(true),
+			"player_message": "",
+			"offered_actions": get_offered_actions(),
+		}
+		return Steering.dose_for(ctx)
+	var sampling_spec: Dictionary = SAMPLING_TABLE.get(stage, SAMPLING_TABLE[0])
+	return {"base": float(sampling_spec.get("dose", 0.0))}
+
+
+func get_offered_actions() -> Array:
+	if not last_offered_actions.is_empty():
+		return last_offered_actions
+	var stage := int(GameState.stage)
+	if MetaDirector != null and MetaDirector.has_method("offers"):
+		return MetaDirector.offers(stage)
+	return []
 
 
 ## -----------------------------------------------------------------------------
@@ -192,6 +329,10 @@ func _start_turn(player_text: String) -> bool:
 	_stream_had_error = false
 	_stream_error_message = ""
 	_streamed_say_text = ""
+	_clear_turn_context()
+	_current_stage = int(GameState.stage)
+	_current_path = String(GameState.path)
+
 	turn_started.emit(_turn_index, player_text)
 
 	if AudioDirector != null and AudioDirector.has_method("begin_turn"):
@@ -224,6 +365,8 @@ func _start_turn(player_text: String) -> bool:
 
 	# Step 3: Schema assembly via TurnSchema
 	var schema: Dictionary = TurnSchema.build_turn_schema(ctx, offered_actions)
+	_current_prompt = messages.duplicate(true)
+	_current_schema = schema.duplicate(true)
 
 	# Step 4: Sampling and steering dose
 	var sampling_spec: Dictionary = SAMPLING_TABLE.get(stage, SAMPLING_TABLE[0])
@@ -241,6 +384,10 @@ func _start_turn(player_text: String) -> bool:
 	# docs/02 §7 empty-say retry: dose -2 applies to whichever dose source won
 	if not dose_dict.is_empty():
 		dose_dict["base"] = maxf(0.0, float(dose_dict.get("base", 0.0)) + _dose_offset)
+	last_offered_actions = offered_actions.duplicate()
+	last_dose = dose_dict.duplicate()
+
+	_current_dose = dose_dict.duplicate(true)
 	# Create LLM TurnRequest
 	var req := TurnRequest.new()
 	req.messages = messages
@@ -268,9 +415,11 @@ func _on_llm_token(token_text: String) -> void:
 		return
 
 	turn_chunk_received.emit(token_text)
+	_current_raw_output += token_text
 	var events: Array = _parser.feed(token_text)
 	for event: Dictionary in events:
 		_process_stream_event(event)
+		_current_applied_events.append(event.duplicate(true))
 
 
 func _process_stream_event(event: Dictionary) -> void:
@@ -423,6 +572,7 @@ func _on_llm_completed(_raw_text: String) -> void:
 	# Docs/02 §7: Third-person pronoun repair, character-break deflection, repetition loop
 	_apply_turn_repairs_and_deflections(_current_turn_data, stage)
 
+	_current_raw_output = _raw_text
 	_close_turn_success(_current_turn_data)
 
 
@@ -553,6 +703,9 @@ func _close_turn_success(turn_data: Dictionary) -> void:
 	# Auto-fill check (docs/02 §5: If model chose no cue/fx for 4 turns and intensity >= 2 -> mild one)
 	_handle_auto_fill(turn_data, stage)
 
+	last_turn_data = turn_data.duplicate(true)
+	last_read = str(turn_data.get("read", ""))
+	last_inner = str(turn_data.get("inner", ""))
 	# Step 7: Apply to GameState
 	# Apply mood
 	if turn_data.has("mood") and turn_data["mood"] is Dictionary:
@@ -605,6 +758,8 @@ func _close_turn_success(turn_data: Dictionary) -> void:
 	_parser = null
 
 	turn_completed.emit(_turn_index, turn_data)
+	_log_turn_record("completed")
+	_clear_turn_context()
 
 
 func _handle_auto_fill(turn_data: Dictionary, stage: int) -> void:
@@ -644,6 +799,8 @@ func _on_llm_failed(err_dict: Dictionary) -> void:
 	var code := str(err_dict.get("code", "unknown_error"))
 	var msg := str(err_dict.get("message", "generation failed"))
 	_abort_turn(code, msg)
+	_log_turn_record("failed", code, msg)
+	_clear_turn_context()
 
 
 func _on_llm_cancelled() -> void:
@@ -653,6 +810,8 @@ func _on_llm_cancelled() -> void:
 	if chat_ui_node != null and chat_ui_node.has_method("abort_turn"):
 		chat_ui_node.abort_turn()
 	turn_cancelled.emit(_turn_index)
+	_log_turn_record("cancelled")
+	_clear_turn_context()
 
 
 func cancel() -> void:
@@ -667,6 +826,79 @@ func _abort_turn(error_code: String, error_message: String) -> void:
 	if chat_ui_node != null and chat_ui_node.has_method("abort_turn"):
 		chat_ui_node.abort_turn()
 	turn_failed.emit(_turn_index, error_code, error_message)
+
+
+func _log_turn_record(status: String, err_code := "", err_msg := "") -> void:
+	if transcript_logger == null:
+		return
+	var metrics: Dictionary = {}
+	if LLM != null and LLM.has_method("last_metrics"):
+		metrics = LLM.last_metrics()
+
+	var error_dict := {}
+	if not err_code.is_empty() or not err_msg.is_empty():
+		error_dict = {"code": err_code, "message": err_msg}
+	elif status == "cancelled":
+		error_dict = {"code": "cancelled", "message": "turn cancelled by player or director"}
+
+	var record := {
+		"turn": _turn_index,
+		"prompt": _current_prompt,
+		"schema": _current_schema,
+		"output": _current_raw_output,
+		"metrics": metrics,
+		"events": _current_applied_events.duplicate(true),
+		"stage": _current_stage,
+		"path": _current_path,
+		"dose": _current_dose,
+		"day": int(GameState.day),
+		"meta": {"status": status},
+	}
+	if not error_dict.is_empty():
+		record["error"] = error_dict
+
+	transcript_logger.log_turn(record)
+
+
+## Replay stub (P1.18, docs/07 §5): re-feeds a transcript record or file back
+## to the Director by driving IncrementalJson events through the turn pipeline.
+func replay_turn(turn_record: Dictionary) -> bool:
+	if _turn_in_flight:
+		push_warning("Director: turn in flight; cannot replay")
+		return false
+
+	var raw_output: String = str(turn_record.get("output", ""))
+	var prompt_msgs: Variant = turn_record.get("prompt", [])
+	var player_text := ""
+	if prompt_msgs is Array:
+		for m: Variant in prompt_msgs:
+			if m is Dictionary and str(m.get("role", "")) == "user":
+				player_text = str(m.get("content", ""))
+
+	_turn_in_flight = true
+	_turn_index = int(turn_record.get("turn", GameState.turn))
+	_current_turn_data = {}
+	_current_beats = []
+	_current_beat_index = -1
+	_current_beat_data = {}
+	_clear_turn_context()
+	_current_prompt = prompt_msgs if prompt_msgs is Array else []
+	_current_schema = turn_record.get("schema", {})
+	_current_raw_output = raw_output
+	_current_stage = int(turn_record.get("stage", GameState.stage))
+	_current_path = String(turn_record.get("path", GameState.path))
+	_current_dose = turn_record.get("dose", {})
+
+	turn_started.emit(_turn_index, player_text)
+
+	_parser = IncrementalJson.new()
+	var events: Array = _parser.feed(raw_output)
+	for event: Dictionary in events:
+		_process_stream_event(event)
+		_current_applied_events.append(event.duplicate(true))
+
+	_on_llm_completed(raw_output)
+	return true
 
 
 ## -----------------------------------------------------------------------------

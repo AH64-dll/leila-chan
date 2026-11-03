@@ -78,3 +78,16 @@
   as spoken text), current player turn, opt-in prefill; `debug` is JSON-safe for P1.18's transcript.
 - For P1.02/P4.05: `set_token_counter(Callable)` takes a real tokenizer (llama-server `/tokenize`); without it the
   report uses `ceil(chars/3.6)`. P1.08 owns building `ctx`; the schema side stays P1.07's.
+
+## P1.07 TurnSchema (round 1, gemini-3.8-flash)
+- Built `game/llm/TurnSchema.gd` with stage-gate data table `game/data/stage_gates.json` and canonical feelings from `game/data/casting.json`.
+- Implemented `build_turn_schema(ctx, offered_actions)` producing llama-server json_schema with canonical property order (`read`, `inner`, `beats`, `mood`, `memory`, `action`, `music`, `fx`, `meta`), stage gates across 0–5, `meta` null/gated for stages 0–2 vs unlocked at 3+, and C9 minLength:1 on `inner`/`say`.
+- Provided semantic validation helper `validate_turn(turn, stage, offered_actions, options)` for Director and test suites.
+- Tests: `game/tests/TurnSchemaTest.gd` with 15 gdUnit4 cases covering schema structure, stages 0–5 enums and gates, meta gating, action offers, string limits, mood bounds, and data loading.
+## P1.18 — TranscriptLogger integration & replay stub (2026-11-03, agent: gemini-3.8-flash)
+
+- Wired `TranscriptLogger` into `Director.gd` (`Director.transcript_logger`): records every turn (`completed`, `failed`, `cancelled`) with canonical format v1 fields {prompt, schema, raw output, applied events, metrics, stage, path, dose, day, meta} under `user://debug/`.
+- Added `LLM.get_backend()` and `LLM.last_metrics()` to pass transport performance metrics into the transcript.
+- Connected safety redactor Callable `Director._redact_record`: delegates to `Safety.redact_record()` when available, with fallback to `filter_output` so unredacted text never touches disk.
+- Implemented `Director.replay_turn(turn_record)` feeding transcript outputs back through `IncrementalJson` to drive all subsystem events and state updates end-to-end.
+- Tests in `DirectorTest.gd`: full pipeline logging, failure logging, cancel logging, safety redaction, and replay verified. All 250 tests + gdlint + gdformat pass.
