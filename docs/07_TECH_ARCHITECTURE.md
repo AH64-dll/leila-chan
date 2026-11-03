@@ -23,7 +23,7 @@ res://
 ├─ autoload/
 │  ├─ GameState.gd        # meters, stage, path, day, flags, profile counters
 │  ├─ Director.gd         # turn pipeline (docs/02 §4)
-│  ├─ LLM.gd              # backend facade: generate(prompt, schema, sampling, dose) -> TurnStream
+│  ├─ LLM.gd              # backend facade: generate(TurnRequest) -> TurnStream
 │  ├─ PromptBuilder.gd    # assembles layered prompt (docs/08)
 │  ├─ SpriteResolver.gd   # feeling × intensity × stage × path → sprite (docs/03)
 │  ├─ AudioDirector.gd    # music states, layers, SFX, budgets (docs/04)
@@ -113,14 +113,38 @@ use this convention instead of reading the paths verbatim:
 ### 3.1 LLM facade
 ```gdscript
 # LLM.gd
-signal token(text)                 # raw stream
+signal token(text: String)                      # raw stream
 func generate(req: TurnRequest) -> TurnStream   # req = {messages, schema, sampling, dose, max_tokens}
-func set_dose(vectors: Dictionary) # {"malice": 4.5, "possessive": 3.0}
+func set_dose(vectors: Dictionary) -> void      # {"malice": 4.5, "possessive": 3.0}
+func get_dose() -> Dictionary
+func set_backend(backend: LLMBackend) -> void
+func cancel() -> void
+func is_busy() -> bool
 ```
 - Runs on a worker thread; emits to the main thread via `call_deferred`.
 - Context: 8192 tokens; KV cache reuse between turns (system prompt prefix is stable within a scene → prompt caching).
 - Prompt budget: system ~900 tokens, memories ~150, scene ~150, history ~12 exchanges (~1500), output ≤ 600.
 
+#### TurnRequest ownership
+- `TurnRequest` instances are single-use per turn and owned by the in-flight turn once passed to `LLM.generate()`.
+- If `req.dose` is empty, it is filled with `LLM.get_dose()` and frozen for that turn. Callers must not reuse or mutate a `TurnRequest` across turns.
+
+#### TurnStream contract and semantics
+- Returned by `LLM.generate()`.
+- Signals:
+  - `token(text: String)`: raw stream chunk, in order.
+  - `completed(full_text: String)`: turn finished cleanly; full raw output text.
+  - `cancelled()`: cancellation was honoured.
+  - `failed(error: Dictionary)`: normalized error dictionary `{"code": String, "message": String}`.
+- Exactly-one-terminal semantics: exactly one terminal signal (`completed`, `cancelled`, or `failed`) is emitted per stream. All emissions occur on the main thread via `call_deferred`.
+- Helper APIs: `TurnStream.cancel()`, `TurnStream.is_cancelled() -> bool`, `TurnStream.is_finished() -> bool`.
+- Cancellation race resolution: terminal delivery wins. If cancellation is requested before terminal delivery on the main thread, the stream delivers `cancelled`. Calling `cancel()` after a terminal signal is a no-op.
+- Standard error vocabulary:
+  - `busy`: another turn is already in flight (single-context concurrency guard).
+  - `no_backend`: no transport backend set on the facade.
+  - `invalid_request`: null request passed to `generate()`.
+  - `thread_error`: worker thread failed to start.
+  - `malformed_result`: backend returned an invalid result or an error dictionary without a string `code`.
 ### 3.2 IncrementalJson
 A tiny state machine over the token stream that emits: `field(name, value)` when a scalar field closes,
 `beat_start(i)`, `beat_field(i, name, value)`, and `say_chunk(i, text)` for partial strings.

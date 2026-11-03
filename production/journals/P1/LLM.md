@@ -52,3 +52,10 @@
   p95 2.02–2.60 s (19–20/20; empty `say` = n/a); full turn 3.3–3.7 s median. Crash restart 2.4–3.0 s.
 - Next: P1.03 consumes the literal SSE fixtures and replaces `FirstSayProbe`; P1.07 adds non-empty
   `say`; P2.03 maps `request.dose` to control vectors and restarts at stage changes.
+## P1.27 — P1.01 review follow-ups: facade error normalization, cancel race, stream contract (2026-11-03)
+
+- Normalized backend error returns in `LLM.gd`: require `error.get("code") is String` (defaulting `message` to `""` if missing/non-string), otherwise fallback to `malformed_result`.
+- Fixed worker-return vs deferred terminal delivery race (DES-3): `_deliver_terminal` checks `stream._cancel_token.is_cancelled()`, ensuring cancellation wins over completion or failure.
+- Documented single-use `TurnRequest` ownership in `TurnRequest.gd`, `LLM.gd`, and `docs/07_TECH_ARCHITECTURE.md§3.1`.
+- Corrected stale facade signature in `docs/07_TECH_ARCHITECTURE.md§2` (`generate(TurnRequest)`) and documented helper APIs + standard error vocabulary in §3.1.
+- Added regression tests covering malformed error dicts and cancellation between worker return and terminal delivery (both clean completion and error paths); 14/14 LLMTest cases pass.

@@ -291,3 +291,86 @@ func test_cancel_after_completed_is_noop() -> void:
 	await get_tree().process_frame
 	assert_bool(stream.is_cancelled()).is_false()
 	assert_str(String(spy["terminal"])).is_equal("completed")
+
+
+func test_malformed_error_dictionary_normalizes() -> void:
+	var fake := FakeBackend.new()
+	var llm := _new_llm(fake)
+
+	# 1. Empty error dictionary falls back to malformed_result.
+	fake.raw_result = {"ok": false, "error": {}}
+	var stream: TurnStream = llm.generate(_new_request())
+	var spy := _spy(stream)
+	await _await_terminal(spy)
+	assert_str(String(spy["terminal"])).is_equal("failed")
+	assert_str(String(spy["payload"]["code"])).is_equal("malformed_result")
+
+	# 2. Error dictionary with non-string code falls back to malformed_result.
+	fake.raw_result = {"ok": false, "error": {"code": 500, "message": "server error"}}
+	stream = llm.generate(_new_request())
+	spy = _spy(stream)
+	await _await_terminal(spy)
+	assert_str(String(spy["terminal"])).is_equal("failed")
+	assert_str(String(spy["payload"]["code"])).is_equal("malformed_result")
+
+	# 3. Valid string code with missing message is normalized with empty string.
+	fake.raw_result = {"ok": false, "error": {"code": "custom_error"}}
+	stream = llm.generate(_new_request())
+	spy = _spy(stream)
+	await _await_terminal(spy)
+	assert_str(String(spy["terminal"])).is_equal("failed")
+	assert_str(String(spy["payload"]["code"])).is_equal("custom_error")
+	assert_str(String(spy["payload"]["message"])).is_equal("")
+
+
+func test_cancel_between_worker_return_and_terminal_delivery() -> void:
+	var fake := FakeBackend.new()
+	fake.chunks = PackedStringArray(["almost", " done"])
+	var llm := _new_llm(fake)
+
+	var stream: TurnStream = llm.generate(_new_request())
+	var spy := _spy(stream)
+
+	# Spin without processing main-thread frames until worker_main exits.
+	var deadline := Time.get_ticks_msec() + 5000
+	while llm._thread != null and llm._thread.is_alive() and Time.get_ticks_msec() < deadline:
+		OS.delay_msec(1)
+	assert_bool(llm._thread == null or not llm._thread.is_alive()).is_true()
+
+	# Worker has returned and queued _deliver_terminal, but deferred call has not run.
+	assert_bool(stream.is_finished()).is_false()
+	stream.cancel()
+	assert_bool(stream.is_cancelled()).is_true()
+
+	# Flush frames and verify cancelled wins over completed.
+	await _await_terminal(spy)
+	assert_str(String(spy["terminal"])).is_equal("cancelled")
+	assert_bool(stream.is_cancelled()).is_true()
+	assert_bool(stream.is_finished()).is_true()
+	assert_bool(llm.is_busy()).is_false()
+
+
+func test_cancel_between_worker_return_and_terminal_delivery_on_error() -> void:
+	var fake := FakeBackend.new()
+	fake.raw_result = {
+		"ok": false, "error": {"code": "upstream_timeout", "message": "gateway timeout"}
+	}
+	var llm := _new_llm(fake)
+
+	var stream: TurnStream = llm.generate(_new_request())
+	var spy := _spy(stream)
+
+	var deadline := Time.get_ticks_msec() + 5000
+	while llm._thread != null and llm._thread.is_alive() and Time.get_ticks_msec() < deadline:
+		OS.delay_msec(1)
+	assert_bool(llm._thread == null or not llm._thread.is_alive()).is_true()
+
+	assert_bool(stream.is_finished()).is_false()
+	stream.cancel()
+	assert_bool(stream.is_cancelled()).is_true()
+
+	await _await_terminal(spy)
+	assert_str(String(spy["terminal"])).is_equal("cancelled")
+	assert_bool(stream.is_cancelled()).is_true()
+	assert_bool(stream.is_finished()).is_true()
+	assert_bool(llm.is_busy()).is_false()
