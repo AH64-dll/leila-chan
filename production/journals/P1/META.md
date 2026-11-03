@@ -24,3 +24,10 @@
 - In `InputBox._gui_input()`, handle `KEY_TAB` and emit `log_toggle_requested` with `accept_event()` so Tab toggles log even when LineEdit has focus.
 - In `ChatLog.append_entry()`, call `remove_child` before `queue_free` on trimming oldest node so child count syncs with entries immediately.
 - In `ChatUI.say_chunk()`, emit `push_warning` once per turn if `text_filter` is unset to warn about unwired safety filter.
+
+## P1.14 (2026-11-03) — Boot → Title → NewGame → Date scene flow
+
+- Built the scene flow: `Boot.gd` auto-advances to `Title.tscn`, `Title.gd` provides full keyboard navigation and Esc quit, `NewGame.gd` validates player name entry, and `Date.gd` syncs `GameState.player_name` into `ChatUI` and `PromptBuilder`.
+- Created `PlayerNameRules.gd`: enforces 1–16 chars, allowed chars (`\p{L}`, spaces, `-`, `'`), empty/whitespace fallback to `"Senpai"`, Safety checks with Leila's pout (`"That's not a real name… tell me your real one."`), and special name `"Leila"` (+5 Fixation).
+- Added `"title"` and `"new_game"` sections to `game/data/ui.json` and matched in `UiConfig.DEFAULTS`.
+- Gotchas: GDScript lambdas capture primitives by value (use Dictionary/Array containers like `spy["called"]` to observe signals in unit tests); add `scene_change_enabled` guards to scene controllers so headless tests can run in isolation without tree replacement and orphan node leakage.
