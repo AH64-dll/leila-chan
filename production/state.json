@@ -809,12 +809,22 @@
       "status": "in_review",
       "agent": "gemini-3.8-flash",
       "round": 3,
-      "reviews": [],
+      "reviews": [
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 3,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.27-design-r3.md",
+          "ts": "2026-11-03T08:16:39+02:00",
+          "declared": "grok-4.6"
+        }
+      ],
       "started": "2026-11-03T02:02:40+02:00",
       "handoff": "production/handoffs/P1.27.md"
     },
     "P1.28": {
-      "status": "in_review",
+      "status": "done",
       "agent": "gemini-3.8-flash",
       "round": 3,
       "reviews": [
@@ -838,7 +848,8 @@
         }
       ],
       "started": "2026-11-03T02:02:41+02:00",
-      "handoff": "production/handoffs/P1.28.md"
+      "handoff": "production/handoffs/P1.28.md",
+      "finished": "2026-11-03T08:16:39+02:00"
     },
     "P1.20": {
       "status": "in_review",
@@ -2233,6 +2244,18 @@
       "event": "review:content:approved",
       "ref": "P1.28",
       "note": "production/reviews/P1.28-content-r3.md"
+    },
+    {
+      "ts": "2026-11-03T08:16:39+02:00",
+      "event": "in_review->done",
+      "ref": "P1.28",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T08:16:39+02:00",
+      "event": "review:design:approved",
+      "ref": "P1.27",
+      "note": "production/reviews/P1.27-design-r3.md"
     }
   ]
 }
