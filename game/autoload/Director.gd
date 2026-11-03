@@ -26,39 +26,24 @@ const SAMPLING_TABLE := {
 	5: {"temperature": 0.95, "top_p": 0.97, "repeat_penalty": 1.18, "dose": 8.0},
 }
 
+## docs/02 §6 rule 2: memories must not contain schema/meta words. A literal
+## schema-key list would reject benign facts the few-shots themselves produce
+## (`gave me a music box` — P1.05 CON-2, `read a book`, `bad mood`), so only
+## unambiguous meta jargon and snake_case intent labels are listed. Kept in
+## step with the prompt-lab list that measured CON-2 (tools/promptlab/lab.py).
 const META_WORDS := [
 	"player",
 	"stage",
 	"json",
-	"read",
-	"inner",
-	"music",
-	"fx",
-	"beats",
-	"feeling",
-	"intensity",
-	"cue",
-	"say",
-	"mood",
-	"memory",
-	"action",
-	"affection",
-	"trust",
-	"stress",
-	"greeting",
-	"flirt",
-	"compliment",
-	"gift",
-	"question",
-	"small_talk",
-	"tease",
-	"insult",
-	"apology",
-	"leaving",
+	"schema",
+	"enum",
+	"prompt",
+	"label",
+	"labels",
+	"request",
+	"response",
 	"jealousy_bait",
-	"boundary",
-	"cold",
-	"scared"
+	"small_talk",
 ]
 
 const DEBUG_OVERLAY_KEY := KEY_F3
@@ -99,6 +84,12 @@ var _current_beat_index := -1
 var _current_beat_data := {}
 var _turn_in_flight := false
 var _turn_index := 0
+var _current_player_input := ""
+var _stream_had_error := false
+var _stream_error_message := ""
+var _retry_count := 0
+var _dose_offset := 0.0
+var _streamed_say_text := ""
 var _current_prompt: Array = []
 var _current_schema: Dictionary = {}
 var _current_raw_output := ""
@@ -142,6 +133,12 @@ func reset() -> void:
 	_current_beat_data.clear()
 	_turn_in_flight = false
 	_turn_index = 0
+	_current_player_input = ""
+	_stream_had_error = false
+	_stream_error_message = ""
+	_retry_count = 0
+	_dose_offset = 0.0
+	_streamed_say_text = ""
 	_parser = null
 	_active_stream = null
 
@@ -288,6 +285,9 @@ func submit_player_input(raw_input: String, telemetry: Dictionary = {}) -> bool:
 	# Step 0.3: History append
 	history.append({"role": "user", "text": trimmed})
 
+	_current_player_input = trimmed
+	_retry_count = 0
+	_dose_offset = 0.0
 	# Step 1–4: Prepare and launch generation
 	return _start_turn(trimmed)
 
@@ -311,6 +311,9 @@ func _start_turn(player_text: String) -> bool:
 	_current_beats = []
 	_current_beat_index = -1
 	_current_beat_data = {}
+	_stream_had_error = false
+	_stream_error_message = ""
+	_streamed_say_text = ""
 	_clear_turn_context()
 	_current_stage = int(GameState.stage)
 	_current_path = String(GameState.path)
@@ -363,6 +366,9 @@ func _start_turn(player_text: String) -> bool:
 		dose_dict = Steering.dose_for(ctx)
 	elif float(sampling_spec.get("dose", 0.0)) > 0.0:
 		dose_dict = {"base": float(sampling_spec.get("dose", 0.0))}
+	# docs/02 §7 empty-say retry: dose -2 applies to whichever dose source won
+	if not dose_dict.is_empty():
+		dose_dict["base"] = maxf(0.0, float(dose_dict.get("base", 0.0)) + _dose_offset)
 	last_offered_actions = offered_actions.duplicate()
 	last_dose = dose_dict.duplicate()
 
@@ -428,15 +434,16 @@ func _process_stream_event(event: Dictionary) -> void:
 		"say_chunk":
 			var b_idx: int = int(event.get("index", 0))
 			var raw_say: String = str(event.get("text", ""))
+			_streamed_say_text += raw_say
 			var filtered_say := filter_output(raw_say)
 			beat_say_chunk.emit(b_idx, filtered_say)
 			if chat_ui_node != null and chat_ui_node.has_method("say_chunk"):
 				chat_ui_node.say_chunk(b_idx, filtered_say)
 
 		"error":
-			push_warning(
-				"Director: IncrementalJson parse error: %s" % str(event.get("message", ""))
-			)
+			_stream_had_error = true
+			_stream_error_message = str(event.get("message", "parse error"))
+			push_warning("Director: IncrementalJson parse error: %s" % _stream_error_message)
 
 
 func _on_field_received(field_name: String, value: Variant) -> void:
@@ -470,7 +477,8 @@ func _on_beat_field_received(beat_index: int, field_name: String, value: Variant
 			beat_cue_requested.emit(cue_name, played)
 
 		"say":
-			_current_beat_data["say"] = str(value)
+			var raw_say_val := str(value)
+			_current_beat_data["say"] = raw_say_val
 			if chat_ui_node != null and chat_ui_node.has_method("end_beat"):
 				chat_ui_node.end_beat(beat_index)
 			_current_beats.append(_current_beat_data.duplicate())
@@ -504,9 +512,9 @@ func _maybe_route_sprite() -> void:
 func _on_llm_completed(_raw_text: String) -> void:
 	if not _turn_in_flight:
 		return
-
+	var parser_status := IncrementalJson.Status.OK
 	if _parser != null:
-		_parser.finish()
+		parser_status = _parser.finish()
 		var full_val: Variant = _parser.get_value()
 		if full_val is Dictionary:
 			for k: Variant in full_val:
@@ -515,8 +523,166 @@ func _on_llm_completed(_raw_text: String) -> void:
 	if not _current_turn_data.has("beats") and not _current_beats.is_empty():
 		_current_turn_data["beats"] = _current_beats
 
+	var stage := int(GameState.stage)
+
+	# Docs/02 §7: Broken JSON / stream parse error handling. TRUNCATED counts:
+	# the stream died mid-JSON, so whatever partial `say` streamed is shown
+	# through the fallback instead of being dropped.
+	if (
+		_stream_had_error
+		or parser_status == IncrementalJson.Status.ERROR
+		or parser_status == IncrementalJson.Status.TRUNCATED
+	):
+		_handle_broken_json_fallback(stage)
+		return
+
+	# Docs/02 §7: Empty say handling
+	var all_say_empty := true
+	var beats_arr: Array = _current_turn_data.get("beats", [])
+	for b: Variant in beats_arr:
+		if b is Dictionary and not str(b.get("say", "")).strip_edges().is_empty():
+			all_say_empty = false
+			break
+	if beats_arr.is_empty() or all_say_empty:
+		if stage < 3 and _retry_count == 0:
+			_retry_count += 1
+			_dose_offset = -2.0
+			_start_turn(_current_player_input)
+			return
+		# Stage >= 3, or stage < 3 after the retry already failed: the ellipsis
+		# beat is the closest defined fallback for a turn with nothing to say.
+		_handle_empty_say_fallback()
+		return
+
+	# Docs/02 §7: Third-person pronoun repair, character-break deflection, repetition loop
+	_apply_turn_repairs_and_deflections(_current_turn_data, stage)
+
 	_current_raw_output = _raw_text
 	_close_turn_success(_current_turn_data)
+
+
+func _handle_broken_json_fallback(stage: int) -> void:
+	var fallback_info: Dictionary = TurnValidator.get_broken_stream_fallback(
+		_streamed_say_text, stage, GameState.player_name
+	)
+	var fallback_say: String = str(fallback_info.get("say", "..."))
+	var fb_beat: Dictionary = {
+		"feeling": str(fallback_info.get("feeling", "confused")),
+		"intensity": int(fallback_info.get("intensity", 1)),
+		"cue": str(fallback_info.get("cue", "none")),
+		"say": fallback_say,
+	}
+	_current_turn_data["beats"] = [fb_beat]
+	_current_turn_data["read"] = _current_turn_data.get("read", "other")
+	_current_turn_data["inner"] = _current_turn_data.get("inner", "...")
+	_current_turn_data["music"] = _current_turn_data.get("music", "keep")
+	_current_turn_data["fx"] = str(fallback_info.get("fx", "none"))
+	_current_turn_data["mood"] = _current_turn_data.get(
+		"mood", {"affection": 0, "trust": 0, "stress": 1}
+	)
+	_current_turn_data["memory"] = ""
+	_current_turn_data["action"] = "none"
+	# Route sprite 29 (stage >= 3) or 00; glitch fx only exists from stage 3
+	var target_sprite: String = str(fallback_info.get("sprite", "00"))
+	if character_node != null and character_node.has_method("set_sprite"):
+		character_node.set_sprite(target_sprite)
+	var fallback_fx := str(fallback_info.get("fx", "none"))
+	if fallback_fx != "none" and FX != null and FX.has_method("trigger"):
+		FX.trigger(fallback_fx, stage)
+
+	# Overwrite the beat whose partial say is already queued on screen — a
+	# second say_chunk would duplicate the partial text. UI implementations
+	# without replace_beat get a plain chunk instead. Both paths leave the
+	# safety scan to the UI seam (ChatUI applies `text_filter`), exactly like
+	# replace_beat, so the text is filtered once and only once.
+	if chat_ui_node != null and chat_ui_node.has_method("replace_beat"):
+		chat_ui_node.replace_beat(0, fallback_say)
+	elif chat_ui_node != null and chat_ui_node.has_method("say_chunk"):
+		chat_ui_node.say_chunk(0, fallback_say)
+	beat_ended.emit(0, fb_beat)
+	_close_turn_success(_current_turn_data)
+
+
+func _handle_empty_say_fallback() -> void:
+	var fb_beat: Dictionary = {
+		"feeling": "empty",
+		"intensity": 1,
+		"cue": "none",
+		"say": "…",
+	}
+	_current_turn_data["beats"] = [fb_beat]
+	_current_turn_data["read"] = _current_turn_data.get("read", "other")
+	_current_turn_data["inner"] = _current_turn_data.get("inner", "...")
+	_current_turn_data["music"] = _current_turn_data.get("music", "keep")
+	_current_turn_data["fx"] = "none"
+	_current_turn_data["mood"] = _current_turn_data.get(
+		"mood", {"affection": 0, "trust": 0, "stress": 0}
+	)
+	_current_turn_data["action"] = "none"
+
+	# Show "…" (docs/02 §7: stage >= 3 gets a stuck typing indicator).
+	# The player can't respond to nothing, so the turn still closes cleanly.
+	# replace_beat is the single text path — the beat is rewritten, not
+	# appended, so no second chunk is emitted for the same literal.
+	if chat_ui_node != null and chat_ui_node.has_method("replace_beat"):
+		chat_ui_node.replace_beat(0, "…")
+	elif chat_ui_node != null and chat_ui_node.has_method("say_chunk"):
+		chat_ui_node.say_chunk(0, "…")
+	beat_ended.emit(0, fb_beat)
+	_close_turn_success(_current_turn_data)
+
+
+func _apply_turn_repairs_and_deflections(turn_data: Dictionary, stage: int) -> void:
+	var beats_list: Array = turn_data.get("beats", [])
+	var player_name := GameState.player_name
+
+	for i in range(beats_list.size()):
+		var b_variant: Variant = beats_list[i]
+		if not (b_variant is Dictionary):
+			continue
+		var beat: Dictionary = b_variant
+		var beat_index := int(beat.get("index", i))
+		var original_say := str(beat.get("say", ""))
+		var say_text := original_say
+
+		# 1. Early character-break deflection
+		if TurnValidator.check_character_break(say_text, stage):
+			GameState.bump_profile(&"meta_curiosity", 1)
+			var def_beat: Dictionary = TurnValidator.get_deflection_beat(player_name)
+			beat["feeling"] = def_beat.get("feeling", beat.get("feeling", "confused"))
+			beat["intensity"] = int(def_beat.get("intensity", beat.get("intensity", 1)))
+			beat["cue"] = def_beat.get("cue", beat.get("cue", "none"))
+			say_text = str(def_beat.get("say", ""))
+		else:
+			# 2. Third-person pronoun repair in say ("He's being mean" -> "You're being mean").
+			# The last player messages are the referent context: if the player
+			# just mentioned a brother or a rival, "He" may be that man.
+			say_text = TurnValidator.repair_player_pronouns(
+				say_text, player_name, last_player_inputs
+			)
+
+			# 3. Repetition loop detection (same 4-gram x3)
+			var loop_info: Dictionary = TurnValidator.detect_repetition_loop(say_text)
+			if bool(loop_info.get("has_loop", false)):
+				say_text = str(loop_info.get("clean_text", say_text))
+				if stage >= 4:
+					if FX != null and FX.has_method("trigger"):
+						FX.trigger("text_bleed", stage)
+
+		beat["say"] = say_text
+		beats_list[i] = beat
+
+		# The streamed chunks are already queued on screen; if the repair
+		# changed the say text, rewrite the queued beat so the screen shows
+		# the corrected line, not the raw one. The UI seam applies the safety
+		# filter, so this path passes raw text just like replace_beat does.
+		if say_text != original_say:
+			if chat_ui_node != null and chat_ui_node.has_method("replace_beat"):
+				chat_ui_node.replace_beat(beat_index, say_text)
+			elif chat_ui_node != null and chat_ui_node.has_method("say_chunk"):
+				chat_ui_node.say_chunk(beat_index, say_text)
+
+	turn_data["beats"] = beats_list
 
 
 func _close_turn_success(turn_data: Dictionary) -> void:

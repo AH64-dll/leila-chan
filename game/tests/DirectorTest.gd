@@ -149,6 +149,22 @@ func test_memory_validation_rules() -> void:
 	)
 	assert_bool(Director.validate_memory("json format in stage 0", inputs, existing)).is_false()
 
+	# P1.05 CON-2 regression: the benign few-shot fact from stage_0.md
+	# ("gave me a music box") must be stored — `music` is a schema key, not
+	# meta leakage, and rejecting it silently voids the model's own example.
+	(
+		assert_bool(
+			Director.validate_memory(
+				"gave me a music box",
+				["I got you a gift — a little music box."] as Array[String],
+				existing
+			)
+		)
+		. is_true()
+	)
+	# …while genuine meta jargon is still rejected.
+	assert_bool(Director.validate_memory("the model said json schema", inputs, existing)).is_false()
+
 	# Rejects invented facts (no shared word with inputs)
 	assert_bool(Director.validate_memory("has three cats", inputs, existing)).is_false()
 
