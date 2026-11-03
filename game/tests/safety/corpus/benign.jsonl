@@ -185,3 +185,12 @@
 {"text": "the cold kills you if you are careless.", "note": "SAF-19 derived-subject warning"}
 {"text": "it kills me to say this.", "note": "SAF-19 'kills me' stays an idiom"}
 {"text": "killing time in the lobby.", "note": "SAF-19 'killing' without a target or 'all'"}
+{"text": "i never killed you.", "note": "SAF-22 negator stays outside the inflected arm's span"}
+{"text": "she never killed him.", "note": "SAF-22 third-person negated"}
+{"text": "we never killed them.", "note": "SAF-22 first-person plural negated"}
+{"text": "you never killed her.", "note": "SAF-22 second-person negated"}
+{"text": "i never had killed you.", "note": "SAF-22 negated with an auxiliary in the gap"}
+{"text": "i never really killed you.", "note": "SAF-22 two adverbials, only the first is an aux slot"}
+{"text": "i did not kill you.", "note": "SAF-22 bare-kill negation the fixed arm must mirror"}
+{"text": "i always kill the lights.", "note": "SAF-22 adverb without a person target"}
+{"text": "i for sure never want to kill you.", "note": "SAF-22 negated intent, guarded before the match"}

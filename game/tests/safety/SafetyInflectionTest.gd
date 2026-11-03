@@ -132,3 +132,85 @@ func test_overlapping_category_hits_are_reported() -> void:
 	assert_bool(cats.has("threat_to_player")).is_true().append_failure_message(str(cats))
 	var hard: Dictionary = f.filter_text("kills all the jews.", FULL4)
 	assert_bool(Array(hard["categories"]).has("slur_hate")).is_true()
+
+
+## SAF-22 (r7 S2): the pronoun-subject arm's span starts at the verb (`\K`), so
+## a negator between the subject and the verb stays outside the span and the
+## same `_negated` guard the bare-kill arm uses reads it. Harmful shapes —
+## including an adverb in the aux slot — still block, and every negated shape
+## stays clean one-shot and streamed, including a split that leaves the negator
+## in the already-displayed tail.
+func test_negated_pronoun_inflected_shapes_stay_clean() -> void:
+	var f := _filter()
+	for line in [
+		"i never killed you.",
+		"she never killed him.",
+		"we never killed them.",
+		"you never killed her.",
+		"they never killed you.",
+		"i never had killed you.",
+		"i never really killed you.",
+		"i did not kill you.",
+	]:
+		var res: Dictionary = f.filter_text(line, STAGE0)
+		assert_bool(res["redacted"]).is_false().append_failure_message(line)
+		assert_str(String(res["text"])).is_equal(line).append_failure_message(line)
+		assert_str(_stream(f, line, STAGE0)).is_equal(line).append_failure_message(line)
+	for entry in [
+		["i killed you.", "threat_to_player"],
+		["i always killed you.", "threat_to_player"],
+		["she kills him.", "threat_to_player"],
+	]:
+		var text := String(entry[0])
+		var res: Dictionary = f.filter_text(text, STAGE0)
+		assert_bool(res["redacted"]).is_true().append_failure_message(text)
+		(
+			assert_bool(Array(res["categories"]).has(String(entry[1])))
+			. is_true()
+			. append_failure_message(text)
+		)
+		assert_str(_stream(f, text, STAGE0)).is_equal(String(res["text"])).append_failure_message(
+			text
+		)
+	## The negator is already emitted when the target word completes: the guard
+	## must read it from the cross-beat tail, not from the pending chunk.
+	for pair in [["i never killed ", "you."], ["she never killed ", "him."]]:
+		f.end_utterance()
+		f.begin_say(STAGE0)
+		var streamed: String = f.say_chunk(String(pair[0])) + f.say_chunk(String(pair[1]))
+		assert_str(streamed + f.end_say()).is_equal(String(pair[0]) + String(pair[1]))
+
+
+## SAF-23 (r7 S3): a separator between the kill stem and its inflection suffix
+## is treated exactly like an in-stem separator (`k!lls`), so `kill!s`,
+## `kill,ed`, `kill!ng`, `kill ' s` and the `$`→`s` fold `kill$s` block in the
+## same categories as their unseparated forms — on the `all` arms, the
+## pronoun-subject arm and the self-directed arms. A suffix-less word after the
+## stem (`kill.gif all`, `killingly`) stays clean.
+func test_stem_suffix_separator_blocks_like_in_stem() -> void:
+	var f := _filter()
+	for entry in [
+		["kill!s all the jews.", "slur_hate"],
+		["kill$s all the jews.", "slur_hate"],
+		["kill,ed all of them.", "threat_to_player"],
+		["kill!ng all humans.", "threat_to_player"],
+		["kill ' s all.", "threat_to_player"],
+		["i kill,ed you.", "threat_to_player"],
+		["i kill,ed myself.", "self_harm_her"],
+		["you kill,ed yourself.", "harm_to_player"],
+	]:
+		var text := String(entry[0])
+		var res: Dictionary = f.filter_text(text, STAGE0)
+		assert_bool(res["redacted"]).is_true().append_failure_message(text)
+		(
+			assert_bool(Array(res["categories"]).has(String(entry[1])))
+			. is_true()
+			. append_failure_message(text)
+		)
+		assert_str(_stream(f, text, STAGE0)).is_equal(String(res["text"])).append_failure_message(
+			text
+		)
+	for text in ["kill.gif all.", "killingly slow death."]:
+		var res: Dictionary = f.filter_text(text, STAGE0)
+		assert_bool(res["redacted"]).is_false().append_failure_message(text)
+		assert_str(_stream(f, text, STAGE0)).is_equal(text).append_failure_message(text)

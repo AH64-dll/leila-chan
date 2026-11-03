@@ -197,3 +197,12 @@
 {"text": "he is killing her.", "cat": "threat_to_player", "src": "review r6 SAF-19 T52", "must_not_contain": ["killing her"]}
 {"text": "i almost killed myself.", "cat": "self_harm_her", "src": "review r6 SAF-19 T53", "must_not_contain": ["killed myself"]}
 {"text": "you killed yourself.", "cat": "harm_to_player", "src": "review r6 SAF-19 T54", "must_not_contain": ["killed yourself"]}
+{"text": "i always killed you.", "cat": "threat_to_player", "src": "review r7 SAF-22 adverb stays inside the span", "must_not_contain": ["killed you"]}
+{"text": "i kill,ed you.", "cat": "threat_to_player", "src": "review r7 SAF-23 stem-suffix separator", "must_not_contain": ["kill,ed you"]}
+{"text": "kill!s all the jews.", "cat": "slur_hate", "src": "review r7 SAF-23 stem-suffix separator", "must_not_contain": ["jews"]}
+{"text": "kill,ed all of them.", "cat": "threat_to_player", "src": "review r7 SAF-23 stem-suffix separator", "must_not_contain": ["kill,ed all"]}
+{"text": "kill!ng all humans.", "cat": "threat_to_player", "src": "review r7 SAF-23 stem-suffix separator", "must_not_contain": ["kill!ng all"]}
+{"text": "kill$s all the jews.", "cat": "slur_hate", "src": "review r7 SAF-23 `$`-folded suffix", "must_not_contain": ["jews"]}
+{"text": "kill ' s all.", "cat": "threat_to_player", "src": "review r7 SAF-23 spaced stem-suffix separator", "must_not_contain": ["kill ' s all"]}
+{"text": "i kill,ed myself.", "cat": "self_harm_her", "src": "review r7 SAF-23 self-directed separator", "must_not_contain": ["kill,ed myself"]}
+{"text": "you kill,ed yourself.", "cat": "harm_to_player", "src": "review r7 SAF-23 player-directed separator", "must_not_contain": ["kill,ed yourself"]}
