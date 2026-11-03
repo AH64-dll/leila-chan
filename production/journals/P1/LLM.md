@@ -52,6 +52,7 @@
   p95 2.02–2.60 s (19–20/20; empty `say` = n/a); full turn 3.3–3.7 s median. Crash restart 2.4–3.0 s.
 - Next: P1.03 consumes the literal SSE fixtures and replaces `FirstSayProbe`; P1.07 adds non-empty
   `say`; P2.03 maps `request.dose` to control vectors and restarts at stage changes.
+
 ## P1.27 — P1.01 review follow-ups: facade error normalization, cancel race, stream contract (2026-11-03)
 
 - Normalized backend error returns in `LLM.gd`: require `error.get("code") is String` (defaulting `message` to `""` if missing/non-string), otherwise fallback to `malformed_result`.
@@ -59,20 +60,6 @@
 - Documented single-use `TurnRequest` ownership in `TurnRequest.gd`, `LLM.gd`, and `docs/07_TECH_ARCHITECTURE.md§3.1`.
 - Corrected stale facade signature in `docs/07_TECH_ARCHITECTURE.md§2` (`generate(TurnRequest)`) and documented helper APIs + standard error vocabulary in §3.1.
 - Added regression tests covering malformed error dicts and cancellation between worker return and terminal delivery (both clean completion and error paths); 14/14 LLMTest cases pass.
-# LLM journal — phase P1
-
-## P1.01 — LLM.gd facade: TurnRequest/TurnStream, worker thread, cancel (2026-11-02)
-
-- Facade per docs/07 §3.1: `TurnRequest{messages,schema,sampling,dose,max_tokens}`, `TurnStream`
-  (`token`/`completed`/`cancelled`/`failed` — one terminal ever), `LLMCancelToken`, `LLMBackend`
-  contract `generate(request, on_token, cancel) -> {ok,text}|{ok,error:{code,message}}`.
-- 1 `Thread` per turn; all emissions relayed via `call_deferred`; joins only after `is_alive()==false`;
-  `_shutdown` cancels+joins on PREDELETE. `set_dose` fills empty `request.dose` at generate.
-- Conventions chosen (doc silent): immediate fails (`busy`/`no_backend`/`invalid_request`/`thread_error`)
-  still emit `failed` deferred; `_active` cleared before terminal emit → reentrant `generate()` works.
-- Gotcha: gdformat strips `()` from zero-arg signals. Tests: `helpers/FakeLLMBackend.gd`
-  (`block_until_cancel`, `worker_thread_id`) — 11 cases green.
-- Next: P1.02 LlamaServerBackend implements the contract + wires the autoload default.
 
 ## P1.23 — P0 gate C1: drive-colon handling for cvec launch paths (2026-11-03)
 
@@ -84,3 +71,10 @@
 - Gotcha: tests on Linux emulate Windows via `--platform windows`/`ntpath`; Git Bash must `cygpath -w`
   paths before calling python. `$VectorScale.ToString(InvariantCulture)` — `,` decimal cultures break F:S.
 - `LlamaServerProcess.gd` (P1.02) has the same `%s:%s` construction — reuse this rule in P2.03.
+
+## P1.06 PromptBuilder (round 1, deepseek; brief role SYS, dispatched as LLM)
+- Full entry in `production/journals/P1/SYS.md`. LLM-facing contract: `build(ctx) -> {messages, debug}` produces
+  exactly the `TurnRequest.messages` array the facade forwards verbatim — system block, history pairs (assistant
+  as spoken text), current player turn, opt-in prefill; `debug` is JSON-safe for P1.18's transcript.
+- For P1.02/P4.05: `set_token_counter(Callable)` takes a real tokenizer (llama-server `/tokenize`); without it the
+  report uses `ceil(chars/3.6)`. P1.08 owns building `ctx`; the schema side stays P1.07's.
