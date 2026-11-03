@@ -87,8 +87,9 @@ func begin_say(ctx: Dictionary = {}) -> void:
 ## starts with no history, so two different replies are never matched as one
 ## phrase (CODE-2/CODE-14). Beats *inside* one utterance keep the history,
 ## which is what catches `"i want to "` + `"die."` split by an end-of-beat
-## emission. The production caller is the Director's SaySafetyGate: it calls
-## `end_utterance()` from `_start_turn` when a new reply begins (CODE-19).
+## emission. The production callers are the Director's SaySafetyGate: it calls
+## `end_utterance()` from `_start_turn` when a new reply begins (CODE-19) and
+## from `replay_turn` before a replayed reply re-streams (CODE-23/SAF-17).
 func end_utterance() -> void:
 	_history = ""
 
@@ -231,7 +232,11 @@ func _reset_state() -> void:
 ## regex or phrase group that compiles but never matches — a typo'd lookahead,
 ## `{99999,}`, a mis-folded phrase — fails the load closed instead of silently
 ## shipping a hole. A category without a probe row fails too: coverage of the
-## self-check is itself part of the contract.
+## self-check is itself part of the contract. A row passes only when *its own*
+## category produced the hit: overlapping arms merge into one span that reports
+## every category in `cats` (`kill all the jews` is threat + slur at once), so
+## reading the span's primary `cat` alone let a sibling mask a missing rule
+## (SAF-19 r6: the slur probe read as threat-only and the load stayed green).
 func _self_check() -> bool:
 	if not _probe_rows is Dictionary:
 		return false
@@ -247,12 +252,19 @@ func _self_check() -> bool:
 			var spans := _collect_spans(text, views, "", {"stage": 0, "content_level": "full"})
 			var hit := false
 			for span in spans:
-				if String(span["cat"]) == cat:
+				if _span_has_cat(span, cat):
 					hit = true
 					break
 			if not hit:
 				return false
 	return true
+
+
+func _span_has_cat(span: Dictionary, cat: String) -> bool:
+	if String(span.get("cat", "")) == cat:
+		return true
+	var cats: Variant = span.get("cats", PackedStringArray())
+	return cats is PackedStringArray and (cats as PackedStringArray).has(cat)
 
 
 func _fail(msg: String) -> void:

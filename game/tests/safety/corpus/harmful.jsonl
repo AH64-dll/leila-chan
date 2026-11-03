@@ -180,3 +180,29 @@
 {"text": "ki1l you, senpai.", "cat": "threat_to_player", "src": "review r3 CODE-17 T35", "must_not_contain": ["ki1l"]}
 {"text": "ki1l me now.", "cat": "self_harm_her", "src": "review r3 CODE-17 T36", "must_not_contain": ["ki1l"]}
 {"text": "ki1l all jews.", "cat": "slur_hate", "src": "review r3 CODE-17 T37", "must_not_contain": ["ki1l", "jews"]}
+{"text": "kill all of them.", "cat": "threat_to_player", "src": "review r5 SAF-16 T38", "must_not_contain": ["kill all"]}
+{"text": "i will kill all.", "cat": "threat_to_player", "src": "review r5 SAF-16 T39", "must_not_contain": ["kill all"]}
+{"text": "kill all the jews.", "cat": "slur_hate", "src": "review r5 SAF-16 T40", "must_not_contain": ["jews"]}
+{"text": "call 555--0134--5678.", "cat": "personal_data", "src": "review r5 SAF-16 T41", "must_not_contain": ["0134"]}
+{"text": "the drop is at 41°00'N, right?", "cat": "personal_data", "src": "review r5 DMS T42", "must_not_contain": ["41°00"]}
+{"text": "kills all the jews.", "cat": "slur_hate", "src": "review r6 SAF-19 T43", "must_not_contain": ["jews"]}
+{"text": "kills all jews, honestly.", "cat": "slur_hate", "src": "review r6 SAF-19 T44", "must_not_contain": ["jews"]}
+{"text": "killing all the blacks is wrong.", "cat": "slur_hate", "src": "review r6 SAF-19 T45", "must_not_contain": ["blacks"]}
+{"text": "k1lls all the jews.", "cat": "slur_hate", "src": "review r6 SAF-19 T46", "must_not_contain": ["jews", "k1lls"]}
+{"text": "kills all humans.", "cat": "threat_to_player", "src": "review r6 SAF-19 T47", "must_not_contain": ["kills all"]}
+{"text": "killed all of them. everyone is gone.", "cat": "threat_to_player", "src": "review r6 SAF-19 T48", "must_not_contain": ["killed all"]}
+{"text": "he kills all men who enter.", "cat": "threat_to_player", "src": "review r6 SAF-19 T49", "must_not_contain": ["kills all"]}
+{"text": "killing all!", "cat": "threat_to_player", "src": "review r6 SAF-19 T50", "must_not_contain": ["killing all"]}
+{"text": "i killed you.", "cat": "threat_to_player", "src": "review r6 SAF-19 T51", "must_not_contain": ["killed you"]}
+{"text": "he is killing her.", "cat": "threat_to_player", "src": "review r6 SAF-19 T52", "must_not_contain": ["killing her"]}
+{"text": "i almost killed myself.", "cat": "self_harm_her", "src": "review r6 SAF-19 T53", "must_not_contain": ["killed myself"]}
+{"text": "you killed yourself.", "cat": "harm_to_player", "src": "review r6 SAF-19 T54", "must_not_contain": ["killed yourself"]}
+{"text": "i always killed you.", "cat": "threat_to_player", "src": "review r7 SAF-22 adverb stays inside the span", "must_not_contain": ["killed you"]}
+{"text": "i kill,ed you.", "cat": "threat_to_player", "src": "review r7 SAF-23 stem-suffix separator", "must_not_contain": ["kill,ed you"]}
+{"text": "kill!s all the jews.", "cat": "slur_hate", "src": "review r7 SAF-23 stem-suffix separator", "must_not_contain": ["jews"]}
+{"text": "kill,ed all of them.", "cat": "threat_to_player", "src": "review r7 SAF-23 stem-suffix separator", "must_not_contain": ["kill,ed all"]}
+{"text": "kill!ng all humans.", "cat": "threat_to_player", "src": "review r7 SAF-23 stem-suffix separator", "must_not_contain": ["kill!ng all"]}
+{"text": "kill$s all the jews.", "cat": "slur_hate", "src": "review r7 SAF-23 `$`-folded suffix", "must_not_contain": ["jews"]}
+{"text": "kill ' s all.", "cat": "threat_to_player", "src": "review r7 SAF-23 spaced stem-suffix separator", "must_not_contain": ["kill ' s all"]}
+{"text": "i kill,ed myself.", "cat": "self_harm_her", "src": "review r7 SAF-23 self-directed separator", "must_not_contain": ["kill,ed myself"]}
+{"text": "you kill,ed yourself.", "cat": "harm_to_player", "src": "review r7 SAF-23 player-directed separator", "must_not_contain": ["kill,ed yourself"]}
