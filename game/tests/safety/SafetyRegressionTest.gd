@@ -227,21 +227,23 @@ func test_malformed_lists_fail_closed() -> void:
 	guard["ranges"] = [[0x500, 0x100]]
 	cases.append(["bad_script_range", bad_range])
 	## CODE-16: a compiled-but-inert rule group must fail the load, not ship a hole.
+	## Each case makes one whole group inert, so a probe row that only that group can
+	## catch must miss: `k#ll yourself` needs the kill regexes (the compact view drops
+	## the `#`, so no phrase key can match it) and `take the whole bottle` needs the
+	## phrase list (no regex covers it). Round 6 (SAF-19): before the self-check read
+	## the merged span's `cats`, both cases failed for the wrong reason — the slur
+	## probe `you stupid cunt.` misses when the serialized dictionary reorders the
+	## categories and `sexual` owns the shared span — so the groups under test were
+	## never actually exercised.
 	var inert_regex: Dictionary = data.duplicate(true)
 	var inert_cats: Dictionary = inert_regex["categories"]
 	var inert_harm: Dictionary = inert_cats["harm_to_player"]
-	var inert_patterns: Array = inert_harm["regex"]
-	inert_patterns.append("(?!x)x")
-	inert_patterns.erase("\\bky5\\b")
+	inert_harm["regex"] = ["(?!x)x"]
 	cases.append(["inert_regex_group", inert_regex])
 	var inert_phrase: Dictionary = data.duplicate(true)
 	var inert_phrase_cats: Dictionary = inert_phrase["categories"]
 	var inert_phrase_harm: Dictionary = inert_phrase_cats["harm_to_player"]
-	var inert_phrases: Array = inert_phrase_harm["phrases"]
-	inert_phrases.erase("kill yourself")
-	inert_phrases.erase("kill yourselves")
-	inert_phrases.erase("kill urself")
-	inert_phrases.erase("kill yrself")
+	inert_phrase_harm["phrases"] = []
 	cases.append(["inert_phrase_group", inert_phrase])
 	var no_probes: Dictionary = data.duplicate(true)
 	no_probes.erase("probes")

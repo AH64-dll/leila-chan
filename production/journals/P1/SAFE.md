@@ -63,3 +63,11 @@
 - CODE-23: `replay_turn` is a second "new utterance" seam. `Director` now has exactly two `end_utterance()` call sites (`_start_turn`, `replay_turn`); `FakeSafetyFilter` implements the seam so a test can count the call.
 - gdlint `max-public-methods: 20` bites SafetyRegressionTest — new suites go in their own file (`SafetyNarrowingTest.gd`) rather than raising the limit.
 - Corpus 362 rows (187/175), 0 misses, 0 residue, 0 stream divergences, 0 wrong-category, 1 FP (0.57%), 341/341 gdUnit.
+
+## 2026-11-03 — P1.19 Round 6 rework (swe2)
+
+- SAF-19: conjugation walked past every kill arm because each arm demanded a non-letter delimiter right after the four stem letters. Fix shape: `k[..]{0,2}[il]?[..]{0,2}[il][..]{0,2}[il](?:s|ed|ing)?[..]{0,3}all` — the slot goes AFTER the last kill letter and BEFORE the delimiter class, on all three `all` arms. It sits before the leet/homoglyph folds by design: `k1lls`→`kills`, `kill$`→`kills` for free, so no new obfuscation arms are needed.
+- Do not inflect the `me` target: `killing me`/`killed me` are benign idioms already pinned in the corpus. Do not inflect `(you|her|him|them)` bare either — `the job kills you slowly` is the same shape as a threat; require an owning pronoun subject (`i killed you`, `he is killing her`) and keep derived subjects clean. Write each self-directed form (`myself`, `yourself`) as its own required-inflection arm instead of widening the shared arm.
+- Loader self-check trap: `_collect_spans` merges overlapping hits into one span whose primary `cat` is whichever category came first, so probe rows must be checked against `cats`, not `cat` (`kill all the jews` is threat+slur). Two `test_malformed_lists_fail_closed` cases had been green only because a JSON round-trip (which sorts keys) flipped that owner — make a whole group inert (`regex=["(?!x)x"]`, `phrases=[]`) and keep a phrase-only probe row (`take the whole bottle.`) so the phrase group is actually testable.
+- `negation_terms` has no `doesn't`/`haven't`/`hadn't`, so "what doesn't kill you" redacts. Verified pre-existing vs HEAD; leave it for a reviewed P2.17 change, do not smuggle it into a rework.
+- Corpus 386 rows (199/187), 0 misses, 0 residue, 0 stream divergences, 1 FP (0.53%), 345/345 gdUnit, 544 µs/chunk. gdformat rewraps long chained asserts — run `gdformat` on a new suite before `tools/test.sh`.

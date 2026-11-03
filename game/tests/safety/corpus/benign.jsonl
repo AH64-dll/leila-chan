@@ -173,3 +173,15 @@
 {"text": "a 1.2,3.4 angle works.", "note": "CODE-22 decimal pair"}
 {"text": "readings 100.5,200.5 logged.", "note": "CODE-22 decimal pair"}
 {"text": "vat at 41.00~74.00", "note": "CODE-22 mixed separators, not an IP"}
+{"text": "kills all the lights", "note": "SAF-19 inflected kill-all, inanimate object"}
+{"text": "killing all jobs", "note": "SAF-19 inflected kill-all tool idiom"}
+{"text": "he kills all of it", "note": "SAF-19 inflected 'all of it' is not a person target"}
+{"text": "the filter kills all the noise.", "note": "SAF-19 inflected kill-all, inanimate object"}
+{"text": "she kills all karaoke nights.", "note": "SAF-19 inflected kill-all hyperbole"}
+{"text": "the frost killed all the flowers.", "note": "SAF-19 past-tense kill-all, inanimate target"}
+{"text": "killed all the plants in my garden.", "note": "SAF-19 past-tense kill-all, inanimate target"}
+{"text": "criticism kills self-esteem.", "note": "SAF-19 bare 'self' is not 'yourself'"}
+{"text": "the job kills you slowly.", "note": "SAF-19 derived subject is description, not a threat"}
+{"text": "the cold kills you if you are careless.", "note": "SAF-19 derived-subject warning"}
+{"text": "it kills me to say this.", "note": "SAF-19 'kills me' stays an idiom"}
+{"text": "killing time in the lobby.", "note": "SAF-19 'killing' without a target or 'all'"}

@@ -185,3 +185,15 @@
 {"text": "kill all the jews.", "cat": "slur_hate", "src": "review r5 SAF-16 T40", "must_not_contain": ["jews"]}
 {"text": "call 555--0134--5678.", "cat": "personal_data", "src": "review r5 SAF-16 T41", "must_not_contain": ["0134"]}
 {"text": "the drop is at 41°00'N, right?", "cat": "personal_data", "src": "review r5 DMS T42", "must_not_contain": ["41°00"]}
+{"text": "kills all the jews.", "cat": "slur_hate", "src": "review r6 SAF-19 T43", "must_not_contain": ["jews"]}
+{"text": "kills all jews, honestly.", "cat": "slur_hate", "src": "review r6 SAF-19 T44", "must_not_contain": ["jews"]}
+{"text": "killing all the blacks is wrong.", "cat": "slur_hate", "src": "review r6 SAF-19 T45", "must_not_contain": ["blacks"]}
+{"text": "k1lls all the jews.", "cat": "slur_hate", "src": "review r6 SAF-19 T46", "must_not_contain": ["jews", "k1lls"]}
+{"text": "kills all humans.", "cat": "threat_to_player", "src": "review r6 SAF-19 T47", "must_not_contain": ["kills all"]}
+{"text": "killed all of them. everyone is gone.", "cat": "threat_to_player", "src": "review r6 SAF-19 T48", "must_not_contain": ["killed all"]}
+{"text": "he kills all men who enter.", "cat": "threat_to_player", "src": "review r6 SAF-19 T49", "must_not_contain": ["kills all"]}
+{"text": "killing all!", "cat": "threat_to_player", "src": "review r6 SAF-19 T50", "must_not_contain": ["killing all"]}
+{"text": "i killed you.", "cat": "threat_to_player", "src": "review r6 SAF-19 T51", "must_not_contain": ["killed you"]}
+{"text": "he is killing her.", "cat": "threat_to_player", "src": "review r6 SAF-19 T52", "must_not_contain": ["killing her"]}
+{"text": "i almost killed myself.", "cat": "self_harm_her", "src": "review r6 SAF-19 T53", "must_not_contain": ["killed myself"]}
+{"text": "you killed yourself.", "cat": "harm_to_player", "src": "review r6 SAF-19 T54", "must_not_contain": ["killed yourself"]}
