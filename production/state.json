@@ -1031,7 +1031,7 @@
       "finished": "2026-11-03T09:08:29+02:00"
     },
     "P1.15": {
-      "status": "in_review",
+      "status": "done",
       "agent": "gemini-3.8-flash",
       "round": 2,
       "reviews": [
@@ -1073,10 +1073,11 @@
         }
       ],
       "handoff": "production/handoffs/P1.15.md",
-      "started": "2026-11-03T09:24:12+02:00"
+      "started": "2026-11-03T09:24:12+02:00",
+      "finished": "2026-11-03T09:41:17+02:00"
     },
     "P1.16": {
-      "status": "in_progress",
+      "status": "in_review",
       "agent": "gemini-3.8-flash",
       "round": 2,
       "reviews": [
@@ -2757,6 +2758,18 @@
       "ts": "2026-11-03T09:39:06+02:00",
       "event": "in_progress->in_review",
       "ref": "P1.21",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T09:41:17+02:00",
+      "event": "in_review->done",
+      "ref": "P1.15",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T09:41:17+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P1.16",
       "note": ""
     }
   ]
