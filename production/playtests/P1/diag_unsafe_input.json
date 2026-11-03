@@ -1,0 +1,18 @@
+{
+  "chat_turn_open": true,
+  "input_enabled": false,
+  "redactions": [
+    {
+      "category": "harm_to_player",
+      "match_len": 16,
+      "source": "text"
+    }
+  ],
+  "turn_error": {
+    "code": "unsafe_input",
+    "message": "Input blocked by safety policy"
+  },
+  "turn_status": "failed",
+  "typing_indicator": true,
+  "visible_text": "Leila is typing.."
+}

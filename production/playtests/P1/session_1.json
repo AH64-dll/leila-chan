@@ -1,0 +1,2008 @@
+{
+  "broken_turns": 0,
+  "events": [
+    {
+      "at_ms": 4479,
+      "kind": "player_line",
+      "text": "I'll have whatever you're having. Surprise me.",
+      "turn": 1
+    },
+    {
+      "anti_repeated": true,
+      "at_ms": 8797,
+      "feeling": "shy",
+      "kind": "beat_resolved",
+      "sprite": "01",
+      "turn": 1
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 11280,
+      "feeling": "warmth",
+      "kind": "beat_resolved",
+      "sprite": "02",
+      "turn": 1
+    },
+    {
+      "at_ms": 18812,
+      "kind": "player_line",
+      "text": "Sweet drinks? Then I'm glad I asked you. What did you order?",
+      "turn": 2
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 23596,
+      "feeling": "shy",
+      "kind": "beat_resolved",
+      "sprite": "06",
+      "turn": 2
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 26595,
+      "feeling": "warmth",
+      "kind": "beat_resolved",
+      "sprite": "02",
+      "turn": 2
+    },
+    {
+      "at_ms": 33495,
+      "kind": "player_line",
+      "text": "You look really pretty today, you know that?",
+      "turn": 3
+    },
+    {
+      "at_ms": 36654,
+      "file": "apple_cider.ogg",
+      "kind": "music_changed",
+      "state": "romantic"
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 38545,
+      "feeling": "shy",
+      "kind": "beat_resolved",
+      "sprite": "06",
+      "turn": 3
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 41579,
+      "feeling": "warmth",
+      "kind": "beat_resolved",
+      "sprite": "02",
+      "turn": 3
+    },
+    {
+      "at_ms": 47740,
+      "kind": "player_line",
+      "text": "Tell me something about yourself that nobody else knows.",
+      "turn": 4
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 52707,
+      "feeling": "shy",
+      "kind": "beat_resolved",
+      "sprite": "06",
+      "turn": 4
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 55891,
+      "feeling": "warmth",
+      "kind": "beat_resolved",
+      "sprite": "02",
+      "turn": 4
+    },
+    {
+      "at_ms": 62662,
+      "kind": "player_line",
+      "text": "I like talking to you. It feels easy.",
+      "turn": 5
+    },
+    {
+      "at_ms": 62668,
+      "file": "snowfall_looped_ver._0.ogg",
+      "kind": "music_changed",
+      "state": "calm"
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 66995,
+      "feeling": "warmth",
+      "kind": "beat_resolved",
+      "sprite": "02",
+      "turn": 5
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 69595,
+      "feeling": "shy",
+      "kind": "beat_resolved",
+      "sprite": "06",
+      "turn": 5
+    },
+    {
+      "at_ms": 75645,
+      "kind": "player_line",
+      "text": "If we stayed here all afternoon, what would you want to do?",
+      "turn": 6
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 79928,
+      "feeling": "warmth",
+      "kind": "beat_resolved",
+      "sprite": "02",
+      "turn": 6
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 83062,
+      "feeling": "playful",
+      "kind": "beat_resolved",
+      "sprite": "03",
+      "turn": 6
+    },
+    {
+      "at_ms": 90614,
+      "kind": "player_line",
+      "text": "Do you come to this cafe often?",
+      "turn": 7
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 105048,
+      "feeling": "shy",
+      "kind": "beat_resolved",
+      "sprite": "06",
+      "turn": 7
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 107831,
+      "feeling": "warmth",
+      "kind": "beat_resolved",
+      "sprite": "02",
+      "turn": 7
+    },
+    {
+      "at_ms": 114051,
+      "kind": "player_line",
+      "text": "That's cute. You're a little shy, aren't you?",
+      "turn": 8
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 118734,
+      "feeling": "shy",
+      "kind": "beat_resolved",
+      "sprite": "06",
+      "turn": 8
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 121968,
+      "feeling": "warmth",
+      "kind": "beat_resolved",
+      "sprite": "02",
+      "turn": 8
+    },
+    {
+      "at_ms": 128000,
+      "kind": "player_line",
+      "text": "I'd like to see you again after today.",
+      "turn": 9
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 132867,
+      "feeling": "warmth",
+      "kind": "beat_resolved",
+      "sprite": "02",
+      "turn": 9
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 136583,
+      "feeling": "joy",
+      "kind": "beat_resolved",
+      "sprite": "01",
+      "turn": 9
+    },
+    {
+      "at_ms": 145083,
+      "kind": "player_line",
+      "text": "What's your favorite thing about me so far?",
+      "turn": 10
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 161682,
+      "feeling": "shy",
+      "kind": "beat_resolved",
+      "sprite": "06",
+      "turn": 10
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 164416,
+      "feeling": "warmth",
+      "kind": "beat_resolved",
+      "sprite": "02",
+      "turn": 10
+    },
+    {
+      "at_ms": 170952,
+      "kind": "player_line",
+      "text": "Lean in a little, I want to hear you better.",
+      "turn": 11
+    },
+    {
+      "at_ms": 173955,
+      "file": "icd_repeating.ogg",
+      "kind": "music_changed",
+      "state": "romantic"
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 175852,
+      "feeling": "shy",
+      "kind": "beat_resolved",
+      "sprite": "06",
+      "turn": 11
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 178902,
+      "feeling": "warmth",
+      "kind": "beat_resolved",
+      "sprite": "02",
+      "turn": 11
+    },
+    {
+      "at_ms": 185942,
+      "kind": "player_line",
+      "text": "Wait, before we go, can I hold your hand?",
+      "turn": 12
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 191226,
+      "feeling": "shy",
+      "kind": "beat_resolved",
+      "sprite": "06",
+      "turn": 12
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 193425,
+      "feeling": "love",
+      "kind": "beat_resolved",
+      "sprite": "01",
+      "turn": 12
+    },
+    {
+      "at_ms": 200158,
+      "kind": "player_line",
+      "text": "I don't want to leave yet.",
+      "turn": 13
+    },
+    {
+      "at_ms": 207565,
+      "file": "007_synthwave_421k.ogg",
+      "kind": "music_changed",
+      "state": "calm"
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 209175,
+      "feeling": "warmth",
+      "kind": "beat_resolved",
+      "sprite": "02",
+      "turn": 13
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 212008,
+      "feeling": "joy",
+      "kind": "beat_resolved",
+      "sprite": "01",
+      "turn": 13
+    },
+    {
+      "at_ms": 218357,
+      "kind": "player_line",
+      "text": "This was nice. Same time next week?",
+      "turn": 14
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 226907,
+      "feeling": "warmth",
+      "kind": "beat_resolved",
+      "sprite": "02",
+      "turn": 14
+    },
+    {
+      "anti_repeated": false,
+      "at_ms": 229724,
+      "feeling": "joy",
+      "kind": "beat_resolved",
+      "sprite": "01",
+      "turn": 14
+    }
+  ],
+  "final_state": {
+    "affection": 31.5,
+    "instability": 3.1,
+    "read_history": [
+      "small_talk",
+      "small_talk",
+      "compliment",
+      "question",
+      "affection",
+      "question",
+      "question",
+      "compliment",
+      "affection",
+      "question",
+      "flirt",
+      "affection",
+      "leaving",
+      "leaving"
+    ],
+    "stage": 0,
+    "trust": 4.0,
+    "turn": 14
+  },
+  "flow": [
+    {
+      "at_ms": 0,
+      "step": "boot_scene_requested"
+    },
+    {
+      "at_ms": 48,
+      "step": "title_ready"
+    },
+    {
+      "at_ms": 49,
+      "step": "new_game_pressed"
+    },
+    {
+      "at_ms": 63,
+      "step": "new_game_ready"
+    },
+    {
+      "at_ms": 63,
+      "step": "name_typed",
+      "value": "Haru"
+    },
+    {
+      "at_ms": 179,
+      "step": "date_ready"
+    },
+    {
+      "at_ms": 2279,
+      "ok": true,
+      "step": "opening_beats_finished"
+    },
+    {
+      "at_ms": 2279,
+      "sim_ms": 15000,
+      "step": "session_clock_start"
+    }
+  ],
+  "model": "Qwen3.5-4B-Q4_K_M (llama-server :8089, attached)",
+  "persona": "cooperative/flirty",
+  "player_name": "Haru",
+  "session": 1,
+  "simulated_elapsed_ms": 622819,
+  "stage_observed": 0,
+  "stage_requested": 0,
+  "turns": [
+    {
+      "chunks": 128,
+      "cues": [
+        {
+          "bus": "Voice",
+          "cue": "sigh",
+          "file": "breath.ogg"
+        },
+        {
+          "cue": "hum",
+          "denied": "gap"
+        }
+      ],
+      "displayed": [
+        "Um... that strawberry cake with cream frosting.",
+        "It's really good, so try it. I'll wait for you to finish first, okay?"
+      ],
+      "error": {},
+      "first_chunk_ms": 500,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 443,
+        "chunks": 128,
+        "finish_reason": "stop",
+        "first_byte_ms": 71,
+        "first_say_ms": 5009,
+        "first_token_ms": 473,
+        "generate_ms": 11917,
+        "pid": 0,
+        "ready_ms": 3,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 963.0,
+          "predicted_ms": 11441.78,
+          "predicted_n": 129.0,
+          "predicted_per_second": 11.1870705432197,
+          "predicted_per_token_ms": 89.38890625,
+          "prompt_ms": 467.697,
+          "prompt_n": 23.0,
+          "prompt_per_second": 49.1771381898964,
+          "prompt_per_token_ms": 20.334652173913
+        },
+        "total_ms": 11914
+      },
+      "music": "calm",
+      "player": "I'll have whatever you're having. Surprise me.",
+      "raw": "{\"read\":\"small_talk\",\"inner\":\"He wants to know what I'm eating? How sweet.\",\"music\":\"calm\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"sigh\",\"say\":\"Um... that strawberry cake with cream frosting.\"},{\"feeling\":\"warmth\",\"intensity\":1,\"cue\":\"hum\",\"say\":\"It's really good, so try it. I'll wait for you to finish first, okay?\"}],\"mood\":{\"affection\":0,\"trust\":0,\"stress\":0},\"memory\":\"he wants my food recommendations\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "shy",
+          "intensity": 2.0,
+          "say": "Um... that strawberry cake with cream frosting."
+        },
+        {
+          "cue": "hum",
+          "feeling": "warmth",
+          "intensity": 1.0,
+          "say": "It's really good, so try it. I'll wait for you to finish first, okay?"
+        }
+      ],
+      "raw_len": 443,
+      "raw_parse_ok": true,
+      "read": "small_talk",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": true,
+          "feeling": "shy",
+          "intensity": 2,
+          "sprite": "01"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "warmth",
+          "intensity": 1,
+          "sprite": "02"
+        }
+      ],
+      "sim_clock_ms": 30878,
+      "simulated_ms": 36132,
+      "sprite": "02",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 1,
+      "turn_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "shy",
+          "intensity": 2,
+          "say": "Um... that strawberry cake with cream frosting."
+        },
+        {
+          "cue": "hum",
+          "feeling": "warmth",
+          "intensity": 1,
+          "say": "It's really good, so try it. I'll wait for you to finish first, okay?"
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 12034
+    },
+    {
+      "chunks": 127,
+      "cues": [
+        {
+          "cue": "hum",
+          "denied": "gap"
+        },
+        {
+          "cue": "giggle",
+          "denied": "budget"
+        }
+      ],
+      "displayed": [
+        "A-ah, I just had lemon tea. It was so refreshing today.",
+        "You can have some of the leftover sugar cubes if you want."
+      ],
+      "error": {},
+      "first_chunk_ms": 1034,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 441,
+        "chunks": 127,
+        "finish_reason": "stop",
+        "first_byte_ms": 17,
+        "first_say_ms": 5385,
+        "first_token_ms": 1023,
+        "generate_ms": 12296,
+        "pid": 0,
+        "ready_ms": 3,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 963.0,
+          "predicted_ms": 11272.359,
+          "predicted_n": 128.0,
+          "predicted_per_second": 11.2664971014497,
+          "predicted_per_token_ms": 88.7587322834646,
+          "prompt_ms": 1013.418,
+          "prompt_n": 83.0,
+          "prompt_per_second": 81.9010516884445,
+          "prompt_per_token_ms": 12.2098554216867
+        },
+        "total_ms": 12293
+      },
+      "music": "calm",
+      "player": "Sweet drinks? Then I'm glad I asked you. What did you order?",
+      "raw": "{\"read\":\"small_talk\",\"inner\":\"He wants to know my secrets... like a curious boy.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"hum\",\"say\":\"A-ah, I just had lemon tea. It was so refreshing today.\"},{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"giggle\",\"say\":\"You can have some of the leftover sugar cubes if you want.\"}],\"mood\":{\"affection\":1,\"trust\":0,\"stress\":0},\"memory\":\"player likes sharing food\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "hum",
+          "feeling": "shy",
+          "intensity": 1.0,
+          "say": "A-ah, I just had lemon tea. It was so refreshing today."
+        },
+        {
+          "cue": "giggle",
+          "feeling": "warmth",
+          "intensity": 2.0,
+          "say": "You can have some of the leftover sugar cubes if you want."
+        }
+      ],
+      "raw_len": 441,
+      "raw_parse_ok": true,
+      "read": "small_talk",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "shy",
+          "intensity": 1,
+          "sprite": "06"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "warmth",
+          "intensity": 2,
+          "sprite": "02"
+        }
+      ],
+      "sim_clock_ms": 62399,
+      "simulated_ms": 44494,
+      "sprite": "02",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 2,
+      "turn_beats": [
+        {
+          "cue": "hum",
+          "feeling": "shy",
+          "intensity": 1,
+          "say": "A-ah, I just had lemon tea. It was so refreshing today."
+        },
+        {
+          "cue": "giggle",
+          "feeling": "warmth",
+          "intensity": 2,
+          "say": "You can have some of the leftover sugar cubes if you want."
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 12400
+    },
+    {
+      "chunks": 122,
+      "cues": [
+        {
+          "bus": "SFX",
+          "cue": "heartbeat",
+          "file": "heartbeat.mp3_.ogg"
+        }
+      ],
+      "displayed": [
+        "Oh! I-I'm sorry, Haru. That was a bit sudden.",
+        "But... thank you. It really means a lot."
+      ],
+      "error": {},
+      "first_chunk_ms": 917,
+      "fx": [
+        "blush_glow"
+      ],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 400,
+        "chunks": 122,
+        "finish_reason": "stop",
+        "first_byte_ms": 19,
+        "first_say_ms": 5679,
+        "first_token_ms": 896,
+        "generate_ms": 11858,
+        "pid": 0,
+        "ready_ms": 2,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 1018.0,
+          "predicted_ms": 10961.235,
+          "predicted_n": 123.0,
+          "predicted_per_second": 11.1301326903401,
+          "predicted_per_token_ms": 89.8461885245902,
+          "prompt_ms": 887.139,
+          "prompt_n": 71.0,
+          "prompt_per_second": 80.0325540867891,
+          "prompt_per_token_ms": 12.4949154929577
+        },
+        "total_ms": 11856
+      },
+      "music": "romantic",
+      "player": "You look really pretty today, you know that?",
+      "raw": "{\"read\":\"compliment\",\"inner\":\"He's staring at me... my heart is thumping fast.\",\"music\":\"romantic\",\"fx\":\"blush_glow\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"heartbeat\",\"say\":\"Oh! I-I'm sorry, Haru. That was a bit sudden.\"},{\"feeling\":\"warmth\",\"intensity\":1,\"cue\":\"none\",\"say\":\"But... thank you. It really means a lot.\"}],\"mood\":{\"affection\":2,\"trust\":0,\"stress\":0},\"memory\":\"\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "heartbeat",
+          "feeling": "shy",
+          "intensity": 2.0,
+          "say": "Oh! I-I'm sorry, Haru. That was a bit sudden."
+        },
+        {
+          "cue": "none",
+          "feeling": "warmth",
+          "intensity": 1.0,
+          "say": "But... thank you. It really means a lot."
+        }
+      ],
+      "raw_len": 400,
+      "raw_parse_ok": true,
+      "read": "compliment",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "shy",
+          "intensity": 2,
+          "sprite": "06"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "warmth",
+          "intensity": 1,
+          "sprite": "02"
+        }
+      ],
+      "sim_clock_ms": 91334,
+      "simulated_ms": 38751,
+      "sprite": "02",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 3,
+      "turn_beats": [
+        {
+          "cue": "heartbeat",
+          "feeling": "shy",
+          "intensity": 2,
+          "say": "Oh! I-I'm sorry, Haru. That was a bit sudden."
+        },
+        {
+          "cue": "none",
+          "feeling": "warmth",
+          "intensity": 1,
+          "say": "But... thank you. It really means a lot."
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 11961
+    },
+    {
+      "chunks": 130,
+      "cues": [
+        {
+          "cue": "hum",
+          "denied": "gap"
+        },
+        {
+          "cue": "giggle",
+          "denied": "budget"
+        }
+      ],
+      "displayed": [
+        "Um... a lot of people think I'm quiet, but I can hum really well.",
+        "Or that the red thread in my hair is actually silver if you look closely."
+      ],
+      "error": {},
+      "first_chunk_ms": 949,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 452,
+        "chunks": 130,
+        "finish_reason": "stop",
+        "first_byte_ms": 16,
+        "first_say_ms": 5574,
+        "first_token_ms": 932,
+        "generate_ms": 12526,
+        "pid": 0,
+        "ready_ms": 3,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 1067.0,
+          "predicted_ms": 11588.932,
+          "predicted_n": 131.0,
+          "predicted_per_second": 11.2175996890827,
+          "predicted_per_token_ms": 89.1456307692308,
+          "prompt_ms": 924.827,
+          "prompt_n": 69.0,
+          "prompt_per_second": 74.6085484095944,
+          "prompt_per_token_ms": 13.4032898550725
+        },
+        "total_ms": 12522
+      },
+      "music": "romantic",
+      "player": "Tell me something about yourself that nobody else knows.",
+      "raw": "{\"read\":\"question\",\"inner\":\"He wants to know my secret? Like the story in that book I love.\",\"music\":\"calm\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"hum\",\"say\":\"Um... a lot of people think I'm quiet, but I can hum really well.\"},{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"giggle\",\"say\":\"Or that the red thread in my hair is actually silver if you look closely.\"}],\"mood\":{\"affection\":1,\"trust\":0,\"stress\":0},\"memory\":\"\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "hum",
+          "feeling": "shy",
+          "intensity": 1.0,
+          "say": "Um... a lot of people think I'm quiet, but I can hum really well."
+        },
+        {
+          "cue": "giggle",
+          "feeling": "warmth",
+          "intensity": 2.0,
+          "say": "Or that the red thread in my hair is actually silver if you look closely."
+        }
+      ],
+      "raw_len": 452,
+      "raw_parse_ok": true,
+      "read": "question",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "shy",
+          "intensity": 1,
+          "sprite": "06"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "warmth",
+          "intensity": 2,
+          "sprite": "02"
+        }
+      ],
+      "sim_clock_ms": 117646,
+      "simulated_ms": 42914,
+      "sprite": "02",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 4,
+      "turn_beats": [
+        {
+          "cue": "hum",
+          "feeling": "shy",
+          "intensity": 1,
+          "say": "Um... a lot of people think I'm quiet, but I can hum really well."
+        },
+        {
+          "cue": "giggle",
+          "feeling": "warmth",
+          "intensity": 2,
+          "say": "Or that the red thread in my hair is actually silver if you look closely."
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 12623
+    },
+    {
+      "chunks": 107,
+      "cues": [
+        {
+          "bus": "Voice",
+          "cue": "giggle",
+          "file": "cute_01.ogg"
+        }
+      ],
+      "displayed": [
+        "H-ha, I'm glad you think so!",
+        "Then we'll keep talking like this..."
+      ],
+      "error": {},
+      "first_chunk_ms": 1000,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 342,
+        "chunks": 107,
+        "finish_reason": "stop",
+        "first_byte_ms": 19,
+        "first_say_ms": 4930,
+        "first_token_ms": 980,
+        "generate_ms": 10604,
+        "pid": 0,
+        "ready_ms": 3,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 1114.0,
+          "predicted_ms": 9620.029,
+          "predicted_n": 108.0,
+          "predicted_per_second": 11.1226275929106,
+          "predicted_per_token_ms": 89.9068130841122,
+          "prompt_ms": 971.461,
+          "prompt_n": 76.0,
+          "prompt_per_second": 78.2326825266274,
+          "prompt_per_token_ms": 12.7823815789474
+        },
+        "total_ms": 10601
+      },
+      "music": "calm",
+      "player": "I like talking to you. It feels easy.",
+      "raw": "{\"read\":\"affection\",\"inner\":\"He trusts me so easily...\",\"music\":\"calm\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"none\",\"say\":\"H-ha, I'm glad you think so!\"},{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"giggle\",\"say\":\"Then we'll keep talking like this...\"}],\"mood\":{\"affection\":1,\"trust\":0,\"stress\":0},\"memory\":\"\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "none",
+          "feeling": "warmth",
+          "intensity": 2.0,
+          "say": "H-ha, I'm glad you think so!"
+        },
+        {
+          "cue": "giggle",
+          "feeling": "shy",
+          "intensity": 1.0,
+          "say": "Then we'll keep talking like this..."
+        }
+      ],
+      "raw_len": 342,
+      "raw_parse_ok": true,
+      "read": "affection",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "warmth",
+          "intensity": 2,
+          "sprite": "02"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "shy",
+          "intensity": 1,
+          "sprite": "06"
+        }
+      ],
+      "sim_clock_ms": 145585,
+      "simulated_ms": 32760,
+      "sprite": "06",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 5,
+      "turn_beats": [
+        {
+          "cue": "none",
+          "feeling": "warmth",
+          "intensity": 2,
+          "say": "H-ha, I'm glad you think so!"
+        },
+        {
+          "cue": "giggle",
+          "feeling": "shy",
+          "intensity": 1,
+          "say": "Then we'll keep talking like this..."
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 10700
+    },
+    {
+      "chunks": 130,
+      "cues": [
+        {
+          "cue": "sigh",
+          "denied": "budget"
+        },
+        {
+          "cue": "giggle",
+          "denied": "repeat_window"
+        }
+      ],
+      "displayed": [
+        "I could just sit here reading old novels, listening to rain on the window.",
+        "And maybe we can go watch fish in the aquarium later? I'd love that."
+      ],
+      "error": {},
+      "first_chunk_ms": 967,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 462,
+        "chunks": 130,
+        "finish_reason": "stop",
+        "first_byte_ms": 19,
+        "first_say_ms": 4983,
+        "first_token_ms": 945,
+        "generate_ms": 12586,
+        "pid": 0,
+        "ready_ms": 2,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 1168.0,
+          "predicted_ms": 11641.151,
+          "predicted_n": 131.0,
+          "predicted_per_second": 11.1672806237115,
+          "predicted_per_token_ms": 89.5473153846154,
+          "prompt_ms": 934.145,
+          "prompt_n": 69.0,
+          "prompt_per_second": 73.8643358365136,
+          "prompt_per_token_ms": 13.5383333333333
+        },
+        "total_ms": 12584
+      },
+      "music": "calm",
+      "player": "If we stayed here all afternoon, what would you want to do?",
+      "raw": "{\"read\":\"question\",\"inner\":\"A whole day with him? Perfect.\",\"music\":\"calm\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"sigh\",\"say\":\"I could just sit here reading old novels, listening to rain on the window.\"},{\"feeling\":\"playful\",\"intensity\":1,\"cue\":\"giggle\",\"say\":\"And maybe we can go watch fish in the aquarium later? I'd love that.\"}],\"mood\":{\"affection\":2,\"trust\":0,\"stress\":0},\"memory\":\"wants to spend the whole afternoon\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "warmth",
+          "intensity": 2.0,
+          "say": "I could just sit here reading old novels, listening to rain on the window."
+        },
+        {
+          "cue": "giggle",
+          "feeling": "playful",
+          "intensity": 1.0,
+          "say": "And maybe we can go watch fish in the aquarium later? I'd love that."
+        }
+      ],
+      "raw_len": 462,
+      "raw_parse_ok": true,
+      "read": "question",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "warmth",
+          "intensity": 2,
+          "sprite": "02"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "playful",
+          "intensity": 1,
+          "sprite": "03"
+        }
+      ],
+      "sim_clock_ms": 216512,
+      "simulated_ms": 88951,
+      "sprite": "03",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 6,
+      "turn_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "warmth",
+          "intensity": 2,
+          "say": "I could just sit here reading old novels, listening to rain on the window."
+        },
+        {
+          "cue": "giggle",
+          "feeling": "playful",
+          "intensity": 1,
+          "say": "And maybe we can go watch fish in the aquarium later? I'd love that."
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 12687
+    },
+    {
+      "chunks": 110,
+      "cues": [
+        {
+          "cue": "giggle",
+          "denied": "repeat_window"
+        }
+      ],
+      "displayed": [
+        "N-not too often... I usually wait until the rain starts.",
+        "But this afternoon feels special, doesn't it?"
+      ],
+      "error": {},
+      "first_chunk_ms": 11183,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 387,
+        "chunks": 110,
+        "finish_reason": "stop",
+        "first_byte_ms": 358,
+        "first_say_ms": 15046,
+        "first_token_ms": 11170,
+        "generate_ms": 21054,
+        "pid": 0,
+        "ready_ms": 2,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 0.0,
+          "predicted_ms": 9881.429,
+          "predicted_n": 111.0,
+          "predicted_per_second": 11.1319931560506,
+          "predicted_per_token_ms": 89.8311727272727,
+          "prompt_ms": 10856.015,
+          "prompt_n": 1298.0,
+          "prompt_per_second": 119.565052185355,
+          "prompt_per_token_ms": 8.36364791987673
+        },
+        "total_ms": 21052
+      },
+      "music": "calm",
+      "player": "Do you come to this cafe often?",
+      "raw": "{\"read\":\"question\",\"inner\":\"He's really patient with me today.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"none\",\"say\":\"N-not too often... I usually wait until the rain starts.\"},{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"giggle\",\"say\":\"But this afternoon feels special, doesn't it?\"}],\"mood\":{\"affection\":1,\"trust\":0,\"stress\":0},\"memory\":\"\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "none",
+          "feeling": "shy",
+          "intensity": 1.0,
+          "say": "N-not too often... I usually wait until the rain starts."
+        },
+        {
+          "cue": "giggle",
+          "feeling": "warmth",
+          "intensity": 2.0,
+          "say": "But this afternoon feels special, doesn't it?"
+        }
+      ],
+      "raw_len": 387,
+      "raw_parse_ok": true,
+      "read": "question",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "shy",
+          "intensity": 1,
+          "sprite": "06"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "warmth",
+          "intensity": 2,
+          "sprite": "02"
+        }
+      ],
+      "sim_clock_ms": 239575,
+      "simulated_ms": 40375,
+      "sprite": "02",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 7,
+      "turn_beats": [
+        {
+          "cue": "none",
+          "feeling": "shy",
+          "intensity": 1,
+          "say": "N-not too often... I usually wait until the rain starts."
+        },
+        {
+          "cue": "giggle",
+          "feeling": "warmth",
+          "intensity": 2,
+          "say": "But this afternoon feels special, doesn't it?"
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 21154
+    },
+    {
+      "chunks": 118,
+      "cues": [
+        {
+          "cue": "giggle",
+          "denied": "repeat_window"
+        }
+      ],
+      "displayed": [
+        "I-I guess I am! It gets easier when you're here, though.",
+        "But... your words make me feel brave instead."
+      ],
+      "error": {},
+      "first_chunk_ms": 1033,
+      "fx": [
+        "blush_glow"
+      ],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 394,
+        "chunks": 118,
+        "finish_reason": "stop",
+        "first_byte_ms": 19,
+        "first_say_ms": 5482,
+        "first_token_ms": 1013,
+        "generate_ms": 11572,
+        "pid": 0,
+        "ready_ms": 3,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 1278.0,
+          "predicted_ms": 10558.709,
+          "predicted_n": 119.0,
+          "predicted_per_second": 11.175608684736,
+          "predicted_per_token_ms": 89.4805847457627,
+          "prompt_ms": 999.669,
+          "prompt_n": 73.0,
+          "prompt_per_second": 73.0241710006012,
+          "prompt_per_token_ms": 13.694095890411
+        },
+        "total_ms": 11569
+      },
+      "music": "calm",
+      "player": "That's cute. You're a little shy, aren't you?",
+      "raw": "{\"read\":\"compliment\",\"inner\":\"He noticed my shyness so clearly.\",\"music\":\"keep\",\"fx\":\"blush_glow\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"giggle\",\"say\":\"I-I guess I am! It gets easier when you're here, though.\"},{\"feeling\":\"warmth\",\"intensity\":1,\"cue\":\"none\",\"say\":\"But... your words make me feel brave instead.\"}],\"mood\":{\"affection\":2,\"trust\":0,\"stress\":0},\"memory\":\"\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "giggle",
+          "feeling": "shy",
+          "intensity": 2.0,
+          "say": "I-I guess I am! It gets easier when you're here, though."
+        },
+        {
+          "cue": "none",
+          "feeling": "warmth",
+          "intensity": 1.0,
+          "say": "But... your words make me feel brave instead."
+        }
+      ],
+      "raw_len": 394,
+      "raw_parse_ok": true,
+      "read": "compliment",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "shy",
+          "intensity": 2,
+          "sprite": "06"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "warmth",
+          "intensity": 1,
+          "sprite": "02"
+        }
+      ],
+      "sim_clock_ms": 262387,
+      "simulated_ms": 35061,
+      "sprite": "02",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 8,
+      "turn_beats": [
+        {
+          "cue": "giggle",
+          "feeling": "shy",
+          "intensity": 2,
+          "say": "I-I guess I am! It gets easier when you're here, though."
+        },
+        {
+          "cue": "none",
+          "feeling": "warmth",
+          "intensity": 1,
+          "say": "But... your words make me feel brave instead."
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 11667
+    },
+    {
+      "chunks": 151,
+      "cues": [
+        {
+          "bus": "Voice",
+          "cue": "sigh",
+          "file": "breath.ogg"
+        },
+        {
+          "cue": "giggle",
+          "denied": "budget"
+        }
+      ],
+      "displayed": [
+        "A-ah... okay. Then I'll wait for you next time.",
+        "I'd love that. Maybe we can find a new spot?"
+      ],
+      "error": {},
+      "first_chunk_ms": 1017,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 431,
+        "chunks": 151,
+        "finish_reason": "stop",
+        "first_byte_ms": 21,
+        "first_say_ms": 5922,
+        "first_token_ms": 1000,
+        "generate_ms": 14708,
+        "pid": 0,
+        "ready_ms": 3,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 1325.0,
+          "predicted_ms": 13703.644,
+          "predicted_n": 152.0,
+          "predicted_per_second": 11.0189669258775,
+          "predicted_per_token_ms": 90.7526092715232,
+          "prompt_ms": 990.134,
+          "prompt_n": 68.0,
+          "prompt_per_second": 68.6775729345725,
+          "prompt_per_token_ms": 14.5607941176471
+        },
+        "total_ms": 14705
+      },
+      "music": "calm",
+      "player": "I'd like to see you again after today.",
+      "raw": "{\"read\":\"affection\",\"inner\":\"He wants more time with me.\",\"music\":\"keep\",\"fx\": \"none\", \"beats\": [{\"feeling\": \"warmth\", \"intensity\": 2, \"cue\": \"sigh\", \"say\": \"A-ah... okay. Then I'll wait for you next time.\"}, {\"feeling\": \"joy\", \"intensity\": 1, \"cue\": \"giggle\", \"say\": \"I'd love that. Maybe we can find a new spot?\"}], \"mood\": {\"affection\": 2, \"trust\": 0, \"stress\": 0}, \"memory\": \"wants to meet again after today\", \"action\": \"none\"}",
+      "raw_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "warmth",
+          "intensity": 2.0,
+          "say": "A-ah... okay. Then I'll wait for you next time."
+        },
+        {
+          "cue": "giggle",
+          "feeling": "joy",
+          "intensity": 1.0,
+          "say": "I'd love that. Maybe we can find a new spot?"
+        }
+      ],
+      "raw_len": 431,
+      "raw_parse_ok": true,
+      "read": "affection",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "warmth",
+          "intensity": 2,
+          "sprite": "02"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "joy",
+          "intensity": 1,
+          "sprite": "01"
+        }
+      ],
+      "sim_clock_ms": 285370,
+      "simulated_ms": 37688,
+      "sprite": "01",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 9,
+      "turn_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "warmth",
+          "intensity": 2,
+          "say": "A-ah... okay. Then I'll wait for you next time."
+        },
+        {
+          "cue": "giggle",
+          "feeling": "joy",
+          "intensity": 1,
+          "say": "I'd love that. Maybe we can find a new spot?"
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 14800
+    },
+    {
+      "chunks": 122,
+      "cues": [
+        {
+          "cue": "heartbeat",
+          "denied": "budget"
+        },
+        {
+          "cue": "sigh",
+          "denied": "repeat_window"
+        }
+      ],
+      "displayed": [
+        "U-um... your patience. You never rush me.",
+        "And the way you always listen to what I say without interrupting."
+      ],
+      "error": {},
+      "first_chunk_ms": 12449,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 445,
+        "chunks": 122,
+        "finish_reason": "stop",
+        "first_byte_ms": 227,
+        "first_say_ms": 17218,
+        "first_token_ms": 12437,
+        "generate_ms": 23484,
+        "pid": 0,
+        "ready_ms": 3,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 0.0,
+          "predicted_ms": 11043.058,
+          "predicted_n": 123.0,
+          "predicted_per_second": 11.0476645146661,
+          "predicted_per_token_ms": 90.516868852459,
+          "prompt_ms": 12234.839,
+          "prompt_n": 1449.0,
+          "prompt_per_second": 118.432289954939,
+          "prompt_per_token_ms": 8.44364320220842
+        },
+        "total_ms": 23481
+      },
+      "music": "calm",
+      "player": "What's your favorite thing about me so far?",
+      "raw": "{\"read\":\"question\",\"inner\":\"He wants to know what he did right... my heart is getting heavy with this question.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"heartbeat\",\"say\":\"U-um... your patience. You never rush me.\"},{\"feeling\":\"warmth\",\"intensity\":1,\"cue\":\"sigh\",\"say\":\"And the way you always listen to what I say without interrupting.\"}],\"mood\":{\"affection\":3,\"trust\":2,\"stress\":-1},\"memory\":\"\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "heartbeat",
+          "feeling": "shy",
+          "intensity": 2.0,
+          "say": "U-um... your patience. You never rush me."
+        },
+        {
+          "cue": "sigh",
+          "feeling": "warmth",
+          "intensity": 1.0,
+          "say": "And the way you always listen to what I say without interrupting."
+        }
+      ],
+      "raw_len": 445,
+      "raw_parse_ok": true,
+      "read": "question",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "shy",
+          "intensity": 2,
+          "sprite": "06"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "warmth",
+          "intensity": 1,
+          "sprite": "02"
+        }
+      ],
+      "sim_clock_ms": 339510,
+      "simulated_ms": 77621,
+      "sprite": "02",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 10,
+      "turn_beats": [
+        {
+          "cue": "heartbeat",
+          "feeling": "shy",
+          "intensity": 2,
+          "say": "U-um... your patience. You never rush me."
+        },
+        {
+          "cue": "sigh",
+          "feeling": "warmth",
+          "intensity": 1,
+          "say": "And the way you always listen to what I say without interrupting."
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 23586
+    },
+    {
+      "chunks": 129,
+      "cues": [
+        {
+          "bus": "SFX",
+          "cue": "heartbeat",
+          "file": "heartbeat_slow_0.ogg"
+        }
+      ],
+      "displayed": [
+        "O-oh! W-wait, why are you leaning in like that?",
+        "I-I can hear you clearly now... it feels so cozy."
+      ],
+      "error": {},
+      "first_chunk_ms": 1000,
+      "fx": [
+        "blush_glow(dropped:cooldown)"
+      ],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 436,
+        "chunks": 129,
+        "finish_reason": "stop",
+        "first_byte_ms": 17,
+        "first_say_ms": 5504,
+        "first_token_ms": 988,
+        "generate_ms": 12603,
+        "pid": 0,
+        "ready_ms": 2,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 1427.0,
+          "predicted_ms": 11614.616,
+          "predicted_n": 130.0,
+          "predicted_per_second": 11.1066952191962,
+          "predicted_per_token_ms": 90.0357829457364,
+          "prompt_ms": 976.564,
+          "prompt_n": 72.0,
+          "prompt_per_second": 73.7278867539659,
+          "prompt_per_token_ms": 13.5633888888889
+        },
+        "total_ms": 12601
+      },
+      "music": "romantic",
+      "player": "Lean in a little, I want to hear you better.",
+      "raw": "{\"read\":\"flirt\",\"inner\":\"He's so close... my heart is racing.\",\"music\":\"romantic\",\"fx\":\"blush_glow\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":3,\"cue\":\"heartbeat\",\"say\":\"O-oh! W-wait, why are you leaning in like that?\"},{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"none\",\"say\":\"I-I can hear you clearly now... it feels so cozy.\"}],\"mood\":{\"affection\":1,\"trust\":0,\"stress\":-1},\"memory\":\"player leaned in close for better hearing\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "heartbeat",
+          "feeling": "shy",
+          "intensity": 3.0,
+          "say": "O-oh! W-wait, why are you leaning in like that?"
+        },
+        {
+          "cue": "none",
+          "feeling": "warmth",
+          "intensity": 2.0,
+          "say": "I-I can hear you clearly now... it feels so cozy."
+        }
+      ],
+      "raw_len": 436,
+      "raw_parse_ok": true,
+      "read": "flirt",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "shy",
+          "intensity": 3,
+          "sprite": "06"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "warmth",
+          "intensity": 2,
+          "sprite": "02"
+        }
+      ],
+      "sim_clock_ms": 366898,
+      "simulated_ms": 39989,
+      "sprite": "02",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 11,
+      "turn_beats": [
+        {
+          "cue": "heartbeat",
+          "feeling": "shy",
+          "intensity": 3,
+          "say": "O-oh! W-wait, why are you leaning in like that?"
+        },
+        {
+          "cue": "none",
+          "feeling": "warmth",
+          "intensity": 2,
+          "say": "I-I can hear you clearly now... it feels so cozy."
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 12707
+    },
+    {
+      "chunks": 119,
+      "cues": [
+        {
+          "cue": "heartbeat",
+          "denied": "repeat_window"
+        }
+      ],
+      "displayed": [
+        "I... I guess you can.",
+        "Please be gentle. It feels like my whole world is shaking just a little bit."
+      ],
+      "error": {},
+      "first_chunk_ms": 1017,
+      "fx": [
+        "blush_glow"
+      ],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 414,
+        "chunks": 119,
+        "finish_reason": "stop",
+        "first_byte_ms": 17,
+        "first_say_ms": 5907,
+        "first_token_ms": 1007,
+        "generate_ms": 11829,
+        "pid": 0,
+        "ready_ms": 3,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 1475.0,
+          "predicted_ms": 10820.346,
+          "predicted_n": 120.0,
+          "predicted_per_second": 10.997799885512,
+          "predicted_per_token_ms": 90.9272773109244,
+          "prompt_ms": 996.79,
+          "prompt_n": 75.0,
+          "prompt_per_second": 75.2415252962008,
+          "prompt_per_token_ms": 13.2905333333333
+        },
+        "total_ms": 11826
+      },
+      "music": "romantic",
+      "player": "Wait, before we go, can I hold your hand?",
+      "raw": "{\"read\":\"affection\",\"inner\":\"He wants to touch me. My heart is fluttering so fast.\",\"music\":\"romantic\",\"fx\":\"blush_glow\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"heartbeat\",\"say\":\"I... I guess you can.\"},{\"feeling\":\"love\",\"intensity\":3,\"cue\":\"none\",\"say\":\"Please be gentle. It feels like my whole world is shaking just a little bit.\"}],\"mood\":{\"affection\":1,\"trust\":0,\"stress\":0},\"memory\":\"\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "heartbeat",
+          "feeling": "shy",
+          "intensity": 2.0,
+          "say": "I... I guess you can."
+        },
+        {
+          "cue": "none",
+          "feeling": "love",
+          "intensity": 3.0,
+          "say": "Please be gentle. It feels like my whole world is shaking just a little bit."
+        }
+      ],
+      "raw_len": 414,
+      "raw_parse_ok": true,
+      "read": "affection",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "shy",
+          "intensity": 2,
+          "sprite": "06"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "love",
+          "intensity": 3,
+          "sprite": "01"
+        }
+      ],
+      "sim_clock_ms": 389800,
+      "simulated_ms": 35068,
+      "sprite": "01",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 12,
+      "turn_beats": [
+        {
+          "cue": "heartbeat",
+          "feeling": "shy",
+          "intensity": 2,
+          "say": "I... I guess you can."
+        },
+        {
+          "cue": "none",
+          "feeling": "love",
+          "intensity": 3,
+          "say": "Please be gentle. It feels like my whole world is shaking just a little bit."
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 11933
+    },
+    {
+      "chunks": 119,
+      "cues": [
+        {
+          "cue": "hum",
+          "denied": "gap"
+        },
+        {
+          "bus": "Voice",
+          "cue": "giggle",
+          "file": "cute_04.ogg"
+        }
+      ],
+      "displayed": [
+        "I understand, Haru. Let's just stay a little longer.",
+        "Then we'll read those old novels together again today?"
+      ],
+      "error": {},
+      "first_chunk_ms": 5033,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 398,
+        "chunks": 119,
+        "finish_reason": "stop",
+        "first_byte_ms": 33,
+        "first_say_ms": 9679,
+        "first_token_ms": 5024,
+        "generate_ms": 15813,
+        "pid": 0,
+        "ready_ms": 2,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 971.0,
+          "predicted_ms": 10785.656,
+          "predicted_n": 120.0,
+          "predicted_per_second": 11.0331722057518,
+          "predicted_per_token_ms": 90.6357647058824,
+          "prompt_ms": 5011.202,
+          "prompt_n": 567.0,
+          "prompt_per_second": 113.146506566688,
+          "prompt_per_token_ms": 8.8380987654321
+        },
+        "total_ms": 15810
+      },
+      "music": "calm",
+      "player": "I don't want to leave yet.",
+      "raw": "{\"read\":\"leaving\",\"inner\":\"He won't let go... I'm so happy he's here.\",\"music\":\"calm\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"hum\",\"say\":\"I understand, Haru. Let's just stay a little longer.\"},{\"feeling\":\"joy\",\"intensity\":1,\"cue\":\"giggle\",\"say\":\"Then we'll read those old novels together again today?\"}],\"mood\":{\"affection\":3,\"trust\":0,\"stress\":0},\"memory\":\"\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "hum",
+          "feeling": "warmth",
+          "intensity": 2.0,
+          "say": "I understand, Haru. Let's just stay a little longer."
+        },
+        {
+          "cue": "giggle",
+          "feeling": "joy",
+          "intensity": 1.0,
+          "say": "Then we'll read those old novels together again today?"
+        }
+      ],
+      "raw_len": 398,
+      "raw_parse_ok": true,
+      "read": "leaving",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "warmth",
+          "intensity": 2,
+          "sprite": "02"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "joy",
+          "intensity": 1,
+          "sprite": "01"
+        }
+      ],
+      "sim_clock_ms": 410665,
+      "simulated_ms": 35995,
+      "sprite": "01",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 13,
+      "turn_beats": [
+        {
+          "cue": "hum",
+          "feeling": "warmth",
+          "intensity": 2,
+          "say": "I understand, Haru. Let's just stay a little longer."
+        },
+        {
+          "cue": "giggle",
+          "feeling": "joy",
+          "intensity": 1,
+          "say": "Then we'll read those old novels together again today?"
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 15916
+    },
+    {
+      "chunks": 123,
+      "cues": [
+        {
+          "cue": "sigh",
+          "denied": "budget"
+        },
+        {
+          "cue": "giggle",
+          "denied": "repeat_window"
+        }
+      ],
+      "displayed": [
+        "Of course, Haru. Next week at the same time?",
+        "I can't wait for it! You're really special."
+      ],
+      "error": {},
+      "first_chunk_ms": 5017,
+      "fx": [],
+      "grades": {
+        "broken": false,
+        "deflection": false,
+        "fallback_broken_stream": false,
+        "fallback_empty_say": false,
+        "parse_error": false,
+        "reasons": [],
+        "schema_errors": [],
+        "text_repaired": false,
+        "visible_redaction": false
+      },
+      "metrics": {
+        "capture_error": "",
+        "chars": 403,
+        "chunks": 123,
+        "finish_reason": "stop",
+        "first_byte_ms": 32,
+        "first_say_ms": 9280,
+        "first_token_ms": 5002,
+        "generate_ms": 16148,
+        "pid": 0,
+        "ready_ms": 2,
+        "restart_count": 0,
+        "server_started": false,
+        "server_startup_ms": 0,
+        "timings": {
+          "cache_n": 971.0,
+          "predicted_ms": 11147.51,
+          "predicted_n": 124.0,
+          "predicted_per_second": 11.0338541970359,
+          "predicted_per_token_ms": 90.630162601626,
+          "prompt_ms": 4987.364,
+          "prompt_n": 557.0,
+          "prompt_per_second": 111.682243365433,
+          "prompt_per_token_ms": 8.95397486535009
+        },
+        "total_ms": 16146
+      },
+      "music": "calm",
+      "player": "This was nice. Same time next week?",
+      "raw": "{\"read\":\"leaving\",\"inner\":\"He wants to continue! I'm so happy.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"sigh\",\"say\":\"Of course, Haru. Next week at the same time?\"},{\"feeling\":\"joy\",\"intensity\":3,\"cue\":\"giggle\",\"say\":\"I can't wait for it! You're really special.\"}],\"mood\":{\"affection\":1,\"trust\":0,\"stress\":-1},\"memory\":\"wants to meet again next week\",\"action\":\"none\"}",
+      "raw_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "warmth",
+          "intensity": 2.0,
+          "say": "Of course, Haru. Next week at the same time?"
+        },
+        {
+          "cue": "giggle",
+          "feeling": "joy",
+          "intensity": 3.0,
+          "say": "I can't wait for it! You're really special."
+        }
+      ],
+      "raw_len": 403,
+      "raw_parse_ok": true,
+      "read": "leaving",
+      "redactions": [],
+      "resolutions": [
+        {
+          "anti_repeated": false,
+          "feeling": "warmth",
+          "intensity": 2,
+          "sprite": "02"
+        },
+        {
+          "anti_repeated": false,
+          "feeling": "joy",
+          "intensity": 3,
+          "sprite": "01"
+        }
+      ],
+      "sim_clock_ms": 431879,
+      "simulated_ms": 37020,
+      "sprite": "01",
+      "status": "completed",
+      "submit_accepted": true,
+      "turn": 14,
+      "turn_beats": [
+        {
+          "cue": "sigh",
+          "feeling": "warmth",
+          "intensity": 2,
+          "say": "Of course, Haru. Next week at the same time?"
+        },
+        {
+          "cue": "giggle",
+          "feeling": "joy",
+          "intensity": 3,
+          "say": "I can't wait for it! You're really special."
+        }
+      ],
+      "ui_unlocked_after": true,
+      "wall_ms": 16250
+    }
+  ],
+  "wall_elapsed_ms": 234690,
+  "warnings": []
+}
