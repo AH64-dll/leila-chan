@@ -978,6 +978,15 @@
           "report": "production/reviews/P1.07-code-r1.md",
           "ts": "2026-11-03T09:22:46+02:00",
           "declared": "grok-4.6"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.07-design-r1.md",
+          "ts": "2026-11-03T09:52:02+02:00",
+          "declared": "grok-4.6"
         }
       ],
       "started": "2026-11-03T07:41:07+02:00",
@@ -2861,6 +2870,12 @@
       "event": "changes_requested->in_progress",
       "ref": "P1.21",
       "note": ""
+    },
+    {
+      "ts": "2026-11-03T09:52:02+02:00",
+      "event": "review:design:approved",
+      "ref": "P1.07",
+      "note": "production/reviews/P1.07-design-r1.md"
     }
   ]
 }

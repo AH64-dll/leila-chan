@@ -78,3 +78,9 @@
   as spoken text), current player turn, opt-in prefill; `debug` is JSON-safe for P1.18's transcript.
 - For P1.02/P4.05: `set_token_counter(Callable)` takes a real tokenizer (llama-server `/tokenize`); without it the
   report uses `ceil(chars/3.6)`. P1.08 owns building `ctx`; the schema side stays P1.07's.
+
+## P1.07 TurnSchema (round 1, gemini-3.8-flash)
+- Built `game/llm/TurnSchema.gd` with stage-gate data table `game/data/stage_gates.json` and canonical feelings from `game/data/casting.json`.
+- Implemented `build_turn_schema(ctx, offered_actions)` producing llama-server json_schema with canonical property order (`read`, `inner`, `beats`, `mood`, `memory`, `action`, `music`, `fx`, `meta`), stage gates across 0–5, `meta` null/gated for stages 0–2 vs unlocked at 3+, and C9 minLength:1 on `inner`/`say`.
+- Provided semantic validation helper `validate_turn(turn, stage, offered_actions, options)` for Director and test suites.
+- Tests: `game/tests/TurnSchemaTest.gd` with 15 gdUnit4 cases covering schema structure, stages 0–5 enums and gates, meta gating, action offers, string limits, mood bounds, and data loading.

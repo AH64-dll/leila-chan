@@ -63,3 +63,9 @@
 - Goldens: `game/tests/fixtures/prompts/*.json`, cases in `tests/helpers/PromptGoldenCases.gd`, regenerate via
   `tests/tools/prompt_builder_goldens.gd`. A prompt-file edit now fails `test_goldens_match_…` on purpose.
 - Measured: stage-1 loaded system message 990 estimated tokens (882 fixed + 108 dynamic) vs docs/07's ~900 line.
+## P1.07 TurnSchema (round 1, gemini-3.8-flash)
+- Built `game/llm/TurnSchema.gd` and autoload shim `game/autoload/TurnSchema.gd` with data tables in `game/data/stage_gates.json`.
+- Dynamic schema builds per-turn json_schema adhering to canonical property order: `read, inner, beats, mood, memory, action, music, fx, meta`.
+- Gates enforced across stages 0–5: `meta` null/gated for 0–2 vs unlocked object/null at 3+; C9 `inner` and `say` minLength:1.
+- `validate_turn()` provides runtime validation for Director and tests.
+- Gotchas: Godot's GDScript parser treats `var x := variant` inference as a hard compilation error under strict warnings — always explicitly type `var cues: Array = ...`.

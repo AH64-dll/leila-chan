@@ -223,7 +223,7 @@ func test_name_reaches_prompt_builder_and_name_tag() -> void:
 	GameState.reset()
 	GameState.player_name = "Ren"
 
-	var date: Control = auto_free(DateScene.instantiate())
+	var date: Node = auto_free(DateScene.instantiate())
 	add_child(date)
 	await get_tree().process_frame
 
