@@ -26,7 +26,7 @@ const DEFAULT_SCENARIO := "res://data/scenarios/D02_cafe.json"
 @export var player_name: String = "Senpai"
 @export var auto_start: bool = false
 @export var reduced_motion: bool = false
-
+@export var photosensitive: bool = false
 var text_box: PanelContainer:
 	get:
 		return chat_ui.text_box if chat_ui else null
@@ -53,6 +53,13 @@ var _opening_finished: bool = false
 
 
 func _ready() -> void:
+	var settings_node: Node = get_node_or_null("/root/Settings")
+	if settings_node != null:
+		if "photosensitive" in settings_node:
+			photosensitive = bool(settings_node.photosensitive)
+		if "reduced_motion" in settings_node:
+			reduced_motion = bool(settings_node.reduced_motion)
+
 	if chat_ui != null:
 		if not chat_ui.player_turn_sent.is_connected(_on_player_turn_sent):
 			chat_ui.player_turn_sent.connect(_on_player_turn_sent)
@@ -67,8 +74,11 @@ func _ready() -> void:
 		if not character.twitch_fired.is_connected(_on_character_twitch_fired):
 			character.twitch_fired.connect(_on_character_twitch_fired)
 		character.set_reduced_motion(reduced_motion)
-	if fx != null and "reduced_motion" in fx:
-		fx.reduced_motion = reduced_motion
+	if fx != null:
+		if "reduced_motion" in fx:
+			fx.reduced_motion = reduced_motion
+		if "photosensitive" in fx:
+			fx.photosensitive = photosensitive
 
 	if _scenario.is_empty():
 		load_scenario(scenario_path)
@@ -119,7 +129,12 @@ func load_scenario(path_or_dict: Variant = DEFAULT_SCENARIO) -> bool:
 	if AudioDirector != null:
 		AudioDirector.set_scene_music(music_id)
 
-	# Wire UI stage & player name
+	# Wire ambience
+	var amb_id := String(_scenario.get("ambience", "none"))
+	if amb_id != "none" and not amb_id.is_empty():
+		var amb_key := StringName("amb." + amb_id if not amb_id.begins_with("amb.") else amb_id)
+		if AudioDirector != null and AudioDirector.has_method("play_system"):
+			AudioDirector.play_system(amb_key)
 	if chat_ui != null:
 		chat_ui.set_stage(stage)
 		chat_ui.set_player_name(player_name)
@@ -209,6 +224,12 @@ func set_reduced_motion(enabled: bool) -> void:
 		fx.reduced_motion = enabled
 
 
+func set_photosensitive(enabled: bool) -> void:
+	photosensitive = enabled
+	if fx != null and "photosensitive" in fx:
+		fx.photosensitive = enabled
+
+
 func set_instant_text(enabled: bool) -> void:
 	if text_box != null:
 		text_box.set_instant(enabled)
@@ -229,6 +250,9 @@ func play_fx(effect_name: StringName, instant: bool = false) -> void:
 	if effect_name == &"shake_small":
 		if not reduced_motion:
 			_shake_camera(2.0, 0.2)
+		return
+	if effect_name == &"sparkle":
+		# P1.11 shader hook; approximated as no-op until P1.11 shader materials land
 		return
 	if fx != null and fx.has_method("play_effect"):
 		fx.play_effect(effect_name)
