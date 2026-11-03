@@ -912,16 +912,27 @@
       "started": "2026-11-03T07:41:07+02:00"
     },
     "P1.23": {
-      "status": "in_review",
+      "status": "done",
       "agent": "swe2",
       "round": 1,
-      "reviews": [],
+      "reviews": [
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.23-code-r1.md",
+          "ts": "2026-11-03T08:30:04+02:00",
+          "declared": "grok-4.6"
+        }
+      ],
       "started": "2026-11-03T07:59:41+02:00",
-      "handoff": "production/handoffs/P1.23.md"
+      "handoff": "production/handoffs/P1.23.md",
+      "finished": "2026-11-03T08:30:14+02:00"
     },
     "P1.11": {
       "status": "in_progress",
-      "agent": "swe2",
+      "agent": "deepseek",
       "round": 1,
       "reviews": [],
       "started": "2026-11-03T08:12:19+02:00"
@@ -2306,6 +2317,18 @@
       "ts": "2026-11-03T08:26:12+02:00",
       "event": "in_review->done",
       "ref": "P1.20",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T08:30:04+02:00",
+      "event": "review:code:approved",
+      "ref": "P1.23",
+      "note": "production/reviews/P1.23-code-r1.md"
+    },
+    {
+      "ts": "2026-11-03T08:30:14+02:00",
+      "event": "in_review->done",
+      "ref": "P1.23",
       "note": ""
     }
   ]
