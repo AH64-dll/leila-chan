@@ -193,6 +193,10 @@ var player_name := "Senpai"
 var flags := {}
 ## Behaviour-profile counters (docs/01 §2); bump via bump_profile()/apply_read().
 var profile := _blank_profile()
+var last_stress := 0
+var stress: int:
+	get:
+		return last_stress
 
 var _last_tone: StringName = &""
 ## Per-turn model-suggestion budget (docs/01 §2): meter → applied delta total,
@@ -222,6 +226,7 @@ func reset() -> void:
 	_mood_turn = -1
 	_mood_spent.clear()
 	state_reset.emit()
+	last_stress = 0
 
 
 func get_meter(meter: StringName) -> float:
@@ -279,6 +284,7 @@ func apply_mood(mood: Dictionary) -> void:
 	if mood.has("trust"):
 		_apply_mood_meter(&"trust", mood["trust"], MOOD_SCALE_TRUST, INF)
 	if mood.has("stress"):
+		last_stress = clampi(int(_num(mood["stress"])), -3, 3)
 		_apply_mood_meter(
 			&"instability", mood["stress"], MOOD_SCALE_STRESS, MAX_INSTABILITY_SUGGESTION
 		)

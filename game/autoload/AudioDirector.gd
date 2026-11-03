@@ -240,6 +240,15 @@ func bus_names() -> PackedStringArray:
 	return names
 
 
+func cue_budget() -> Dictionary:
+	var budget: Dictionary = _band_entry(_rules.get("cue_budget", {}).get("bands", []), _stage)
+	return {
+		"tokens": _cue_tokens,
+		"cap": float(budget.get("cap", 1.0)),
+		"per_turn": float(budget.get("per_turn", 0.5)),
+	}
+
+
 func bus_volume_linear(bus: StringName) -> float:
 	var idx := AudioServer.get_bus_index(bus)
 	if idx < 0:

@@ -1,5 +1,14 @@
 # ENG journal — phase P1
 
+## P1.17 (round 1, agent: swe2)
+- Built `game/scenes/debug/DebugOverlay.{gd,tscn}` (`class_name DebugOverlay`, programmatic UI, layer 120):
+  meters/stage/path/dose/last read+inner/cue budget/FX cooldowns/offers, live via autoload signals.
+- Hooks: `Director` F3 `_unhandled_input` → `toggle_debug_overlay()` (lazy-instantiates tscn on root);
+  `last_*` snapshots in Director; `AudioDirector.cue_budget()`; `GameState.last_stress`.
+  Dev-only = `OS.has_feature("release")` guards + `is_dev_build()`.
+- Gotchas: AudioDirector API is `cue_budget()` not `get_*`; test vars need `class_name` typing for `:=`.
+  `##` doc comments detach if a func is inserted above them — insert below the commented block.
+
 ## P1.26 (round 1, agent: commandcode)
 - Built the gate C6 guard in `production/tools/track.py`: `review`/`gate` default to the report's
   `Reviewer backend:` line and require `--backend-override "<evidence>"` on a contradiction; the override and

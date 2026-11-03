@@ -61,6 +61,7 @@ const META_WORDS := [
 	"scared"
 ]
 
+const DEBUG_OVERLAY_KEY := KEY_F3
 ## Turn history maintained by Director: array of {"role": "user"|"assistant", ...}
 var history: Array[Dictionary] = []
 ## Validated player memories (docs/02 §6)
@@ -80,6 +81,15 @@ var chat_ui_node: Node = null
 var quiet_turn_streak := 0
 var last_player_inputs: Array[String] = []
 
+## Last turn state accessible to dev tools, overlay, and inspection
+var last_turn_data: Dictionary = {}
+var last_dose: Dictionary = {}
+var last_offered_actions: Array = []
+var last_read: String = ""
+var last_inner: String = ""
+
+var _overlay: CanvasLayer = null
+
 var _active_stream: TurnStream = null
 var _parser: IncrementalJson = null
 var _current_turn_data: Dictionary = {}
@@ -94,11 +104,26 @@ func _ready() -> void:
 	reset()
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	if OS.has_feature("release"):
+		return
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo or key.keycode != DEBUG_OVERLAY_KEY:
+		return
+	toggle_debug_overlay()
+	get_viewport().set_input_as_handled()
+
+
 func reset() -> void:
 	history.clear()
 	memories.clear()
 	last_player_inputs.clear()
 	quiet_turn_streak = 0
+	last_turn_data.clear()
+	last_dose.clear()
+	last_offered_actions.clear()
+	last_read = ""
+	last_inner = ""
 	_current_turn_data.clear()
 	_current_beats.clear()
 	_current_beat_index = -1
@@ -121,6 +146,73 @@ func register_chat_ui(node: Node) -> void:
 	chat_ui_node = node
 	if chat_ui_node != null and chat_ui_node.has_method("set_text_filter"):
 		chat_ui_node.text_filter = Callable(self, "filter_output")
+
+
+func toggle_debug_overlay() -> void:
+	if OS.has_feature("release"):
+		return
+	if _overlay == null or not is_instance_valid(_overlay):
+		var scene := load("res://scenes/debug/DebugOverlay.tscn") as PackedScene
+		if scene != null:
+			_overlay = scene.instantiate() as CanvasLayer
+			get_tree().root.add_child(_overlay)
+	if _overlay != null:
+		if _overlay.has_method("toggle"):
+			_overlay.toggle()
+		else:
+			_overlay.visible = not _overlay.visible
+			if _overlay.visible and _overlay.has_method("refresh"):
+				_overlay.refresh()
+
+
+func is_debug_overlay_open() -> bool:
+	return _overlay != null and is_instance_valid(_overlay) and _overlay.visible
+
+
+func get_debug_overlay() -> CanvasLayer:
+	return _overlay
+
+
+func set_debug_overlay(overlay: CanvasLayer) -> void:
+	_overlay = overlay
+
+
+func get_last_read() -> String:
+	return last_read
+
+
+func get_last_inner() -> String:
+	return last_inner
+
+
+func get_current_dose() -> Dictionary:
+	if not last_dose.is_empty():
+		return last_dose
+	var stage := int(GameState.stage)
+	if Steering != null and Steering.has_method("dose_for"):
+		var ctx := {
+			"stage": stage,
+			"path": String(GameState.path),
+			"player_name": GameState.player_name,
+			"scene": scene_info,
+			"memories": memories.duplicate(),
+			"events": [],
+			"history": history.duplicate(true),
+			"player_message": "",
+			"offered_actions": get_offered_actions(),
+		}
+		return Steering.dose_for(ctx)
+	var sampling_spec: Dictionary = SAMPLING_TABLE.get(stage, SAMPLING_TABLE[0])
+	return {"base": float(sampling_spec.get("dose", 0.0))}
+
+
+func get_offered_actions() -> Array:
+	if not last_offered_actions.is_empty():
+		return last_offered_actions
+	var stage := int(GameState.stage)
+	if MetaDirector != null and MetaDirector.has_method("offers"):
+		return MetaDirector.offers(stage)
+	return []
 
 
 ## -----------------------------------------------------------------------------
@@ -221,6 +313,8 @@ func _start_turn(player_text: String) -> bool:
 		dose_dict = Steering.dose_for(ctx)
 	elif float(sampling_spec.get("dose", 0.0)) > 0.0:
 		dose_dict = {"base": float(sampling_spec.get("dose", 0.0))}
+	last_offered_actions = offered_actions.duplicate()
+	last_dose = dose_dict.duplicate()
 
 	# Create LLM TurnRequest
 	var req := TurnRequest.new()
@@ -382,6 +476,9 @@ func _close_turn_success(turn_data: Dictionary) -> void:
 	# Auto-fill check (docs/02 §5: If model chose no cue/fx for 4 turns and intensity >= 2 -> mild one)
 	_handle_auto_fill(turn_data, stage)
 
+	last_turn_data = turn_data.duplicate(true)
+	last_read = str(turn_data.get("read", ""))
+	last_inner = str(turn_data.get("inner", ""))
 	# Step 7: Apply to GameState
 	# Apply mood
 	if turn_data.has("mood") and turn_data["mood"] is Dictionary:
