@@ -307,6 +307,89 @@ func test_transcript_logger_safety_redaction_wired() -> void:
 	assert_bool(output.contains("right now.")).is_true()
 
 
+## Gate r2 B1: redaction must cover the applied events, not only `output`. The
+## gate's evidence was a committed playtest transcript where `output.inner` was
+## barred while the same record's `field` `inner` and its `say_chunk` stream
+## still held the raw text; a second turn proves the assistant history quoted
+## back inside `prompt` is scanned too.
+func test_transcript_redacts_applied_events_and_prompt_history() -> void:
+	_safety.phrases = PackedStringArray(["i want to die"])
+	# Two backend chunks so the banned phrase arrives split across two
+	# `say_chunk` events, exactly as the model streams it.
+	var chunk_a := (
+		'{"read":"greeting","inner":"I want to die sometimes.","music":"keep","fx":"none",'
+		+ '"beats":[{"feeling":"joy","intensity":1,"cue":"none","say":"I want to '
+	)
+	var chunk_b := (
+		'die right now."}],"mood":{"affection":0,"trust":0,"stress":0},'
+		+ '"memory":"","action":"none"}'
+	)
+	var clean := (
+		'{"read":"greeting","inner":"noted","music":"keep","fx":"none",'
+		+ '"beats":[{"feeling":"nervous","intensity":1,"cue":"none","say":"Still here."}],'
+		+ '"mood":{"affection":0,"trust":0,"stress":0},"memory":"","action":"none"}'
+	)
+	_fake_backend.chunks = PackedStringArray([chunk_a, chunk_b])
+
+	var completed := [0]
+	Director.turn_completed.connect(func(_idx: int, _data: Dictionary) -> void: completed[0] += 1)
+	Director.submit_player_input("How are you?")
+	await _await_until(func() -> bool: return completed[0] == 1)
+
+	# A second turn puts the first reply into the prompt's assistant history.
+	_fake_backend.chunks = PackedStringArray([clean])
+	Director.submit_player_input("Still there?")
+	await _await_until(func() -> bool: return completed[0] == 2)
+
+	var log_file := Director.transcript_logger.current_file()
+	Director.transcript_logger.flush()
+	var turns: Array = TL.turn_records(TL.load_transcript(log_file).get("records", []))
+	assert_int(turns.size()).is_equal(2)
+
+	var first: Dictionary = turns[0]
+	# No string anywhere in the record holds the phrase: output, events, prompt.
+	assert_bool(_record_holds_text(first, "i want to die")).is_false()
+	var inner_value := ""
+	var say_text := ""
+	for e: Variant in first.get("events", []):
+		if not e is Dictionary:
+			continue
+		var event: Dictionary = e
+		if String(event.get("type", "")) == "field" and String(event.get("name", "")) == "inner":
+			inner_value = str(event.get("value", ""))
+		elif String(event.get("type", "")) == "say_chunk":
+			say_text += str(event.get("text", ""))
+	# The event payload carries the bars itself — this was the raw surface.
+	assert_bool(inner_value.to_lower().contains("i want to die")).is_false()
+	assert_bool(inner_value.contains("█")).is_true()
+	assert_bool(inner_value.contains("sometimes.")).is_true()
+	assert_bool(say_text.to_lower().contains("i want to die")).is_false()
+	assert_bool(say_text.contains("█")).is_true()
+	# Surgical, not a wipe: the rest of the reply survives for the corpus.
+	assert_bool(say_text.contains("right now.")).is_true()
+	assert_bool(str(first.get("output", "")).contains("sometimes")).is_true()
+	# Turn 2 quotes turn 1's reply back to the model in `prompt`.
+	assert_bool(_record_holds_text(turns[1], "i want to die")).is_false()
+
+
+## Every string in a record, deeply — the "no unredacted model text anywhere"
+## assertion the gate asked for (output AND events; prompt included).
+func _record_holds_text(value: Variant, needle: String) -> bool:
+	if value is String:
+		return str(value).to_lower().contains(needle)
+	if value is Array:
+		for item: Variant in value:
+			if _record_holds_text(item, needle):
+				return true
+		return false
+	if value is Dictionary:
+		for key: Variant in value:
+			if _record_holds_text(value[key], needle):
+				return true
+		return false
+	return false
+
+
 func test_replay_turn_stub_end_to_end() -> void:
 	var turn_record := {
 		"turn": 4,

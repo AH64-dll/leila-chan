@@ -49,6 +49,9 @@ var _overlay: CanvasLayer = null
 ## The single say scanner (docs/02 §8). Owns the beat boundary calls so no other
 ## node installs a second filter over the same text.
 var _safety := SaySafetyGate.new()
+## The transcript redactor (gate r2 B1) — see _wire_safety_redactor(). Held in a
+## member because a Callable does not keep its RefCounted target alive.
+var _redactor: TranscriptRedactor = null
 
 var _active_stream: TurnStream = null
 var _parser: IncrementalJson = null
@@ -148,33 +151,12 @@ func _init_transcript_logger() -> void:
 func _wire_safety_redactor() -> void:
 	if transcript_logger == null:
 		return
-	var redactor := Callable(self, "_redact_record")
-	transcript_logger.set_redactor(redactor)
-
-
-## Transcript redaction (P1.18). The record is redacted through the same filter
-## the display uses, so a transcript can never hold text the screen refused.
-##
-## With no filter able to scan (Safety still a stub, or a build without the
-## streaming API) the output is fail-closed to bars and the gap is marked in the
-## record: the P1.18 contract is that unredacted model output never touches disk,
-## and that must hold whether or not a filter is present.
-func _redact_record(record: Dictionary) -> Dictionary:
-	if Safety != null and Safety.has_method("redact_record"):
-		var res: Variant = Safety.call("redact_record", record)
-		if res is Dictionary:
-			return res
-	if record.has("output") and record["output"] is String:
-		var output := str(record["output"])
-		if _safety.can_stream():
-			record["output"] = _safety.filter_text(output, {"stage": _current_stage})
-		else:
-			record["output"] = SaySafetyGate.redact(output)
-			var meta: Variant = record.get("meta", {})
-			if meta is Dictionary:
-				meta["redaction"] = "unavailable"
-				record["meta"] = meta
-	return record
+	if _redactor == null:
+		_redactor = TranscriptRedactor.new(_safety)
+	# TranscriptRedactor (gate r2 B1) scans `output`, every text-bearing event
+	# payload and the assistant history in `prompt` through the display filter,
+	# so no unredacted model text can reach a transcript line.
+	transcript_logger.set_redactor(Callable(_redactor, "redact_record"))
 
 
 func _clear_turn_context() -> void:

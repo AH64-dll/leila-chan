@@ -181,7 +181,8 @@ func test_capture_screenshots_for_handoff() -> void:
 	_date.set_reduced_motion(true)
 	_date.set_instant_text(true)
 	_date.start_date()
-	for i: int in 5:
+	# Await crossfade completion (>140ms, ~25 frames) so Leila is at full opacity
+	for i: int in 25:
 		await get_tree().process_frame
 
 	var vp := get_tree().root
@@ -191,7 +192,7 @@ func test_capture_screenshots_for_handoff() -> void:
 
 	_date.stage = 1
 	_date.start_date()
-	for i: int in 5:
+	for i: int in 25:
 		await get_tree().process_frame
 
 	var img1 := vp.get_texture().get_image()
@@ -210,6 +211,23 @@ func test_capture_screenshots_for_handoff() -> void:
 		)
 		. is_true()
 	)
+
+
+func test_photosensitive_wiring() -> void:
+	_date.set_photosensitive(true)
+	assert_bool(_date.photosensitive).is_true()
+	assert_bool(_date.fx.photosensitive).is_true()
+	_date.play_fx(&"twitch")
+	await get_tree().process_frame
+	# Overlay remains completely clear when photosensitive is enabled
+	assert_float(_date.fx._overlay.color.a).is_equal_approx(0.0, 0.001)
+
+
+func test_ambience_forwarding() -> void:
+	# D02 cafe carries ambience: "cafe"
+	var ok: bool = _date.load_scenario("res://data/scenarios/D02_cafe.json")
+	assert_bool(ok).is_true()
+	assert_str(String(_date.get_scenario().get("ambience", ""))).is_equal("cafe")
 
 
 func test_vram_usage_budget_under_800mb() -> void:
