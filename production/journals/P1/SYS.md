@@ -23,3 +23,19 @@
 - Gotchas: `stage` setter can't emit (fires during member init before connections) — bulk changes
   signal via state_reset or an explicit stage_changed. Keep test_* count ≤20/suite (gdlint
   max-public-methods); split restore regressions into GameStateRestoreTest.gd.
+
+## P1.14 TranscriptLogger (round 1, assigned scope = the P1.18 transcript logger)
+- Built `game/llm/TranscriptLogger.gd` (RefCounted, class_name): one JSONL line per turn under
+  `user://debug/turns_s<unix>-<seq>_p<NNN>.jsonl`; session start/end markers share the stream; canonical
+  record v1 {v,type,session,seq,ts,turn,prompt,schema,output + metrics/events/error/day/stage/path/dose/meta},
+  unknown keys dropped. Redactor Callable gate (set_redactor) applied to EVERY line incl. session markers,
+  deep copy in, dict out; redact_ready()==false holds records (log_turn false, nothing on disk) until the
+  P1.19 Safety hook attaches — never write unredacted. Release builds write nothing (OS.has_feature gate).
+- Rotation = UTF-8 byte budget per file (max_file_bytes) + max_files cap pruning oldest (never the open file);
+  store_line+flush per line so a crash loses nothing. Replay loader stub: static load_transcript (tolerates
+  corrupt lines, keeps good records + per-line errors), turn_records filter, transcript_files listing.
+- Gotchas: Dictionary["missing"] ERRORS (must has() first — _validate does); Godot Dictionary iterates keys
+  SORTED, so JSON.stringify order is alphabetical-deterministic (assert sorted, not insertion order);
+  gdUnit4 has starts_with not begins_with; String*int is invalid (use .repeat()); NamedConstant ERR_*
+  globals are usable bare, no class prefix needed; transient not-ready must NOT touch _last_error so
+  callers can distinguish "held" from real failures.
