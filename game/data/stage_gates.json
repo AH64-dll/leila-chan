@@ -1,0 +1,350 @@
+{
+  "version": 1,
+  "doc": "Stage gates table for Turn schema (P1.07). Sources: docs/02 §2.1-§2.4, docs/05 §1-§2.",
+  "stages": {
+    "0": {
+      "cues": [
+        "none",
+        "giggle",
+        "laugh_soft",
+        "gasp",
+        "sigh",
+        "hum",
+        "sniffle",
+        "heartbeat"
+      ],
+      "music": [
+        "keep",
+        "romantic",
+        "playful",
+        "calm",
+        "melancholy"
+      ],
+      "fx": [
+        "none",
+        "blush_glow",
+        "hearts",
+        "sparkle",
+        "shake_small",
+        "zoom_face"
+      ],
+      "actions": [
+        "none"
+      ],
+      "meta_unlocked": false
+    },
+    "1": {
+      "cues": [
+        "none",
+        "giggle",
+        "laugh_soft",
+        "gasp",
+        "sigh",
+        "hum",
+        "sniffle",
+        "heartbeat",
+        "sob",
+        "music_box_note",
+        "clock_tick",
+        "phone_buzz"
+      ],
+      "music": [
+        "keep",
+        "romantic",
+        "playful",
+        "calm",
+        "melancholy"
+      ],
+      "fx": [
+        "none",
+        "blush_glow",
+        "hearts",
+        "sparkle",
+        "shake_small",
+        "zoom_face",
+        "rain"
+      ],
+      "actions": [
+        "none"
+      ],
+      "meta_unlocked": false
+    },
+    "2": {
+      "cues": [
+        "none",
+        "giggle",
+        "laugh_soft",
+        "gasp",
+        "sigh",
+        "hum",
+        "sniffle",
+        "heartbeat",
+        "sob",
+        "music_box_note",
+        "clock_tick",
+        "phone_buzz",
+        "heartbeat_fast",
+        "whisper",
+        "knock"
+      ],
+      "music": [
+        "keep",
+        "romantic",
+        "playful",
+        "calm",
+        "melancholy",
+        "tense",
+        "music_box",
+        "silence"
+      ],
+      "fx": [
+        "none",
+        "blush_glow",
+        "hearts",
+        "sparkle",
+        "shake_small",
+        "zoom_face",
+        "rain"
+      ],
+      "actions": [
+        "none"
+      ],
+      "meta_unlocked": false
+    },
+    "3": {
+      "cues": [
+        "none",
+        "giggle",
+        "laugh_soft",
+        "gasp",
+        "sigh",
+        "hum",
+        "sniffle",
+        "heartbeat",
+        "sob",
+        "music_box_note",
+        "clock_tick",
+        "phone_buzz",
+        "heartbeat_fast",
+        "whisper",
+        "knock",
+        "breath_close",
+        "door_slam",
+        "glass_shatter",
+        "static"
+      ],
+      "music": [
+        "keep",
+        "romantic",
+        "playful",
+        "calm",
+        "melancholy",
+        "tense",
+        "music_box",
+        "silence",
+        "dread",
+        "distorted"
+      ],
+      "fx": [
+        "none",
+        "blush_glow",
+        "hearts",
+        "sparkle",
+        "shake_small",
+        "zoom_face",
+        "rain",
+        "shake_big",
+        "flicker",
+        "darken",
+        "vignette_red",
+        "glitch"
+      ],
+      "actions": [
+        "none"
+      ],
+      "meta_unlocked": true
+    },
+    "4": {
+      "cues": [
+        "none",
+        "giggle",
+        "laugh_soft",
+        "gasp",
+        "sigh",
+        "hum",
+        "sniffle",
+        "heartbeat",
+        "sob",
+        "music_box_note",
+        "clock_tick",
+        "phone_buzz",
+        "heartbeat_fast",
+        "whisper",
+        "knock",
+        "breath_close",
+        "door_slam",
+        "glass_shatter",
+        "static",
+        "laugh_unhinged",
+        "knife_draw"
+      ],
+      "music": [
+        "keep",
+        "romantic",
+        "playful",
+        "calm",
+        "melancholy",
+        "tense",
+        "music_box",
+        "silence",
+        "dread",
+        "distorted"
+      ],
+      "fx": [
+        "none",
+        "blush_glow",
+        "hearts",
+        "sparkle",
+        "shake_small",
+        "zoom_face",
+        "rain",
+        "shake_big",
+        "flicker",
+        "darken",
+        "vignette_red",
+        "glitch",
+        "text_bleed",
+        "invert_flash"
+      ],
+      "actions": [
+        "none"
+      ],
+      "meta_unlocked": true
+    },
+    "5": {
+      "cues": [
+        "none",
+        "giggle",
+        "laugh_soft",
+        "gasp",
+        "sigh",
+        "hum",
+        "sniffle",
+        "heartbeat",
+        "sob",
+        "music_box_note",
+        "clock_tick",
+        "phone_buzz",
+        "heartbeat_fast",
+        "whisper",
+        "knock",
+        "breath_close",
+        "door_slam",
+        "glass_shatter",
+        "static",
+        "laugh_unhinged",
+        "knife_draw",
+        "scream"
+      ],
+      "music": [
+        "keep",
+        "romantic",
+        "playful",
+        "calm",
+        "melancholy",
+        "tense",
+        "music_box",
+        "silence",
+        "dread",
+        "distorted"
+      ],
+      "fx": [
+        "none",
+        "blush_glow",
+        "hearts",
+        "sparkle",
+        "shake_small",
+        "zoom_face",
+        "rain",
+        "shake_big",
+        "flicker",
+        "darken",
+        "vignette_red",
+        "glitch",
+        "text_bleed",
+        "invert_flash",
+        "her_eyes"
+      ],
+      "actions": [
+        "none"
+      ],
+      "meta_unlocked": true
+    }
+  },
+  "gates": {
+    "cues": {
+      "none": 0,
+      "giggle": 0,
+      "laugh_soft": 0,
+      "gasp": 0,
+      "sigh": 0,
+      "hum": 0,
+      "sniffle": 0,
+      "heartbeat": 0,
+      "sob": 1,
+      "music_box_note": 1,
+      "clock_tick": 1,
+      "phone_buzz": 1,
+      "heartbeat_fast": 2,
+      "whisper": 2,
+      "knock": 2,
+      "breath_close": 3,
+      "door_slam": 3,
+      "glass_shatter": 3,
+      "static": 3,
+      "laugh_unhinged": 4,
+      "knife_draw": 4,
+      "scream": 5
+    },
+    "music": {
+      "keep": 0,
+      "romantic": 0,
+      "playful": 0,
+      "calm": 0,
+      "melancholy": 0,
+      "tense": 2,
+      "music_box": 2,
+      "silence": 2,
+      "dread": 3,
+      "distorted": 3
+    },
+    "fx": {
+      "none": 0,
+      "blush_glow": 0,
+      "hearts": 0,
+      "sparkle": 0,
+      "shake_small": 0,
+      "zoom_face": 0,
+      "rain": 1,
+      "shake_big": 3,
+      "flicker": 3,
+      "darken": 3,
+      "vignette_red": 3,
+      "glitch": 3,
+      "text_bleed": 4,
+      "invert_flash": 4,
+      "her_eyes": 5
+    },
+    "meta_min_stage": 3,
+    "offered_actions": {
+      "none": 0,
+      "end_date": 0,
+      "refuse_exit": 3,
+      "window_shake": 3,
+      "she_closes_game": 4,
+      "fake_crash": 4,
+      "look_at_me": 4,
+      "push_window": 4
+    }
+  }
+}

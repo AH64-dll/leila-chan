@@ -26,3 +26,7 @@ game/**/*.json text eol=lf
 *.godot text eol=lf
 *.uid text eol=lf
 *.import text eol=lf
+
+# Literal captured SSE streams (P1.02): byte-exact evidence, never normalize.
+# The final `data: [DONE]` event ends with a blank line by definition.
+*.sse -text whitespace=-blank-at-eof

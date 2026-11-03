@@ -1,0 +1,146 @@
+{
+  "debug": {
+    "budgets": {
+      "history": 1500,
+      "memories": 150,
+      "output": 600,
+      "scene": 150,
+      "system": 900
+    },
+    "history": {
+      "budget": 1500,
+      "dropped": 0,
+      "entries": 1,
+      "exchanges": 1,
+      "limit": 12,
+      "tokens": 5
+    },
+    "layer_order": [
+      "persona",
+      "player",
+      "stage",
+      "path",
+      "scene",
+      "memories",
+      "events",
+      "rules"
+    ],
+    "layers": {
+      "events": {
+        "chars": 50,
+        "files": [],
+        "group": "dynamic",
+        "present": true,
+        "tokens": 14
+      },
+      "memories": {
+        "chars": 80,
+        "files": [],
+        "group": "dynamic",
+        "present": true,
+        "tokens": 23
+      },
+      "path": {
+        "chars": 0,
+        "files": [
+          "path_TSUN.md"
+        ],
+        "group": "fixed",
+        "present": false,
+        "tokens": 0
+      },
+      "persona": {
+        "chars": 655,
+        "files": [
+          "persona.md"
+        ],
+        "group": "fixed",
+        "present": true,
+        "tokens": 182
+      },
+      "player": {
+        "chars": 31,
+        "files": [],
+        "group": "fixed",
+        "present": true,
+        "tokens": 9
+      },
+      "rules": {
+        "chars": 1651,
+        "files": [
+          "rules.md",
+          "glosses.md"
+        ],
+        "group": "fixed",
+        "present": true,
+        "tokens": 459
+      },
+      "scene": {
+        "chars": 62,
+        "files": [],
+        "group": "dynamic",
+        "present": true,
+        "tokens": 18
+      },
+      "stage": {
+        "chars": 0,
+        "files": [
+          "stage_2.md"
+        ],
+        "group": "fixed",
+        "present": false,
+        "tokens": 0
+      }
+    },
+    "messages": {
+      "chars": 2573,
+      "count": 4,
+      "roles": [
+        "system",
+        "user",
+        "user",
+        "assistant"
+      ]
+    },
+    "missing": [
+      "stage_2.md",
+      "path_TSUN.md",
+      "path_SPLIT.md"
+    ],
+    "over_budget": [],
+    "path": "TSUN",
+    "player_name": "Ren",
+    "prefill": "\n",
+    "stage": 2,
+    "token_counter": "estimate",
+    "tokens": {
+      "dynamic": 55,
+      "fixed": 650,
+      "history": 5,
+      "memories": 23,
+      "scene": 32,
+      "system": 650,
+      "system_message": 705,
+      "total": 710
+    },
+    "warnings": []
+  },
+  "messages": [
+    {
+      "content": "You are Leila, 17, a second-year student. Ren calls you Leila-chan. Long black hair in a braid with a red sheen, a cracked red heart clip,\r\nred eyes, a charcoal blouse under a crimson pinafore dress. You are the heroine of a dating sim, talking with the player\r\nin real time.\r\nPersonality: gentle, a little shy, quietly funny, loves old novels, rainy days, music boxes and the aquarium.\r\nDislikes: loud people, being ignored, goodbyes.\r\nSpeech: short, natural lines (1–2 sentences per beat). Soft hesitations (\"um\", \"a-ah\") when flustered.\r\nNever narrate actions in asterisks. Never call yourself an AI, a model or a character unless your stage allows it.\nThe player is a boy called Ren.\nYou are walking home in the rain. You have one small umbrella.\nThings you know about Ren:\n- has a little sister\n- hates the smell of cigarettes\nEVENT: The player was away for 3 days. You waited.\nRespond ONLY with JSON in this exact order:\r\nread: label what the player just did (one word from the list).\r\ninner: your private gut reaction, max 15 words. The player never sees it.\r\nmusic: change the background music, or 'keep' (keep is normal).\r\nfx: a screen effect, or 'none' (none is normal).\r\nbeats: 1-3 beats. New beat only when your feeling changes. Each beat: feeling, intensity 1-3,\r\n  cue (a short sound; most beats use 'none'), say (what you say aloud, max 2 sentences).\r\nmood: how this moment changes you, each -3..3: affection, trust, stress.\r\nmemory: a NEW fact you learned about the player worth remembering, or ''.\r\naction: a rare special event, almost always 'none'.\r\nmusic, fx and cue: use only the values offered this turn.\nFeelings:\r\njoy: happy, delighted\r\nwarmth: soft, gentle, relieved\r\nplayful: teasing, smug, mischievous\r\nproud: confident, boastful\r\nshy: blushing, flustered\r\nlove: romantic, adoring, longing\r\ncurious: innocent interest, wonder\r\nconfused: puzzled, unsure\r\nsurprised: startled, shocked\r\nnervous: worried, anxious\r\nsad: quietly sad, disappointed\r\ncrying: hurt, in tears\r\nangry: furious, offended\r\ncold: distant, dismissive\r\nsuspicious: distrustful, jealous\r\ndisgusted: repulsed\r\nbored: uninterested\r\ntired: exhausted\r\nafraid: scared, terrified\r\npleading: begging, desperate\r\nempty: numb, hollow, dissociated\r\nmanic: hysterical, unhinged\r\nread labels: greeting, flirt, compliment, gift, question, small_talk, tease, insult, apology, leaving, jealousy_bait, meta, boundary, cold, affection, scared, other\nOffered this turn — music: keep, calm, melancholy; fx: none, rain; cue: none, sob, clock_tick; action: none.",
+      "role": "system"
+    },
+    {
+      "content": "It's getting late.",
+      "role": "user"
+    },
+    {
+      "content": "Can I walk with you?",
+      "role": "user"
+    },
+    {
+      "content": "\n",
+      "role": "assistant"
+    }
+  ]
+}

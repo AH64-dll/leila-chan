@@ -55,6 +55,25 @@ The control vector is a **launch flag** (`--control-vector-scaled file.gguf:SCAL
 so changing the dose = restarting the server (~3 s, docs/06 §4). Per-turn doses
 arrive only with the native backend.
 
+**Vector path rules (P1.23).** llama.cpp parses the flag as `FNAME:SCALE` by
+splitting on `:` and `,`, so a FNAME that itself contains `:` or `,` can never
+reach it — which is every `X:\...` Windows absolute path. Both launchers
+normalize through `tools/llm/cvec_path.py` before appending `:SCALE`:
+
+- **accepted:** relative paths (recommended, e.g.
+  `experiments/steering/evil_qwen_unit.gguf`), POSIX absolute paths, UNC paths,
+  and `X:\...` absolute paths **on the same drive as the directory you launch
+  from** — those become same-drive relative paths (`D:\proj\vec.gguf` launched
+  from `D:\proj` goes to llama-server as `vec.gguf:4`).
+- **rejected with a message:** `X:file` (ambiguous drive-relative syntax),
+  vector paths on a *different* drive than the working directory, and any
+  filename literally containing `:` or `,` — rename it or `cd` to its drive.
+- Scale must be a plain number (`0`, `1.5`, `4`); non-numeric or `NaN`/`inf`
+  values are rejected before the server ever sees them.
+- The normalization needs `python`/`py` on `PATH` when `-Vector`/`--vector` is
+  used (already required by `smoke.py`). `serve.sh --dry-run` /
+  `serve.ps1 -DryRun` print the resolved command line without starting.
+
 ## 3. Verify
 
 ```bash
@@ -67,3 +86,76 @@ nvidia-smi --query-gpu=memory.used,memory.total --format=csv
 `experiments/tool_test_v3.py`, thinking disabled) and exits non-zero unless it
 parses as complete valid JSON. llama-server prints per-request `eval time …
 tokens per second` to its own console — keep it in the foreground to watch.
+
+## 4. Game transport: `LlamaServerBackend` (P1.02)
+
+`game/llm/backends/LlamaServerBackend.gd` implements the `LLMBackend`
+contract on the facade's worker thread. It speaks HTTP/1.1 + SSE over
+`StreamPeerTCP` (Godot's `HTTPRequest` is a Node and main-thread only), sends
+**the request's own** `json_schema` as `response_format`, passes sampling and
+`max_tokens`, forces `enable_thinking=false`, and never blocks the main thread.
+
+Two modes, selected by `auto_start`:
+
+| Mode | Config | Behaviour |
+|---|---|---|
+| attach (default) | `base_url` only | Talks to a server you started with `serve.ps1`/`serve.sh`. Never launches or kills anything. A healthy server on the URL is adopted. |
+| start | `auto_start=true`, `server_exe`, `model_path` | Launches the pinned binary with `--jinja -ngl 99 -c 8192 -np 1` and any `control_vectors`, then waits for `/health`. If the port already answers, the existing server is adopted instead of starting a second one. |
+
+`game/autoload/LLM.gd` exposes `use_default_backend(config)`; `Boot.gd` installs
+the attach-mode default. A boot scene that should own the process calls
+`LLM.use_default_backend({"auto_start": true})` once.
+
+Key config (defaults in `LlamaServerProcess.default_config()`):
+
+| Key | Default | Meaning |
+|---|---|---|
+| `base_url` | `http://127.0.0.1:8089` | Server root (a full `/v1/chat/completions` URL is accepted) |
+| `chat_path` | `/v1/chat/completions` | Appended to `base_url` |
+| `auto_start` | `false` | Launch and supervise our own process |
+| `watchdog` | `true` | Auto-start supervision when we own the process |
+| `watchdog_interval_ms` | 1000 | Liveness check interval (crash restart measured 2.4–3.0 s) |
+| `server_exe` | `$LEILA_LLAMA_DIR/llama-server(.exe)`, else `D:/lila/tools/llama/llama-b12024/...` | Pinned binary |
+| `model_path` | `$LEILA_MODEL`, else `D:/lila/models/Qwen3.5-4B-Q4_K_M.gguf` | GGUF |
+| `control_vectors` | `[]` | `[{"path": "...gguf", "scale": 4.0}]`, launch flags (docs/06 §4) |
+| `connect_timeout_ms` | 2000 | TCP connect |
+| `read_timeout_ms` | 60000 | Max idle between socket reads |
+| `turn_timeout_ms` | 180000 | Hard cap for one request |
+| `startup_timeout_ms` | 30000 | `/health` wait after launch |
+| `retry_once` | `true` | One retry, before any token, on a transport failure |
+
+Supervision: when the backend owns the process it auto-starts a watchdog
+(`watchdog=true`) that checks the process every interval and restarts a dead
+one; on this machine a crash → healthy restart measured **2.4–3.0 s** (P1.02
+live test). Attached servers are never restarted. `shutdown()` stops the
+watchdog and our process; the LLM autoload calls it after joining the worker.
+
+Each turn logs one line and keeps the same numbers in `last_metrics()`:
+
+```
+[LlamaServerBackend] turn ok ttft=102ms first_say=1830ms total=3302ms ready=3ms chunks=141 pid=25556 restarts=0
+```
+
+`ttft` and `first_say` are measured from the POST, so a cold server start is
+reported separately as `ready_ms`/`server_startup_ms`. `first_say` is the first
+character of the first non-empty `say` value; it is not the same as TTFT
+(P0 gate C8).
+
+### Verify against the real server
+
+```bash
+# one turn: prints every raw chunk + ttft/first_say/total
+tools/godot.ps1 --headless --path game res://tests/scenes/LlamaStreamDemo.tscn -- --turns=1
+
+# 20-turn latency table (median/p95) and literal SSE capture
+tools/godot.ps1 --headless --path game res://tests/scenes/LlamaStreamDemo.tscn -- \
+  --turns=20 --capture=game/tests/fixtures/sse --capture-turns=3 --quiet
+
+# live gdUnit suite: schema-per-request, crash restart < 5 s, first say
+tools/godot.ps1 --headless --path game -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd \
+  -a res://tests/LlamaServerLiveTest.gd -c --ignoreHeadlessMode
+```
+
+The live suite skips when the local model/binaries are absent; the demo and
+capture need them. The captured corpus and its provenance are documented in
+`game/tests/fixtures/sse/README.md`.

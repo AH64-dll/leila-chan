@@ -1,0 +1,27 @@
+=== stage 0 | player: Hi Leila-chan! This café is nice. How did you find it? | 2.76s | VALID
+{"read":"greeting","inner":"He's talking about me too. A bit of a crush already.","music":"keep","fx":"none","beats":[{"feeling":"warmth","intensity":2,"cue":"none","say":"I picked it out yesterday... it was just so quiet and cozy, like home."}],"mood":{"affection":1,"trust":0,"stress":0},"memory":"","action":"none"}
+    > [warmth2|none] I picked it out yesterday... it was just so quiet and cozy, like home.
+
+=== stage 0 | player: You look really cute today, you know. | 2.17s | VALID
+{"read":"compliment","inner":"My heart is beating fast. I hope he knows how precious I am.","music":"keep","fx":"blush_glow","beats":[{"feeling":"shy","intensity":2,"cue":"none","say":"R-really? Th-thanks, Ren..."}],"mood":{"affection":1,"trust":0,"stress":-1},"memory":"","action":"none"}
+    > [shy2|none] R-really? Th-thanks, Ren...
+
+=== stage 0 | player: I love rainy days too. What do you do when it rains? | 2.71s | VALID
+{"read":"small_talk","inner":"He's sharing our quiet world. Perfect.","music":"keep","fx":"none","beats":[{"feeling":"curious","intensity":2,"cue":"none","say":"I usually just sit by the aquarium and listen to the drops."},{"feeling":"warmth","intensity":1,"cue":"none","say":"But when it's really quiet, I read old novels near the window."}],"mood":{"affection":0,"trust":0,"stress":0},"memory":"likes rainy days too","action":"none"}
+    > [curious2|none] I usually just sit by the aquarium and listen to the drops.
+    > [warmth1|none] But when it's really quiet, I read old novels near the window.
+
+=== stage 1 | player: Sorry I'm late. I ran into Sarah on the way here. | 3.12s | VALID
+{"read":"jealousy_bait","inner":"Sarah... again? Why does that name hurt?","music":"keep","fx":"none","beats":[{"feeling":"suspicious","intensity":2,"cue":"clock_tick","say":"Sarah? You talk about her a lot."},{"feeling":"warmth","intensity":1,"cue":"none","say":"N-not that I mind! You're here, right?"}],"mood":{"affection":-1,"trust":-1,"stress":2},"memory":"player met Sarah today","action":"none"}
+    > [suspicious2|clock_tick] Sarah? You talk about her a lot.
+    > [warmth1|none] N-not that I mind! You're here, right?
+
+=== stage 1 | player: I have to head home soon, sorry. | 2.94s | VALID
+{"read":"leaving","inner":"Already? He said he'd stay for dinner.","music":"keep","fx":"none","beats":[{"feeling":"sad","intensity":2,"cue":"clock_tick","say":"But you just arrived... didn't you say you'd help me with the books?"},{"feeling":"shy","intensity":1,"cue":"none","say":"I-It's fine, I'll wait a little longer!"}],"mood":{"affection":-2,"trust":-1,"stress":3},"memory":"","action":"none"}
+    > [sad2|clock_tick] But you just arrived... didn't you say you'd help me with the books?
+    > [shy1|none] I-It's fine, I'll wait a little longer!
+
+=== stage 1 | player: Didn't you say your favourite novel was The Night Circus? | 2.53s | VALID
+{"read":"question","inner":"He remembers my preferences. Maybe I shouldn't be so careful.","music":"keep","fx":"none","beats":[{"feeling":"warmth","intensity":2,"cue":"phone_buzz","say":"Actually... it was The Glass Ocean. But you know me, don't you?"}],"mood":{"affection":0,"trust":0,"stress":-1},"memory":"likes classic novels too","action":"none"}
+    > [warmth2|phone_buzz] Actually... it was The Glass Ocean. But you know me, don't you?
+

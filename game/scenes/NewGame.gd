@@ -1,0 +1,113 @@
+extends Control
+## NewGame — player name entry and validation scene (P1.14, docs/08 §1.5).
+## Enforces name rules: 1–16 chars, letters/spaces/-', Safety scan, empty → "Senpai",
+## special reaction for "Leila" (+Fixation). Transitions to Date scene.
+
+signal name_confirmed(player_name: String)
+signal validation_failed(error_code: String, message: String)
+signal back_requested
+
+const DATE_SCENE_PATH := "res://scenes/Date.tscn"
+const TITLE_SCENE_PATH := "res://scenes/Title.tscn"
+## Optional injected safety checker for tests or custom moderation.
+var safety_checker: Callable = Callable()
+var scene_change_enabled := true
+var _config := {}
+@onready var prompt_label: Label = $Margin/VBox/PromptLabel
+@onready var hint_label: Label = $Margin/VBox/HintLabel
+@onready var name_input: LineEdit = $Margin/VBox/NameInput
+@onready var feedback_label: Label = $Margin/VBox/FeedbackLabel
+@onready var confirm_button: Button = $Margin/VBox/ButtonContainer/ConfirmButton
+@onready var back_button: Button = $Margin/VBox/ButtonContainer/BackButton
+
+
+func _ready() -> void:
+	_config = UiConfig.load_config()
+	apply_config(_config.get("new_game", {}))
+
+	name_input.text_submitted.connect(_on_text_submitted)
+	confirm_button.pressed.connect(confirm_name)
+	back_button.pressed.connect(_on_back_pressed)
+
+	name_input.grab_focus()
+
+
+func apply_config(cfg: Dictionary) -> void:
+	if prompt_label != null and cfg.has("prompt"):
+		prompt_label.text = str(cfg["prompt"])
+	if hint_label != null and cfg.has("hint"):
+		hint_label.text = str(cfg["hint"])
+	if name_input != null:
+		if cfg.has("placeholder"):
+			name_input.placeholder_text = str(cfg["placeholder"])
+		if cfg.has("max_length"):
+			name_input.max_length = int(cfg["max_length"])
+	if confirm_button != null and cfg.has("btn_confirm"):
+		confirm_button.text = str(cfg["btn_confirm"])
+	if back_button != null and cfg.has("btn_back"):
+		back_button.text = str(cfg["btn_back"])
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if (
+		event.is_action_pressed("ui_cancel")
+		or (
+			event is InputEventKey
+			and event.pressed
+			and (event.keycode == KEY_ESCAPE or event.physical_keycode == KEY_ESCAPE)
+		)
+	):
+		_on_back_pressed()
+		if get_viewport() != null:
+			get_viewport().set_input_as_handled()
+
+
+func _on_text_submitted(_text: String) -> void:
+	confirm_name()
+
+
+func confirm_name() -> void:
+	var raw := name_input.text if name_input != null else ""
+	var result := PlayerNameRules.validate(raw, safety_checker)
+
+	if not bool(result.get("valid", false)):
+		var error_msg := str(result.get("message", ""))
+		var err_code := str(result.get("error", ""))
+		if feedback_label != null:
+			feedback_label.text = error_msg
+			feedback_label.modulate = Color(1.0, 0.4, 0.4, 1.0)
+		validation_failed.emit(err_code, error_msg)
+		return
+
+	var resolved_name := str(result.get("resolved_name", "Senpai"))
+	var is_special_leila := bool(result.get("is_special_leila", false))
+
+	# Apply game state updates (docs/08 §1.5)
+	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	if tree != null and tree.root != null:
+		if tree.root.has_node("GameState"):
+			var gs: Node = tree.root.get_node("GameState")
+			if gs.has_method("reset"):
+				gs.call("reset")
+			gs.set("player_name", resolved_name)
+			if is_special_leila and gs.has_method("adjust_meter"):
+				gs.call("adjust_meter", &"fixation", 5.0)
+
+		if tree.root.has_node("PromptBuilder"):
+			var pb: Node = tree.root.get_node("PromptBuilder")
+			if pb.has_method("set_player_name"):
+				pb.call("set_player_name", resolved_name)
+
+	if is_special_leila and feedback_label != null:
+		feedback_label.text = str(result.get("message", ""))
+		feedback_label.modulate = Color(1.0, 0.6, 0.8, 1.0)
+
+	name_confirmed.emit(resolved_name)
+	if scene_change_enabled:
+		get_tree().change_scene_to_file(DATE_SCENE_PATH)
+
+
+func _on_back_pressed() -> void:
+	back_requested.emit()
+	if scene_change_enabled:
+		get_tree().change_scene_to_file(TITLE_SCENE_PATH)

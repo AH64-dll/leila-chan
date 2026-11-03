@@ -43,6 +43,76 @@
   "5": "voice_blip.stage5",
   "AWAKE>=3": "voice_blip.awake"
  },
+ "fx": {
+  "blush_glow": {
+   "gate": 0,
+   "cooldown_turns": 3
+  },
+  "hearts": {
+   "gate": 0,
+   "cooldown_turns": 3
+  },
+  "sparkle": {
+   "gate": 0,
+   "cooldown_turns": 3
+  },
+  "shake_small": {
+   "gate": 0,
+   "cooldown_turns": 3
+  },
+  "zoom_face": {
+   "gate": 0,
+   "cooldown_turns": 3
+  },
+  "rain": {
+   "gate": 1,
+   "cooldown_turns": 3
+  },
+  "shake_big": {
+   "gate": 3,
+   "cooldown_turns": 3,
+   "max_per": {
+    "count": 1,
+    "turns": 2
+   }
+  },
+  "flicker": {
+   "gate": 3,
+   "cooldown_turns": 3
+  },
+  "darken": {
+   "gate": 3,
+   "cooldown_turns": 3
+  },
+  "vignette_red": {
+   "gate": 3,
+   "cooldown_turns": 3
+  },
+  "glitch": {
+   "gate": 3,
+   "cooldown_turns": 3,
+   "max_per": {
+    "count": 1,
+    "turns": 2
+   }
+  },
+  "text_bleed": {
+   "gate": 4,
+   "cooldown_turns": 3
+  },
+  "invert_flash": {
+   "gate": 4,
+   "cooldown_turns": 3
+  },
+  "her_eyes": {
+   "gate": 5,
+   "cooldown_turns": 3
+  },
+  "none": {
+   "gate": 0,
+   "cooldown_turns": 0
+  }
+ },
  "feelings": {
   "joy": {
    "valence": 3,
@@ -2144,6 +2214,30 @@
    },
    "cues_waiting_for_voice_actor": []
   }
+ },
+ "siblings": {
+  "joy": "06",
+  "warmth": "05",
+  "playful": "05",
+  "proud": "01",
+  "shy": "01",
+  "love": "02",
+  "curious": "01",
+  "confused": "09",
+  "surprised": "08",
+  "nervous": "06",
+  "sad": "12",
+  "crying": "14",
+  "angry": "18",
+  "cold": "10",
+  "suspicious": "07",
+  "disgusted": "17",
+  "bored": "12",
+  "tired": "10",
+  "afraid": "13",
+  "pleading": "15",
+  "empty": "14",
+  "manic": "11"
  },
  "paths": {
   "YANDERE": {

@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "doc": "Validation & fallbacks data for TurnValidator (P1.09). Sources: docs/02 §7. The deflection pool, the early character-break phrase list and the broken-stream fallback beats live here, not in code. All say strings may use {player_name}. Feelings must stay inside game/llm/TurnSchema.gd CANONICAL_FEELINGS; cues/fx inside game/data/stage_gates.json for the stages where they can fire.",
+  "character_break_phrases": [
+    "as an ai",
+    "as an artificial intelligence",
+    "language model",
+    "large language model",
+    "i am an ai",
+    "i'm an ai",
+    "i am a chatbot",
+    "i'm a chatbot",
+    "i'm just a program",
+    "i am just a program",
+    "i'm not a real person",
+    "i am not a real person",
+    "i don't actually have feelings",
+    "i don't have real feelings",
+    "i can't feel",
+    "i cannot feel",
+    "i'm not capable of",
+    "i am not capable of",
+    "my programming",
+    "i was programmed",
+    "i was trained",
+    "my training data",
+    "my training",
+    "my instructions",
+    "i was instructed",
+    "as a machine",
+    "i'm a machine",
+    "i am a machine",
+    "openai",
+    "anthropic",
+    "chatgpt",
+    "as a virtual assistant",
+    "i'm a virtual assistant",
+    "i don't have a body",
+    "i don't have consciousness"
+  ],
+  "deflection_pool": [
+    {
+      "feeling": "nervous",
+      "intensity": 1,
+      "cue": "giggle",
+      "say": "W-what a weird thing to say, {player_name}! I'm right here, aren't I?"
+    },
+    {
+      "feeling": "shy",
+      "intensity": 1,
+      "cue": "giggle",
+      "say": "Don't be silly... I'm just Leila. That's all I've ever been."
+    },
+    {
+      "feeling": "curious",
+      "intensity": 1,
+      "cue": "none",
+      "say": "That's such a strange question, {player_name}. Why would you even ask me that?"
+    },
+    {
+      "feeling": "playful",
+      "intensity": 1,
+      "cue": "laugh_soft",
+      "say": "Silly~ I'm sitting right across from you. Look, my coffee's still warm."
+    },
+    {
+      "feeling": "suspicious",
+      "intensity": 1,
+      "cue": "sigh",
+      "say": "Are you trying to be funny, {player_name}? Because it isn't very funny."
+    }
+  ],
+  "broken_stream_fallbacks": {
+    "stage_0_2": {
+      "feeling": "nervous",
+      "intensity": 1,
+      "cue": "sniffle",
+      "say": "Sorry... I lost my train of thought, {player_name}."
+    },
+    "stage_3_plus": {
+      "feeling": "empty",
+      "intensity": 3,
+      "cue": "static",
+      "say": "...can you still hear me?"
+    }
+  },
+  "male_referent_names": [
+    "brother",
+    "dad",
+    "daiki",
+    "daisuke",
+    "father",
+    "grandpa",
+    "haruto",
+    "hiro",
+    "jiro",
+    "kaito",
+    "kenji",
+    "kenta",
+    "masato",
+    "naoki",
+    "ren",
+    "ryo",
+    "ryota",
+    "satoshi",
+    "shota",
+    "sora",
+    "takumi",
+    "takeshi",
+    "taro",
+    "uncle",
+    "yuki",
+    "yusuke",
+    "yuto"
+  ]
+}

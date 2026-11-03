@@ -18,12 +18,18 @@ concurrency:
 jobs:
   checks:
     name: tracker - pytest - gdlint - godot headless
+    # Bound the job: a stalled curl or godot --import would otherwise burn the
+    # 6-hour runner default (P0 gate C3). Observed end-to-end ~30 s including
+    # the ~50 MB Godot fetch; 15 min is ~30x headroom, not a flaky-trip risk.
+    timeout-minutes: 15
     # Image pinned like every other tool; ubuntu-latest is a moving target
     # (runner-images #14748 migrates it to Ubuntu 26).
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Python 3.12 (README pin)
         uses: actions/setup-python@v7

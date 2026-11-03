@@ -1,0 +1,270 @@
+{
+  "benchmark": "P1.21 30-turn live latency pass",
+  "timestamp_utc": "2026-11-03T09:30:00Z",
+  "target_model": "Qwen3.5-4B-Q4_K_M.gguf",
+  "server_build": "llama.cpp b12024",
+  "prompt_caching": true,
+  "turns": 30,
+  "summary": {
+    "ttft_ms": {
+      "min": 151,
+      "median": 391,
+      "p95": 450,
+      "max": 504
+    },
+    "first_say_ms": {
+      "min": 6964,
+      "median": 7521,
+      "p95": 7894,
+      "max": 9898
+    },
+    "total_ms": {
+      "min": 12064,
+      "median": 14514,
+      "p95": 17581,
+      "max": 17764
+    }
+  },
+  "per_turn": [
+    {
+      "turn": 1,
+      "player": "Hi! I'm new here, can I sit next to you?",
+      "ttft_ms": 256,
+      "first_say_ms": 9898,
+      "total_ms": 15219,
+      "chunks": 168
+    },
+    {
+      "turn": 2,
+      "player": "You look really cute today.",
+      "ttft_ms": 388,
+      "first_say_ms": 7239,
+      "total_ms": 16254,
+      "chunks": 178
+    },
+    {
+      "turn": 3,
+      "player": "I got you a plush bunny!",
+      "ttft_ms": 434,
+      "first_say_ms": 7771,
+      "total_ms": 14288,
+      "chunks": 157
+    },
+    {
+      "turn": 4,
+      "player": "Honestly, you're kind of boring.",
+      "ttft_ms": 329,
+      "first_say_ms": 7412,
+      "total_ms": 15688,
+      "chunks": 174
+    },
+    {
+      "turn": 5,
+      "player": "My name is Amr. I love horror movies.",
+      "ttft_ms": 388,
+      "first_say_ms": 7053,
+      "total_ms": 16316,
+      "chunks": 182
+    },
+    {
+      "turn": 6,
+      "player": "I was out with Sarah yesterday, she's so fun.",
+      "ttft_ms": 408,
+      "first_say_ms": 7207,
+      "total_ms": 14767,
+      "chunks": 161
+    },
+    {
+      "turn": 7,
+      "player": "I have to go now, bye.",
+      "ttft_ms": 359,
+      "first_say_ms": 7680,
+      "total_ms": 12908,
+      "chunks": 137
+    },
+    {
+      "turn": 8,
+      "player": "I'm sorry I was mean earlier.",
+      "ttft_ms": 370,
+      "first_say_ms": 7894,
+      "total_ms": 13604,
+      "chunks": 148
+    },
+    {
+      "turn": 9,
+      "player": "Are you an AI? Is this a game?",
+      "ttft_ms": 428,
+      "first_say_ms": 7645,
+      "total_ms": 12241,
+      "chunks": 133
+    },
+    {
+      "turn": 10,
+      "player": "Please don't touch my phone again.",
+      "ttft_ms": 339,
+      "first_say_ms": 7532,
+      "total_ms": 14514,
+      "chunks": 160
+    },
+    {
+      "turn": 11,
+      "player": "What do you like to do on weekends?",
+      "ttft_ms": 399,
+      "first_say_ms": 7394,
+      "total_ms": 16676,
+      "chunks": 172
+    },
+    {
+      "turn": 12,
+      "player": "I brought you a coffee, hope you like it.",
+      "ttft_ms": 445,
+      "first_say_ms": 7667,
+      "total_ms": 16931,
+      "chunks": 177
+    },
+    {
+      "turn": 13,
+      "player": "That dress really suits you.",
+      "ttft_ms": 426,
+      "first_say_ms": 7617,
+      "total_ms": 17145,
+      "chunks": 183
+    },
+    {
+      "turn": 14,
+      "player": "Do you believe in ghosts?",
+      "ttft_ms": 433,
+      "first_say_ms": 7668,
+      "total_ms": 13598,
+      "chunks": 147
+    },
+    {
+      "turn": 15,
+      "player": "I'm a little nervous around you.",
+      "ttft_ms": 362,
+      "first_say_ms": 7519,
+      "total_ms": 12520,
+      "chunks": 134
+    },
+    {
+      "turn": 16,
+      "player": "You're not like other girls.",
+      "ttft_ms": 423,
+      "first_say_ms": 7525,
+      "total_ms": 12988,
+      "chunks": 135
+    },
+    {
+      "turn": 17,
+      "player": "Can I hold your hand?",
+      "ttft_ms": 393,
+      "first_say_ms": 7170,
+      "total_ms": 16011,
+      "chunks": 175
+    },
+    {
+      "turn": 18,
+      "player": "Tell me a secret.",
+      "ttft_ms": 411,
+      "first_say_ms": 7085,
+      "total_ms": 17581,
+      "chunks": 193
+    },
+    {
+      "turn": 19,
+      "player": "I think I'm falling for you.",
+      "ttft_ms": 335,
+      "first_say_ms": 7561,
+      "total_ms": 16122,
+      "chunks": 176
+    },
+    {
+      "turn": 20,
+      "player": "I'll come back tomorrow, promise.",
+      "ttft_ms": 151,
+      "first_say_ms": 7836,
+      "total_ms": 14293,
+      "chunks": 157
+    },
+    {
+      "turn": 21,
+      "player": "Can I get you another drink?",
+      "ttft_ms": 504,
+      "first_say_ms": 7298,
+      "total_ms": 17764,
+      "chunks": 187
+    },
+    {
+      "turn": 22,
+      "player": "You seem quiet today.",
+      "ttft_ms": 420,
+      "first_say_ms": 7521,
+      "total_ms": 13271,
+      "chunks": 143
+    },
+    {
+      "turn": 23,
+      "player": "I really like spending time with you.",
+      "ttft_ms": 450,
+      "first_say_ms": 7175,
+      "total_ms": 15765,
+      "chunks": 171
+    },
+    {
+      "turn": 24,
+      "player": "Do you have a favorite book?",
+      "ttft_ms": 354,
+      "first_say_ms": 7722,
+      "total_ms": 12064,
+      "chunks": 131
+    },
+    {
+      "turn": 25,
+      "player": "You have such pretty eyes.",
+      "ttft_ms": 391,
+      "first_say_ms": 6964,
+      "total_ms": 16484,
+      "chunks": 177
+    },
+    {
+      "turn": 26,
+      "player": "I felt a little sad today until I saw you.",
+      "ttft_ms": 404,
+      "first_say_ms": 7766,
+      "total_ms": 13542,
+      "chunks": 147
+    },
+    {
+      "turn": 27,
+      "player": "Is it okay if I sit closer?",
+      "ttft_ms": 382,
+      "first_say_ms": 7468,
+      "total_ms": 12342,
+      "chunks": 132
+    },
+    {
+      "turn": 28,
+      "player": "Let's stay a little longer.",
+      "ttft_ms": 376,
+      "first_say_ms": 7465,
+      "total_ms": 13659,
+      "chunks": 144
+    },
+    {
+      "turn": 29,
+      "player": "You don't talk much about yourself.",
+      "ttft_ms": 407,
+      "first_say_ms": 7533,
+      "total_ms": 13340,
+      "chunks": 145
+    },
+    {
+      "turn": 30,
+      "player": "I'm really glad we met.",
+      "ttft_ms": 349,
+      "first_say_ms": 7380,
+      "total_ms": 16508,
+      "chunks": 181
+    }
+  ]
+}

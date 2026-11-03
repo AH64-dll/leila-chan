@@ -1,41 +1,140 @@
 {
   "project": "Leila-chan",
-  "worktree_root": "D:/lila-wt",
+  "worktree_root": "/run/media/amrhares/New Volume/lila-wt",
   "max_parallel_tasks": 3,
-  "inplace_tasks": ["P0.01", "P0.02", "P0.03"],
-  "local_artifacts_root": "D:/lila",
+  "inplace_tasks": [
+    "P0.01",
+    "P0.02",
+    "P0.03"
+  ],
+  "local_artifacts_root": "/run/media/amrhares/New Volume/lila",
   "max_review_rounds": 3,
-  "sizes": {"S": 1, "M": 3, "L": 8},
+  "sizes": {
+    "S": 1,
+    "M": 3,
+    "L": 8
+  },
   "phases": [
-    {"id": "P0", "name": "Bootstrap & environment",        "weight": 4,  "doc": "production/phases/P0_bootstrap.md"},
-    {"id": "P1", "name": "Vertical slice: one living date", "weight": 18, "doc": "production/phases/P1_vertical_slice.md"},
-    {"id": "P2", "name": "The sickness",                   "weight": 16, "doc": "production/phases/P2_sickness.md"},
-    {"id": "P3", "name": "Paths & meta",                   "weight": 18, "doc": "production/phases/P3_paths_meta.md"},
-    {"id": "P4", "name": "Native runtime",                 "weight": 12, "doc": "production/phases/P4_native_runtime.md"},
-    {"id": "P5", "name": "Content complete",               "weight": 20, "doc": "production/phases/P5_content_complete.md"},
-    {"id": "P6", "name": "Steam launch",                   "weight": 7,  "doc": "production/phases/P6_steam_launch.md"},
-    {"id": "P7", "name": "Mobile",                         "weight": 5,  "doc": "production/phases/P7_mobile.md"}
+    {
+      "id": "P0",
+      "name": "Bootstrap & environment",
+      "weight": 4,
+      "doc": "production/phases/P0_bootstrap.md"
+    },
+    {
+      "id": "P1",
+      "name": "Vertical slice: one living date",
+      "weight": 18,
+      "doc": "production/phases/P1_vertical_slice.md"
+    },
+    {
+      "id": "P2",
+      "name": "The sickness",
+      "weight": 16,
+      "doc": "production/phases/P2_sickness.md"
+    },
+    {
+      "id": "P3",
+      "name": "Paths & meta",
+      "weight": 18,
+      "doc": "production/phases/P3_paths_meta.md"
+    },
+    {
+      "id": "P4",
+      "name": "Native runtime",
+      "weight": 12,
+      "doc": "production/phases/P4_native_runtime.md"
+    },
+    {
+      "id": "P5",
+      "name": "Content complete",
+      "weight": 20,
+      "doc": "production/phases/P5_content_complete.md"
+    },
+    {
+      "id": "P6",
+      "name": "Steam launch",
+      "weight": 7,
+      "doc": "production/phases/P6_steam_launch.md"
+    },
+    {
+      "id": "P7",
+      "name": "Mobile",
+      "weight": 5,
+      "doc": "production/phases/P7_mobile.md"
+    }
   ],
   "roles": {
-    "PROD": {"name": "Producer (orchestrator)",        "skill": ".claude/skills/leila-producer/SKILL.md"},
-    "ENG":  {"name": "Engine Architect",               "skill": ".claude/skills/role-engine-architect/SKILL.md"},
-    "LLM":  {"name": "LLM Integration Engineer",       "skill": ".claude/skills/role-llm-engineer/SKILL.md"},
-    "SYS":  {"name": "Systems Engineer",               "skill": ".claude/skills/role-systems-engineer/SKILL.md"},
-    "NAR":  {"name": "Narrative & Prompt Writer",      "skill": ".claude/skills/role-narrative-writer/SKILL.md"},
-    "STR":  {"name": "Steering & ML Engineer",         "skill": ".claude/skills/role-steering-engineer/SKILL.md"},
-    "ART":  {"name": "Art & Character Engineer",       "skill": ".claude/skills/role-art-engineer/SKILL.md"},
-    "AUD":  {"name": "Audio Engineer",                 "skill": ".claude/skills/role-audio-engineer/SKILL.md"},
-    "META": {"name": "Meta-events & UX Engineer",      "skill": ".claude/skills/role-meta-ux-engineer/SKILL.md"},
-    "SAFE": {"name": "Safety & Compliance Officer",    "skill": ".claude/skills/role-safety-officer/SKILL.md"},
-    "QA":   {"name": "QA & Prompt-lab Engineer",       "skill": ".claude/skills/role-qa-tester/SKILL.md"},
-    "REL":  {"name": "Build & Release Engineer",       "skill": ".claude/skills/role-build-release/SKILL.md"}
+    "PROD": {
+      "name": "Producer (orchestrator)",
+      "skill": ".claude/skills/leila-producer/SKILL.md"
+    },
+    "ENG": {
+      "name": "Engine Architect",
+      "skill": ".claude/skills/role-engine-architect/SKILL.md"
+    },
+    "LLM": {
+      "name": "LLM Integration Engineer",
+      "skill": ".claude/skills/role-llm-engineer/SKILL.md"
+    },
+    "SYS": {
+      "name": "Systems Engineer",
+      "skill": ".claude/skills/role-systems-engineer/SKILL.md"
+    },
+    "NAR": {
+      "name": "Narrative & Prompt Writer",
+      "skill": ".claude/skills/role-narrative-writer/SKILL.md"
+    },
+    "STR": {
+      "name": "Steering & ML Engineer",
+      "skill": ".claude/skills/role-steering-engineer/SKILL.md"
+    },
+    "ART": {
+      "name": "Art & Character Engineer",
+      "skill": ".claude/skills/role-art-engineer/SKILL.md"
+    },
+    "AUD": {
+      "name": "Audio Engineer",
+      "skill": ".claude/skills/role-audio-engineer/SKILL.md"
+    },
+    "META": {
+      "name": "Meta-events & UX Engineer",
+      "skill": ".claude/skills/role-meta-ux-engineer/SKILL.md"
+    },
+    "SAFE": {
+      "name": "Safety & Compliance Officer",
+      "skill": ".claude/skills/role-safety-officer/SKILL.md"
+    },
+    "QA": {
+      "name": "QA & Prompt-lab Engineer",
+      "skill": ".claude/skills/role-qa-tester/SKILL.md"
+    },
+    "REL": {
+      "name": "Build & Release Engineer",
+      "skill": ".claude/skills/role-build-release/SKILL.md"
+    }
   },
   "reviews": {
-    "code":    {"name": "Code review",            "skill": ".claude/skills/review-code/SKILL.md"},
-    "design":  {"name": "Design-fidelity review", "skill": ".claude/skills/review-design-fidelity/SKILL.md"},
-    "content": {"name": "Content review",         "skill": ".claude/skills/review-content/SKILL.md"},
-    "safety":  {"name": "Safety review",          "skill": ".claude/skills/review-safety/SKILL.md"},
-    "gate":    {"name": "Phase-gate review",      "skill": ".claude/skills/review-phase-gate/SKILL.md"}
+    "code": {
+      "name": "Code review",
+      "skill": ".claude/skills/review-code/SKILL.md"
+    },
+    "design": {
+      "name": "Design-fidelity review",
+      "skill": ".claude/skills/review-design-fidelity/SKILL.md"
+    },
+    "content": {
+      "name": "Content review",
+      "skill": ".claude/skills/review-content/SKILL.md"
+    },
+    "safety": {
+      "name": "Safety review",
+      "skill": ".claude/skills/review-safety/SKILL.md"
+    },
+    "gate": {
+      "name": "Phase-gate review",
+      "skill": ".claude/skills/review-phase-gate/SKILL.md"
+    }
   },
   "dispatch": {
     "implement": "bash ~/.claude/bin/subagent --cwd \"{cwd}\" --prompt-file \"{brief}\"",
