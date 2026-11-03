@@ -14,3 +14,8 @@
   after correcting the record or it warns as stale.
 - Next: P1.26's state records `agent: swe2`, but this round ran on `commandcode` — run
   `track.py agent P1.26 commandcode` before `set P1.26 in_review`.
+
+## P1.08 (round 1, agent: gemini-3.8-flash)
+- Implemented `Director.gd` (`game/autoload/Director.gd`) pipeline v1 wiring steps 0–7 of docs/02 §4: input handling, context assembly, PromptBuilder, TurnSchema, stage sampling/dose, IncrementalJson live event dispatch to AudioDirector, FX, SpriteResolver, Character, and ChatUI.
+- Created `game/tests/DirectorTest.gd` testing full turn pipeline, recorded streams, cancellation, and memory validation.
+- Verified full gate passes cleanly: gdlint, gdformat, godot headless tests (206 test cases, 0 failures), and pytest.
