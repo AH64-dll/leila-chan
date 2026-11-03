@@ -1224,9 +1224,9 @@
       "finished": "2026-11-03T10:00:24+02:00"
     },
     "P1.09": {
-      "status": "changes_requested",
+      "status": "done",
       "agent": "swe2",
-      "round": 1,
+      "round": 2,
       "reviews": [
         {
           "kind": "code",
@@ -1245,12 +1245,32 @@
           "report": "production/reviews/P1.09-design-r1.md",
           "ts": "2026-11-03T14:05:41+02:00",
           "declared": "grok-4.6"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.09-design-r2.md",
+          "ts": "2026-11-03T15:42:16+02:00",
+          "declared": "grok-4.6"
+        },
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.09-code-r2.md",
+          "ts": "2026-11-03T15:49:03+02:00",
+          "declared": "grok-4.6"
         }
       ],
-      "handoff": "production/handoffs/P1.09.md"
+      "handoff": "production/handoffs/P1.09.md",
+      "started": "2026-11-03T15:42:13+02:00",
+      "finished": "2026-11-03T15:49:56+02:00"
     },
     "P1.17": {
-      "status": "in_review",
+      "status": "done",
       "agent": "swe2",
       "round": 1,
       "reviews": [
@@ -1264,10 +1284,11 @@
           "declared": "grok-4.6"
         }
       ],
-      "handoff": "production/handoffs/P1.17.md"
+      "handoff": "production/handoffs/P1.17.md",
+      "finished": "2026-11-03T14:09:14+02:00"
     },
     "P1.18": {
-      "status": "in_review",
+      "status": "done",
       "agent": "gemini-3.8-flash",
       "round": 1,
       "reviews": [
@@ -1281,7 +1302,8 @@
           "declared": "grok-4.6"
         }
       ],
-      "handoff": "production/handoffs/P1.18.md"
+      "handoff": "production/handoffs/P1.18.md",
+      "finished": "2026-11-03T14:09:14+02:00"
     }
   },
   "history": [
@@ -3066,6 +3088,48 @@
       "event": "in_review->changes_requested",
       "ref": "P1.19",
       "note": "by code review"
+    },
+    {
+      "ts": "2026-11-03T14:09:14+02:00",
+      "event": "in_review->done",
+      "ref": "P1.17",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T14:09:14+02:00",
+      "event": "in_review->done",
+      "ref": "P1.18",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T15:42:13+02:00",
+      "event": "changes_requested->in_progress",
+      "ref": "P1.09",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T15:42:16+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P1.09",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T15:42:16+02:00",
+      "event": "review:design:approved",
+      "ref": "P1.09",
+      "note": "production/reviews/P1.09-design-r2.md"
+    },
+    {
+      "ts": "2026-11-03T15:49:03+02:00",
+      "event": "review:code:approved",
+      "ref": "P1.09",
+      "note": "production/reviews/P1.09-code-r2.md"
+    },
+    {
+      "ts": "2026-11-03T15:49:56+02:00",
+      "event": "in_review->done",
+      "ref": "P1.09",
+      "note": ""
     }
   ]
 }
