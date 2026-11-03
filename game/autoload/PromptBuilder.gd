@@ -135,7 +135,9 @@ func build(ctx: Dictionary = {}) -> Dictionary:
 	var layers := _assemble(stage, path, resolved_name, ctx, missing, warnings)
 	var window := _window(ctx.get("history", []), ctx, warnings)
 	var messages := _messages(layers, window["messages"], ctx, warnings)
-	var debug := _debug(ctx, stage, path, resolved_name, layers, window, messages, missing, warnings)
+	var debug := _debug(
+		ctx, stage, path, resolved_name, layers, window, messages, missing, warnings
+	)
 	return {"messages": messages, "debug": debug}
 
 

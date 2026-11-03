@@ -1031,7 +1031,7 @@
       "finished": "2026-11-03T09:08:29+02:00"
     },
     "P1.15": {
-      "status": "in_progress",
+      "status": "in_review",
       "agent": "gemini-3.8-flash",
       "round": 2,
       "reviews": [
@@ -1058,14 +1058,34 @@
       "started": "2026-11-03T09:24:12+02:00"
     },
     "P1.16": {
-      "status": "in_review",
+      "status": "in_progress",
       "agent": "gemini-3.8-flash",
-      "round": 1,
-      "reviews": [],
-      "handoff": "production/handoffs/P1.16.md"
+      "round": 2,
+      "reviews": [
+        {
+          "kind": "content",
+          "verdict": "changes",
+          "round": 1,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.16-content-r1.md",
+          "ts": "2026-11-03T09:32:45+02:00",
+          "declared": "grok-4.6"
+        },
+        {
+          "kind": "design",
+          "verdict": "changes",
+          "round": 1,
+          "reviewer": "grok-4.6",
+          "report": "production/reviews/P1.16-design-r1.md",
+          "ts": "2026-11-03T09:32:46+02:00",
+          "declared": "grok-4.6"
+        }
+      ],
+      "handoff": "production/handoffs/P1.16.md",
+      "started": "2026-11-03T09:32:46+02:00"
     },
     "P1.14": {
-      "status": "in_review",
+      "status": "done",
       "agent": "gemini-3.8-flash",
       "round": 1,
       "reviews": [
@@ -1089,7 +1109,8 @@
         }
       ],
       "started": "2026-11-03T09:01:36+02:00",
-      "handoff": "production/handoffs/P1.14.md"
+      "handoff": "production/handoffs/P1.14.md",
+      "finished": "2026-11-03T09:33:29+02:00"
     },
     "P1.08": {
       "status": "in_progress",
@@ -2664,6 +2685,42 @@
       "event": "review:design:approved",
       "ref": "P1.14",
       "note": "production/reviews/P1.14-design-r1.md"
+    },
+    {
+      "ts": "2026-11-03T09:32:45+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P1.15",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T09:32:45+02:00",
+      "event": "review:content:changes",
+      "ref": "P1.16",
+      "note": "production/reviews/P1.16-content-r1.md"
+    },
+    {
+      "ts": "2026-11-03T09:32:45+02:00",
+      "event": "in_review->changes_requested",
+      "ref": "P1.16",
+      "note": "by content review"
+    },
+    {
+      "ts": "2026-11-03T09:32:46+02:00",
+      "event": "review:design:changes",
+      "ref": "P1.16",
+      "note": "production/reviews/P1.16-design-r1.md"
+    },
+    {
+      "ts": "2026-11-03T09:32:46+02:00",
+      "event": "changes_requested->in_progress",
+      "ref": "P1.16",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-03T09:33:29+02:00",
+      "event": "in_review->done",
+      "ref": "P1.14",
+      "note": ""
     }
   ]
 }
