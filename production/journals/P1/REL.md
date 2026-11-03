@@ -19,3 +19,11 @@
   stderr+7 for LEILA_GODOT and resolved paths; the pytest wrapper skips off Windows.
 - Gotcha: PS 5.1 still labels forwarded stderr `NativeCommandError` in transcripts; non-terminating
   is what matters. Move the whole `game/tests` dir to exercise the zero-suite guard's first layer.
+## P1.25 (2026-11-03) — P0 gate C4: disable persisted checkout credentials
+- Added `with: persist-credentials: false` to all `actions/checkout` steps in `.github/workflows/ci.yml` (P0 gate C4).
+  This prevents runner-scoped GitHub tokens from being persisted in `.git/config` during build and script execution.
+- Extended `tests/test_ci_workflow.py` to enforce that every `actions/checkout` step explicitly sets boolean `false`.
+  Added tests asserting rejection of missing `with:`, missing `persist-credentials`, string `'false'`, `0`, and `true`.
+- Extended workflow discovery to cover both `.yml` and `.yaml` workflow files (P1.24 CODE-1 carry-over).
+- Gotcha: In YAML 1.1 `persist-credentials: false` parses as boolean `False`, whereas quoted `'false'` is a string.
+  The policy assertion checks `is False` strictly to prevent string-typed truthy values in runner action inputs.
