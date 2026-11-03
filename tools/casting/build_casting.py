@@ -185,6 +185,21 @@ ON_ENTER = {
 VOICE_BY_STAGE = {"0": "voice_blip.stage0_2", "1": "voice_blip.stage0_2", "2": "voice_blip.stage0_2",
                   "3": "voice_blip.stage3", "4": "voice_blip.stage4", "5": "voice_blip.stage5", "AWAKE>=3": "voice_blip.awake"}
 
+# docs/03 §3 step 4 (anti-repeat): when one sprite would show on a third beat in a row, the
+# resolver swaps to the feeling's sibling face for that beat. The doc gives only the example
+# 06 -> 01; the rest keeps the same mood family (positive<->positive, hostile<->hostile,
+# low<->low) and only uses healthy faces (id <= 20), so a T0-T1 swap can never escalate or
+# read as corruption. Every sibling differs from the feeling's own T0-T1 sprite set.
+# T2+ path-aware siblings are P2.14's job (docs/03 §3.2).
+SIBLINGS = {
+    "joy": "06", "warmth": "05", "playful": "05", "proud": "01",
+    "shy": "01",  # the doc's own example: repeated 06 -> 01
+    "love": "02", "curious": "01", "confused": "09", "surprised": "08", "nervous": "06",
+    "sad": "12", "crying": "14", "angry": "18", "cold": "10", "suspicious": "07",
+    "disgusted": "17", "bored": "12", "tired": "10", "afraid": "13", "pleading": "15",
+    "empty": "14", "manic": "11",
+}
+
 PATHS = {
     "YANDERE": {"tiers": ["T2", "T3"], "override": {"love": "24", "angry": "21", "suspicious": "28", "joy": "22"},
                 "flagged": {"warmth": ["27", "rival_gone"]}, "music_bias": "music_box", "cue_bias": ["heartbeat_fast", "breath_close"]},
@@ -247,6 +262,17 @@ def main():
             "model_hint": d["hint"], "tiers": tiers,
             "cues_waiting_for_voice_actor": sorted(set(empty_cues)),
         }
+    for f, s in SIBLINGS.items():
+        if f not in F:
+            errors.append(f"siblings: unknown feeling '{f}'")
+            continue
+        if s not in art:
+            errors.append(f"siblings {f}: sprite {s} not exported")
+        own = {feelings[f]["tiers"][t]["sprite"][i] for t in ("T0", "T1") for i in ("1", "2", "3")}
+        if s in own:
+            errors.append(f"siblings {f}: {s} is the feeling's own T0-T1 face (anti-repeat would be a no-op)")
+        if int(s) > 20:
+            errors.append(f"siblings {f}: {s} is a corruption face (docs/03 §1) — siblings stay healthy")
     for s, e in ON_ENTER.items():
         if s not in art:
             errors.append(f"on_enter: sprite {s} missing")
@@ -286,6 +312,7 @@ def main():
                 "native_size": [384, 688], "scale": 2, "filter": "nearest", "palette": "art/leila/palette.json"},
         "voice_by_stage": VOICE_BY_STAGE,
         "feelings": feelings,
+        "siblings": SIBLINGS,
         "paths": PATHS,
         "sprites": sprites,
         "intensity_3": {"camera": "push to bust_crop", "auto_sting": "stinger.soft (T0-T1) / stinger.mid (T2-T3) if budget allows",
@@ -310,7 +337,8 @@ def write_doc(c):
     w("everything else from this table, so her face, body, voice, sounds and music always agree:\n")
     w("```")
     w("beat {feeling, intensity, cue?, say}")
-    w("  ├─ sprite   = resolver(feeling, intensity, tier, path)        → §2 (+ path overrides §4)")
+    w("  ├─ sprite   = resolver(feeling, intensity, tier, path)        → §2 (+ path overrides §4;")
+    w("  │              same sprite 3 beats in a row → siblings[f], docs/03 §3 step 4)")
     w("  ├─ motion   = feelings[f].motion[intensity]                   → Godot tween preset (docs/03 §4)")
     w("  ├─ voice    = voice_by_stage[stage]  pitched by feelings[f].voice (empty → no blips: she speaks in silence)")
     w("  ├─ cue      = model's cue if allowed, else (auto-fill, i ≥ 2, budget ok) random from tiers[t].cues")
@@ -343,6 +371,14 @@ def write_doc(c):
     w("|---|---|")
     for k, e in ON_ENTER.items():
         w(f'| {k} {c["sprites"][k]["key"]} | ' + "; ".join(f"{a}: {', '.join(b) if isinstance(b, list) else b}" for a, b in e.items()) + " |")
+    w("\n### 3.1 Anti-repeat siblings\n")
+    w("docs/03 §3 step 4: when one sprite would show on a third beat in a row, the resolver shows the feeling's sibling")
+    w("instead. Siblings are healthy faces (ids 01–20, so a T0–T1 swap can never read as corruption) in the same mood")
+    w("family; T2+ path-aware siblings belong to the resolver's path rules (P2.14).\n")
+    w("| Feeling | Sibling |")
+    w("|---|---|")
+    for f, s in c["siblings"].items():
+        w(f'| {f} | {s} {c["sprites"][s]["key"]} |')
     w("\n## 4. Paths\n")
     w("| Path | Overrides (T2–T3) | Rule | Music / cue bias |")
     w("|---|---|---|---|")
