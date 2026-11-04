@@ -82,3 +82,10 @@
 - The Python contract now reads `reset_session`'s body and refuses any `_run_ended` assignment that is
   not under `if clear_run_ended:` (`test_the_deferred_run_end_survives_the_session_reset`); the data
   `doc` names T23 beside T28/T30 for the shared `text_match` guard (DES-7).
+- CODE-8: keeping `_run_ended` across the reset moved the leak risk into TEST land — every suite that
+  can raise `save_gone` (ShadowSaveTest's Reset Everything, SaveSystemTest's delete) must clear it in
+  `after_test`, or the next suite in the same Godot process speaks it (a probe proved `kind: wipe,
+  gate_stage: 3` arriving with instability +4 and AWAKE +2). Green-by-ordering is not green.
+- CODE-9: a pin must point at the caller that exists. `Director.gd` never calls Telemetry; the route is
+  `InputHook.reset_session`, so the assert read the file that could not pass `true` and missed the
+  mutation. Pin the real caller, then sweep `game/` for the call form (not for the docblock's mention).

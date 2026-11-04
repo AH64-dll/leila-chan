@@ -46,6 +46,12 @@ func after_test() -> void:
 	Settings.settings_path = _previous_settings
 	SaveSystem.consume_pending_scene()
 	_reset_game()
+	# P3.07 r3 CODE-8: Reset Everything at stage 3 raises a deferred T19 note
+	# (`kind: wipe, gate_stage: 3`) that now survives `Director.reset()` — the
+	# whole point of the carve-out. This suite never drains a turn, so it clears
+	# the note explicitly instead of leaking it into the next suite in this
+	# process.
+	Telemetry.reset_session(true)
 
 
 ## Acceptance 1: first_name, names, runs and the kept memories all survive a

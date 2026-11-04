@@ -43,6 +43,10 @@ func after_test() -> void:
 	SaveSystem.set_clock(Callable())
 	SaveSystem.consume_pending_scene()
 	_reset_game()
+	# P3.07 r3 CODE-8: `delete_slot`/`wipe_everything` raise a deferred T19 note
+	# that survives the Director reset now; clear it here rather than let the
+	# next suite in this process speak this suite's line.
+	Telemetry.reset_session(true)
 	_log = null
 
 

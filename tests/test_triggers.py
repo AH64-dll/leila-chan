@@ -424,10 +424,20 @@ def test_the_deferred_run_end_survives_the_session_reset() -> None:
         assert lines[index - 1].strip() == "if clear_run_ended:", (
             f"reset_session clears _run_ended unconditionally: {lines[index]!r}"
         )
-    # ...and the clear must not be the default the game's reset path takes.
-    assert "reset_session(true)" not in (
-        ROOT / "game" / "autoload" / "Director.gd"
-    ).read_text(encoding="utf-8")
+    # ...and no production caller may take the full-clear seam. `Director.gd`
+    # never calls Telemetry at all — it goes through `InputHook.reset_session`,
+    # which is the one caller that exists, so pin that file and then sweep the
+    # rest of `game/` (the earlier Director-only assert stayed green when
+    # `InputHook` was switched to `call("reset_session", true)`).
+    hook = (ROOT / "game" / "llm" / "InputHook.gd").read_text(encoding="utf-8")
+    assert 'telemetry.call("reset_session")' in hook, "the route into Telemetry changed"
+    # Calls only: a docblock may name the seam without taking it.
+    full_clear = re.compile(r"""\.\s*reset_session\(\s*true\b|["']reset_session["']\s*,\s*true\b""")
+    for path in sorted((ROOT / "game").rglob("*.gd")):
+        if "tests" in path.relative_to(ROOT).parts:
+            continue
+        match = full_clear.search(path.read_text(encoding="utf-8"))
+        assert match is None, f"{path} takes the test-only full clear: {match.group(0)!r}"
     # T23 shares the `text_match` guard with T28/T30 (DES-7).
     assert "text_match` guard (T23/T28/T30" in TRIGGERS["doc"]
 
