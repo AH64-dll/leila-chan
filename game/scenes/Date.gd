@@ -456,6 +456,14 @@ func play_opening_beats() -> void:
 	if chat_ui != null:
 		chat_ui.begin_turn_wait()
 
+	# GameState.flags carries the beat-level rules the resolver reads (docs/03 §3.2
+	# TSUN break / ANCHOR relapse, docs/10 §3's rival_gone) — the Director hands the
+	# same dictionary to resolve_beat per turn, so the opening beats must too.
+	var flags: Dictionary = {}
+	var gs_node: Node = get_node_or_null("/root/GameState")
+	if gs_node != null and "flags" in gs_node:
+		flags = gs_node.flags
+
 	for i: int in range(beats.size()):
 		var beat: Dictionary = beats[i]
 		if AudioDirector != null:
@@ -465,7 +473,7 @@ func play_opening_beats() -> void:
 		var intensity := int(beat.get("intensity", 1))
 		var packet: Dictionary = {}
 		if SpriteResolver != null:
-			packet = SpriteResolver.resolve_beat(feeling, intensity, stage, path_name)
+			packet = SpriteResolver.resolve_beat(feeling, intensity, stage, path_name, flags)
 		# Hand the finished packet down: resolving again inside set_feeling() would
 		# run the anti-repeat window and the reveal budget twice per beat (the same
 		# CODE-4 rule the Director follows).
@@ -473,7 +481,7 @@ func play_opening_beats() -> void:
 			if character.has_method("apply_beat"):
 				character.apply_beat(packet)
 			else:
-				character.set_feeling(feeling, intensity, stage, path_name)
+				character.set_feeling(feeling, intensity, stage, path_name, flags)
 
 		var sprite_id := StringName(String(packet.get("sprite", "")))
 		if AudioDirector != null:

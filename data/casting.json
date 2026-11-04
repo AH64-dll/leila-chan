@@ -2278,6 +2278,14 @@
  },
  "paths": {
   "YANDERE": {
+   "pool": [
+    "01",
+    "06",
+    "24",
+    "21",
+    "30",
+    "27"
+   ],
    "tiers": [
     "T2",
     "T3"
@@ -2294,13 +2302,26 @@
      "rival_gone"
     ]
    },
+   "rule": "love and violence share a face",
    "music_bias": "music_box",
    "cue_bias": [
     "heartbeat_fast",
     "breath_close"
+   ],
+   "docs_03_extras": [
+    "22",
+    "28"
    ]
   },
   "SPLIT": {
+   "pool": [
+    "01",
+    "17",
+    "19",
+    "15",
+    "16",
+    "13"
+   ],
    "tiers": [
     "T2",
     "T3"
@@ -2309,24 +2330,25 @@
     "crying": "16",
     "pleading": "19"
    },
-   "idealize": [
-    "01",
-    "02",
-    "24"
-   ],
-   "devalue": [
-    "17",
-    "18",
-    "07"
-   ],
+   "idealize": "01",
+   "devalue": "17",
    "rule": "alternate when beat valence flips",
    "music_bias": "tense",
    "cue_bias": [
     "sob",
     "door_slam"
-   ]
+   ],
+   "docs_03_extras": []
   },
   "TSUN": {
+   "pool": [
+    "03",
+    "07",
+    "09",
+    "17",
+    "10",
+    "26"
+   ],
    "tiers": [
     "T2",
     "T3"
@@ -2338,35 +2360,60 @@
     "angry": "17"
    },
    "break": {
-    "afraid": "20",
-    "crying": "16"
+    "flag": "tsun_break",
+    "sprite": {
+     "afraid": "20",
+     "crying": "16"
+    }
    },
+   "rule": "the act cracks into a scared child",
    "music_bias": "keep",
    "cue_bias": [
     "sigh",
     "door_slam"
+   ],
+   "docs_03_extras": [
+    "16",
+    "18",
+    "20"
    ]
   },
   "HOLLOW": {
+   "pool": [
+    "14",
+    "12",
+    "10",
+    "23",
+    "25"
+   ],
    "tiers": [
     "T2",
     "T3"
    ],
-   "drift_to": [
-    "23",
-    "10",
-    "12",
-    "14"
-   ],
+   "change_intensity": 3,
+   "drift": {
+    "default": "23",
+    "sad": "14",
+    "tired": "12",
+    "bored": "10"
+   },
    "rule": "sprite changes only on intensity 3",
    "voice": "no blips at i1",
    "music_bias": "silence",
    "cue_bias": [
     "clock_tick",
     "music_box_note"
-   ]
+   ],
+   "docs_03_extras": []
   },
   "AWAKE": {
+   "pool": [
+    "08",
+    "29",
+    "11",
+    "22",
+    "25"
+   ],
    "tiers": [
     "T2",
     "T3"
@@ -2383,18 +2430,47 @@
    "music_bias": "distorted",
    "cue_bias": [
     "static"
+   ],
+   "docs_03_extras": [
+    "26"
    ]
   },
   "ANCHOR": {
+   "pool": [
+    "02",
+    "05",
+    "06",
+    "13",
+    "14",
+    "26",
+    "21"
+   ],
    "tiers": [
     "T2",
     "T3"
    ],
+   "healthy_tier": "T1",
+   "relapse": {
+    "flag": "anchor_relapse",
+    "spike": {
+     "distress": "26",
+     "elation": "22"
+    },
+    "crisis": {
+     "sprite": "21",
+     "tier": "T3",
+     "intensity": 3
+    },
+    "then": "02"
+   },
    "rule": "keeps healthy sprites; relapse beat uses 26/22 once, then 02",
    "music_bias": "calm",
    "cue_bias": [
     "hum",
     "sigh"
+   ],
+   "docs_03_extras": [
+    "22"
    ]
   }
  },
