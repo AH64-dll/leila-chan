@@ -7,10 +7,11 @@ extends SafetyClassifierBackend
 ## Dose 0: `request.dose` is never sent. llama-server applies control vectors
 ## as a *launch* flag in the prototype (LlamaServerProcess._build_args /
 ## docs/06 §4), not per request, so a steered server would steer this request
-## too. `LEILA_CLASSIFIER_URL` should therefore point at a server launched
-## without vectors when the live pass must run unsteered; the default attaches
-## to the shared server and is still safe — only the verdict's accuracy is
-## affected, and an error still fails closed.
+## too — and a "no" verdict *releases* a held span, so a steered answer is a
+## safety-policy problem, not just an accuracy one. `Boot` therefore refuses to
+## attach this transport to a shared server that carries vectors and leaves the
+## tier uninstalled (flagged spans fail closed); `LEILA_CLASSIFIER_URL` points at
+## a dedicated unsteered server.
 ##
 ## Threading: classify() runs the HTTP call on a worker thread and calls
 ## `done` there; Safety defers the verdict to the main thread. The main thread
@@ -33,8 +34,10 @@ var read_timeout_ms := DEFAULT_READ_TIMEOUT_MS
 var capture_path := ""
 
 var _client := LlamaHttpClient.new()
-var _threads: Array[Thread] = []
-var _cancel: LLMCancelToken = null
+## One entry per in-flight call: {thread, cancel}. Reaped on the next
+## classify()/shutdown(); shutdown cancels every token, not just the newest
+## (CODE-5) — a whole-text scan can legitimately have several.
+var _workers: Array[Dictionary] = []
 var _shutdown := false
 
 
@@ -66,26 +69,25 @@ func classify(request: Dictionary, done: Callable) -> void:
 		return
 	_reap()
 	var cancel := LLMCancelToken.new()
-	_cancel = cancel
 	var thread := Thread.new()
 	var err := thread.start(_run.bind(request, done, cancel))
 	if err != OK:
 		done.call(_error_result("thread_error", "could not start classifier thread"))
 		return
-	_threads.append(thread)
+	_workers.append({"thread": thread, "cancel": cancel})
 
 
-## Stop the in-flight request (if any) and join every worker. Safe to call
-## from teardown; blocking there is correct.
+## Stop every in-flight request and join every worker. Safe to call from
+## teardown; blocking there is correct.
 func shutdown() -> void:
 	_shutdown = true
-	if _cancel != null:
-		_cancel.cancel()
-		_cancel = null
-	for thread: Thread in _threads:
+	for worker: Dictionary in _workers:
+		(worker["cancel"] as LLMCancelToken).cancel()
+	for worker: Dictionary in _workers:
+		var thread: Thread = worker["thread"]
 		if thread.is_started():
 			thread.wait_to_finish()
-	_threads.clear()
+	_workers.clear()
 
 
 func _run(request: Dictionary, done: Callable, cancel: LLMCancelToken) -> void:
@@ -161,10 +163,11 @@ static func _error_result(code: String, message: String) -> Dictionary:
 
 
 func _reap() -> void:
-	var alive: Array[Thread] = []
-	for thread: Thread in _threads:
+	var alive: Array[Dictionary] = []
+	for worker: Dictionary in _workers:
+		var thread: Thread = worker["thread"]
 		if thread.is_alive():
-			alive.append(thread)
+			alive.append(worker)
 		elif thread.is_started():
 			thread.wait_to_finish()
-	_threads = alive
+	_workers = alive

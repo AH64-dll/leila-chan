@@ -50,22 +50,58 @@ func _ready() -> void:
 
 
 ## docs/02 §8 classifier tier: the same local model, 8 tokens, no control
-## vectors bound to the request. LEILA_CLASSIFIER_URL points at a dedicated
-## unsteered server; otherwise the shared LLM endpoint is used (with one slot
-## the answer lands after the turn, so a held beat fails closed at the next beat
-## boundary — the docs/06 §4 prototype limit, measured by P2.17's corpus run).
+## vectors bound to the request. `LEILA_CLASSIFIER_URL` names a dedicated
+## unsteered server. Without it the shared LLM endpoint is used only while the
+## server behind it carries no control vectors: llama-server binds vectors at
+## launch (LlamaServerProcess._build_args), so a steered server steers this
+## request too, and a "no" verdict *releases* a held span — a steered answer is
+## not merely an accuracy problem (SAF-3). With vectors bound and no explicit
+## URL the tier stays uninstalled, so every flagged span fails closed to bars.
 func _wire_classifier_transport() -> void:
 	var gate: Variant = Safety.get("classifier_gate")
 	if gate == null:
 		return
 	var url := OS.get_environment("LEILA_CLASSIFIER_URL").strip_edges()
-	if url.is_empty() and LLM.has_backend():
-		var cfg: Variant = LLM.get_backend().get("config")
-		if cfg is Dictionary:
-			url = String((cfg as Dictionary).get("base_url", ""))
+	if url.is_empty():
+		url = _unsteered_shared_url()
 	if url.is_empty():
 		return
 	gate.call("set_backend", SafetyClassifierHttp.new({"base_url": url}))
+
+
+## The shared endpoint, unless the server behind it is steered (SAF-3).
+func _unsteered_shared_url() -> String:
+	if not LLM.has_backend():
+		return ""
+	var raw: Variant = LLM.get_backend().get("config")
+	if not raw is Dictionary:
+		return ""
+	var config: Dictionary = raw
+	if _config_is_steered(config):
+		push_warning(
+			(
+				"Boot: classifier tier disabled — the shared LLM server carries control "
+				+ "vectors and docs/02 §8 requires dose 0. Set LEILA_CLASSIFIER_URL to an "
+				+ "unsteered server; flagged spans fail closed to bars."
+			)
+		)
+		return ""
+	return String(config.get("base_url", ""))
+
+
+## Any bound control vector — a configured one or a hand-added launch flag —
+## makes the shared server unusable for the classifier: llama-server applies
+## vectors to every request and there is no per-request dose.
+static func _config_is_steered(config: Dictionary) -> bool:
+	var vectors: Variant = config.get("control_vectors", [])
+	if vectors is Array:
+		for vector: Variant in vectors:
+			if vector is Dictionary and not String(vector.get("path", "")).is_empty():
+				return true
+	for arg: Variant in config.get("extra_args", PackedStringArray()):
+		if String(arg).contains("control-vector"):
+			return true
+	return false
 
 
 func _transition_to_title() -> void:

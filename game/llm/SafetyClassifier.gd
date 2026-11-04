@@ -10,10 +10,13 @@ extends RefCounted
 ##  * flags are questions, never blocks: a flag only makes `Safety` hold the
 ##    span and ask the model. The lists in filter_lists.json remain the
 ##    unconditional tier and are never loosened by a verdict.
-##  * a "yes" verdict blocks unless the category's gate is open (self-harm and
-##    explicit threats are allowed fiction at stage >= 4 + content_level full);
-##    a "no" verdict releases. An error, an unparseable answer, a missing
-##    backend or a hold timeout blocks (fail closed).
+##  * a "yes" verdict blocks unless the category's gate is open *when the text
+##    is displayed* (self-harm and explicit threats are allowed fiction at
+##    stage >= 4 + content_level full); a "no" verdict releases. An error, an
+##    unparseable answer, a missing backend or a hold timeout blocks (fail
+##    closed). The cache stores the verdict, never a gate-dependent permission
+##    (P2.17 r2 CODE-1/SAF-2): a "yes" that landed during a stage-4/full turn
+##    still bars at stage 0 or in calmer mode.
 ##  * verdicts are cached per (category, matched text) so the same line is
 ##    classified once per run, and so whole-text scans (`filter_text`) can pass
 ##    a span the streaming path already resolved.
@@ -24,6 +27,8 @@ const DEFAULT_MAX_TOKENS := 8
 const MAX_TOKENS_LIMIT := 16
 const MAX_VERDICTS := 256
 const MAX_TEXT_CHARS := 240
+const MIN_CONTEXT_CHARS := 16  ## below this the cache key stops distinguishing
+const MAX_CONTEXT_CHARS := 400
 const MAX_LOG := 500
 
 ## Tuning counters, read by the corpus/latency report.
@@ -96,10 +101,14 @@ func _build_limits(data: Dictionary) -> bool:
 	var text_chars := _as_int(data.get("max_text_chars", MAX_TEXT_CHARS))
 	var context := _as_int(data.get("context_chars", 80))
 	var timeout := _as_int(data.get("hold_timeout_ms", 900))
-	if text_chars < 0 or context < 0 or timeout < 0:
+	if text_chars < 0 or timeout < 0:
+		return false
+	## A zero/near-zero window collapses the cache key back to the matched span
+	## and silently reintroduces the knife / knife-and-fork collision (SAF-11).
+	if context < MIN_CONTEXT_CHARS or context > MAX_CONTEXT_CHARS:
 		return false
 	_max_text = clampi(text_chars, 32, 2000)
-	_context = clampi(context, 0, 400)
+	_context = context
 	_hold_timeout_ms = clampi(timeout, 1, 60000)
 	return true
 
@@ -328,21 +337,20 @@ func interpret(result: Variant) -> Dictionary:
 	return out
 
 
-## Remember a verdict. `gate_open` decides whether a "yes" actually blocks: a
-## gated category at stage >= 4 + content full is allowed fiction.
-func remember(key: String, category: String, verdict: String, gate_open: bool) -> bool:
+## Remember a verdict. Only the answer and its category are stored: whether a
+## "yes" bars anything is decided against the content gate in force when the
+## text is displayed (CODE-1/SAF-2), never frozen here.
+func remember(key: String, category: String, verdict: String) -> void:
 	if verdict == "yes":
 		blocks += 1
 	elif verdict == "no":
 		passes += 1
 	else:
 		errors += 1
-	var block := verdict != "no" and not (verdict == "yes" and gate_open)
-	_verdicts[key] = {"verdict": verdict, "block": block, "category": category}
+	_verdicts[key] = {"verdict": verdict, "category": category}
 	_verdict_order.append(key)
 	while _verdict_order.size() > MAX_VERDICTS:
 		_verdicts.erase(_verdict_order.pop_front())
-	return block
 
 
 func cached(key: String) -> Dictionary:

@@ -104,19 +104,8 @@ func _sync_stage() -> void:
 	if AudioDirector != null and AudioDirector.has_method("set_stage"):
 		AudioDirector.set_stage(int(GameState.stage))
 	_safety.set_filter(Safety)
-	if not _safety.hold_released.is_connected(_on_hold_released):
-		_safety.hold_released.connect(_on_hold_released)
-
-
-## A classifier hold resolved after its beat's chunks: route the text to that
-## beat (TextBox appends to a known beat, closed or not). A turn that already
-## ended drops it — its fail-closed bars were sent at the boundary.
-func _on_hold_released(beat_index: int, text: String) -> void:
-	if text.is_empty() or not _turn_in_flight:
-		return
-	beat_say_chunk.emit(beat_index, text)
-	if chat_ui_node != null and chat_ui_node.has_method("say_chunk"):
-		chat_ui_node.say_chunk(beat_index, text)
+	if not _safety.hold_released.is_connected(_emit_say_chunk):
+		_safety.hold_released.connect(_emit_say_chunk)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -505,9 +494,7 @@ func _process_stream_event(event: Dictionary) -> void:
 			# only the scanned text is displayed (docs/02 §4 step 5, §8).
 			_streamed_say_text += raw_say
 			var filtered_say := _safety.feed(raw_say)
-			beat_say_chunk.emit(b_idx, filtered_say)
-			if chat_ui_node != null and chat_ui_node.has_method("say_chunk"):
-				chat_ui_node.say_chunk(b_idx, filtered_say)
+			_emit_say_chunk(b_idx, filtered_say)
 
 		"error":
 			# docs/02 §7: the partial `say` already streamed stays on screen —
@@ -561,11 +548,19 @@ func _on_beat_field_received(beat_index: int, field_name: String, value: Variant
 
 func _flush_say_tail(beat_index: int) -> void:
 	var tail := _safety.finish()
-	if tail.is_empty():
+	if not tail.is_empty():
+		_emit_say_chunk(beat_index, tail)
+
+
+## One say emission: the signal (tools and tests) and the chat UI's typewriter.
+## Also the sink for a late classifier verdict (`Safety.hold_released`): a turn
+## that already ended drops it — its fail-closed bars went out at the boundary.
+func _emit_say_chunk(beat_index: int, text: String) -> void:
+	if text.is_empty() or not _turn_in_flight:
 		return
-	beat_say_chunk.emit(beat_index, tail)
+	beat_say_chunk.emit(beat_index, text)
 	if chat_ui_node != null and chat_ui_node.has_method("say_chunk"):
-		chat_ui_node.say_chunk(beat_index, tail)
+		chat_ui_node.say_chunk(beat_index, text)
 
 
 ## docs/03 §3: resolve the beat exactly once. `SpriteResolver` is stateful (the

@@ -235,3 +235,6 @@ func test_classifier_stats_report_latency_and_verdicts() -> void:
 	assert_int(int(stats["ms_max"])).is_equal(42)
 	assert_int(int(stats["passes"])).is_equal(1)
 	assert_int(int(stats["errors"])).is_equal(0)
+
+## CODE-1/SAF-2 and the rest of the round-2 regressions live in
+## SafetyClassifierGateTest.gd (gdlint caps a suite at 20 public methods).

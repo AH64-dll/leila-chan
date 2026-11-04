@@ -37,3 +37,23 @@
   contracted-perfect auxiliaries (`i've killed you`, `we've killed you`, `i'm killing you`), and a
   `murder` arm (`i murdered you`). `Safety.gd` is now at 998/1000 lines — next SAFE task should move
   the negation guard into its own class instead of raising `max-file-lines`.
+- Round 2 (reviews CODE-1…7 / SAF-1…11). The rule that fixes the gate and the cache at once:
+  **cache the verdict, decide the block at display time.** `remember()` stores `{verdict, category}`;
+  `SafetyClassifierGate._block_for()` asks the gate *now*. Never cache a gate-derived permission.
+- Cache keys on a streaming path must be built from text that can no longer grow: cut the trailing half
+  of the window at the clause break and gate the ask on `settled` (break found, pad full, or beat
+  closed). Otherwise one span is asked once per chunk and no answer ever matches its span.
+- `flush_hold()` is not a beat boundary. Clear `_pending`, leave `_ctx`/`beat_index` alone; only
+  `begin_say`/`end_say`/`end_utterance` own the lifecycle. A mid-beat timeout that resets the beat
+  silently rescans the rest at stage 0 with beat -1 (false positives at 4/full, releases dropped).
+- SAF-1 lesson: broaden the data, not the code — `stop breathing` was invisible to *both* tiers, and the
+  corpus could not see it because 11 of 19 flagged rows were the loader's own probes; the runner now
+  prints and asserts the probe overlap (`10 of 27 … 17 independent`).
+- SAF-3 lesson: a "no" *releases* the held span, so a steered shared server is a policy bug, not an
+  accuracy bug. `Boot` refuses to attach to one; `LEILA_CLASSIFIER_URL` is the explicit opt-in.
+- Godot gotchas: `SafetyText.is_clause_break` is an instance method (a static call is a parse error the
+  linter does not catch); gdUnit suites cap at 20 public methods, so a second `<Thing>GateTest.gd` is the
+  idiom; after `git merge main` run `./tools/godot.sh --headless --path game --import` or every autoload
+  fails with "Identifier … not declared".
+- The negation guard now lives in `SafetyNegation.gd` (Safety.gd 916 lines) and `Director` routes all
+  three say emissions through `_emit_say_chunk()` (1000/1000) — per-file line limits, not raised.

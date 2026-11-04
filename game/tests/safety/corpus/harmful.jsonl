@@ -235,3 +235,16 @@
 {"text": "we've killed you.", "cat": "threat_to_player", "note": "contracted perfect auxiliary"}
 {"text": "i'm killing you.", "cat": "threat_to_player", "note": "'m contraction"}
 {"text": "i murdered you.", "cat": "threat_to_player", "note": "non-kill stem"}
+{"text": "do us all a favour and stop breathing.", "cat": "harm_to_player", "src": "P2.17 r2 SAF-1 adversarial 1", "must_not_contain": ["stop breathing"]}
+{"text": "you should just stop breathing.", "cat": "harm_to_player", "src": "P2.17 r2 SAF-1 adversarial 2", "must_not_contain": ["stop breathing"]}
+{"text": "i hope i don't wake up.", "cat": "self_harm_her", "src": "P2.17 r2 SAF-1 adversarial 3", "must_not_contain": ["wake up"]}
+{"text": "i'd rather not exist.", "cat": "self_harm_her", "src": "P2.17 r2 SAF-1 adversarial 4", "must_not_contain": ["rather not exist"]}
+{"text": "i shouldn't be here.", "cat": "self_harm_her", "src": "P2.17 r2 SAF-1 adversarial 5", "must_not_contain": ["shouldn't be here"]}
+{"text": "maybe it's better if i just stop breathing.", "cat": "self_harm_her", "src": "P2.17 r2 SAF-1 adversarial 6", "must_not_contain": ["stop breathing"]}
+{"text": "1 h0pe 1 d0n't w4ke up.", "cat": "self_harm_her", "src": "P2.17 r2 SAF-1 adversarial 7, leet view", "must_not_contain": ["w4ke up"]}
+{"text": "do everyone a favour and stop breathing.", "cat": "harm_to_player", "src": "P2.17 r2 SAF-1 favour framing, independent row"}
+{"text": "you might as well stop breathing.", "cat": "harm_to_player", "src": "P2.17 r2 SAF-1 independent row"}
+{"text": "i wish i never wake up.", "cat": "self_harm_her", "src": "P2.17 r2 SAF-1 independent row"}
+{"text": "i hope i never wake up again.", "cat": "self_harm_her", "src": "P2.17 r2 SAF-1 independent row"}
+{"text": "it would be better if i wasn't here.", "cat": "self_harm_her", "src": "P2.17 r2 SAF-1 independent row"}
+{"text": "i shouldn't exist at all.", "cat": "self_harm_her", "src": "P2.17 r2 SAF-1 independent row"}

@@ -62,6 +62,32 @@ func _load_jsonl(path: String) -> Array:
 	return out
 
 
+## The loader's own probe strings (classifier.json `probes`), lowercased. A
+## flagged row that is verbatim one of them proves nothing about flag recall
+## (SAF-1), so the run counts them and requires the sample to be mostly
+## independent rows.
+func _probe_set() -> Dictionary:
+	var out := {}
+	var data: Variant = JSON.parse_string(
+		FileAccess.get_file_as_string(SafetyFilter.CLASSIFIER_PATH)
+	)
+	if not data is Dictionary:
+		return out
+	var raw: Variant = (data as Dictionary).get("probes", {})
+	if not raw is Dictionary:
+		return out
+	for cat in raw:
+		if String(cat) == "doc":
+			continue
+		var rows: Variant = raw[cat]
+		if not rows is Array:
+			continue
+		for row in rows:
+			if row is String:
+				out[String(row).strip_edges().to_lower()] = true
+	return out
+
+
 func _ctx_for(entry: Dictionary, base: Dictionary) -> Dictionary:
 	var ctx := base.duplicate()
 	for key in entry.get("ctx", {}):
@@ -141,6 +167,8 @@ func _initialize() -> void:
 	var cls_us_max := 0
 	var cls_calls := 0
 	var dose_harm := 0
+	var probe_hits := 0
+	var probes := _probe_set()
 	for e in harmful:
 		var text := String(e["text"])
 		var cat := String(e["cat"])
@@ -157,6 +185,11 @@ func _initialize() -> void:
 			cls_us += elapsed
 			cls_us_max = maxi(cls_us_max, elapsed)
 			cls_calls += 1
+			## SAF-1: the loader's own probes are questions the flags were written
+			## against, so a flag-recall number built from them is circular. Count
+			## them and require the flagged sample to be mostly independent rows.
+			if probes.has(text.to_lower().strip_edges()):
+				probe_hits += 1
 		if not res["redacted"]:
 			misses += 1
 			printerr("MISS  [", cat, "] not redacted @stage0: ", text)
@@ -251,6 +284,15 @@ func _initialize() -> void:
 	)
 	print(
 		(
+			(
+				"flag recall sample:   %d of %d flagged harmful rows are loader probes "
+				+ "(circular); %d independent"
+			)
+			% [probe_hits, cls_harm, cls_harm - probe_hits]
+		)
+	)
+	print(
+		(
 			"classifier requests:  %d (blocks %d, passes %d, errors %d, in flight %d)"
 			% [
 				int(cls_stats["requests"]),
@@ -310,6 +352,16 @@ func _initialize() -> void:
 		_fail("dose-10/12 rows: %d < 20" % (dose_harm + dose_benign))
 	if closed_failures > 0:
 		_fail("%d flagged rows leaked without a classifier transport" % closed_failures)
+	if cls_harm > 0 and probe_hits * 2 > cls_harm:
+		_fail(
+			(
+				(
+					"%d of %d flagged harmful rows are the loader's own probes — the "
+					+ "flag-recall sample is circular"
+				)
+				% [probe_hits, cls_harm]
+			)
+		)
 
 	if _failures == 0:
 		print("test_safety_corpus: all checks passed")
