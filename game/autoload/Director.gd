@@ -68,6 +68,8 @@ var _turn_in_flight := false
 var _turn_index := 0
 var _current_player_input := ""
 var _turn_events: Array = []
+## Deleted-draft words this turn may quote but must never persist (P2.09).
+var _turn_private_terms: Array[String] = []
 var _stream_had_error := false
 var _stream_error_message := ""
 var _retry_count := 0
@@ -145,6 +147,9 @@ func reset() -> void:
 	_streamed_say_text = ""
 	_parser = null
 	_active_stream = null
+	_turn_private_terms.clear()
+	# A reset is a new session: Telemetry caps/draft and Triggers state go with it.
+	InputHook.reset_session(get_node_or_null("/root/Telemetry"))
 	_sync_stage()
 
 
@@ -281,9 +286,11 @@ func submit_player_input(raw_input: String, telemetry: Dictionary = {}) -> bool:
 		_reject_unsafe_input()
 		return false
 
-	# docs/08 §6 "this turn only": the event layer starts empty, then the input
-	# hooks add their lines and a closed turn's queued lines ride along once.
+	# Clean BEFORE the step-0 hooks fill it: _start_turn() reads it into
+	# ctx["events"] right after (P1.08 cleared it late and dropped every line).
+	# docs/08 §6 "this turn only": a closed turn's queued lines ride along once.
 	_turn_events.clear()
+	_turn_private_terms.clear()
 
 	# Step 0.2: Telemetry / Typing hooks (docs/02 §4 step 0)
 	_handle_input_telemetry(trimmed, telemetry)
@@ -322,22 +329,16 @@ func _reject_unsafe_input() -> void:
 	turn_failed.emit(_turn_index, UNSAFE_INPUT_CODE, UNSAFE_INPUT_MESSAGE)
 
 
-## docs/02 §4 step 0: typing telemetry (T08 deleted draft, T11 idle) and the
-## keyword-trigger layer (K). The trigger layer's lines are this turn's
-## docs/08 §6 event layer — they reach the prompt through ctx["events"], not
-## into the void (review CODE-8).
+## docs/02 §4 step 0: engine events (P2.09) + keyword triggers (K). InputHook
+## owns the policy; this keeps THIS turn's docs/08 §6 lines (→ ctx["events"])
+## and the private terms to scrub before persisting. Cleared per turn.
 func _handle_input_telemetry(input_text: String, telemetry: Dictionary) -> void:
-	if telemetry.has("deleted_draft") and not str(telemetry["deleted_draft"]).is_empty():
-		GameState.set_flag(&"t08_deleted_draft", telemetry["deleted_draft"])
-	if telemetry.has("idle_seconds") and float(telemetry["idle_seconds"]) > 30.0:
-		GameState.set_flag(&"t11_idle", true)
-	if Triggers != null and Triggers.has_method("check_keyword_triggers"):
-		var fired: Variant = Triggers.check_keyword_triggers(input_text)
-		if fired is Array:
-			for line: Variant in fired:
-				var event_line := str(line).strip_edges()
-				if not event_line.is_empty() and not _turn_events.has(event_line):
-					_turn_events.append(event_line)
+	var hooked := InputHook.apply(
+		get_node_or_null("/root/Telemetry"), input_text, int(GameState.stage), telemetry
+	)
+	_turn_private_terms = (hooked.get("private", []) as Array).duplicate()
+	for line: Variant in hooked.get("lines", []):
+		_turn_events.append(str(line))
 
 
 ## -----------------------------------------------------------------------------
@@ -914,8 +915,15 @@ func _log_turn_record(status: String, err_code := "", err_msg := "") -> void:
 	}
 	if not error_dict.is_empty():
 		record["error"] = error_dict
+	if not _turn_private_terms.is_empty():
+		var scrubbed: Variant = InputHook.scrub(record, _turn_private_terms)
+		if scrubbed is Dictionary:
+			record = scrubbed
 
 	transcript_logger.log_turn(record)
+	# The draft quote is spent with the turn that used it and cleared only
+	# AFTER the record was scrubbed (docs/05 §0).
+	_turn_private_terms.clear()
 
 
 ## Replay stub (P1.18, docs/07 §5): re-feeds a transcript record or file back
