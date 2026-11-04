@@ -15,7 +15,8 @@ signal pause_requested  ## Esc — the owning scene opens the safe pause (docs/0
 signal log_toggle_requested  ## Tab — toggle scroll-back log even when focused (DES-1).
 
 var _enabled := true
-var _last_draft := ""
+var _draft_peak := ""
+var _draft_last := ""
 
 
 func _ready() -> void:
@@ -47,16 +48,32 @@ func draft() -> String:
 
 func clear_draft() -> void:
 	text = ""
-	_last_draft = ""
+	_draft_peak = ""
+	_draft_last = ""
 
 
 func _on_text_changed(new_text: String) -> void:
-	if new_text.is_empty() and not _last_draft.is_empty():
-		# The signal carries the deleted words for M21; the box itself keeps
-		# nothing — the draft is memory-only and dies with the emission.
-		draft_deleted.emit(_last_draft)
-	_last_draft = new_text
+	# Backspace erases one character per edit, so the edit that empties the box
+	# only knows the last char. Keep the peak of the draft this edit continues
+	# and drop it when the text is replaced wholesale (select-all then type or
+	# paste) — the erased words must be the draft the player just gave up on.
+	if not _continues_draft(new_text):
+		_draft_peak = ""
+	_draft_last = new_text
+	if new_text.length() >= _draft_peak.length():
+		_draft_peak = new_text
+	if new_text.is_empty() and not _draft_peak.is_empty():
+		# The signal carries the whole erased draft for M21. The box itself
+		# keeps nothing — the draft is memory-only and dies with the emission.
+		draft_deleted.emit(_draft_peak)
+		_draft_peak = ""
 	draft_changed.emit(new_text)
+
+
+## True when `new_text` is still the same draft as the previous edit: a prefix
+## of it (characters erased) or an extension of it (characters typed).
+func _continues_draft(new_text: String) -> bool:
+	return new_text.begins_with(_draft_last) or _draft_last.begins_with(new_text)
 
 
 func _on_text_submitted(raw: String) -> void:
@@ -64,7 +81,8 @@ func _on_text_submitted(raw: String) -> void:
 	if trimmed.is_empty():
 		return
 	text = ""
-	_last_draft = ""
+	_draft_peak = ""
+	_draft_last = ""
 	submitted.emit(trimmed)
 
 

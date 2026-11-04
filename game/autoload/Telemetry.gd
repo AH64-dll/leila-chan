@@ -105,7 +105,8 @@ const FALLBACK_EVENTS := {
 		"trigger": "T12",
 		"meta": "",
 		"stage_min": 0,
-		"line": "EVENT: The player sent the same message again ({count} times in a row).",
+		"line":
+		"EVENT: The player sent the same message again ({count} times in the last few messages).",
 	},
 }
 
@@ -125,7 +126,6 @@ var _idle_armed := true
 var _last_activity_ms := 0.0
 var _last_resize_emit_ms := 0.0
 var _resize_origin := Vector2i.ZERO
-var _last_window_size := Vector2i.ZERO
 var _last_screenshot_ms := 0.0
 var _close_requests := 0
 var _screenshots := 0
@@ -395,7 +395,6 @@ func note_close_requested() -> void:
 ## the last reported size and one event lands per cooldown, with no event for
 ## sub-threshold jitter. Returns true when an event was recorded.
 func note_resized(current: Vector2i) -> bool:
-	_last_window_size = current
 	if not _date_active:
 		_resize_origin = current
 		return false
@@ -459,21 +458,18 @@ func take_turn_events(stage: int) -> Dictionary:
 		if stage < int(event.get("stage_min", 0)):
 			continue
 		var line := str(event.get("line", "")).strip_edges()
-		if not line.is_empty() and not lines.has(line):
+		var quote := _draft_quote_line(stage) if kind == DRAFT_KIND else ""
+		# At stage >= draft_quote_stage the quote subsumes the bare fact:
+		# one line per event per turn.
+		if quote.is_empty() and not line.is_empty() and not lines.has(line):
 			lines.append(line)
-		if kind == DRAFT_KIND:
-			var quote := _draft_quote_line(stage)
-			if not quote.is_empty() and not lines.has(quote):
-				lines.append(quote)
-				var quoted := _sanitise_draft(_private_draft)
-				if not _private_draft.is_empty() and not private_terms.has(_private_draft):
-					private_terms.append(_private_draft)
-				if (
-					not quoted.is_empty()
-					and quoted != _private_draft
-					and not private_terms.has(quoted)
-				):
-					private_terms.append(quoted)
+		if not quote.is_empty() and not lines.has(quote):
+			lines.append(quote)
+			var quoted := _sanitise_draft(_private_draft)
+			if not _private_draft.is_empty() and not private_terms.has(_private_draft):
+				private_terms.append(_private_draft)
+			if not quoted.is_empty() and quoted != _private_draft and not private_terms.has(quoted):
+				private_terms.append(quoted)
 	_clear_pending()
 	return {"lines": lines, "private": private_terms, "events": drained}
 
@@ -615,8 +611,7 @@ func _sync_window_size() -> void:
 	var tree := get_tree()
 	if tree == null or tree.root == null:
 		return
-	_last_window_size = tree.root.size
-	_resize_origin = _last_window_size
+	_resize_origin = tree.root.size
 
 
 func _connect_window() -> void:

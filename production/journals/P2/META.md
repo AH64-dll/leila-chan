@@ -29,6 +29,7 @@
   session but unused; P3.04 can gate path-specific effects there.
 - P2.09 overlap: ImplP209's telemetry hooks in ChatUI/Date are additive and disjoint from the text path;
   a normal 3-way merge should keep both (producer merges, per P2.25).
+
 ## P2.09 — input & window telemetry (round 1, 2026-11-04)
 
 - Built `Telemetry.gd` (autoload #15, last) as the docs/01 §5 "E" seam: seven detectors normalize to
@@ -49,8 +50,31 @@
 - Gotcha: `_clear_turn_context()` must NOT clear `_turn_private_terms`; `_start_turn()` calls it right
   after step 0, which erased the terms before the prompt/log. Clear them at submit start, in reset,
   and after `_log_turn_record()`.
-- Adding an autoload needs `Boot.EXPECTED_AUTOLOADS` + `AutoloadRingTest`; docs/07 §2 still says "14
+- Adding an autoload needs `Boot.EXPECTED_AUTOLOADS` only — `AutoloadRingTest` is data-driven from
+  that constant, so it pins the ring without a second list to update. docs/07 §2 still says "14
   autoloads" → DCR in the P2.09 handoff, left for the producer.
 - For P2.10: `Triggers.handle_engine_event()` is the matching seam; read the draft with
   `Telemetry.take_private_draft()` before the Director drains it if the trigger layer wants its own
   M21 quote.
+
+
+## P2.09 — round 2 (2026-11-04)
+
+- Rework: the deleted-draft contract moved to the sender. `InputBox` keeps `_draft_peak` (longest text
+  since the last clear) plus `_draft_last`, so hold-backspace reports the whole draft, and
+  `_continues_draft()` drops the peak on a wholesale replacement (select-all + type/paste) so a
+  replaced draft is never quoted. `Telemetry.take_turn_events()` now emits the M21 quote *instead of*
+  the bare fact line at stage ≥ 3.
+- Convention: every `EVENT:` line may state only what the detector measured. The repeat row said
+  "in a row" for a 3-message window → now "in the last few messages"; keep that discipline when
+  P3.09–P3.11 add lines.
+- Gotcha: gdUnit prints arrays through `str()`, which escapes inner quotes (`\"hell\"`), so
+  `.contains('"hell"')` on `str(array)` is false even when the line is right. Assert on the element
+  (`ends_with`/`contains` on `str(lines[0])`) instead.
+- Gotcha: `tools/test.sh` needs `godot --import` first on a tree merged with new `class_name` scripts
+  (P2.06's `Corruption`/`CorruptionSession`); without it gdUnit discovery fails with
+  "Identifier not declared".
+- Gotcha: gdformat reflows a wrapped `if (` once the nesting depth changes — run `gdformat` (not just
+  `--check`) after de-nesting a block, and re-check before committing.
+- Privacy sweeps must fail closed: `_dir_contains()` now asserts the directory exists, so a disabled
+  logger can no longer make the "never persisted" test pass vacuously.

@@ -81,25 +81,20 @@ func _clean_test_dir(path: String) -> void:
 		DirAccess.remove_absolute(path)
 
 
-## True when any file under `path` contains `needle` (privacy sweep).
+## True when any file under `path` contains `needle` (privacy sweep). The
+## directory must exist: a missing transcript must fail the test, not pass it.
 func _dir_contains(path: String, needle: String) -> bool:
+	assert_bool(DirAccess.dir_exists_absolute(path)).append_failure_message(path).is_true()
 	if not DirAccess.dir_exists_absolute(path):
-		return false
+		return true
 	var d := DirAccess.open(path)
 	if d == null:
-		return false
+		return true
 	for f: String in d.get_files():
 		var text := FileAccess.get_file_as_string(path.path_join(f))
 		if text.contains(needle):
 			return true
 	return false
-
-
-func _emitted_kinds() -> Array[String]:
-	var kinds: Array[String] = []
-	for event: Dictionary in Triggers.received_events:
-		kinds.append(str(event.get("event", "")))
-	return kinds
 
 
 ## docs/01 §5 trigger ids + docs/05 §1.3 gates are content, not code.
@@ -206,6 +201,8 @@ func test_deleted_draft_is_memory_only_and_spent_once() -> void:
 	assert_bool(Telemetry.note_draft_deleted(MARKER)).is_true()
 	var high := Telemetry.take_turn_events(3)
 	assert_bool(str(high["lines"]).contains(MARKER)).is_true()
+	# The quote subsumes the bare fact: one line per event per turn.
+	assert_array(high["lines"]).has_size(1)
 	assert_bool((high["private"] as Array).has(MARKER)).is_true()
 	# spent: a second drain has nothing, and a direct read is empty too.
 	var again := Telemetry.take_turn_events(3)
@@ -227,6 +224,8 @@ func test_deleted_draft_never_reaches_a_file() -> void:
 	await _await_until(func() -> bool: return not Director.is_busy())
 
 	Director.transcript_logger.flush()
+	assert_str(Director.transcript_logger.current_file()).is_not_empty()
+	assert_bool(DirAccess.dir_exists_absolute(TEST_DEBUG_DIR)).is_true()
 	assert_bool(_dir_contains(TEST_DEBUG_DIR, MARKER)).is_false()
 	assert_bool(str(GameState.to_dict()).contains(MARKER)).is_false()
 	assert_bool(Telemetry.take_private_draft().is_empty()).is_true()
@@ -381,6 +380,29 @@ func test_chatui_forwards_drafts_and_turn_state() -> void:
 	ui.input_box.text_changed.emit("")
 	assert_bool(bool(Telemetry.state()["draft_pending"])).is_true()
 	assert_str(str(Triggers.last_event("draft_deleted").get("trigger", ""))).is_equal("T08")
+
+	# Hold-backspace erases one character per edit, so the final edit only knows
+	# the last char: the signal must still carry the whole draft (M21). Start
+	# from a clean Telemetry so nothing can stand in for the missing event.
+	Telemetry.reset_session()
+	Telemetry.set_date_active(true)
+	for step: String in ["h", "he", "hel", "hell", "hel", "he", "h", ""]:
+		ui.input_box.text_changed.emit(step)
+	assert_bool(bool(Telemetry.state()["draft_pending"])).is_true()
+	var quoted := Telemetry.take_turn_events(3)
+	assert_array(quoted["lines"]).has_size(1)
+	if not (quoted["lines"] as Array).is_empty():
+		assert_str(str((quoted["lines"] as Array)[0])).ends_with('"hell"')
+
+	# Select-all then retype starts a new draft: the erase reports that one, not
+	# the words of the draft it replaced.
+	ui.input_box.text_changed.emit("hello")
+	ui.input_box.text_changed.emit("hi")
+	ui.input_box.text_changed.emit("")
+	var replaced := Telemetry.take_turn_events(3)
+	assert_array(replaced["lines"]).has_size(1)
+	if not (replaced["lines"] as Array).is_empty():
+		assert_str(str((replaced["lines"] as Array)[0])).ends_with('"hi"')
 
 	ui.begin_turn_wait()
 	assert_bool(bool(Telemetry.state()["turn_open"])).is_true()
