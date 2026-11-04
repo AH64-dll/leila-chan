@@ -19,7 +19,6 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import lab  # noqa: F401  (score imports lab; keeps the path contract identical)
 from score import annotate, pair_counts
 
 
