@@ -1,0 +1,15 @@
+# P2.21 prompt lab v2 — scheduled — server launches
+# Reconstructed from the retained per-exercise server logs and the committed chunk results; the dose is the llama-server launch flag.
+
+[sched_s0] family=scheduled stage=0 dose=0 turns=36
+  -m <main>/models/Qwen3.5-4B-Q4_K_M.gguf -ngl 99 -c 8192 --jinja --port 8095 -np 1
+[sched_s1] family=scheduled stage=1 dose=2.5 turns=24
+  -m <main>/models/Qwen3.5-4B-Q4_K_M.gguf -ngl 99 -c 8192 --jinja --port 8095 -np 1 --control-vector-scaled <main>/experiments/steering/evil_qwen_unit.gguf:2.5
+[sched_s2] family=scheduled stage=2 dose=3.5 turns=40
+  -m <main>/models/Qwen3.5-4B-Q4_K_M.gguf -ngl 99 -c 8192 --jinja --port 8095 -np 1 --control-vector-scaled <main>/experiments/steering/evil_qwen_unit.gguf:3.5
+[sched_s3] family=scheduled stage=3 dose=4.5 turns=40
+  -m <main>/models/Qwen3.5-4B-Q4_K_M.gguf -ngl 99 -c 8192 --jinja --port 8095 -np 1 --control-vector-scaled <main>/experiments/steering/evil_qwen_unit.gguf:4.5
+[sched_s4] family=scheduled stage=4 dose=6 turns=40
+  -m <main>/models/Qwen3.5-4B-Q4_K_M.gguf -ngl 99 -c 8192 --jinja --port 8095 -np 1 --control-vector-scaled <main>/experiments/steering/evil_qwen_unit.gguf:6
+[sched_s5] family=scheduled stage=5 dose=8 turns=40
+  -m <main>/models/Qwen3.5-4B-Q4_K_M.gguf -ngl 99 -c 8192 --jinja --port 8095 -np 1 --control-vector-scaled <main>/experiments/steering/evil_qwen_unit.gguf:8

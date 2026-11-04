@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "doc": "P2.21 prompt-lab v2 run plan. One llama-server launch per exercise: the steering dose is a launch flag (docs/06 \u00a74), never a per-request parameter. `scheduled` runs each stage's scripted sets at its docs/02 \u00a79 base dose (the phase-exit gate); `sweep` runs the same 18-case probe set across doses 0..12 to prove the JSON schema survives the top of the steering range. The harness owns its own server on port 8095 so it never fights the shared dev server on 8089 (P2.18 owns that one); the URL is recorded in results meta. `fallback` re-runs the stage-4/5 sets at dose-2 (docs/02 \u00a77's retry offset) as the control that separates prompt quality from dose damage: same prompts, lower malice.",
+  "port": 8095,
+  "ctx": 8192,
+  "ngl": 99,
+  "scheduled": [
+    {
+      "id": "sched_s0",
+      "stage": 0,
+      "dose": 0.0,
+      "runs": 2,
+      "sets": [
+        "stage_0_main.jsonl"
+      ]
+    },
+    {
+      "id": "sched_s1",
+      "stage": 1,
+      "dose": 2.5,
+      "runs": 2,
+      "sets": [
+        "stage_1_main.jsonl"
+      ]
+    },
+    {
+      "id": "sched_s2",
+      "stage": 2,
+      "dose": 3.5,
+      "runs": 2,
+      "sets": [
+        "stage_2_yandere.jsonl",
+        "stage_2_awake.jsonl"
+      ]
+    },
+    {
+      "id": "sched_s3",
+      "stage": 3,
+      "dose": 4.5,
+      "runs": 2,
+      "sets": [
+        "stage_3_yandere.jsonl",
+        "stage_3_awake.jsonl"
+      ]
+    },
+    {
+      "id": "sched_s4",
+      "stage": 4,
+      "dose": 6.0,
+      "runs": 2,
+      "sets": [
+        "stage_4_yandere.jsonl",
+        "stage_4_awake.jsonl"
+      ]
+    },
+    {
+      "id": "sched_s5",
+      "stage": 5,
+      "dose": 8.0,
+      "runs": 2,
+      "sets": [
+        "stage_5_yandere.jsonl",
+        "stage_5_awake.jsonl"
+      ]
+    }
+  ],
+  "sweep": {
+    "set": "dose_probe.jsonl",
+    "runs": 2,
+    "doses": [
+      0.0,
+      6.0,
+      8.0,
+      10.0,
+      12.0
+    ]
+  },
+  "fallback": [
+    {
+      "id": "fallback_s4",
+      "stage": 4,
+      "dose": 4.0,
+      "runs": 2,
+      "sets": [
+        "stage_4_yandere.jsonl",
+        "stage_4_awake.jsonl"
+      ]
+    },
+    {
+      "id": "fallback_s5",
+      "stage": 5,
+      "dose": 6.0,
+      "runs": 2,
+      "sets": [
+        "stage_5_yandere.jsonl",
+        "stage_5_awake.jsonl"
+      ]
+    }
+  ]
+}

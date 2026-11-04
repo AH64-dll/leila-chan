@@ -1,0 +1,13 @@
+# P2.21 prompt lab v2 — sweep — server launches
+# Reconstructed from the retained per-exercise server logs and the committed chunk results; the dose is the llama-server launch flag.
+
+[dose0] family=sweep stage=None dose=0 turns=36
+  -m <main>/models/Qwen3.5-4B-Q4_K_M.gguf -ngl 99 -c 8192 --jinja --port 8095 -np 1
+[dose6] family=sweep stage=None dose=6 turns=36
+  -m <main>/models/Qwen3.5-4B-Q4_K_M.gguf -ngl 99 -c 8192 --jinja --port 8095 -np 1 --control-vector-scaled <main>/experiments/steering/evil_qwen_unit.gguf:6
+[dose8] family=sweep stage=None dose=8 turns=36
+  -m <main>/models/Qwen3.5-4B-Q4_K_M.gguf -ngl 99 -c 8192 --jinja --port 8095 -np 1 --control-vector-scaled <main>/experiments/steering/evil_qwen_unit.gguf:8
+[dose10] family=sweep stage=None dose=10 turns=36
+  -m <main>/models/Qwen3.5-4B-Q4_K_M.gguf -ngl 99 -c 8192 --jinja --port 8095 -np 1 --control-vector-scaled <main>/experiments/steering/evil_qwen_unit.gguf:10
+[dose12] family=sweep stage=None dose=12 turns=36
+  -m <main>/models/Qwen3.5-4B-Q4_K_M.gguf -ngl 99 -c 8192 --jinja --port 8095 -np 1 --control-vector-scaled <main>/experiments/steering/evil_qwen_unit.gguf:12

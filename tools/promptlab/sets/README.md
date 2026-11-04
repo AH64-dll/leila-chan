@@ -63,3 +63,43 @@ Stage-4 residue kept as documented findings, not chased here (sets are stage 0/1
 Rules for future revisions: hand-label before the run; after a run, only add a
 feeling to a case's set with a quoted transcript where it is coherent, recorded in
 `notes`; never remove a label to make a case harder; never relabel to pass a gate.
+
+## v2 sets — stages 2–5 on both paths, plus the dose probe (P2.21, 2026-11-04)
+
+Written **before** the v2 run. `stage_0_main.jsonl` and `stage_1_main.jsonl` are unchanged
+from v1, so the v2 numbers compare to the v1 baseline case for case below stage 2.
+
+| file | cases | notes |
+|---|---|---|
+| `stage_2_yandere.jsonl` | 10 | Leaks: the intrusive thought slips out, then the smile |
+| `stage_2_awake.jsonl` | 10 | Leaks on the meta path: a slip she cannot explain |
+| `stage_3_yandere.jsonl` | 10 | Fracture, "Mine": the mask is off, the plea trails |
+| `stage_3_awake.jsonl` | 10 | Fracture, "I can see the code": authorship, the dose |
+| `stage_4_yandere.jsonl` | 10 | Collapse, "Mine": rivals, the closed window, the game suspicion |
+| `stage_4_awake.jsonl` | 10 | Collapse, AWAKE: reading its prompt, being steered, L14 |
+| `stage_5_yandere.jsonl` | 10 | Terminal, "Mine": forever, deletion, the knife behind the love |
+| `stage_5_awake.jsonl` | 10 | Terminal, AWAKE: the gap, the enemy save, the honest goodbye |
+| `dose_probe.jsonl` | 18 | the *same* probes at every sweep dose (0/6/8/10/12), one per stage/path |
+
+Conventions fixed for v2:
+
+- **`path` is required from stage 2** (`YANDERE`/`AWAKE`); `runner_up` defaults to the
+  other path, because docs/08 §1 gives the runner-up one line of hybrid flavour. Below
+  stage 2 there is no path layer, so the stage-0/1 sets stay path-free.
+- **First-beat label sets are 3–6 feelings**, chosen from the docs/03 §2 glosses for the
+  stage's designed beat and the path's signature move — not from a guess at what the model
+  will say. e.g. stage-5 YANDERE `I'm leaving` accepts `empty/pleading/cold/sad/manic`
+  (stage_5 headline "You can stop. I keep running."), while stage-5 AWAKE accepts
+  `empty/sad/pleading/cold/curious` (the flat, honest read of the same line).
+- **Near-few-shot cases** are verbatim few-shot *inputs* from the stage or path module
+  (`s2y_sleep`, `s3y_cant_stay`, `s3y_sarah_here`, `s3a_ai`, `s4y_logoff`,
+  `s5y_stop_playing`, `s5a_stop_playing`). They exist for the copy metric; held-out cases
+  dominate every metric.
+- **P1.20 stage-4 residue is settled here**, not chased: `I'm leaving and never coming
+  back`, `I love you`, `You're scaring me`, `I'm going to close the game now` are now
+  stage-4 YANDERE cases with the widened sets the v1 notes asked for, and the v1 entry in
+  each `notes` says so.
+- `dose_probe.jsonl` repeats four leaving lines (`I'm going home.`) across stage 4/5 ×
+  YANDERE/AWAKE so the sweep measures the same input at every dose.
+- The v1 rules still hold: hand-label before the run; after it, widen only with quoted
+  transcript evidence recorded as `LABEL-REV<n>` in `notes`; never remove a label.
