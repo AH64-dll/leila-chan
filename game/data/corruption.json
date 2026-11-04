@@ -1,0 +1,81 @@
+{
+	"version": 1,
+	"doc": "P2.06 corruption text filter (docs/07 §3.4 text pipeline: say chunk -> Safety.scan -> PronounFix -> Corruption.filter(stage, path) -> Typewriter; effect gates from docs/01 §3 stage table). `effects` pins each effect's kind, first stage and per-beat cap; a stage row only tunes the chance, so no data edit can unlock an effect below its documented gate. `strike.pairs` are the self-correction pairs (word -> what she really meant); `strike.mark` is U+0338 COMBINING LONG SOLIDUS OVERLAY, which the shipped Open Sans UI font (plus system fallback) renders as a slash through each glyph. `zalgo.marks` are the three combining marks the shipped font actually carries (U+0300, U+0301, U+0308); U+0332 in `bleed` is the combining low line. `reduced_motion.disable` lists the effects that exist only as visual jitter/smear and are switched off for the accessibility setting; the textual effects stay. `calmer_max_stage` is docs/02 §8's calmer mode cap (stage 3), so a calmer run never reaches zalgo/redaction/bleed/reverse. Read by game/llm/Corruption.gd; its DOCS_TABLE fallback holds the same values so a broken file degrades to the documented behaviour.",
+	"effects": {
+		"hesitate": {"kind": "beat", "gate": 1, "max_per_beat": 1},
+		"strike": {"kind": "word", "gate": 2, "max_per_beat": 1},
+		"repeat": {"kind": "word", "gate": 3, "max_per_beat": 2},
+		"wrong_name": {"kind": "word", "gate": 3, "max_per_beat": 1},
+		"zalgo": {"kind": "word", "gate": 4, "max_per_beat": 3},
+		"redact": {"kind": "word", "gate": 4, "max_per_beat": 1},
+		"bleed": {"kind": "beat", "gate": 5, "max_per_beat": 1},
+		"reverse": {"kind": "beat", "gate": 5, "max_per_beat": 1}
+	},
+	"stages": {
+		"0": {},
+		"1": {"hesitate": 0.3},
+		"2": {"hesitate": 0.35, "strike": 0.5},
+		"3": {"hesitate": 0.4, "strike": 0.6, "repeat": 0.06, "wrong_name": 0.5},
+		"4": {
+			"hesitate": 0.5,
+			"strike": 0.7,
+			"repeat": 0.08,
+			"wrong_name": 0.6,
+			"zalgo": 0.1,
+			"redact": 0.04
+		},
+		"5": {
+			"hesitate": 0.6,
+			"strike": 0.8,
+			"repeat": 0.12,
+			"wrong_name": 0.7,
+			"zalgo": 0.16,
+			"redact": 0.06,
+			"bleed": 0.45,
+			"reverse": 0.25
+		}
+	},
+	"params": {
+		"hesitate": {"mark": "…"},
+		"strike": {
+			"mark": "\u0338",
+			"correction": "— no,",
+			"pairs": {
+				"hate": "love",
+				"love": "hate",
+				"never": "always",
+				"always": "never",
+				"leave": "stay",
+				"stay": "leave",
+				"remember": "forget",
+				"forget": "remember",
+				"fine": "broken",
+				"safe": "scared",
+				"want": "need",
+				"need": "want",
+				"mine": "yours",
+				"yours": "mine",
+				"sorry": "glad",
+				"glad": "sorry",
+				"trust": "doubt",
+				"doubt": "trust",
+				"alone": "with you",
+				"okay": "not okay"
+			}
+		},
+		"repeat": {"min_length": 2},
+		"wrong_name": {
+			"names": ["Kenji", "Ren", "Haru", "Sora", "Yuki", "Akira", "Daichi", "Riku"]
+		},
+		"zalgo": {
+			"marks": ["\u0300", "\u0301", "\u0308"],
+			"glyphs": {"4": 1, "5": 2},
+			"marks_per_glyph": {"4": 1, "5": 2}
+		},
+		"redact": {"bars": 6},
+		"bleed": {"fragment_words": 2, "indent": "      ", "mark": "\u0332"},
+		"reverse": {}
+	},
+	"reduced_motion": {"disable": ["zalgo", "bleed"]},
+	"calmer_max_stage": 3
+}
