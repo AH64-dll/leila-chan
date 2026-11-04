@@ -62,8 +62,10 @@
   900 ms bounds a held beat, but a whole-text scan must live on the transport's own bound (30 s, loader
   floor 12 s = the 10 s read bound + margin) or a slow-but-healthy answer is dropped before it can cache.
 - A refusal is not an answer. Never cache an error as the clause's verdict: one flaky read then becomes a
-  permanent bar, and a flag false positive can never heal. Bar that display, mark the refusal on the hold
-  so the drain a settle re-enters does not re-ask the same question, and let the next beat try again.
+  permanent bar, and a flag false positive can never heal. Bar that display, remember the refused clause
+  (category + matched text, NOT the window key — the barred text stays in the display window and is
+  re-detected at a new offset) for the rest of the beat so the drain a settle re-enters does not re-ask,
+  and clear it when the next beat starts.
 - Policy that depends on the *server's launch flags* cannot be a boot-time snapshot of config the app never
   had: `serve.sh --vector` is invisible to the game. Give the gate a Callable that re-reads the live config,
   and attach only where the app can vouch — its own launch (`auto_start`), or an explicit
