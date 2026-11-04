@@ -86,6 +86,13 @@ func _ready() -> void:
 		# pass-through also keeps ChatUI's unset-filter warning accurate — it
 		# only fires when a driver hands it un-scanned text.
 		chat_ui.text_filter = func(chunk: String) -> String: return chunk
+		# F1 controller wiring (P1 gate-r3 / P2.23): the Director routes every
+		# streamed say chunk and the unsafe-input refusal through this node, so
+		# the scene that instantiates the ChatUI owns the registration. An
+		# autoload-side discovery hook would add a second wiring path for no
+		# benefit. `_exit_tree()` clears it so the autoload never holds a freed
+		# scene node.
+		Director.register_chat_ui(chat_ui)
 	if character != null:
 		if not character.twitch_fired.is_connected(_on_character_twitch_fired):
 			character.twitch_fired.connect(_on_character_twitch_fired)
@@ -101,6 +108,20 @@ func _ready() -> void:
 
 	if auto_start:
 		start_date.call_deferred()
+
+
+## F1 controller wiring (P2.23): a Date that leaves the tree must not leave the
+## Director holding its (soon freed) ChatUI — clear our own registration, and a
+## registration that already points at a freed node. Another date's live ChatUI
+## is never touched.
+func _exit_tree() -> void:
+	var registered: Variant = Director.chat_ui_node
+	if registered == null:
+		return
+	if not is_instance_valid(registered):
+		Director.register_chat_ui(null)
+	elif is_instance_valid(chat_ui) and registered == chat_ui:
+		Director.register_chat_ui(null)
 
 
 func find_component(component_name: String) -> Node:

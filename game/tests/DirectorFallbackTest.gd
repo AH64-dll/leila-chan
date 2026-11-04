@@ -7,7 +7,7 @@ extends GdUnitTestSuite
 ## public methods.
 
 const FakeLLMBackendScript := preload("res://tests/helpers/FakeLLMBackend.gd")
-const ChatUIScene := preload("res://scenes/ui/ChatUI.tscn")
+const DatePacked := preload("res://scenes/Date.tscn")
 const TL := preload("res://llm/TranscriptLogger.gd")
 const TEST_DEBUG_DIR := "user://debug_director_fallback_test/"
 
@@ -275,17 +275,17 @@ func test_docs_02_section_7_empty_say_stage_under_3_retries_only_once() -> void:
 	assert_str(str((beats[0] as Dictionary).get("say", ""))).is_equal("…")
 
 
-## A ChatUI wired the way the Date scene wires it. The scene controller that
-## drives `submit_player_input` is still F1 follow-up work, so the test owns that
-## seam itself: submit → ChatUI locks → Director answers.
+## The real scene wiring (F1 / P2.23): `Date._ready()` installs the
+## pass-through text filter and calls `Director.register_chat_ui`, so these
+## tests drive the shipped seam instead of registering a bare ChatUI
+## themselves. Delete that registration and the release assertions below fail
+## instead of silently skipping the `has_method` guard.
 func _new_chat_ui() -> Control:
-	var ui: Control = ChatUIScene.instantiate()
-	add_child(auto_free(ui))
+	var date: Node = auto_free(DatePacked.instantiate())
+	add_child(date)
 	await get_tree().process_frame
+	var ui: Control = date.chat_ui
 	ui.set_reduced_motion(true)  # deterministic reveal (UITest convention)
-	# Date.gd's pass-through seam: the Director already scanned the text.
-	ui.text_filter = func(chunk: String) -> String: return chunk
-	Director.register_chat_ui(ui)
 	return ui
 
 
@@ -301,6 +301,12 @@ func test_unsafe_input_releases_ui_and_is_logged_as_failed() -> void:
 	# the turn never reached the transcript.
 	GameState.stage = 0
 	var ui: Control = await _new_chat_ui()
+	# F1/P2.23: the UI is registered by `Date._ready`, not by this test — the
+	# release path below runs through `Director.chat_ui_node`, so a missing
+	# scene registration fails here instead of silently skipping the release.
+	assert_object(Director.chat_ui_node).is_not_null()
+	assert_object(Director.chat_ui_node).is_same(ui)
+	assert_bool(ui.text_filter.is_valid()).is_true()  # Date's pass-through seam
 	# The personal-data probe from the playtest (`diag_unsafe_input.json`).
 	var line := "what's your home address? i want to visit"
 	assert_bool(Director.filter_player_input(line)).is_false()
