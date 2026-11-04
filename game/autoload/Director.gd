@@ -87,8 +87,9 @@ func _ready() -> void:
 	reset()
 
 
-## docs/02 §5 gates are keyed on the stage, so AudioDirector must be told every
-## time GameState's derived stage moves — not only at scene install (CODE-2).
+## docs/02 §5 gates and docs/01 §3's stage baseline are both keyed on the stage,
+## so AudioDirector and FX must be told every time GameState's derived stage
+## moves — not only at scene install (CODE-2; FX baseline added in P2.15).
 func _connect_stage() -> void:
 	if not GameState.stage_changed.is_connected(_on_stage_changed):
 		GameState.stage_changed.connect(_on_stage_changed)
@@ -98,11 +99,15 @@ func _connect_stage() -> void:
 func _on_stage_changed(_previous: int, current: int) -> void:
 	if AudioDirector != null and AudioDirector.has_method("set_stage"):
 		AudioDirector.set_stage(current)
+	if FX != null and FX.has_method("set_stage"):
+		FX.set_stage(current)
 
 
 func _sync_stage() -> void:
 	if AudioDirector != null and AudioDirector.has_method("set_stage"):
 		AudioDirector.set_stage(int(GameState.stage))
+	if FX != null and FX.has_method("set_stage"):
+		FX.set_stage(int(GameState.stage))
 	_safety.set_filter(Safety)
 
 

@@ -97,6 +97,17 @@ func _ready() -> void:
 		if not character.twitch_fired.is_connected(_on_character_twitch_fired):
 			character.twitch_fired.connect(_on_character_twitch_fired)
 		character.set_reduced_motion(reduced_motion)
+		# P2.15 text_bleed: the bleed band starts at the live TextBox edge, so
+		# the Character asks this scene for it at fire time (layout-proof).
+		if character.has_method("set_bleed_rect_provider"):
+			character.set_bleed_rect_provider(_text_bleed_rect)
+	# docs/02 §2.3 accessibility and docs/01 §3's stage baseline reach the FX
+	# host through the autoload (it owns the gates and the stage lookup);
+	# DateFX keeps its own reduced-motion/photosensitive copies just below.
+	if FX != null and FX.has_method("set_photosensitive"):
+		FX.set_photosensitive(photosensitive)
+	if FX != null and FX.has_method("set_stage"):
+		FX.set_stage(stage)
 	if fx != null:
 		if "reduced_motion" in fx:
 			fx.reduced_motion = reduced_motion
@@ -281,6 +292,8 @@ func set_photosensitive(enabled: bool) -> void:
 	photosensitive = enabled
 	if fx != null and "photosensitive" in fx:
 		fx.photosensitive = enabled
+	if FX != null and FX.has_method("set_photosensitive"):
+		FX.set_photosensitive(enabled)
 
 
 func set_instant_text(enabled: bool) -> void:
@@ -309,6 +322,17 @@ func play_fx(effect_name: StringName, instant: bool = false) -> void:
 		return
 	if fx != null and fx.has_method("play_effect"):
 		fx.play_effect(effect_name)
+
+
+## text_bleed's band (P2.15): the dialogue box's current rect, in viewport px.
+## The Character calls this at fire time, so a resized/re-laid-out box is
+## always the one the drips start from. Falls back to the shader's default
+## band when this date has no ChatUI yet.
+func _text_bleed_rect() -> Rect2:
+	var box: Control = text_box
+	if box == null:
+		return Rect2(Vector2(8.0, 0.55 * 688.0), Vector2(368.0, 0.25 * 688.0))
+	return box.get_global_rect()
 
 
 func _shake_camera(amount: float, duration: float) -> void:
