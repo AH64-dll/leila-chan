@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "doc": "P2.01 meter arithmetic. Sources: docs/01_GAME_DESIGN.md §2 (instability ratchet floor = peak - 15; per-turn slow burn +0.35 +0.15*(Fixation/100) -0.2*(Lucidity/100); per day +3; model suggestion caps) and docs/02_DIRECTOR_PROTOCOL.md §1.1 (mood ints -3..3, scaled affection x1.5, trust x2, stress -> instability x0.6). These numbers ARE the design formula: changing one requires a DCR and the doc-value test in tests/test_meters.py, never a quiet tweak. Read by game/llm/Meters.gd; the in-code fallback there holds the same values so a broken file degrades to the documented formula.",
+  "doc": "P2.01 meter arithmetic + P2.22B meter writers. Sources: docs/01_GAME_DESIGN.md §2 (instability ratchet floor = peak - 15; per-turn slow burn +0.35 +0.15*(Fixation/100) -0.2*(Lucidity/100); per day +3; model suggestion caps; the Fixation 'moves by' sources time spent / affection / isolation and the Lucidity sources kindness / honesty / boundaries) and docs/02_DIRECTOR_PROTOCOL.md §1.1 (mood ints -3..3, scaled affection x1.5, trust x2, stress -> instability x0.6). ratchet_drop, slow_burn, daily_burn and mood ARE the design formula: changing one requires a DCR and the doc-value test in tests/test_meters.py, never a quiet tweak. The writers block is the P2.22B magnitudes for the sources docs/01 §2 names but does not number (DCR-1 in production/handoffs/P2.22B.md): time_per_turn + per_affection_gain + isolation feed Fixation, kindness/honesty/boundaries feed Lucidity, keyed by the docs/01 §2 behaviour-profile counters GameState already keeps. Read by game/llm/Meters.gd; the in-code fallback there holds the same values so a broken file degrades to the documented formula.",
   "ratchet_drop": 15.0,
   "slow_burn": {
     "base": 0.35,
@@ -18,6 +18,28 @@
     "turn_caps": {
       "affection": 5.0,
       "instability": 3.0
+    }
+  },
+  "writers": {
+    "fixation": {
+      "time_per_turn": 0.35,
+      "per_affection_gain": 0.05,
+      "isolation": {
+        "coldness": 0.5,
+        "apathy": 0.5,
+        "ignored_questions": 0.5
+      }
+    },
+    "lucidity": {
+      "kindness": {
+        "warmth": 0.3
+      },
+      "honesty": {
+        "honesty": 0.8
+      },
+      "boundaries": {
+        "boundaries": 1.0
+      }
     }
   }
 }

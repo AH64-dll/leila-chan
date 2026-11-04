@@ -255,22 +255,101 @@ SIBLINGS_CORRUPT = {
     "26": "28", "27": "24", "28": "26", "29": "23", "30": "21",
 }
 
+# docs/01 §4 "Sprites:" lines, transcribed by hand and checked against the doc by tests/test_casting_paths.py.
+# These are the path *pools*: every face a path's own rules may put on screen, so the design bible stays the
+# authority on each path's look and the resolver never invents a signature.
+PATH_POOLS = {
+    # §4.1 "Sprites: 01, 06, 24, 21, 30, 27."
+    "YANDERE": ["01", "06", "24", "21", "30", "27"],
+    # §4.2 "Sprites: 01 <-> 17 rapid swaps, 19, 15, 16, 13."
+    "SPLIT": ["01", "17", "19", "15", "16", "13"],
+    # §4.3 "Sprites: 03, 07, 09, 17, 10, 26."
+    "TSUN": ["03", "07", "09", "17", "10", "26"],
+    # §4.4 "Sprites: 14, 12, 10, 23, 25."
+    "HOLLOW": ["14", "12", "10", "23", "25"],
+    # §4.5 "Sprites: 08, 29, 11, 22, 25."
+    "AWAKE": ["08", "29", "11", "22", "25"],
+    # §4.6 "Sprites: 02, 05, 06, 13, 14, then sudden spikes of 26 / 21 she recovers from."
+    "ANCHOR": ["02", "05", "06", "13", "14", "26", "21"],
+}
+
+# docs/03 §3.2's per-path spot fixes that name a face outside the path's docs/01 §4 pool. They are the resolver
+# spec's explicit overrides (P2.14 shipped them), so they stay; the pool column keeps docs/01 §4 honest and this
+# list keeps the divergence countable instead of silent. tests/test_casting_paths.py compares both against the docs.
+DOC03_EXTRAS = {
+    "YANDERE": ["22", "28"],     # §3.2 "joy→22", "suspicious→28" (docs/01 §4.1 omits both)
+    "SPLIT": [],                 # 01↔17, 16, 19 are all in the §4.2 pool
+    "TSUN": ["16", "18", "20"],  # §3.2 "disgusted→18"; break "afraid→20, crying→16"
+    "HOLLOW": [],                # drift 23/10/12/14 sits inside the §4.4 pool
+    "AWAKE": ["26"],             # §3.2 "surprised→26" (docs/01 §4.5 lists 11 instead)
+    "ANCHOR": ["22"],            # §3.2 relapse "26/22"; docs/01 §4.6 gives the spikes as "26 / 21"
+}
+
 PATHS = {
-    "YANDERE": {"tiers": ["T2", "T3"], "override": {"love": "24", "angry": "21", "suspicious": "28", "joy": "22"},
-                "flagged": {"warmth": ["27", "rival_gone"]}, "music_bias": "music_box", "cue_bias": ["heartbeat_fast", "breath_close"]},
-    "SPLIT": {"tiers": ["T2", "T3"], "override": {"crying": "16", "pleading": "19"},
-              "idealize": ["01", "02", "24"], "devalue": ["17", "18", "07"], "rule": "alternate when beat valence flips",
+    "YANDERE": {"pool": PATH_POOLS["YANDERE"], "tiers": ["T2", "T3"],
+                "override": {"love": "24", "angry": "21", "suspicious": "28", "joy": "22"},
+                "flagged": {"warmth": ["27", "rival_gone"]}, "rule": "love and violence share a face",
+                "music_bias": "music_box", "cue_bias": ["heartbeat_fast", "breath_close"]},
+    # docs/01 §4.2: "01 ↔ 17 rapid swaps". docs/03 §3.2's broader "positive → 01/02/24, negative → 17/18/07"
+    # lists are the feelings' own base-table faces (02, 24, 18, 07 all resolve there anyway), so the *rule*
+    # uses the two whiplash faces the design bible names; see the P3.06 handoff DCR.
+    "SPLIT": {"pool": PATH_POOLS["SPLIT"], "tiers": ["T2", "T3"], "override": {"crying": "16", "pleading": "19"},
+              "idealize": "01", "devalue": "17", "rule": "alternate when beat valence flips",
               "music_bias": "tense", "cue_bias": ["sob", "door_slam"]},
-    "TSUN": {"tiers": ["T2", "T3"], "override": {"playful": "03", "cold": "07", "disgusted": "18", "angry": "17"},
-             "break": {"afraid": "20", "crying": "16"}, "music_bias": "keep", "cue_bias": ["sigh", "door_slam"]},
-    "HOLLOW": {"tiers": ["T2", "T3"], "drift_to": ["23", "10", "12", "14"], "rule": "sprite changes only on intensity 3",
-               "voice": "no blips at i1", "music_bias": "silence", "cue_bias": ["clock_tick", "music_box_note"]},
-    "AWAKE": {"tiers": ["T2", "T3"], "override": {"confused": "29", "surprised": "26", "cold": "25", "manic": "22"},
+    "TSUN": {"pool": PATH_POOLS["TSUN"], "tiers": ["T2", "T3"],
+             "override": {"playful": "03", "cold": "07", "disgusted": "18", "angry": "17"},
+             "break": {"flag": "tsun_break", "sprite": {"afraid": "20", "crying": "16"}},
+             "rule": "the act cracks into a scared child",
+             "music_bias": "keep", "cue_bias": ["sigh", "door_slam"]},
+    # docs/03 §3.2: "most feelings drift to 23/10/12/14; sprite changes only on intensity 3" — the face stops
+    # responding. Sad/tired/bored keep their own numb face, every other feeling (cold included) drifts to 23.
+    # Cold has no entry of its own: 25's first tier is T3 and cold's T3 base cell is already 25, so a `cold: 25`
+    # entry could never change a face (DES-2); 25 stays a docs/01 §4.4 pool signature via the base table.
+    "HOLLOW": {"pool": PATH_POOLS["HOLLOW"], "tiers": ["T2", "T3"], "change_intensity": 3,
+               "drift": {"default": "23", "sad": "14", "tired": "12", "bored": "10"},
+               "rule": "sprite changes only on intensity 3", "voice": "no blips at i1",
+               "music_bias": "silence", "cue_bias": ["clock_tick", "music_box_note"]},
+    "AWAKE": {"pool": PATH_POOLS["AWAKE"], "tiers": ["T2", "T3"],
+              "override": {"confused": "29", "surprised": "26", "cold": "25", "manic": "22"},
               "rule": "glitch shader on every sprite change", "shader": "glitch", "voice": "voice_blip.awake",
               "music_bias": "distorted", "cue_bias": ["static"]},
-    "ANCHOR": {"tiers": ["T2", "T3"], "rule": "keeps healthy sprites; relapse beat uses 26/22 once, then 02",
+    # docs/03 §3.2: "keeps healthy sprites; relapse beats use 26/22 for one beat, then 02". healthy_tier is the
+    # pre-fracture column the beat resolves from, so ANCHOR never shows a corrupt face (docs/01 §4.6). The
+    # relapse spike is data: distress for a negative beat, elation for a positive one, and — docs/01 §4.6's
+    # "sudden spikes of 26 / 21" — the knife at stage 5 intensity 3 on a distress beat (docs/03 §1 gives 21
+    # valence -3, and it stays under its 1-per-scene reveal budget).
+    "ANCHOR": {"pool": PATH_POOLS["ANCHOR"], "tiers": ["T2", "T3"], "healthy_tier": "T1",
+               "relapse": {"flag": "anchor_relapse", "spike": {"distress": "26", "elation": "22"},
+                           "crisis": {"sprite": "21", "tier": "T3", "intensity": 3}, "then": "02"},
+               "rule": "keeps healthy sprites; relapse beat uses 26/22 once, then 02",
                "music_bias": "calm", "cue_bias": ["hum", "sigh"]},
 }
+for _path, _spec in PATHS.items():
+    _spec["docs_03_extras"] = DOC03_EXTRAS[_path]
+
+
+def path_rule_sprites(spec):
+    """(sprite, where) for every face a path's own rule tables can select (docs/03 §3.2)."""
+    out = []
+    for feeling, sprite in spec.get("override", {}).items():
+        out.append((sprite, f"override {feeling}"))
+    for feeling, pair in spec.get("flagged", {}).items():
+        out.append((pair[0], f"flagged {feeling}"))
+    for feeling, sprite in spec.get("break", {}).get("sprite", {}).items():
+        out.append((sprite, f"break {feeling}"))
+    for key in ("idealize", "devalue"):
+        if spec.get(key):
+            out.append((spec[key], key))
+    for feeling, sprite in spec.get("drift", {}).items():
+        out.append((sprite, f"drift {feeling}"))
+    relapse = spec.get("relapse", {})
+    for key, sprite in relapse.get("spike", {}).items():
+        out.append((sprite, f"relapse {key}"))
+    if relapse.get("crisis", {}).get("sprite"):
+        out.append((relapse["crisis"]["sprite"], "relapse crisis"))
+    if relapse.get("then"):
+        out.append((relapse["then"], "relapse recovery"))
+    return out
 
 
 def main():
@@ -348,6 +427,30 @@ def main():
     for k, v in MOTION_INTENSITY.items():
         if k not in ("1", "2", "3") or not 0.0 < v <= 3.0:
             errors.append(f"motion intensity {k}: {v} is not a plausible amplitude scale")
+    if sorted(PATHS) != sorted(PATH_POOLS):
+        errors.append(f"paths {sorted(PATHS)} != pools {sorted(PATH_POOLS)}")
+    for name, spec in PATHS.items():
+        pool = spec.get("pool", [])
+        if not pool:
+            errors.append(f"paths {name}: empty docs/01 §4 pool")
+        if len(set(pool)) != len(pool):
+            errors.append(f"paths {name}: pool repeats a sprite")
+        for s in pool:
+            if s not in art:
+                errors.append(f"paths {name}: pool sprite {s} not exported")
+        if spec.get("healthy_tier", "T1") not in ("T0", "T1"):
+            errors.append(f"paths {name}: healthy_tier {spec['healthy_tier']} is not pre-fracture")
+        if "break" in spec and not str(spec["break"].get("flag", "")).strip():
+            errors.append(f"paths {name}: break rule needs the beat flag that fires it")
+        if "relapse" in spec and not str(spec["relapse"].get("flag", "")).strip():
+            errors.append(f"paths {name}: relapse rule needs the beat flag that fires it")
+        rules = path_rule_sprites(spec)
+        for s, where in rules:
+            if s not in art:
+                errors.append(f"paths {name}: {where} names sprite {s}, which is not exported")
+        extras = sorted({s for s, _ in rules if s not in pool})
+        if extras != sorted(DOC03_EXTRAS[name]):
+            errors.append(f"paths {name}: docs/03 extras {extras} != DOC03_EXTRAS {sorted(DOC03_EXTRAS[name])}")
     for s, e in ON_ENTER.items():
         if s not in art:
             errors.append(f"on_enter: sprite {s} missing")
@@ -506,11 +609,47 @@ def write_doc(c):
     for s, e in c["siblings_corrupt"].items():
         w(f'| {s} {c["sprites"][s]["key"]} | {"–".join(c["sprites"][s]["tiers"])} | {e} {c["sprites"][e]["key"]} |')
     w("\n## 4. Paths\n")
-    w("| Path | Overrides (T2–T3) | Rule | Music / cue bias |")
-    w("|---|---|---|---|")
+    w("Each path owns a sprite pool — docs/01 §4's own `Sprites:` line — and docs/03 §3.2's beat rules, live from")
+    w("the path's tiers up (T2–T3; below them every path is inert, docs/03 §3 step 2). A face a path's rules name")
+    w("must be either in its pool or one of the **docs/03 extras** counted below, and every pool face is exported")
+    w("art: a docs/03 §3.2 override the design bible's pool omits still ships (the resolver spec is explicit per")
+    w("feeling), but the divergence stays visible here instead of hiding in code.\n")
+    w("| Path | Pool (docs/01 §4) | Overrides (docs/03 §3.2) | Rule | Music / cue bias |")
+    w("|---|---|---|---|---|")
     for p, d in c["paths"].items():
-        ov = ", ".join(f"{a}→{b}" for a, b in d.get("override", {}).items())
-        w(f'| {p} | {ov or "—"} | {d.get("rule", "")} | {d["music_bias"]} / {", ".join(d["cue_bias"])} |')
+        parts = [", ".join(f"{a}→{b}" for a, b in d.get("override", {}).items()),
+                 ", ".join(f"{a}→{b[0]} if {b[1]}" for a, b in d.get("flagged", {}).items()),
+                 ", ".join(f"{a}→{b}" for a, b in d.get("break", {}).get("sprite", {}).items())]
+        ov = "; ".join(x for x in parts if x) or "—"
+        w(f'| {p} | {" ".join(d["pool"])} | {ov} | {d.get("rule", "")} | {d["music_bias"]} / {", ".join(d["cue_bias"])} |')
+    w("")
+    w("### 4.1 Beat rules\n")
+    w("| Path | What the resolver does | Data |")
+    w("|---|---|---|")
+    for p, d in c["paths"].items():
+        bits = []
+        if "idealize" in d:
+            bits.append(f'valence flip → {d["idealize"]} (idealize) / {d["devalue"]} (devalue)')
+        if "break" in d:
+            made = ", ".join(f"{f}→{s}" for f, s in d["break"]["sprite"].items())
+            bits.append(f'flag `{d["break"]["flag"]}`: {made}')
+        if "drift" in d:
+            drift = ", ".join(f"{f}→{s}" for f, s in d["drift"].items())
+            bits.append(f'freezes below i{d["change_intensity"]}; drift {drift}')
+        if "healthy_tier" in d:
+            bits.append(f'keeps healthy sprites: resolves from the {d["healthy_tier"]} (pre-fracture) column')
+        if "relapse" in d:
+            r = d["relapse"]
+            spikes = ", ".join(f"{k}→{s}" for k, s in r["spike"].items())
+            bits.append(f'flag `{r["flag"]}`: {spikes}; crisis→{r["crisis"]["sprite"]} at '
+                        f'{r["crisis"]["tier"]} i{r["crisis"]["intensity"]} on a distress '
+                        f'(negative-valence) beat; then {r["then"]}')
+        if bits:
+            w(f'| {p} | {d.get("rule", "")} | {" · ".join(bits)} |')
+    w("")
+    w("A pool face is a docs/01 §4 signature. Faces docs/03 §3.2 names outside the pool (kept, see above):")
+    for p, d in c["paths"].items():
+        w(f'- {p}: {", ".join(d.get("docs_03_extras", [])) or "—"}')
     w("\n## 5. Voice by stage\n")
     w("| Stage | Blip pool (`cue_map.json` system group) |")
     w("|---|---|")

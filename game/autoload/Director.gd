@@ -18,12 +18,11 @@ const UNSAFE_INPUT_CODE := "unsafe_input"
 const UNSAFE_INPUT_MESSAGE := "Input blocked by safety policy"
 ## Turn history maintained by Director: array of {"role": "user"|"assistant", ...}
 var history: Array[Dictionary] = []
-## Current active scene info
-var scene_info: Dictionary = {
-	"prompt": "You are in a small café after class. Two cups, one window seat.",
-	"variant": "The afternoon light filters softly through the glass.",
-	"event": "",
-}
+## This turn's docs/08 §1 `[scene]` layer (goal/prompt/variant/event), assigned by
+## the live Date before each submit (`Date._apply_director_scene`) and cleared when
+## that date ends. Empty means no date is running: no scene layer at all, instead of
+## the café this used to hard-code for every shipped date (P2.22 S1-3).
+var scene_info: Dictionary = {}
 
 ## Subsystem node references (injected or registered)
 var character_node: Node = null
@@ -40,9 +39,9 @@ var last_offered_actions: Array = []
 var last_read: String = ""
 var last_inner: String = ""
 ## docs/01 §2 ledger of the last completed turn: turn index, the slow burn that
-## landed, the mood deltas that landed, instability/floor/stage after the turn.
-## Written by GameState.apply_turn_meters(); dev tooling reads it (DirectorTest
-## asserts the wiring, the P2.19 night screen can show it).
+## landed, the mood deltas that landed, the Fixation the writers added, and
+## instability/floor/stage after the turn. Written by
+## GameState.apply_turn_meters(); dev tooling reads it.
 var last_meter_ledger: Dictionary = {}
 var last_sprite_enter: Dictionary = {}  # docs/10 §3: last {"events", "report"} dispatch
 
@@ -127,6 +126,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func reset() -> void:
 	history.clear()
 	Memory.reset()
+	scene_info = {}
 	last_player_inputs.clear()
 	quiet_turn_streak = 0
 	last_turn_data.clear()
@@ -257,13 +257,13 @@ func sampling_spec(stage: int) -> Dictionary:
 
 ## The docs/02 §4 step 1 snapshot for this turn (see TurnContext.build). The
 ## memories are the ones she *reads*: newest 8 slots, corrupted per stage
-## (docs/02 §6), which is why the prompt is built from Memory and not from a
-## Director-owned list.
+## (docs/02 §6) — built from Memory, not a Director list. `turn_events()` adds
+## this turn's OPPORTUNITY lines so the reason rides the enum's own prompt.
 func build_turn_context(player_text: String, events: Array = []) -> Dictionary:
 	var memories := Memory.prompt_facts({"stage": int(GameState.stage)})
-	return TurnContext.build(
-		player_text, events, scene_info, memories, history, get_offered_actions()
-	)
+	var offered := get_offered_actions()
+	var turn_events := MetaDirector.turn_events(events, int(GameState.stage))
+	return TurnContext.build(player_text, turn_events, scene_info, memories, history, offered)
 
 
 ## docs/08 §5 "Offered this turn — …": the legal enums of this turn.
@@ -761,11 +761,11 @@ func _close_turn_success(turn_data: Dictionary) -> void:
 		if not mem_candidate.is_empty():
 			Memory.consider(mem_candidate, last_player_inputs)
 
-	# Apply action
+	# Apply action; the event counts on the turn the player answered (r1 CODE-2).
 	if turn_data.has("action") and str(turn_data["action"]) != "none":
 		var act := str(turn_data["action"])
 		if MetaDirector != null and MetaDirector.has_method("execute_after_text"):
-			MetaDirector.execute_after_text(act)
+			MetaDirector.execute_after_text(act, _turn_index)
 
 	if FX != null and FX.has_method("end_turn"):
 		FX.end_turn()

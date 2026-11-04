@@ -223,7 +223,9 @@ func test_name_reaches_prompt_builder_and_name_tag() -> void:
 	GameState.reset()
 	GameState.player_name = "Ren"
 
+	# P2.22 S1-2: a shipped Date starts itself; this test inspects a quiet host.
 	var date: Node = auto_free(DateScene.instantiate())
+	date.auto_start = false
 	add_child(date)
 	await get_tree().process_frame
 
@@ -270,7 +272,9 @@ func test_title_scene_navigation_and_esc() -> void:
 
 	# Keyboard focus configuration
 	assert_int(title.new_game_button.focus_mode).is_equal(Control.FOCUS_ALL)
-	# Esc raises quit_requested
+	# Esc raises quit_requested — the scene's documented fallback handler
+	# (docs/05 §0 rule 3: `PauseMenu._input` owns Esc in a shipping build, so
+	# this path is only reached by tests and by a build without the autoload).
 	var spy := {"quit": false}
 	title.quit_requested.connect(func() -> void: spy["quit"] = true)
 
@@ -333,7 +337,9 @@ func test_photosensitive_chosen_on_the_title_reaches_the_date_host() -> void:
 	Settings.settings_path = TMP
 	Settings.set_photosensitive(true)  # exactly what pressing the Title row does
 
+	# P2.22 S1-2: a shipped Date starts itself; this test inspects a quiet host.
 	var date: Node = auto_free(DateScene.instantiate())
+	date.auto_start = false
 	add_child(date)
 	await get_tree().process_frame
 

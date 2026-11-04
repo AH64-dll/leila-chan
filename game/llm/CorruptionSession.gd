@@ -28,6 +28,10 @@ var player_name := "Senpai"
 var reduced_motion := false
 var content_level := ""
 var turn := 0
+## docs/08 §1.5 stage-4 "-kun": the mood the name rules judge against —
+## {"affection": meter, "stress": last mood int} (GameState, resolved by the
+## ChatUI once per turn). Empty = never affectionate, never angry.
+var mood := {}
 ## Test/replay salt: changes the seed sequence without touching the data.
 var seed_base := 0
 
@@ -39,6 +43,10 @@ var _started := false
 var _word_index := 0
 var _counts: Dictionary = {}
 var _pending_hesitate := false
+## docs/08 §1.5 name-decay counters: keyed "decay"/"kun", reset per TURN in
+## `begin_turn` (via abort) — the `max_per_turn` data cap spans every beat of
+## the turn and survives a beat rewrite.
+var _name_counts := {}
 var _fired_bleed := false
 var _fired_reverse := false
 var _beat_text := ""
@@ -54,6 +62,8 @@ func begin_turn(config: Dictionary = {}) -> void:
 	reduced_motion = bool(config.get("reduced_motion", reduced_motion))
 	content_level = String(config.get("content_level", content_level))
 	turn = int(config.get("turn", turn))
+	var raw_mood: Variant = config.get("mood", mood)
+	mood = (raw_mood as Dictionary).duplicate() if raw_mood is Dictionary else {}
 	seed_base = int(config.get("seed_base", seed_base))
 	abort()
 
@@ -131,6 +141,7 @@ func abort() -> void:
 	_beat_text = ""
 	_word_index = 0
 	_counts = {}
+	_name_counts = {}
 	_pending_hesitate = false
 	_fired_bleed = false
 	_fired_reverse = false
@@ -281,7 +292,45 @@ func _process_word(word: String) -> String:
 			out = redacted
 			_bump("redact")
 
+	# 7. docs/08 §1.5 name decay — renderer-side, the player's own name only.
+	# Gated inside Corruption: stage 3+ drops a letter and corrects it
+	# ("Reni… Renji"), stage 4+ adds "-kun" when she is affectionate. These
+	# are NOT table effects: `wrong_name` already holds the word-kind slot for
+	# name words (it wins above), and the name rules roll on their own
+	# data/max counters. Both rules roll for every player-name word that still
+	# has capacity, and each consumes its randf even when the roll fails, so a
+	# replay draws in the same order. Decay owns the word when it fires;
+	# "-kun" colours the word the decay roll left alone.
+	var eff_stage := int(_plan.get("effective_stage", 0))
+	if eff_stage >= 3 and Corruption.is_player_name(out, player_name):
+		var decayed := ""
+		if _name_capacity("decay", eff_stage) > 0:
+			decayed = Corruption.decay_name(out, player_name, eff_stage, _rng)
+		var kuned := ""
+		if eff_stage >= 4 and _name_capacity("kun", eff_stage) > 0:
+			kuned = Corruption.kun_name(out, player_name, eff_stage, mood, _rng)
+		if not decayed.is_empty():
+			out = decayed
+			_bump_name("decay")
+		elif not kuned.is_empty():
+			out = kuned
+			_bump_name("kun")
+
 	return out
+
+
+## Per-turn capacity left for a name rule (data `max_per_turn`). The gate
+## itself lives inside Corruption.*_name; a rule below its gate reports full
+## capacity so the loop never rolls it.
+func _name_capacity(name: String, effective_stage: int) -> int:
+	var rule := Corruption.name_rule(name)
+	if effective_stage < int(rule.get("gate", 6)):
+		return 0
+	return maxi(0, int(rule.get("max_per_turn", 1)) - int(_name_counts.get(name, 0)))
+
+
+func _bump_name(name: String) -> void:
+	_name_counts[name] = int(_name_counts.get(name, 0)) + 1
 
 
 func _can_fire(name: String) -> bool:

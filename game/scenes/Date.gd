@@ -12,6 +12,7 @@ extends Node2D
 
 signal date_started
 signal date_ended(reason: String)
+signal ending_reached(decision: Dictionary)
 signal beat_played(beat_index: int, packet: Dictionary)
 signal opening_beats_finished
 signal player_turn_submitted(text: String)
@@ -22,6 +23,9 @@ const DEFAULT_SCENARIO := "res://data/scenarios/D02_cafe.json"
 ## docs/01 §1: a finished date hands the loop to the night (P2.19), which runs the
 ## night checks and opens the next day.
 const NIGHT_SCENE_PATH := "res://scenes/Night.tscn"
+## docs/01 §7 (P3.16): an `any_time` ending (E14 "Static") can end the run from a
+## turn close, before the night. The ending scene renders it.
+const ENDING_SCENE_PATH := "res://scenes/Ending.tscn"
 ## `stage` defaults to "unset" so the scene follows the campaign's stage.
 ## Every player entry goes through change_scene_to_file, which cannot set an
 ## export, so an unset stage must mean GameState.stage — otherwise a mid-
@@ -33,7 +37,14 @@ const STAGE_FROM_GAME_STATE := -1
 @export var stage: int = STAGE_FROM_GAME_STATE
 @export var path_name: String = ""
 @export var player_name: String = "Senpai"
-@export var auto_start: bool = false
+## P2.22 S1-2: a date starts itself. Every real entry (NewGame, Continue, the
+## Night's next-day hand-off) arrives through change_scene_to_file, which cannot
+## pass a value in, so a shipped date that waited for a caller never played its
+## greeting, never requested its music, never wrote its scene-entry autosave and
+## never reached its `end` rule. The flag stays as the seam the dev tools and the
+## scene suites use: they host a Date they drive by hand and turn it off before
+## adding it to the tree (fx_shot, fx_bench, SaveFlowTest).
+@export var auto_start: bool = true
 @export var reduced_motion: bool = false
 @export var photosensitive: bool = false
 ## P2.19: the day/night loop. On, the date takes its scenario from the campaign (a
@@ -202,6 +213,10 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	_note_telemetry_date(false)
 	_clear_save_seam()
+	# This date's scene layer dies with it (P2.22 S1-3): the Director is an
+	# autoload that outlives the scene, so a stale goal would ride into whatever
+	# builds the next prompt.
+	_clear_director_scene()
 	var registered: Variant = Director.chat_ui_node
 	if registered == null:
 		return
@@ -304,9 +319,29 @@ func _check_scenario_end() -> void:
 	if not bool(outcome.get("ended", false)):
 		return
 	_date_over = true
+	# The date is over, so its scene layer is too: a listener of `date_ended`
+	# (or the idler frame before the night scene) must not find a goal for a date
+	# that just finished.
+	_clear_director_scene()
 	date_ended.emit(String(outcome.get("reason", "")))
 	if campaign_flow and scene_change_enabled:
 		get_tree().change_scene_to_file.call_deferred(NIGHT_SCENE_PATH)
+
+
+## docs/01 §7 (P3.16): is an ending due at this turn close? Only the `any_time`
+## rows can answer yes here (E14 "Static" before Day 7); the campaign's own last
+## night belongs to the Night scene. The route is deferred for the same reason the
+## night's is: the turn close is still unwinding.
+func _check_ending() -> void:
+	if _date_over or not is_inside_tree():
+		return
+	var decision := Endings.evaluate(GameState.to_dict(), Endings.PHASE_TURN)
+	if decision.is_empty():
+		return
+	_date_over = true
+	ending_reached.emit(decision)
+	if campaign_flow and scene_change_enabled:
+		get_tree().change_scene_to_file.call_deferred(ENDING_SCENE_PATH)
 
 
 ## The P2.09 seam, resolved by path: a Date scene must run in tests and tools
@@ -385,6 +420,11 @@ func start_date() -> void:
 	if SpriteResolver != null:
 		SpriteResolver.reset_scene()
 
+	# docs/05 §3 (P3.08): the per-scene meta-event budget starts at the date
+	# boundary; the scenario path is the scene's own name in the session log.
+	if MetaDirector != null and MetaDirector.has_method("note_scene"):
+		MetaDirector.note_scene(scenario_path)
+
 	var music_id := StringName(String(_scenario.get("music", "calm")))
 	if AudioDirector != null:
 		AudioDirector.request_music(music_id)
@@ -421,6 +461,14 @@ func play_opening_beats() -> void:
 	if chat_ui != null:
 		chat_ui.begin_turn_wait()
 
+	# GameState.flags carries the beat-level rules the resolver reads (docs/03 §3.2
+	# TSUN break / ANCHOR relapse, docs/10 §3's rival_gone) — the Director hands the
+	# same dictionary to resolve_beat per turn, so the opening beats must too.
+	var flags: Dictionary = {}
+	var gs_node: Node = get_node_or_null("/root/GameState")
+	if gs_node != null and "flags" in gs_node:
+		flags = gs_node.flags
+
 	for i: int in range(beats.size()):
 		var beat: Dictionary = beats[i]
 		if AudioDirector != null:
@@ -430,7 +478,7 @@ func play_opening_beats() -> void:
 		var intensity := int(beat.get("intensity", 1))
 		var packet: Dictionary = {}
 		if SpriteResolver != null:
-			packet = SpriteResolver.resolve_beat(feeling, intensity, stage, path_name)
+			packet = SpriteResolver.resolve_beat(feeling, intensity, stage, path_name, flags)
 		# Hand the finished packet down: resolving again inside set_feeling() would
 		# run the anti-repeat window and the reveal budget twice per beat (the same
 		# CODE-4 rule the Director follows).
@@ -438,7 +486,7 @@ func play_opening_beats() -> void:
 			if character.has_method("apply_beat"):
 				character.apply_beat(packet)
 			else:
-				character.set_feeling(feeling, intensity, stage, path_name)
+				character.set_feeling(feeling, intensity, stage, path_name, flags)
 
 		var sprite_id := StringName(String(packet.get("sprite", "")))
 		if AudioDirector != null:
@@ -562,9 +610,61 @@ func _shake_camera(amount: float, duration: float) -> void:
 	tween.tween_property(cam, "position", orig_pos, duration * 0.25)
 
 
+## docs/02 §4 step 0: the player's line opens the Director's turn. ChatUI emits
+## `player_turn_sent` after it logged the line and locked the input
+## (ChatUI.gd `_on_input_submitted`), and this is the Date's only submit point.
+## P2.22 S1-1: nothing called `Director.submit_player_input`, so a typed line
+## opened no turn in the shipped game — the playtest harness installed its own
+## bridge, which is exactly why the gap survived. This is the production seam.
 func _on_player_turn_sent(text: String) -> void:
-	_current_turn += 1
+	# The layer and the counter both name the turn this line opens.
+	var turn := _current_turn + 1
+	# docs/08 §1: the scene layer belongs to this turn. The Director reads
+	# `scene_info` while it builds the prompt (`build_turn_context`), so it must
+	# land before the submit, never after it.
+	_apply_director_scene(turn)
 	player_turn_submitted.emit(text)
+	# docs/02 §4 step 0: a Safety-refused line opens no turn. Counting it would
+	# spend an `events[].at_turn` and walk the date to `max_turns` on refusals
+	# alone, so the date's turn count follows the Director's, not the keystroke.
+	if Director.submit_player_input(text):
+		_current_turn = turn
+
+
+## docs/08 §1 + §7: a turn's `[scene]` layer — the scenario's goal, its prompt,
+## the stage/path variant and that turn's `events` line. The Director owns the
+## field (its TurnContext carries it into the prompt); the Date owns the value,
+## because it is the only node that knows which scenario, stage and turn this
+## prompt is for. P2.22 S1-3: nothing assigned it, so every prompt kept the
+## Director's constructor café line and no scenario ever reached the model.
+func _apply_director_scene(turn: int) -> void:
+	if _scenario.is_empty():
+		_clear_director_scene()
+		return
+	Director.scene_info = ScenarioLoader.resolve_scene(
+		_scenario, stage, _scene_path(), turn, player_name
+	)
+
+
+## docs/01 §2: the campaign owns the path. `path_name` is the export a dev tool
+## pins when it hosts a Date with no campaign behind it; the live game answers
+## from GameState, so the scene layer twists with the path she is on.
+func _scene_path() -> String:
+	var gs_node: Node = get_node_or_null("/root/GameState")
+	if gs_node != null and "path" in gs_node:
+		var path_id := String(gs_node.path).strip_edges()
+		if not path_id.is_empty():
+			return path_id
+	return path_name
+
+
+## No date, no scene layer. A finished date's goal must never reach a later
+## prompt, and an empty dictionary is the Director's "no date in progress" state
+## (docs/08 §1's scene layer then renders nothing) — never stale, never a café
+## this date was not set in.
+func _clear_director_scene() -> void:
+	if not Director.scene_info.is_empty():
+		Director.scene_info = {}
 
 
 func _on_turn_displayed() -> void:
@@ -582,6 +682,9 @@ func _on_turn_displayed() -> void:
 	_autosave_scene.call_deferred("after turn")
 	# P2.19: the date's end is decided once her last line is on screen, and routed
 	# on an idle frame (the Director may still be unwinding this turn's close).
+	# P3.16 asks the ending question first: a run that burns out this turn has no
+	# night to reach, and either check sets `_date_over` so only one wins.
+	_check_ending.call_deferred()
 	_check_scenario_end.call_deferred()
 
 

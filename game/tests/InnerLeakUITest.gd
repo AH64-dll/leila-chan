@@ -262,6 +262,7 @@ func test_esc_still_pauses_while_a_leak_is_showing() -> void:
 func test_date_hands_each_finished_turn_to_the_leak() -> void:
 	GameState.stage = 5
 	var date: Node2D = DatePacked.instantiate()
+	date.auto_start = false  # P2.22 S1-2: the harness below opens the turn itself
 	add_child(auto_free(date))
 	await get_tree().process_frame
 	assert_int(date.chat_ui.stage).is_equal(5)

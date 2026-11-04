@@ -25,6 +25,7 @@ func _new_chat() -> Control:
 
 func _new_date() -> Node2D:
 	var date: Node2D = DatePacked.instantiate()
+	date.auto_start = false  # P2.22 S1-2: the suite drives the date itself
 	add_child(auto_free(date))
 	await get_tree().process_frame
 	return date

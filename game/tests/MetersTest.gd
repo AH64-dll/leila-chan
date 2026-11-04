@@ -282,6 +282,110 @@ func test_broken_data_values_keep_docs_defaults() -> void:
 	assert_bool(merged.has("unknown_key")).is_false()
 
 
+func test_fixation_writers_follow_the_documented_sources() -> void:
+	# docs/01 §2 Fixation "Moves by: time spent, affection, isolation". docs
+	# number no magnitude (P2.22B DCR-1): time is the constant, affection only
+	# counts when it was gained, isolation is read off the profile counters.
+	assert_float(MetersScript.fixation_turn(0.0)).is_equal_approx(0.35, EPS)
+	assert_float(MetersScript.fixation_turn(3.0)).is_equal_approx(0.5, EPS)
+	assert_float(MetersScript.fixation_turn(-4.0)).is_equal_approx(0.35, EPS)
+	assert_float(MetersScript.fixation_turn(NAN)).is_equal_approx(0.35, EPS)
+	assert_float(MetersScript.isolation_gain({&"coldness": 1})).is_equal_approx(0.5, EPS)
+	assert_float(MetersScript.isolation_gain({&"apathy": 2})).is_equal_approx(1.0, EPS)
+	# Only the isolation counters pay; warmth is Lucidity's, not Fixation's.
+	(
+		assert_float(MetersScript.isolation_gain({&"ignored_questions": 1, &"warmth": 3}))
+		. is_equal_approx(0.5, EPS)
+	)
+	assert_float(MetersScript.isolation_gain({})).is_zero()
+	# Through the turn pipeline: time + the affection her mood actually landed.
+	var s: Variant = _state()
+	var ledger: Dictionary = s.apply_turn_meters({"mood": {"affection": 2}})
+	assert_float(s.fixation).is_equal_approx(0.5, EPS)
+	assert_float(ledger["fixation"]).is_equal_approx(0.5, EPS)
+	# The isolation half arrives with the profile evidence, and a cold turn
+	# moves Fixation while a warm one does not. The lines are long enough not to
+	# trip the docs/01 §4.4 short-reply apathy rule, which is also isolation.
+	var t: Variant = _state()
+	t.apply_turn_profile(&"cold", "The weather has been strange all week, hasn't it?")
+	assert_float(t.fixation).is_equal_approx(0.5, EPS)
+	var u: Variant = _state()
+	u.apply_turn_profile(&"affection", "You're really sweet, and I'm glad I came to see you today.")
+	assert_float(u.fixation).is_zero()
+
+
+func test_lucidity_writers_follow_the_documented_sources() -> void:
+	# docs/01 §2 Lucidity "Moves by: kindness, honesty, boundaries" — mirrored
+	# onto the profile counters those acts bump (warmth, honesty, boundaries).
+	assert_float(MetersScript.lucidity_gain({&"warmth": 1})).is_equal_approx(0.3, EPS)
+	assert_float(MetersScript.lucidity_gain({&"honesty": 1})).is_equal_approx(0.8, EPS)
+	assert_float(MetersScript.lucidity_gain({&"boundaries": 1})).is_equal_approx(1.0, EPS)
+	assert_float(MetersScript.lucidity_gain({&"teasing": 4, &"coldness": 2})).is_zero()
+	(
+		assert_float(MetersScript.lucidity_gain({&"warmth": 1, &"honesty": 1, &"boundaries": 1}))
+		. is_equal_approx(2.1, EPS)
+	)
+	# Through the turn pipeline: an apology is honesty, a boundary is boundaries,
+	# a warm line is kindness. The read label is the only input.
+	var s: Variant = _state()
+	s.apply_turn_profile(&"apology", "I'm sorry, that was unfair")
+	assert_float(s.lucidity).is_equal_approx(0.8, EPS)
+	s.apply_turn_profile(&"boundary", "please don't call me that")
+	assert_float(s.lucidity).is_equal_approx(1.8, EPS)
+	s.apply_turn_profile(&"affection", "you make me happy")
+	assert_float(s.lucidity).is_equal_approx(2.1, EPS)
+
+
+func test_night_path_check_writes_no_meters() -> void:
+	# docs/01 §1 NIGHT re-scores the path without a turn: no line, no reply, so
+	# no time was spent and no act happened (P2.22B).
+	var s: Variant = _state()
+	s.fixation = 30.0
+	s.lucidity = 40.0
+	s.apply_turn_profile(&"", "")
+	s.apply_turn_profile(&"apology")
+	assert_float(s.fixation).is_equal_approx(30.0, EPS)
+	assert_float(s.lucidity).is_equal_approx(40.0, EPS)
+
+
+func test_e12_lucidity_threshold_is_reachable() -> void:
+	# docs/01 §2 + docs/01 §E12: "Remission — Lucidity ≥ 70 at Day 14". A kind,
+	# honest, boundary-setting ANCHOR campaign (docs/01 §4.6) reaches it through
+	# the real turn pipeline, and she is still sick when it does.
+	var s: Variant = _state()
+	var day_plan: Array[StringName] = [
+		&"affection",
+		&"affection",
+		&"affection",
+		&"affection",
+		&"apology",
+		&"apology",
+		&"apology",
+		&"boundary",
+		&"boundary",
+		&"question",
+		&"question",
+		&"question",
+	]
+	var mood_by_read := {
+		&"affection": {"affection": 2, "trust": 1, "stress": -1},
+		&"apology": {"affection": 0, "trust": 1, "stress": 0},
+		&"boundary": {"affection": 0, "trust": 1, "stress": 0},
+		&"question": {"affection": 0, "trust": 0, "stress": 0},
+	}
+	for day: int in GameStateScript.DAY_MAX:
+		for read: StringName in day_plan:
+			s.apply_turn_meters({"mood": mood_by_read[read]})
+			s.apply_turn_profile(read, "a kind line", {})
+		if day < GameStateScript.DAY_MAX - 1:
+			s.advance_day()
+	assert_float(s.lucidity).is_greater_equal(70.0)
+	assert_float(s.fixation).is_greater(50.0)
+	assert_float(s.instability).is_greater_equal(50.0)
+	assert_int(s.stage).is_greater_equal(3)
+	assert_int(s.day).is_equal(GameStateScript.DAY_MAX)
+
+
 func test_turn_context_meters_carry_the_ratchet() -> void:
 	# docs/02 §4 step 1: the turn context carries the meters, plus the ratchet
 	# pair and the live slow-burn increment the prompt/overlay layers read.

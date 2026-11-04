@@ -4,6 +4,9 @@ extends Node
 ## AWAKE path overrides resolve against the sprite's documented tier, the YANDERE
 ## reveal budget is scene-scoped, corrupt faces get path-aware siblings, and every
 ## sprite change carries its docs/10 §3 on-enter effects.
+## P3.06 adds the four remaining path rules from docs/03 §3.2 — SPLIT's valence
+## whiplash, TSUN's break moment, HOLLOW's frozen face and ANCHOR's relapse — plus
+## docs/01 §4's per-path sprite pools (casting.paths.<P>.pool) that bound them.
 ##
 ## Two signals: `beat_resolved` carries the routed packet, `sprite_entered` carries the
 ## on-enter effects the instant the face actually changes (the Director fires them —
@@ -33,6 +36,11 @@ var _recent: PackedStringArray = []  # sprites actually shown, for anti-repeat
 ## "1 reveal per scene" on 21 lives here, not in resolve() — resolve() stays pure.
 var _reveals: Dictionary = {}
 var _last_entered := ""  # sprite whose on-enter effects fired last ("" = none yet)
+## docs/03 §3.2 SPLIT whiplash: the previous beat's valence sign (0 = none yet), so a
+## polarity flip can force the 01 <-> 17 swap. Scene-scoped like the other history.
+var _last_valence := 0
+## docs/03 §3.2 ANCHOR: a relapse beat is followed by exactly one recovery beat (02).
+var _recovery_pending := false
 
 
 func _ready() -> void:
@@ -63,35 +71,82 @@ func resolve(feeling: String, intensity: int, stage: int, path := "", flags := {
 	return _resolve_excluding(feeling, intensity, stage, path, flags, "")
 
 
-## docs/03 §3 full pipeline for one streamed beat: resolve() + the scene-scoped
-## reveal budget, step 4 anti-repeat, the docs/10 §3 on-enter effects and the AWAKE
-## glitch rule. Returns the packet the Director routes.
+## docs/03 §3 full pipeline for one streamed beat: resolve() + the path's own beat
+## rules (docs/03 §3.2), the scene-scoped reveal budget, step 4 anti-repeat, the
+## docs/10 §3 on-enter effects and the AWAKE glitch rule. Returns the packet the
+## Director routes; `path_rule` names the rule that decided the face ("" = base table).
 func resolve_beat(
 	feeling: String, intensity: int, stage: int, path := "", flags := {}
 ) -> Dictionary:
 	var tier := tier_for_stage(stage)
-	var sprite := resolve(feeling, intensity, stage, path, flags)
+	var spec := _path_spec(path, tier)
+	var rule := ""
+	var sprite := ""
+	var planned := ""
+	var frozen := false
+	if not spec.is_empty() and _freezes(spec, intensity) and not _last_entered.is_empty():
+		# docs/03 §3.2 HOLLOW: "sprite changes only on intensity 3" — the face stops
+		# responding. A held beat spends no budget and refires no entry events: the
+		# whole point of the path is that nothing moves.
+		sprite = _last_entered
+		rule = "freeze"
+		frozen = true
+	elif not spec.is_empty() and _recovery_pending:
+		# docs/03 §3.2 ANCHOR: "relapse beats use 26/22 for one beat, then 02".
+		sprite = String(spec.get("relapse", {}).get("then", ""))
+		rule = "recovery"
+		_recovery_pending = false
+	else:
+		var cand := _path_rule(feeling, intensity, tier, path, flags)
+		rule = String(cand["rule"])
+		planned = String(cand["sprite"])
+		if planned.is_empty():
+			planned = _whiplash_sprite(feeling, spec)
+			if not planned.is_empty():
+				rule = "whiplash"
+		if not planned.is_empty() and not _candidate_gated(planned, tier, flags):
+			sprite = planned
+		else:
+			if not planned.is_empty():
+				rule = ""  # a gated path face falls through to the beat's own face
+			planned = ""
+			sprite = resolve(feeling, intensity, stage, path, flags)
+
 	var budget_spent := ""
-	var cap := _reveal_cap(sprite)
-	if cap > 0 and int(_reveals.get(sprite, 0)) >= cap:
-		# docs/03 §3 step 3 / docs/03 §1: 21 is a once-per-scene reveal. The next
-		# candidate wins (the feeling's own T3 face) — never the fallback face.
-		budget_spent = sprite
-		sprite = _resolve_excluding(feeling, intensity, stage, path, flags, sprite)
+	if not frozen:
+		var cap := _reveal_cap(sprite)
+		if cap > 0 and int(_reveals.get(sprite, 0)) >= cap:
+			# docs/03 §3 step 3 / docs/03 §1: 21 is a once-per-scene reveal. The next
+			# candidate wins (the feeling's own T3 face) — never the fallback face.
+			budget_spent = sprite
+			sprite = _resolve_excluding(feeling, intensity, stage, path, flags, sprite)
 
 	var anti_repeated := false
-	if _recent.size() >= ANTI_REPEAT_WINDOW and _recent[-1] == sprite and _recent[-2] == sprite:
-		var sibling := _sibling_for(feeling, sprite, tier, flags)
-		if not sibling.is_empty():
-			sprite = sibling
-			anti_repeated = true
-	_recent.push_back(sprite)
-	while _recent.size() > ANTI_REPEAT_WINDOW:
-		_recent.remove_at(0)
-	_reveals[sprite] = int(_reveals.get(sprite, 0)) + 1
+	if not frozen and not _owns_changes(spec):
+		if _recent.size() >= ANTI_REPEAT_WINDOW and _recent[-1] == sprite and _recent[-2] == sprite:
+			var sibling := _sibling_for(feeling, sprite, tier, flags)
+			if not sibling.is_empty():
+				sprite = sibling
+				anti_repeated = true
+	if not frozen:
+		_recent.push_back(sprite)
+		while _recent.size() > ANTI_REPEAT_WINDOW:
+			_recent.remove_at(0)
+		_reveals[sprite] = int(_reveals.get(sprite, 0)) + 1
+		if rule == "relapse" and budget_spent != planned:
+			_recovery_pending = true
+	_last_valence = _valence_of(feeling)
 
 	var packet := _beat_packet(feeling, intensity, stage, tier, sprite, path)
+	if frozen:
+		# docs/03 §4: HOLLOW i1-i2 use the `freeze` preset ("stops breathing
+		# animation"). The held face's own on_enter motion (14 -> sink, 25 -> breathe)
+		# would keep the body moving, which is the opposite of the rule, so the held
+		# beat carries the documented preset and no amplitude (DES-3).
+		packet["motion"] = "freeze"
+		packet["motion_scale"] = 1.0
 	packet["anti_repeated"] = anti_repeated
+	packet["path_rule"] = rule
 	if not budget_spent.is_empty():
 		packet["budget_spent"] = budget_spent
 	var events := _entry_events(sprite, stage, path)
@@ -126,11 +181,14 @@ func sprite_texture_path(sprite_id: String) -> String:
 
 
 ## New scene / new date / tests: forgets the anti-repeat window, the per-scene
-## reveal budget and the last on-enter face.
+## reveal budget, the last on-enter face, SPLIT's previous valence and any pending
+## ANCHOR recovery.
 func reset_scene() -> void:
 	_recent.clear()
 	_reveals.clear()
 	_last_entered = ""
+	_last_valence = 0
+	_recovery_pending = false
 
 
 func _load_json(path: String) -> Dictionary:
@@ -163,18 +221,36 @@ func _derive_min_tiers() -> Dictionary:
 	for path_name: String in casting.get("paths", {}):
 		var spec: Dictionary = casting["paths"][path_name]
 		for tier: String in spec.get("tiers", []):
-			for pool: String in ["override", "flagged", "break", "idealize", "devalue", "drift_to"]:
-				var ids: Variant = spec.get(pool, {})
-				for key: Variant in ids:
-					var ids_any: Variant = ids[key] if ids is Dictionary else key
-					var ids_list: Array = ids_any if ids_any is Array else [ids_any]
-					_note_tier(derived, String(ids_list[0]), tier)
+			_note_path_tiers(derived, spec, tier)
 	for tier: String in casting.get("fallback", {}):
 		_note_tier(derived, casting["fallback"][tier], tier)
 	for sprite_id: String in derived:
 		if not best.has(sprite_id):
 			best[sprite_id] = derived[sprite_id]
 	return best
+
+
+## Every face a path's tables can name at one of its tiers: the docs/01 §4 pool and
+## docs/03 §3.2's overrides, break faces, drift faces, whiplash pair and relapse
+## spikes. Only used for tables that do not declare sprites[id].tiers themselves.
+func _note_path_tiers(best: Dictionary, spec: Dictionary, tier: String) -> void:
+	for sprite_id: Variant in spec.get("pool", []):
+		_note_tier(best, String(sprite_id), tier)
+	for sprite_id: Variant in spec.get("override", {}).values():
+		_note_tier(best, String(sprite_id), tier)
+	for pair: Variant in spec.get("flagged", {}).values():
+		_note_tier(best, String((pair as Array)[0]), tier)
+	for sprite_id: Variant in spec.get("break", {}).get("sprite", {}).values():
+		_note_tier(best, String(sprite_id), tier)
+	for key: String in ["idealize", "devalue"]:
+		_note_tier(best, String(spec.get(key, "")), tier)
+	for sprite_id: Variant in spec.get("drift", {}).values():
+		_note_tier(best, String(sprite_id), tier)
+	var relapse: Dictionary = spec.get("relapse", {})
+	for sprite_id: Variant in relapse.get("spike", {}).values():
+		_note_tier(best, String(sprite_id), tier)
+	_note_tier(best, String(relapse.get("crisis", {}).get("sprite", "")), tier)
+	_note_tier(best, String(relapse.get("then", "")), tier)
 
 
 func _note_tier(best: Dictionary, sprite_id: String, tier: String) -> void:
@@ -185,22 +261,136 @@ func _note_tier(best: Dictionary, sprite_id: String, tier: String) -> void:
 		best[sprite_id] = idx
 
 
-## docs/03 §3 step 2: PATH_OVERRIDE[path][tier][feeling] ?? BASE — path rows only
-## exist for the tiers they list (T2/T3 in casting.json, so inert at T0-T1). A
-## flagged row ("warmth -> 27 *if* rival_gone") wins over the generic override and
-## is only returned once its flag is set.
-func _path_candidate(feeling: String, tier: String, path: String, flags: Dictionary) -> String:
-	if path.is_empty():
-		return ""
+## The path spec while `tier` is inside the path's range (T2-T3). Every path row is
+## inert below its tiers, so "" is the answer at T0-T1 (docs/03 §3 step 2).
+func _path_spec(path: String, tier: String) -> Dictionary:
+	if path.is_empty() or tier.is_empty():
+		return {}
 	var spec: Dictionary = casting.get("paths", {}).get(path, {})
 	if spec.is_empty() or not tier in spec.get("tiers", []):
-		return ""
+		return {}
+	return spec
+
+
+## docs/03 §3.2: what the path itself says about one beat — {"sprite": face,
+## "rule": why}, or {"sprite": "", "rule": ""} when the path table stays silent and
+## the base table decides. Pure, like resolve(): no history, no budget.
+##
+## Rule order inside a path is the resolver spec's own precedence: a break moment
+## outranks the act, a relapse outranks the healthy face, and HOLLOW's drift applies
+## to every feeling (its rule is "most feelings").
+func _path_rule(
+	feeling: String, intensity: int, tier: String, path: String, flags: Dictionary
+) -> Dictionary:
+	var spec := _path_spec(path, tier)
+	if spec.is_empty():
+		return {"sprite": "", "rule": ""}
+	var special := _path_special_face(feeling, intensity, tier, spec, flags)
+	if not special.is_empty():
+		return special
+	# ANCHOR keeps healthy sprites: no face of its own, the base column changes.
+	if spec.has("healthy_tier"):
+		return {"sprite": "", "rule": "healthy"}
+	return _path_override_face(feeling, spec, flags)
+
+
+## The rules docs/03 §3.2 introduces beyond a per-feeling override: TSUN's break
+## moment, ANCHOR's relapse and HOLLOW's drift. {} when none of them applies.
+func _path_special_face(
+	feeling: String, intensity: int, tier: String, spec: Dictionary, flags: Dictionary
+) -> Dictionary:
+	# TSUN-BREAK: at a break moment the act cracks into a scared child.
+	var brk: Dictionary = spec.get("break", {})
+	if not brk.is_empty() and bool(flags.get(String(brk.get("flag", "")), false)):
+		var broken := String(brk.get("sprite", {}).get(feeling, ""))
+		if not broken.is_empty():
+			return {"sprite": broken, "rule": "break"}
+	# ANCHOR: a relapse beat spikes for exactly one beat; resolve_beat owns the recovery.
+	var relapse: Dictionary = spec.get("relapse", {})
+	if not relapse.is_empty() and bool(flags.get(String(relapse.get("flag", "")), false)):
+		return {"sprite": _relapse_spike(relapse, feeling, intensity, tier), "rule": "relapse"}
+	# HOLLOW: the face stops responding — every feeling drifts to the numb pool.
+	var drift: Dictionary = spec.get("drift", {})
+	if not drift.is_empty():
+		return {"sprite": String(drift.get(feeling, drift.get("default", ""))), "rule": "drift"}
+	return {}
+
+
+## docs/03 §3 step 2: PATH_OVERRIDE[path][tier][feeling] ?? BASE. A flagged row
+## ("warmth -> 27 *if* rival_gone") wins over the generic override and only fires once
+## its flag is set. {"sprite": "", "rule": ""} when the feeling has no path row.
+func _path_override_face(feeling: String, spec: Dictionary, flags: Dictionary) -> Dictionary:
 	var flagged: Dictionary = spec.get("flagged", {})
 	if flagged.has(feeling):
 		var pair: Array = flagged[feeling]
 		if bool(flags.get(String(pair[1]), false)):
-			return String(pair[0])
-	return String(spec.get("override", {}).get(feeling, ""))
+			return {"sprite": String(pair[0]), "rule": "override"}
+	var override := String(spec.get("override", {}).get(feeling, ""))
+	if not override.is_empty():
+		return {"sprite": override, "rule": "override"}
+	return {"sprite": "", "rule": ""}
+
+
+## docs/03 §3.2 ANCHOR "keeps healthy sprites": the beat resolves from the path's
+## healthy_tier column (the pre-fracture one) instead of the corrupt stage's row.
+func _base_tier_for(path: String, tier: String) -> String:
+	var spec := _path_spec(path, tier)
+	if spec.is_empty():
+		return tier
+	return String(spec.get("healthy_tier", tier))
+
+
+## docs/03 §3.2 "relapse beats use 26/22 for one beat"; docs/01 §4.6 also promises
+## "sudden spikes of 26 / 21". The crisis face is the *distress* spike pushed to its
+## documented tier/intensity — docs/03 §1 gives 21 valence -3 — so it is valence-scoped:
+## a positive beat keeps its elation 22 and never spends the knife's reveal budget
+## (DES-1). resolve_beat still holds any crisis to the once-per-scene cap.
+func _relapse_spike(relapse: Dictionary, feeling: String, intensity: int, tier: String) -> String:
+	var valence := _valence_of(feeling)
+	var crisis: Dictionary = relapse.get("crisis", {})
+	if (
+		valence < 0
+		and not crisis.is_empty()
+		and tier == String(crisis.get("tier", ""))
+		and intensity >= int(crisis.get("intensity", 0))
+	):
+		return String(crisis.get("sprite", ""))
+	var spike: Dictionary = relapse.get("spike", {})
+	return String(spike.get("elation" if valence >= 0 else "distress", ""))
+
+
+## docs/01 §4.2 "01 ↔ 17 rapid swaps" + docs/03 §3.2 "resolver forces alternation
+## when beats flip valence": when the beat's polarity turns over, the face turns over
+## with it. "" when the path has no swap pair, the beat has no polarity, nothing has
+## been shown yet, or the polarity did not flip.
+func _whiplash_sprite(feeling: String, spec: Dictionary) -> String:
+	var idealize := String(spec.get("idealize", ""))
+	var devalue := String(spec.get("devalue", ""))
+	if idealize.is_empty() or devalue.is_empty():
+		return ""
+	var valence := _valence_of(feeling)
+	if valence == 0 or _last_valence == 0 or valence == _last_valence:
+		return ""
+	return idealize if valence > 0 else devalue
+
+
+## The feeling's valence sign from casting.json (0 = neutral, which never flips).
+func _valence_of(feeling: String) -> int:
+	return signi(int(casting.get("feelings", {}).get(feeling, {}).get("valence", 0)))
+
+
+## docs/03 §3.2 HOLLOW: "sprite changes only on intensity 3". Below the path's
+## change intensity the face holds whatever was already on screen.
+func _freezes(spec: Dictionary, intensity: int) -> bool:
+	if not spec.has("change_intensity"):
+		return false
+	return intensity < int(spec["change_intensity"])
+
+
+## HOLLOW's whole rule is "changes only on intensity 3", so the generic anti-repeat
+## may not swap its held face on the third beat: that swap would be a change.
+func _owns_changes(spec: Dictionary) -> bool:
+	return spec.has("drift")
 
 
 func _base_sprite(feeling: String, tier: String, intensity: int) -> String:
@@ -283,12 +473,12 @@ func _resolve_excluding(
 	var tier := tier_for_stage(stage)
 	if tier.is_empty():
 		return "00"
-	var candidate := _path_candidate(feeling, tier, path, flags)
+	var candidate := String(_path_rule(feeling, intensity, tier, path, flags)["sprite"])
 	if candidate == exclude:
 		candidate = ""
 	if not candidate.is_empty() and not _candidate_gated(candidate, tier, flags):
 		return candidate
-	var base := _base_sprite(feeling, tier, intensity)
+	var base := _base_sprite(feeling, _base_tier_for(path, tier), intensity)
 	if base == exclude:
 		base = ""
 	if not base.is_empty():
@@ -338,12 +528,7 @@ func _entry_events(sprite_id: String, stage: int, path: String) -> Dictionary:
 ## docs/10 §4's data-side rule for a path at this tier (AWAKE's "glitch shader on
 ## every sprite change" is casting.paths.AWAKE.shader). "" when the path is inert.
 func _path_shader(path: String, tier: String) -> String:
-	if path.is_empty():
-		return ""
-	var spec: Dictionary = casting.get("paths", {}).get(path, {})
-	if spec.is_empty() or not tier in spec.get("tiers", []):
-		return ""
-	return String(spec.get("shader", ""))
+	return String(_path_spec(path, tier).get("shader", ""))
 
 
 ## Everything a beat needs besides the sprite: motion (and its intensity amplitude),

@@ -20,6 +20,7 @@ const EXPECTED_AUTOLOADS: PackedStringArray = [
 	"Steering",
 	"SaveSystem",
 	"Settings",
+	"PauseMenu",
 	"Telemetry",
 ]
 

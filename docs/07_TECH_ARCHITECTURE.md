@@ -34,7 +34,9 @@ res://
 │  ├─ Safety.gd           # output filter, redaction, content settings
 │  ├─ Steering.gd         # dose schedule, vector mixing
 │  ├─ SaveSystem.gd       # saves + shadow save + letters (user:// only)
-│  └─ Settings.gd         # immersion, photosensitive, content level, volumes (player name lives in the save)
+│  ├─ Settings.gd         # immersion, photosensitive, content level, volumes (player name lives in the save)
+│  ├─ PauseMenu.gd        # docs/05 §0 rule 3 safe pause (Esc in `_input`) + the one settings screen
+│  └─ Telemetry.gd        # engine events for docs/01 §5 "E" triggers + docs/05 §1.3 input/window events
 ├─ llm/
 │  ├─ backends/LlamaServerBackend.gd   # HTTP + SSE streaming (prototype)
 │  ├─ backends/NativeBackend.gd        # GDExtension (ship)
@@ -46,10 +48,12 @@ res://
 │  ├─ NightLoop.gd                    # docs/01 §1 night: meters → stage → path → overnight event, one ordered report
 │  ├─ OvernightEvents.gd              # docs/01 §6.3 overnight events: availability, weighted pick, per-stage lines
 │  ├─ Campaign.gd                     # docs/01 §1 campaign clock + the day's scenario pick by availability
+│  ├─ TriggerEngine.gd                # docs/01 §5 row matching, once/repeatable/escalating, cooldowns, guard blocks
+│  ├─ TriggerEffects.gd               # docs/02 §1.2 strength scaling + first-firing spike + path-point ledger for a firing
 │  └─ ProfileKeywords.gd              # docs/01 §2 keyword half of the behaviour profile (control, apathy, …)
 ├─ scenes/
 │  ├─ Boot.tscn  Title.tscn  NewGame.tscn  Date.tscn  Night.tscn  Ending.tscn  Extras.tscn
-│  ├─ ui/TextBox.tscn  ui/InputBox.tscn  ui/ChatLog.tscn  ui/NameTag.tscn  ui/Settings.tscn
+│  ├─ ui/TextBox.tscn  ui/InputBox.tscn  ui/ChatLog.tscn  ui/NameTag.tscn
 │  ├─ character/Character.tscn        # sprite stack, motion presets, shaders
 │  └─ meta/FakeCrash.tscn FakeUpdate.tscn PeekWindow.tscn FakeTerminal.tscn
 ├─ shaders/  glitch · chromatic · desaturate · vignette · text_bleed · breathe · dissolve
@@ -71,7 +75,10 @@ Everything content-related is **data**, so writers tune scenarios, gates and map
   `canvas_items` + `keep` + integer scale mode; window override `768×1376` (×2 portrait) is
   **provisional — ART confirms at P0.08/P1.16** and the default window must fit a 1080p desktop.
 - **Texture filter:** project-wide Nearest (`default_texture_filter=0`), per `art/leila/README`.
-- **Autoload order:** the 14 autoloads register in the doc order above.
+- **Autoload order:** the 16 autoloads register in the doc order above.
+- **Settings screen:** `ui/Settings.tscn` is not a scene. One surface (docs/09 M3) is the `PauseMenu`
+  overlay's settings page: the Title row and the Esc pause both open it, and it must survive
+  `get_tree().paused` — an autoload `CanvasLayer` is the only shape that can host the panic pause.
 - **Repo conventions:** `.gdkeep` placeholders keep empty layout dirs in git; `.gd.uid` sidecars are
   committed (Godot 4.4+ convention); **no first-party `.gdignore` inside `game/`** — every directory
   there is export content, and repo-root images are structurally outside `res://`. (The vendored
@@ -174,6 +181,24 @@ word repetition / wrong name (3+), zalgo bursts & redaction (4+), text bleed & r
 ### 3.5 Saves
 `user://saves/slot_N.json` (state, memories, log), `user://.leila/shadow.json` (persists across New Game, docs/05 M08),
 `user://letters/`, `user://diary/`. Settings → "Reset Everything" deletes all of `user://` except settings.
+
+The shadow file's full contents, for privacy review (enforced by `ShadowStore`, tested in
+`game/tests/ShadowSaveTest.gd`): `first_name` — the first name ever typed at New Game (docs/08 §1.5);
+`names` — every distinct name across runs; `runs` — the name of each run ended by New Game (cap 8);
+<<<<<<< HEAD
+`memories` — up to `data/memory.json → shadow.limit` (3) facts from the most recent run that reached the
+meta gate (stage 3+); a run that ended earlier keeps the previous set.
+It never holds logs, transcripts, deleted drafts, the OS username, telemetry or device data.
+=======
+`last_stage` — the stage the run she last sealed had reached (the docs/08 §1.5 shadow-line gate, which
+has to survive the process: `GameState.stage` is 0 on the next launch);
+`memories` — up to `data/memory.json → shadow.limit` (3) facts from a run that reached stage 3+.
+It never holds logs, transcripts, deleted drafts, telemetry or device data, and it never reads the
+environment. The OS username is not stored by the game; the only way it can appear is if the player
+*types* it — which the opt-in invites — and then it is kept exactly like any other typed name.
+>>>>>>> task/P3.14
+The write point is `SaveSystem.begin_new_game`, called by the New Game scene before it resets the
+run; "Reset Everything" (`Settings.reset_everything` → `SaveSystem.wipe_everything`) deletes it.
 
 ## 4. Threading and performance
 

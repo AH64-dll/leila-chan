@@ -8,9 +8,9 @@ extends Control
 ## black, holds it, shows the morning line, then hands the loop on — to the next
 ## day's Date, or to the campaign's end.
 ##
-## Accessibility: Esc always works (docs/05 §0 rule 3) and ends the night, N12's
-## ten seconds included, because this screen has no pause menu yet (P3.13) and a
-## screen that ignores the player is worse than a skipped beat. The skip window and
+## Accessibility: Esc always works (docs/05 §0 rule 3): P3.13's PauseMenu
+## opens the safe pause even on the black screen — N12's ten seconds included —
+## and pausing never skips the event. The skip window and
 ## the hold are data; the timeline is driven by advance_time(), which tests step
 ## exactly instead of waiting on the wall clock.
 
@@ -21,10 +21,11 @@ signal campaign_completed(report: Dictionary)
 signal pause_requested
 
 const DATE_SCENE_PATH := "res://scenes/Date.tscn"
-## docs/01 §7's endings are P3.16's deliverable. Until the ending scene exists the
-## loop's last night returns to the title screen instead of stranding the player on
-## a black one; campaign_completed carries the report for P3.16 to take over.
-const AFTER_CAMPAIGN_SCENE_PATH := "res://scenes/Title.tscn"
+## docs/01 §7 (P3.16): the campaign's last night, and any night an `any_time`
+## ending is due after the roll-over, hands the loop to the ending scene. The
+## night never decides which ending — Endings.evaluate() does, and the report
+## carries the decision for whoever is watching.
+const ENDING_SCENE_PATH := "res://scenes/Ending.tscn"
 
 const PHASE_IDLE := 0
 const PHASE_EVENT := 1
@@ -80,6 +81,7 @@ func start_night() -> Dictionary:
 	if _report.is_empty():
 		_finish()
 		return {}
+	_note_ending()
 	_event = _event_for_report()
 	_plan()
 	day_label.text = String(OvernightEvents.screen()["day_label"]).format(
@@ -172,13 +174,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 
-## docs/05 §0 rule 3: Esc always works. This screen has no pause menu yet, so the
-## safe behaviour is to move the loop on rather than hold the player on a screen
-## that ignores them — the black ten seconds included.
+## docs/05 §0 rule 3: Esc always works. P3.13's PauseMenu reads Esc in _input
+## before this handler ever sees it and opens the safe pause; this path stays
+## as the scene-level signal for tests and for a build without the autoload —
+## and it never ends the night: pausing must not skip the event.
 func _request_pause() -> void:
 	pause_requested.emit()
-	if not _finished:
-		_finish()
 	if get_viewport() != null:
 		get_viewport().set_input_as_handled()
 
@@ -225,7 +226,7 @@ func _plan() -> void:
 ## docs/01 §6.3: N12's "good morning." is the next day starting; on the campaign's
 ## last night there is no morning, so the screen promises none.
 func _morning_text() -> String:
-	if bool(_report.get("campaign_over", false)):
+	if bool(_report.get("campaign_over", false)) or _ending_due():
 		return ""
 	if _event.has("morning_line"):
 		return String(_event["morning_line"])
@@ -299,7 +300,7 @@ func _refresh_skip_hint() -> void:
 ## Date; the autosave carries it, so Continue lands on the same date. The last
 ## night saves nothing: there is no next day to resume into (P3.16 owns the end).
 func _queue_next_day() -> void:
-	if bool(_report.get("campaign_over", false)):
+	if bool(_report.get("campaign_over", false)) or _ending_due():
 		return
 	var next: Dictionary = Campaign.new(GameState).next_scenario()
 	if next.is_empty():
@@ -331,10 +332,26 @@ func _finish() -> void:
 		campaign_completed.emit(_report.duplicate(true))
 	if not scene_change_enabled:
 		return
-	if over:
-		get_tree().change_scene_to_file.call_deferred(AFTER_CAMPAIGN_SCENE_PATH)
+	if over or _ending_due():
+		get_tree().change_scene_to_file.call_deferred(ENDING_SCENE_PATH)
 		return
 	get_tree().change_scene_to_file.call_deferred(DATE_SCENE_PATH)
+
+
+## docs/01 §7 (P3.16): the report carries the ending the night reached. The last
+## night asks the campaign-end question; every other night asks the turn-close one
+## (only an `any_time` row — E14 "Static" — can answer it mid-campaign).
+func _note_ending() -> void:
+	var phase := Endings.PHASE_TURN
+	if bool(_report.get("campaign_over", false)):
+		phase = Endings.PHASE_CAMPAIGN_END
+	_report["ending"] = Endings.evaluate(GameState.to_dict(), phase)
+
+
+## Is this night handing over to the ending scene rather than to a date?
+func _ending_due() -> bool:
+	var ending: Variant = _report.get("ending", {})
+	return ending is Dictionary and not (ending as Dictionary).is_empty()
 
 
 func _fill_screen_texts() -> void:

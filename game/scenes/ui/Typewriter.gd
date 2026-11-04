@@ -17,6 +17,9 @@ signal beat_drained(index: int)  ## Beat index fully on screen.
 signal drained  ## Every queued beat is closed and fully on screen.
 
 var chars_per_second := 40.0
+## Settings.text_speed (P3.13): a multiplier on `chars_per_second`, stored
+## separately so `configure()` keeps owning the data-clamped base rate.
+var speed_scale := 1.0
 var instant := false  ## reduced-motion / photosensitive-safe mode: everything appears at once
 var pause_chars: Dictionary = {}  ## {".": 240, ...} extra ms to dwell after the character
 
@@ -63,7 +66,7 @@ func advance(delta: float) -> int:
 			return 0
 		delta = -_pause_ms / 1000.0  # the leftover frame time still earns characters
 		_pause_ms = 0.0
-	_credit += delta * chars_per_second
+	_credit += delta * chars_per_second * speed_scale
 	var guard := 0
 	while _credit >= 1.0 and _available() > 0 and guard < 100000:
 		guard += 1

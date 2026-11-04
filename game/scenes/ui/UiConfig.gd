@@ -31,6 +31,7 @@ const DEFAULTS := {
 	"title":
 	{
 		"btn_continue": "Continue",
+		"btn_extras": "Extras",
 		"btn_new_game": "New Game",
 		"btn_photosensitive": "Photosensitive mode: {state}",
 		"btn_quit": "Quit",
@@ -39,6 +40,34 @@ const DEFAULTS := {
 		"photosensitive_off": "Off",
 		"photosensitive_on": "On",
 		"subtitle": "A Dating Sim",
+	},
+	"pause":
+	{
+		"btn_quit": "Quit game",
+		"btn_resume": "Resume",
+		"btn_settings": "Settings",
+		"title": "Paused",
+	},
+	"settings":
+	{
+		"audio": "Volume",
+		"btn_back": "Back",
+		"btn_resources": "Mental health resources",
+		"calmer_mode": "Calmer mode (caps stage at 3)",
+		"content_level": "Content level",
+		"content_options": ["Not set (safest)", "Calmer mode", "Full"],
+		"content_warning": "Content warning: horror themes, obsession and psychological distress.",
+		"her_dose": "Her dose",
+		"immersion": "Immersion",
+		"immersion_hint": "Deep lets her reach outside the window.",
+		"immersion_options": ["Standard", "Deep"],
+		"photosensitive": "Photosensitive mode: {state}",
+		"reduced_motion": "Reduced motion",
+		"resources_url": "https://findahelpline.com/",
+		"state_off": "Off",
+		"state_on": "On",
+		"text_speed": "Text speed",
+		"title": "Settings",
 	},
 	"new_game":
 	{
@@ -50,10 +79,39 @@ const DEFAULTS := {
 		"leila_special": "That's *my* name. …Do you want to be me?",
 		"max_length": 16,
 		"min_length": 1,
+		"os_username_special": "You told me the truth. Good.",
 		"placeholder": "Enter your name...",
 		"pout_unsafe": "That's not a real name… tell me your real one.",
 		"prompt": "What's your name?",
+		"shadow_name": "That's not what you were called last time.",
 		"too_long": "Name must be 16 characters or less.",
+	},
+	"ending":
+	{
+		"title_fallback": "The End",
+		"path_format": "{path} · Day {day} · {stage}",
+		"any_path": "Any path",
+		"seen_first": "First time",
+		"seen_format": "Seen {count}×",
+		"unknown": "This ending is not in this build's catalogue.",
+		"skip_hint": "Space or click to continue",
+		"skip_after_s": 1.5,
+		"line_interval_s": 0.9,
+	},
+	"extras":
+	{
+		"title": "Extras",
+		"subtitle": "What you have reached.",
+		"progress": "{seen} / {total} endings",
+		"locked": "???",
+		"locked_detail": "Not seen yet",
+		"detail_format": "Seen {count}× · Day {day} · {path}",
+		"detail_first": "First time · Day {day} · {path}",
+		"secret_title": "Weights",
+		"secret_locked": "Play all six paths.",
+		"secret_unlocked": "She remembers every version of herself.",
+		"empty": "No ending yet. Finish a run.",
+		"btn_back": "Back",
 	},
 }
 

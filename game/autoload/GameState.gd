@@ -361,8 +361,11 @@ func _apply_mood_meter(meter: StringName, field: StringName, raw_value: Variant)
 ## docs/02 §4 step 7 + docs/01 §2: the atomic per-turn meter update the
 ## Director runs at turn close. The turn index advances FIRST because the
 ## mood budget is keyed on `turn` (P1.04/P1.29 handoff order, review CODE-12),
-## then the slow burn lands, then the model's mood. Returns the ledger for one
-## turn — the meters simulation and the F3 overlay read it.
+## then the slow burn lands, then the model's mood, then the docs/01 §2 Fixation
+## writer for time spent and affection gained. Returns the ledger for one
+## turn — the meters simulation and the F3 overlay read it. The isolation half
+## of the Fixation writer lands in apply_turn_profile(), where the turn's
+## behaviour-profile deltas exist.
 func apply_turn_meters(turn_data: Dictionary) -> Dictionary:
 	advance_turn()
 	var burn := adjust_meter(&"instability", Meters.slow_burn(fixation, lucidity))
@@ -370,10 +373,13 @@ func apply_turn_meters(turn_data: Dictionary) -> Dictionary:
 	var mood: Variant = turn_data.get("mood")
 	if mood is Dictionary:
 		landed = apply_mood(mood)
+	var affection_landed := float(landed[&"affection"]) if landed.has(&"affection") else 0.0
+	var fixation_landed := adjust_meter(&"fixation", Meters.fixation_turn(affection_landed))
 	return {
 		"turn": turn,
 		"slow_burn": burn,
 		"mood": landed,
+		"fixation": fixation_landed,
 		"instability": instability,
 		"instability_floor": instability_floor,
 		"stage": stage,
@@ -411,31 +417,49 @@ func bump_profile(counter: StringName, amount: int = 1) -> void:
 
 ## docs/02 §4 step 7 + docs/01 §2/§4: one call owns this turn's behaviour
 ## profile — the model's `read` label, the keyword rules on the player's line
-## and her reply, her question for the next turn's T15 check — and then the
-## docs/01 §4 path check. Returns the path decision (the F3 overlay and tests
-## read it); a locked path still reports live scores.
+## and her reply, her question for the next turn's T15 check — then the
+## docs/01 §2 Fixation/Lucidity writers for the profile evidence, and then the
+## docs/01 §4 path check (so YANDERE's Fixation term scores the value this turn
+## produced). Returns the path decision (the F3 overlay and tests read it); a
+## locked path still reports live scores.
 ##
 ## A call with no player line and no turn data is the docs/01 §1 NIGHT's path
 ## check, not a turn: there is no message and no reply, so her pending question
-## stays pending instead of being cleared by an empty turn. Everything else
-## (re-score against the current meters, runner-up, Stage-2/3 rule) is identical.
+## stays pending instead of being cleared by an empty turn, and no meter writer
+## runs. Everything else (re-score against the current meters, runner-up,
+## Stage-2/3 rule) is identical.
 func apply_turn_profile(read_label: StringName, player_text := "", turn_data := {}) -> Dictionary:
-	_apply_read(read_label)
 	var data: Dictionary = turn_data if turn_data is Dictionary else {}
-	var bumps := ProfileKeywords.classify(
+	# One store for this turn's counter bumps — the read label, the keyword
+	# rules and the warm/cold swing inside _apply_read. The docs/01 §2 writers
+	# below read the turn's *deltas*, never the running totals, so a counter
+	# earned in an earlier turn cannot pay a meter twice.
+	var bumps := {}
+	_apply_read(read_label, bumps)
+	var keyword_bumps := ProfileKeywords.classify(
 		player_text, ProfileKeywords.reply_text(data), last_question
 	)
-	for counter: StringName in bumps:
-		bump_profile(counter, int(bumps[counter]))
+	for counter: StringName in keyword_bumps:
+		var points := int(keyword_bumps[counter])
+		bump_profile(counter, points)
+		bumps[counter] = int(bumps.get(counter, 0)) + points
 	if not (player_text.strip_edges().is_empty() and data.is_empty()):
 		last_question = ProfileKeywords.question_in(data)
+		# docs/01 §2 "Moves by": isolation (coldness, apathy, an unanswered
+		# question) deepens Fixation; the acts that carry kindness, honesty and
+		# boundaries raise Lucidity. The NIGHT path check is not a turn and
+		# writes neither (P2.22B).
+		adjust_meter(&"fixation", Meters.isolation_gain(bumps))
+		adjust_meter(&"lucidity", Meters.lucidity_gain(bumps))
 	return _evaluate_path()
 
 
 ## docs/02 §4 step 7: the Turn's `read` intent feeds the profile counters.
 ## The label→counter table and the warm/cold tone map behind `inconsistency`
 ## (warm↔cold swings, docs/01 §2) live in res://data/profile_map.json.
-func _apply_read(read_label: StringName) -> void:
+## Every bump is mirrored into `into` so the caller can hand this turn's
+## evidence to the docs/01 §2 meter writers (P2.22B) without re-deriving it.
+func _apply_read(read_label: StringName, into: Dictionary) -> void:
 	if read_label == &"":
 		return
 	var table: Dictionary = _profile_map().get("read_to_profile", {})
@@ -446,12 +470,16 @@ func _apply_read(read_label: StringName) -> void:
 	var bumps: Variant = table.get(key, {})
 	if bumps is Dictionary:
 		for counter: Variant in bumps:
-			bump_profile(StringName(_str(counter)), int(bumps[counter]))
+			var name := StringName(_str(counter))
+			var points := int(bumps[counter])
+			bump_profile(name, points)
+			into[name] = int(into.get(name, 0)) + points
 	var tone := _tone_of_read(key)
 	if tone == &"":
 		return
 	if _last_tone != &"" and _last_tone != tone:
 		bump_profile(&"inconsistency")
+		into[&"inconsistency"] = int(into.get(&"inconsistency", 0)) + 1
 	_last_tone = tone
 
 

@@ -28,9 +28,19 @@ const SLOT_PREFIX := "slot_"
 const AUTO_FILE := "autosave.json"
 const SLOT_SUFFIX := ".json"
 const TMP_SUFFIX := ".tmp"
-
 ## Test seam: point the store at a scratch directory (SaveSystem.save_dir).
 var dir_path := DEFAULT_DIR
+## Envelope identity. The defaults are the docs/07 §3.5 save; ShadowStore
+## reuses this codec for `user://.leila/shadow.json` under its own format tag
+## (`leila.shadow`), so a slot file and the shadow file can never pass as the
+## other (P3.12, docs/05 M08).
+var format := FORMAT
+var version := VERSION
+
+
+func _init(envelope_format := FORMAT, envelope_version := VERSION) -> void:
+	format = envelope_format
+	version = envelope_version
 
 
 ## "1".."3" or "auto" for a slot id that may arrive as an int, a String or a
@@ -76,8 +86,8 @@ func encode(payload: Dictionary) -> Dictionary:
 	if not canonical is Dictionary:
 		return _fail("invalid_data", "save payload is not JSON-serialisable")
 	var envelope := {
-		"format": FORMAT,
-		"version": VERSION,
+		"format": format,
+		"version": version,
 		"checksum": JSON.stringify(canonical, "", true).sha256_text(),
 		"payload": canonical,
 	}
@@ -222,11 +232,13 @@ func _replace(temporary: String, path: String) -> bool:
 
 
 func _envelope_problem(envelope: Dictionary) -> Dictionary:
-	if _string(envelope.get("format")) != FORMAT:
+	if _string(envelope.get("format")) != format:
 		return _corrupt("not a leila save file")
-	var version := _int(envelope.get("version"), -1)
-	if version != VERSION:
-		return _fail("unsupported_version", "save v%d, this build reads v%d" % [version, VERSION])
+	var read_version := _int(envelope.get("version"), -1)
+	if read_version != version:
+		return _fail(
+			"unsupported_version", "save v%d, this build reads v%d" % [read_version, version]
+		)
 	if not envelope.get("payload") is Dictionary:
 		return _corrupt("save payload is missing")
 	return _ok({})

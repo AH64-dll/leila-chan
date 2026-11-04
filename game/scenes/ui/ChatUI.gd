@@ -52,6 +52,9 @@ var _config := {}
 var _filter_warning_emitted_this_turn := false
 var _turn_seq := 0  # seeded per-turn counter for the corruption filter
 var _inner_leaked_turn := -1  # `_turn_seq` of the turn whose thought already leaked
+## docs/08 §1.5 stage 5: her name replaces the player's tag for one line per
+## chat log (a Date scene owns one ChatUI, so the cap spans that date's turns).
+var _name_tag_swapped := false
 
 @onready var chat_log: ScrollContainer = $Margin/VBox/ChatLog
 @onready var text_box: PanelContainer = $Margin/VBox/TextBox
@@ -60,10 +63,25 @@ var _inner_leaked_turn := -1  # `_turn_seq` of the turn whose thought already le
 
 
 func _ready() -> void:
+	add_to_group(&"chat_ui")  # Settings pushes text_speed through this path (P3.13)
 	_config = UiConfig.load_config()
 	apply_config(_config)
+	_apply_stored_settings()
 	if text_box != null and not text_box.resized.is_connected(_on_text_box_resized):
 		text_box.resized.connect(_on_text_box_resized)
+
+
+## P3.13: the screen inherits the player's stored speed setting the moment it
+## exists — a chat opened after the choice never plays one unscaled character.
+## (Reduced motion and the content level are already read live per call by
+## is_reduced_motion()/_content_level(), so they need no one-shot apply.)
+func _apply_stored_settings() -> void:
+	var settings := get_node_or_null("/root/Settings")
+	if settings == null:
+		return
+	var scale: Variant = settings.get("text_speed")
+	if scale is float or scale is int:
+		text_box.set_speed_scale(float(scale))
 
 
 ## The leak's own timeline (a 1 s hold, or word by word then a hold) is stepped
@@ -123,7 +141,7 @@ func _on_input_submitted(text: String) -> void:
 	if not input_box.is_input_enabled():
 		return
 	_note_telemetry("note_activity", [])
-	chat_log.append_entry("player", _player_name, text)
+	chat_log.append_entry("player", player_tag_for(_turn_seq + 1), text)
 	begin_turn_wait()
 	player_turn_sent.emit(text)
 
@@ -191,6 +209,7 @@ func _begin_corruption_turn() -> void:
 				"player_name": _player_name,
 				"reduced_motion": is_reduced_motion(),
 				"content_level": _content_level(),
+				"mood": _name_mood(),
 			}
 		)
 	)
@@ -399,6 +418,9 @@ func is_turn_open() -> bool:
 ## ── Keyboard-only play and pause ───────────────────────────────────────────
 
 
+## docs/05 §0 rule 3: `PauseMenu._input` owns Esc and pauses before this
+## handler runs, so the `ui_cancel` branch only fires in a build without the
+## autoload (the suites drive it directly). The scrolling branches are live.
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_on_pause_requested()
@@ -460,6 +482,45 @@ func is_reduced_motion() -> bool:
 	if settings == null:
 		return false
 	return bool(settings.get("reduced_motion"))
+
+
+## Settings.text_speed (P3.13): the settings screen's slider writes through
+## Settings, which pushes the scale here so a running reveal changes pace
+## mid-line rather than at the next scene.
+func set_text_speed_scale(scale: float) -> void:
+	text_box.set_speed_scale(scale)
+
+
+## The name-tag the next player line shows in the log (docs/08 §1.5 stage 5):
+## at stage 5 hers replaces yours for exactly one line per chat log — a seeded
+## roll on the upcoming turn counter, like the corruption session's, so a replay
+## of the same turn sequence shows the same swap. Below stage 5 it is always the
+## confirmed name.
+func player_tag_for(next_turn: int) -> String:
+	if _name_tag_swapped:
+		return _player_name
+	var salt := corruption.seed_base if corruption != null else 0
+	var eff_stage := Corruption.effective_stage(stage, _plan_ctx())
+	if not Corruption.should_swap_name_tag(eff_stage, next_turn, salt):
+		return _player_name
+	_name_tag_swapped = true
+	return _leila_name
+
+
+## docs/08 §1.5 stage 4 "-kun" mood: the turn's affection meter and last mood
+## stress int, read once here so the corruption session stays UI-free. Missing
+## GameState = a UI test; she is neither affectionate nor angry.
+func _name_mood() -> Dictionary:
+	var gs := get_node_or_null("/root/GameState")
+	if gs == null:
+		return {}
+	return {"affection": float(gs.get("affection")), "stress": int(gs.get("last_stress"))}
+
+
+## Shared corruption-plan context (content level + reduced motion) — the
+## calmer cap applies to the name tag's gate exactly as to the say text.
+func _plan_ctx() -> Dictionary:
+	return {"content_level": _content_level(), "reduced_motion": is_reduced_motion()}
 
 
 ## docs/02 §8 content level for the corruption plan (`calmer` caps the stage).

@@ -9,22 +9,44 @@ extends GdUnitTestSuite
 
 const DateScene := preload("res://scenes/Date.gd")
 const DatePacked := preload("res://scenes/Date.tscn")
+const FakeLLMBackendScript := preload("res://tests/helpers/FakeLLMBackend.gd")
+const TURN_FIXTURE := "res://tests/fixtures/streams/turn_001.json"
 const PALETTE_RES := "res://assets/sprites/leila/palette.json"
 const CAFE_BG_RES := "res://assets/bg/cafe.png"
 
 var _date: Node2D
+var _fake_backend: RefCounted
+var _previous_backend: LLMBackend
 
 
 func before_test() -> void:
+	# P2.22 S1-1/S1-2: a shipped Date starts itself, and a typed line opens a real
+	# Director turn. This suite drives the date by hand (it changes the stage
+	# between beats and captures frames), so it opts out of both: `auto_start`
+	# off before the node enters the tree, and a scripted backend so the submit
+	# test never waits on a model.
+	_fake_backend = FakeLLMBackendScript.new()
+	_fake_backend.chunks = PackedStringArray([FileAccess.get_file_as_string(TURN_FIXTURE)])
+	_previous_backend = LLM.get_backend()
+	LLM.set_backend(_fake_backend)
+	Director.reset()
+
 	_date = DatePacked.instantiate()
+	_date.auto_start = false
 	get_tree().root.add_child(_date)
 	await get_tree().process_frame
 
 
 func after_test() -> void:
+	# A submitted line may still be streaming; the Director outlives this scene,
+	# so close it before the ChatUI it points at is freed.
+	Director.cancel()
 	if _date != null and is_instance_valid(_date):
 		_date.queue_free()
 	await get_tree().process_frame
+	await get_tree().process_frame
+	Director.reset()
+	LLM.set_backend(_previous_backend)
 
 
 func test_date_scene_wires_character_textbox_inputbox_fx_audio() -> void:
@@ -62,6 +84,7 @@ func test_date_follows_the_campaign_stage_when_not_pinned() -> void:
 	GameState.reset()
 	GameState.stage = 4
 	var fresh: Node2D = DatePacked.instantiate()
+	fresh.auto_start = false
 	add_child(auto_free(fresh))
 	await get_tree().process_frame
 	assert_int(fresh.stage).is_equal(4)
@@ -69,6 +92,7 @@ func test_date_follows_the_campaign_stage_when_not_pinned() -> void:
 
 	# an explicit value still wins: the dev tools and scene tests pin a stage
 	var pinned: Node2D = DatePacked.instantiate()
+	pinned.auto_start = false
 	pinned.stage = 1
 	add_child(auto_free(pinned))
 	await get_tree().process_frame
@@ -190,6 +214,52 @@ func test_opening_beats_resolve_once_per_beat() -> void:
 	assert_str(String(passes[0]["sprite"])).is_equal(_date.character.current_sprite)
 
 
+## P3.06: the date route hands GameState.flags to the resolver's beat rules. With
+## `anchor_relapse` set the opening beat is ANCHOR's relapse spike; without it the same
+## beat is her healthy face. Before this route existed no flag reached a date beat, so
+## tsun_break / anchor_relapse / rival_gone were dead in the scene the player plays.
+## The scenario's opening feeling is whatever the campaign picked, so the expectation
+## comes from the same pure lookup the packet carries, not from a hard-coded sprite.
+func test_opening_beats_pass_game_state_flags_to_the_resolver() -> void:
+	GameState.reset()
+	GameState.flags["anchor_relapse"] = true
+	var packets := await _opening_packets(4, "ANCHOR")
+	assert_int(packets.size()).is_equal(1)
+	var feeling := String(packets[0]["feeling"])
+	var intensity := int(packets[0]["intensity"])
+	var healthy_face := SpriteResolver.resolve(feeling, intensity, 4, "ANCHOR")
+	var spike := SpriteResolver.resolve(feeling, intensity, 4, "ANCHOR", {"anchor_relapse": true})
+	assert_str(String(packets[0]["sprite"])).is_equal(spike)
+	assert_str(String(packets[0]["path_rule"])).is_equal("relapse")
+	assert_str(spike).is_not_equal(healthy_face)
+
+	GameState.flags.erase("anchor_relapse")
+	var after := await _opening_packets(4, "ANCHOR")
+	assert_int(after.size()).is_equal(1)
+	var after_face := SpriteResolver.resolve(
+		String(after[0]["feeling"]), int(after[0]["intensity"]), 4, "ANCHOR"
+	)
+	assert_str(String(after[0]["sprite"])).is_equal(after_face)
+	assert_str(String(after[0]["path_rule"])).is_equal("healthy")
+	GameState.reset()
+
+
+## Play one date's opening beats and return the packets it routed, so a test reads the
+## real scene route (scenario pick, opening beats, resolver, Character) end to end.
+func _opening_packets(stage: int, path: String) -> Array:
+	var date: Node2D = DatePacked.instantiate()
+	date.auto_start = false
+	date.stage = stage
+	date.path_name = path
+	date.set_instant_text(true)
+	add_child(auto_free(date))
+	var packets: Array = []
+	date.beat_played.connect(func(_idx: int, packet: Dictionary) -> void: packets.append(packet))
+	date.start_date()
+	await get_tree().process_frame
+	return packets
+
+
 func test_fx_wiring_and_twitch_signal() -> void:
 	var fx_played: Array[StringName] = []
 	# Twitch hook wired from character
@@ -218,14 +288,22 @@ func test_reduced_motion_wiring() -> void:
 
 func test_player_turn_input_flow() -> void:
 	var submitted_lines: Array[String] = []
+	var turns_opened: Array[String] = []
 	_date.player_turn_submitted.connect(func(t: String) -> void: submitted_lines.append(t))
+	Director.turn_started.connect(func(_idx: int, text: String) -> void: turns_opened.append(text))
 
 	_date.chat_ui._on_input_submitted("Can I order coffee?")
-	await get_tree().process_frame
 
+	# P2.22 S1-1: the Date is the production bridge — the submit opens the
+	# Director's turn synchronously, so a typed line can never be logged with no
+	# reply behind it. (The playtest harness used to install this itself.)
+	assert_array(turns_opened).contains(["Can I order coffee?"])
 	assert_int(submitted_lines.size()).is_equal(1)
 	assert_str(submitted_lines[0]).is_equal("Can I order coffee?")
 	assert_int(_date.chat_log.entry_count()).is_equal(1)
+	var first: Dictionary = (_date.chat_log.get_entries())[0]
+	assert_str(String(first["speaker_key"])).is_equal("player")
+	assert_str(String(first["text"])).is_equal("Can I order coffee?")
 
 
 func test_pause_request_propagation() -> void:
@@ -345,3 +423,25 @@ func _without_hesitation(text: String) -> String:
 	while out.contains("  "):
 		out = out.replace("  ", " ")
 	return out.strip_edges()
+
+
+## P3.16 / docs/01 §7: E14 "Static" is the one ending a turn close can reach —
+## Instability 100 before Day 7 — and the date must end the run there instead of
+## walking into the night.
+func test_an_early_burnout_ends_the_date_into_the_ending() -> void:
+	_date.scene_change_enabled = false
+	(
+		assert_bool(
+			GameState.from_dict(
+				{"day": 6, "path": "SPLIT", "instability": 100.0, "instability_peak": 100.0}
+			)
+		)
+		. is_true()
+	)
+	var reached: Array = []
+	_date.ending_reached.connect(func(decision: Dictionary) -> void: reached.append(decision))
+	_date._on_turn_displayed()
+	await get_tree().process_frame
+	assert_int(reached.size()).is_equal(1)
+	assert_str(String(reached[0].get("id", ""))).is_equal("E14")
+	assert_bool(_date._date_over).is_true()

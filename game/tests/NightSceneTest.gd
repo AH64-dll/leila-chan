@@ -133,7 +133,10 @@ func test_night_screen_click_skips_after_the_window() -> void:
 	assert_bool(night.is_finished()).is_true()
 
 
-func test_night_screen_esc_always_ends_the_night() -> void:
+## P3.13: Esc is the PauseMenu's panic key (it reads _input first), so the
+## scene-level handler only emits the request — pausing must never skip the
+## night, N12's unskippable black included.
+func test_night_screen_esc_requests_pause_without_skipping() -> void:
 	var night: Control = _open("N12")
 	var paused: Array = []
 	night.pause_requested.connect(func() -> void: paused.append(true))
@@ -142,7 +145,7 @@ func test_night_screen_esc_always_ends_the_night() -> void:
 	event.pressed = true
 	night._unhandled_key_input(event)
 	assert_array(paused).has_size(1)
-	assert_bool(night.is_finished()).is_true()
+	assert_bool(night.is_finished()).is_false()
 
 
 func test_night_screen_autosaves_the_next_day_and_queues_its_date() -> void:
@@ -188,6 +191,7 @@ func test_date_opens_the_scenario_the_night_queued() -> void:
 	GameState.set_flag(&"next_scenario", NEXT_SCENARIO)
 	var date: Node2D = auto_free(DatePacked.instantiate())
 	date.scene_change_enabled = false
+	date.auto_start = false  # P2.22 S1-2: this test asserts the hand-off, not a date
 	add_child(date)
 	await get_tree().process_frame
 	assert_str(String(date.scenario_path)).is_equal(NEXT_SCENARIO)
@@ -263,3 +267,28 @@ func _remove_dir(path: String) -> void:
 	for file: String in directory.get_files():
 		DirAccess.remove_absolute(path.path_join(file))
 	DirAccess.remove_absolute(path)
+
+
+## P3.16 / docs/01 §7: the campaign's last night is where a run becomes an
+## ending. The report carries the decision (the ending scene renders it), the
+## night queues no next day, and it promises no morning.
+func test_the_last_night_carries_the_runs_ending() -> void:
+	(
+		assert_bool(
+			GameState.from_dict(
+				{"day": 14, "path": "HOLLOW", "instability": 95.0, "instability_peak": 95.0}
+			)
+		)
+		. is_true()
+	)
+	var reports: Array = []
+	var night: Control = _open("N01")
+	night.night_finished.connect(func(report: Dictionary) -> void: reports.append(report))
+	night.advance_time(120.0)
+	assert_int(reports.size()).is_equal(1)
+	var report: Dictionary = reports[0]
+	assert_bool(bool(report.get("campaign_over", false))).is_true()
+	var ending: Variant = report.get("ending", {})
+	assert_bool(ending is Dictionary).is_true()
+	assert_str(String((ending as Dictionary).get("id", ""))).is_equal("E08")
+	assert_str(String(GameState.get_flag(&"next_scenario", ""))).is_empty()

@@ -1,3 +1,6 @@
+# gdlint: disable=max-public-methods
+# (dev panel: one getter per section is the test-read surface, and P3.08's META
+# row pushes the panel past the 20-method cap. Drop this when the panel splits.)
 class_name DebugOverlay
 extends CanvasLayer
 ## DebugOverlay — the F3 Director overlay dev panel (P1.17, docs/07 §5).
@@ -22,6 +25,11 @@ const COLOR_MUTED := Color(0.6, 0.6, 0.65)
 const COLOR_READY := Color(0.55, 0.85, 0.6)
 const COLOR_COOLDOWN := Color(0.9, 0.5, 0.5)
 const COLOR_INNER := Color(0.92, 0.8, 0.95)
+const ENDING_SCENE_PATH := "res://scenes/Ending.tscn"
+
+## Test seam: a suite forcing an ending must not change scene. On in dev builds,
+## where the button's whole point is to show the ending it forced.
+var ending_scene_change_enabled := true
 
 var _affection_label: Label
 var _trust_label: Label
@@ -42,7 +50,9 @@ var _cue_budget_label: Label
 var _offers_label: Label
 var _telemetry_label: Label
 var _triggers_label: Label
+var _endings_label: Label
 var _last_turn_data: Dictionary = {}
+var _meta_label: Label
 var _fx_labels: Dictionary = {}  # fx_name -> Label
 
 
@@ -162,6 +172,28 @@ func _build_ui() -> void:
 	_offers_label = _create_label(root_vbox, "Offered Actions: (none)", COLOR_LABEL)
 	_offers_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
+	# --- Meta Section (P3.08) ---
+	# docs/05 §3 live state plus one button per offerable action — the overlay
+	# opens the offer directly (gates/lottery bypassed, like Telemetry's
+	# debug_fire), so every meta event stays reachable from F3 for testing.
+	_create_section_header(root_vbox, "META (P3.08)")
+	_meta_label = _create_label(root_vbox, "Open: (none)", COLOR_LABEL)
+	_meta_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var meta_grid := GridContainer.new()
+	meta_grid.columns = 2
+	meta_grid.add_theme_constant_override("h_separation", 4)
+	meta_grid.add_theme_constant_override("v_separation", 2)
+	root_vbox.add_child(meta_grid)
+	if MetaDirector != null:
+		for action: String in MetaDirector.action_ids():
+			_add_meta_button(meta_grid, action)
+	else:
+		var missing_meta := Button.new()
+		missing_meta.text = "(MetaDirector autoload missing)"
+		missing_meta.add_theme_font_size_override("font_size", FONT_SIZE)
+		missing_meta.disabled = true
+		meta_grid.add_child(missing_meta)
+
 	# --- Telemetry Section (P2.09) ---
 	# Every engine event is fireable here for testing (role checklist): one
 	# button per data/telemetry.json row, plus the pending/state line the turn
@@ -192,6 +224,51 @@ func _build_ui() -> void:
 	_triggers_label = _create_label(root_vbox, "Fired: (none)", COLOR_LABEL)
 	_triggers_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
+	# --- Endings Section (P3.16) ---
+	# docs/01 §7: one button per ending. Each forces the row through Endings'
+	# satisfying state and the evaluator's verdict, then hands over to the ending
+	# scene — so a click proves the row is reachable, it does not bypass the rule.
+	_create_section_header(root_vbox, "ENDINGS (P3.16)")
+	_endings_label = _create_label(root_vbox, "Reached: (none)", COLOR_LABEL)
+	_endings_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var endings_grid := GridContainer.new()
+	endings_grid.name = "EndingsGrid"
+	endings_grid.columns = 2
+	endings_grid.add_theme_constant_override("h_separation", 4)
+	endings_grid.add_theme_constant_override("v_separation", 2)
+	root_vbox.add_child(endings_grid)
+	for row: Dictionary in Endings.rows():
+		if String(row.get("kind", "")) == Endings.KIND_ENDING:
+			_add_ending_button(endings_grid, row)
+
+
+## One P3.16 debug trigger. The node name is the seam a test clicks
+## (`Ending_E14`), the text is the id a reviewer reads, and the tooltip is the
+## row's actual condition.
+func _add_ending_button(parent: Container, row: Dictionary) -> void:
+	var id := String(row.get("id", ""))
+	var button := Button.new()
+	button.name = "Ending_" + id
+	button.text = id
+	button.tooltip_text = Endings.describe(row)
+	button.add_theme_font_size_override("font_size", FONT_SIZE)
+	button.pressed.connect(func() -> void: _force_ending(id))
+	parent.add_child(button)
+
+
+## Force one ending: replace the run with the state that satisfies the row, let
+## the evaluator confirm it, then open the ending scene (when a test is not
+## watching). Dev-only; the overlay is stripped from release builds.
+func _force_ending(id: String) -> void:
+	var result := Endings.force(id)
+	if not bool(result.get("ok", false)):
+		if _endings_label != null:
+			_endings_label.text = "Force %s failed: %s" % [id, String(result.get("error", ""))]
+		return
+	refresh()
+	if ending_scene_change_enabled and get_tree() != null:
+		get_tree().change_scene_to_file.call_deferred(ENDING_SCENE_PATH)
+
 
 func _create_section_header(parent: Container, text: String) -> Label:
 	var label := Label.new()
@@ -209,6 +286,63 @@ func _create_label(parent: Container, text: String, color: Color) -> Label:
 	label.modulate = color
 	parent.add_child(label)
 	return label
+
+
+## One P3.08 debug trigger: click → MetaDirector.debug_offer(action) →
+## refresh. The label is the action itself ("hide_ui") so a reviewer can match
+## the button to the data/meta_events.json row.
+func _add_meta_button(parent: Container, action: String) -> void:
+	var button := Button.new()
+	button.text = action
+	button.tooltip_text = "Open the %s offer (docs/05 §3 gates bypassed)" % action
+	button.add_theme_font_size_override("font_size", FONT_SIZE)
+	button.pressed.connect(func() -> void: fire_meta(action))
+	parent.add_child(button)
+
+
+## Force-open one offered action from the overlay (dev builds only; the seam
+## refuses in release). Public so tests can click the same path the button
+## uses — the model still decides whether it fires, exactly like a real offer.
+func fire_meta(action: String) -> bool:
+	if MetaDirector == null:
+		return false
+	var offered := MetaDirector.debug_offer(action)
+	refresh()
+	return offered
+
+
+## The META section's text: the docs/05 §3 budget read — open offers, what the
+## scene has spent, what the session already showed — and the docs/05 §0 rows
+## the hard-rule gate is refusing right now (`R4: …` under Standard immersion).
+func _meta_text() -> String:
+	if MetaDirector == null:
+		return "Open: (MetaDirector autoload missing)"
+	var view: Dictionary = MetaDirector.state()
+	var open: Array = view.get("open_offers", [])
+	var seen: Array = view.get("events_seen", [])
+	var fired := int(view.get("scene_events", 0))
+	var cap := int(view.get("scene_cap", 0))
+	var text := (
+		"Open: %s\nScene: %d/%d events\nSeen: %s"
+		% [
+			", ".join(open) if not open.is_empty() else "(none)",
+			fired,
+			cap,
+			", ".join(seen) if not seen.is_empty() else "(none)",
+		]
+	)
+	var blocked: Dictionary = view.get("hard_rule_violations", {})
+	if not blocked.is_empty():
+		var reasons: Array[String] = []
+		for action: String in blocked:
+			reasons.append("%s → %s" % [action, blocked[action]])
+		text += "\nBlocked: %s" % ", ".join(reasons)
+	return text
+
+
+## The META section's label, for tests.
+func get_meta_text() -> String:
+	return _meta_label.text if _meta_label != null else ""
 
 
 ## One P2.09 debug trigger: click → Telemetry.debug_fire(kind) → refresh. The
@@ -292,12 +426,19 @@ func _connect_signals() -> void:
 	if Triggers != null:
 		Triggers.triggered.connect(func(_r: Dictionary) -> void: refresh())
 
+	if MetaDirector != null:
+		MetaDirector.offer_changed.connect(func() -> void: refresh())
+		MetaDirector.event_fired.connect(func(_id: String, _a: String) -> void: refresh())
+
 
 func _on_turn_completed(_idx: int, data: Dictionary) -> void:
 	_last_turn_data = data.duplicate(true)
 	refresh()
 
 
+## docs/05 §0 rule 3: `PauseMenu._input` owns Esc and pauses before this
+## handler runs, so the Esc-to-close branch below is unreachable in a shipping
+## build (F3 still closes the overlay). Dev-only; never read Esc in `_input`.
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_dev_build():
 		return
@@ -459,9 +600,17 @@ func refresh() -> void:
 	if _telemetry_label != null:
 		_telemetry_label.text = _telemetry_text()
 
+	# --- Meta (P3.08) ---
+	if _meta_label != null:
+		_meta_label.text = _meta_text()
+
 	# --- Triggers (P2.08) ---
 	if _triggers_label != null:
 		_triggers_label.text = _triggers_text()
+
+	# --- Endings (P3.16) ---
+	if _endings_label != null:
+		_endings_label.text = _endings_text()
 
 
 ## The TRIGGERS section's text: catalogue size, the latest firings (id, step,
@@ -499,6 +648,26 @@ func _triggers_text() -> String:
 	return (
 		"Catalogue: %d triggers\nFired: %s\nPath points: %s"
 		% [int(report.get("catalogue", 0)), shown, str(points) if not points.is_empty() else "{}"]
+	)
+
+
+## The ENDINGS section's text: this run's ending flag, the log's progress and the
+## paths the log says were played (the secret's requirement).
+func _endings_text() -> String:
+	var reached := String(GameState.get_flag(Endings.FLAG_ENDING, ""))
+	if reached.is_empty():
+		reached = "(none)"
+	var total := 0
+	for row: Dictionary in Endings.rows():
+		if String(row.get("kind", "")) == Endings.KIND_ENDING:
+			total += 1
+	var seen := EndingLog.seen_ids()
+	var paths: Array[String] = []
+	for path: StringName in EndingLog.seen_paths():
+		paths.append(String(path))
+	return (
+		"Reached: %s\nLog: %d/%d · paths %s"
+		% [reached, seen.size(), total, ", ".join(paths) if not paths.is_empty() else "(none)"]
 	)
 
 
