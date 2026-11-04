@@ -2728,7 +2728,7 @@
     "P3.05": {
       "status": "changes_requested",
       "agent": "deepseek",
-      "round": 1,
+      "round": 2,
       "reviews": [
         {
           "kind": "content",
@@ -2756,6 +2756,24 @@
           "report": "production/reviews/P3.05-safety-r1.md",
           "ts": "2026-11-04T19:21:09+02:00",
           "declared": "deepseek"
+        },
+        {
+          "kind": "safety",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "gemini-flash",
+          "report": "production/reviews/P3.05-safety-r2.md",
+          "ts": "2026-11-04T21:52:53+02:00",
+          "declared": "gemini-flash"
+        },
+        {
+          "kind": "design",
+          "verdict": "changes",
+          "round": 2,
+          "reviewer": "gemini-flash",
+          "report": "production/reviews/P3.05-design-r2.md",
+          "ts": "2026-11-04T21:52:53+02:00",
+          "declared": "gemini-flash"
         }
       ],
       "started": "2026-11-04T18:02:02+02:00",
@@ -8029,6 +8047,36 @@
       "event": "in_review->done",
       "ref": "P2.22",
       "note": ""
+    },
+    {
+      "ts": "2026-11-04T21:52:53+02:00",
+      "event": "changes_requested->in_progress",
+      "ref": "P3.05",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T21:52:53+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P3.05",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T21:52:53+02:00",
+      "event": "review:safety:approved",
+      "ref": "P3.05",
+      "note": "production/reviews/P3.05-safety-r2.md"
+    },
+    {
+      "ts": "2026-11-04T21:52:53+02:00",
+      "event": "review:design:changes",
+      "ref": "P3.05",
+      "note": "production/reviews/P3.05-design-r2.md"
+    },
+    {
+      "ts": "2026-11-04T21:52:53+02:00",
+      "event": "in_review->changes_requested",
+      "ref": "P3.05",
+      "note": "by design review"
     }
   ]
 }
