@@ -2937,7 +2937,7 @@
       "finished": "2026-11-04T19:02:14+02:00"
     },
     "P3.15": {
-      "status": "in_review",
+      "status": "done",
       "agent": "deepseek",
       "round": 1,
       "reviews": [
@@ -2970,7 +2970,8 @@
         }
       ],
       "started": "2026-11-04T18:02:03+02:00",
-      "handoff": "production/handoffs/P3.15.md"
+      "handoff": "production/handoffs/P3.15.md",
+      "finished": "2026-11-04T21:33:11+02:00"
     },
     "P3.16": {
       "status": "done",
@@ -7914,6 +7915,12 @@
       "event": "review:code:approved",
       "ref": "P3.15",
       "note": "production/reviews/P3.15-code-r2.md"
+    },
+    {
+      "ts": "2026-11-04T21:33:11+02:00",
+      "event": "in_review->done",
+      "ref": "P3.15",
+      "note": ""
     }
   ]
 }
