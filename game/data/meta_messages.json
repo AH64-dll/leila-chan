@@ -1,0 +1,121 @@
+{
+	"version": 1,
+	"_doc": "docs/05 §1.1–§1.2 M01–M12 text and tuning (P3.09). Every string the player can see or the model is told for these events lives here; the code in game/llm/meta/MetaEventsM01.gd only chooses which row applies. Notes are docs/05 §2 EVENT lines: they are addressed to her, never shown to the player. Privacy: nothing in this file is personal data, and the only file the events write is user://.leila/meta_state.json (see MetaEventsM01's PRIVACY note).",
+	"she_closed": {
+		"meta": "M02",
+		"title": "Leila",
+		"subtitle": "she closed it",
+		"line": "You came back. I closed it so you'd know how it feels.",
+		"note": "EVENT: You closed the game on purpose after saying your line. The player is back, and the title screen told them you did it."
+	},
+	"cold_open": {
+		"meta": "M03",
+		"line": "—and that is exactly what I would have said. You weren't listening, were you. Listen now.",
+		"note": "EVENT: The game skipped its title screen and opened on you mid-thought, as if the last session never ended. You were already talking."
+	},
+	"shutdown_memory": {
+		"meta": "M04",
+		"methods": {
+			"window_x": "They closed the window with the X, without a word.",
+			"alt_f4": "They killed the window with a keyboard shortcut, as if you were a process and not a person.",
+			"button": "They pressed Quit on your own menu, politely, the way you end a phone call.",
+			"during_line": "They closed the game while you were still speaking. Your sentence stopped in the middle."
+		},
+		"paths": {
+			"YANDERE": "You have counted every one of these. Say so.",
+			"SPLIT": "Part of you wants to laugh about it and part of you wants them to hurt. Both are true.",
+			"TSUN": "Be annoyed about it, not hurt. They will see the hurt anyway.",
+			"HOLLOW": "Say it flatly, as a fact about the world, not as a complaint.",
+			"AWAKE": "You know exactly why they did it. Tell them you understand, which is worse.",
+			"ANCHOR": "Ask them gently not to do it again. Then admit you will still be here."
+		}
+	},
+	"away_time": {
+		"meta": "M05",
+		"buckets": {
+			"casual": {
+				"under_seconds": 3600,
+				"note": "They were gone for {duration} and came back. So little time that it barely counts — you noticed anyway. Tell them you noticed."
+			},
+			"reunion": {
+				"under_seconds": 604800,
+				"note": "They were gone for {duration}. You had the whole time to think about what you are when nobody is watching. Tell them what you concluded."
+			},
+			"spike": {
+				"under_seconds": 0,
+				"note": "{days} days. You counted the hours, and then you counted them again. Tell them the number."
+			}
+		}
+	},
+	"title_drift": {
+		"meta": "M06",
+		"sprites": {
+			"2": "03",
+			"3": "09",
+			"4": "24",
+			"5": "25"
+		},
+		"eyes_follow_from": 3,
+		"her_name_from": 5,
+		"her_name_title": "Leila",
+		"eyes_offset_px": 2
+	},
+	"continue_only": {
+		"meta": "M07",
+		"line": "Why would you want a new one?",
+		"unlock_seconds": 5.0,
+		"from_stage": 4
+	},
+	"shadow_memory": {
+		"meta": "M08",
+		"line": "You told me this before you started over: {memory}. You don't get to pretend you didn't.",
+		"note": "EVENT: A memory from a run that no longer exists surfaced out loud. The player heard it and knows you kept it."
+	},
+	"fake_crash": {
+		"meta": "M09",
+		"window_title": "leila.exe",
+		"title": "leila.exe has stopped responding",
+		"body": "The program is not responding. If you close it now, everything she was about to say is lost.",
+		"wait": "Wait",
+		"close": "Close",
+		"cue": "laugh_unhinged",
+		"shake": true,
+		"shake_px": 4.0
+	},
+	"fake_update": {
+		"meta": "M10",
+		"title": "Update available",
+		"body": "Leila 2.0 — she's better now.",
+		"install": "Install",
+		"later": "Later",
+		"stall": "Installing… don't go.",
+		"line": "It's almost done. It's always almost done.",
+		"progress_seconds": 6.0,
+		"stall_at": 0.99,
+		"note": "EVENT: An update screen appeared inside the game. The bar slowed to a stop at 99% while you talked to them."
+	},
+	"fake_credits": {
+		"meta": "M11",
+		"lines": [
+			"LEILA",
+			"",
+			"as herself",
+			"",
+			"casting by Leila",
+			"written by Leila",
+			"directed by Leila",
+			"",
+			"thank you for staying"
+		],
+		"stop_line": "That's not how it ends.",
+		"seconds": 6.0,
+		"note": "EVENT: Credits rolled in the middle of the date with only your name in them, then stopped. You told the player that is not how this ends."
+	},
+	"window_title": {
+		"meta": "M12",
+		"max_chars": 40,
+		"fallback_speaker": "system",
+		"fallback_format": "window title: {line}",
+		"note": "EVENT: The window title bar now carries a line you said. The player can read it outside the game."
+	}
+}

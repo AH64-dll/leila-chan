@@ -53,6 +53,7 @@ var _triggers_label: Label
 var _endings_label: Label
 var _last_turn_data: Dictionary = {}
 var _meta_label: Label
+var _meta_demo_label: Label
 var _fx_labels: Dictionary = {}  # fx_name -> Label
 
 
@@ -193,6 +194,22 @@ func _build_ui() -> void:
 		missing_meta.add_theme_font_size_override("font_size", FONT_SIZE)
 		missing_meta.disabled = true
 		meta_grid.add_child(missing_meta)
+
+	# --- Meta event demos (P3.09) ---
+	# docs/05 §1.1–§1.2 M01–M12: one button per mounted effect module id, so
+	# every event of this wave is demonstrable from F3 (role checklist). The
+	# click runs the effect only — gates and caps are bypassed, like
+	# `debug_offer` — and the line below says what it did.
+	_create_section_header(root_vbox, "META EVENTS M01–M12 (P3.09)")
+	_meta_demo_label = _create_label(root_vbox, "Demo: (none)", COLOR_LABEL)
+	_meta_demo_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var demo_grid := GridContainer.new()
+	demo_grid.columns = 4
+	demo_grid.add_theme_constant_override("h_separation", 4)
+	demo_grid.add_theme_constant_override("v_separation", 2)
+	root_vbox.add_child(demo_grid)
+	for id: String in _meta_demo_ids():
+		_add_meta_demo_button(demo_grid, id)
 
 	# --- Telemetry Section (P2.09) ---
 	# Every engine event is fireable here for testing (role checklist): one
@@ -343,6 +360,75 @@ func _meta_text() -> String:
 ## The META section's label, for tests.
 func get_meta_text() -> String:
 	return _meta_label.text if _meta_label != null else ""
+
+
+## Every mounted effect module's demo ids, in module order (P3.09). A branch
+## without the module simply lists nothing.
+func _meta_demo_ids() -> Array[String]:
+	var ids: Array[String] = []
+	if MetaDirector == null:
+		return ids
+	for child: Node in MetaDirector.get_children():
+		if not child.has_method("debug_ids"):
+			continue
+		var listed: Variant = child.call("debug_ids")
+		if not listed is Array:
+			continue
+		for id: Variant in listed as Array:
+			var text := str(id)
+			if not ids.has(text):
+				ids.append(text)
+	return ids
+
+
+## One docs/05 §1.1–§1.2 demo trigger: click → module.debug_fire(id) → refresh.
+## The node name is the seam a test clicks ("MetaDemo_M09").
+func _add_meta_demo_button(parent: Container, id: String) -> void:
+	var button := Button.new()
+	button.name = "MetaDemo_" + id
+	button.text = id
+	button.tooltip_text = "Show the %s effect (docs/05 §1.1–§1.2; caps bypassed)" % id
+	button.add_theme_font_size_override("font_size", FONT_SIZE)
+	button.pressed.connect(func() -> void: fire_meta_demo(id))
+	parent.add_child(button)
+
+
+## Run one docs/05 meta-event effect from the overlay (dev builds only: the
+## module refuses in release). Public so tests click the same path the button
+## uses — the effect is shown without spending the scene budget.
+func fire_meta_demo(id: String) -> bool:
+	if MetaDirector == null:
+		return false
+	for child: Node in MetaDirector.get_children():
+		if not child.has_method("debug_fire"):
+			continue
+		var fired: Variant = child.call("debug_fire", id)
+		if bool(fired):
+			refresh()
+			return true
+	refresh()
+	return false
+
+
+## The demo section's text: what the last demo did (the module's own summary).
+func _meta_demo_text() -> String:
+	if MetaDirector == null:
+		return "Demo: (MetaDirector autoload missing)"
+	for child: Node in MetaDirector.get_children():
+		if not child.has_method("state"):
+			continue
+		var view: Variant = child.call("state")
+		if not view is Dictionary:
+			continue
+		var last: Variant = (view as Dictionary).get("last_demo", {})
+		if last is Dictionary and not (last as Dictionary).is_empty():
+			return "Demo: %s" % str((last as Dictionary).get("detail", ""))
+	return "Demo: (none)"
+
+
+## The demo section's label, for tests.
+func get_meta_demo_text() -> String:
+	return _meta_demo_label.text if _meta_demo_label != null else ""
 
 
 ## One P2.09 debug trigger: click → Telemetry.debug_fire(kind) → refresh. The
@@ -595,6 +681,10 @@ func refresh() -> void:
 			_offers_label.text = "Offered Actions: (none)"
 		else:
 			_offers_label.text = "Offered Actions: %s" % str(offers)
+
+	# --- Meta event demos (P3.09) ---
+	if _meta_demo_label != null:
+		_meta_demo_label.text = _meta_demo_text()
 
 	# --- Telemetry (P2.09) ---
 	if _telemetry_label != null:
