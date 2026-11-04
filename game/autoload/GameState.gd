@@ -3,8 +3,9 @@ extends Node
 ## counters and a serialisable snapshot (docs/07 §2, docs/01 §2).
 ##
 ## The model never writes here. The Director applies each Turn through
-## apply_mood()/apply_read() (docs/02 §4 step 7), which clamp and scale per
-## docs/01 §2 and docs/02 §1.1. Read the public vars freely; mutate them only
+## apply_turn_meters()/apply_read() (docs/02 §4 step 7); the arithmetic itself
+## (slow burn, daily burn, ratchet floor, mood scaling) lives in Meters so the
+## formula has one definition. Read the public vars freely; mutate them only
 ## through the methods so clamping, the ratchet and the signals always hold.
 ##
 ## Stage is monotonic: good days can lower Instability (ratchet floor =
@@ -38,9 +39,6 @@ const METER_NAMES: Array[StringName] = [
 	&"affection", &"trust", &"instability", &"fixation", &"lucidity"
 ]
 
-## Instability ratchet (docs/01 §2): never below floor = peak − 15.
-const RATCHET_DROP := 15.0
-
 ## Stage instability bands (docs/01 §3): stage i holds while instability ≥ BANDS[i].
 const STAGE_BANDS: Array[int] = [0, 15, 30, 50, 70, 90]
 const STAGE_MAX := 5
@@ -48,23 +46,11 @@ const STAGE_MAX := 5
 ## Campaign length in in-game days (docs/01 §1).
 const DAY_MAX := 14
 
-## Model mood application (docs/02 §1.1): each mood field is an int −3..3,
-## scaled per meter when applied.
-const MOOD_LIMIT := 3.0
-const MOOD_SCALE_AFFECTION := 1.5
-const MOOD_SCALE_TRUST := 2.0
-const MOOD_SCALE_STRESS := 0.6
-## Per-turn caps on model-suggested moves (docs/01 §2 "Moves by" column) —
-## enforced per turn against the running total, not per apply_mood() call.
-const MAX_AFFECTION_SUGGESTION := 5.0
-const MAX_INSTABILITY_SUGGESTION := 3.0
-
-## Slow burn (docs/01 §2): +0.35 +0.15·(Fixation/100) −0.2·(Lucidity/100) per
-## turn, +3 per day. Triggers add their spikes on top via adjust_meter().
-const SLOW_BURN_BASE := 0.35
-const SLOW_BURN_FIXATION := 0.15
-const SLOW_BURN_LUCIDITY := 0.2
-const DAILY_BURN := 3.0
+## Meter arithmetic — mood scaling (docs/02 §1.1), the per-turn caps on
+## model-suggested moves (docs/01 §2 "Moves by"), the slow burn and the daily
+## burn (docs/01 §2) — lives in Meters (game/llm/Meters.gd) and its data file
+## res://data/meters.json. This class applies the results; it does not define
+## the formula.
 
 ## Behaviour-profile counters (docs/01 §2) — the full set, in doc order.
 const PROFILE_COUNTERS: Array[StringName] = [
@@ -130,10 +116,18 @@ var instability_peak := 0.0:
 			push_warning("GameState.instability_peak: non-finite write ignored")
 			return
 		instability_peak = _clamp_meter(&"instability", v)
+		# Raising the peak raises the floor under the live meter, so the
+		# docs/01 §2 invariant (instability ≥ floor) is enforced by the peak
+		# write itself, not by whichever write happens next. Lowering the peak
+		# never lowers the meter — she is not cured by editing the high-water
+		# mark. from_dict() suppresses the stage signal during a restore so the
+		# load still emits exactly one transition.
+		if not _peak_guard and instability < instability_floor:
+			instability = instability_floor
 ## Read-only: the lowest Instability may ever sit at (docs/01 §2 ratchet).
 var instability_floor: float:
 	get:
-		return maxf(0.0, instability_peak - RATCHET_DROP)
+		return Meters.ratchet_floor(instability_peak)
 ## Derived from Instability bands (docs/01 §3); only ever moves upward.
 var stage := 0:
 	set(v):
@@ -156,7 +150,12 @@ var trust := 0.0:
 var instability := 0.0:
 	set(v):
 		var capped := _clamp_meter(&"instability", v)
+		# The peak write is game-side, not a caller raising the ceiling: guard it
+		# so the peak setter does not try to lift this meter while this setter
+		# owns the write (that would re-enter here and recurse).
+		_peak_guard = true
 		instability_peak = maxf(instability_peak, capped)
+		_peak_guard = false
 		var clamped := maxf(capped, instability_floor)
 		if clamped != instability:
 			instability = clamped
@@ -199,6 +198,12 @@ var stress: int:
 		return last_stress
 
 var _last_tone: StringName = &""
+## Ratchet re-entrancy guards (docs/01 §2): the instability setter raises the
+## peak, and a caller-raised peak lifts the meter back over its floor. Without
+## the guards those two writes re-enter each other; `_restoring` makes a
+## from_dict() restore land atomically and emit one stage transition.
+var _peak_guard := false
+var _restoring := false
 ## Per-turn model-suggestion budget (docs/01 §2): meter → applied delta total,
 ## reset whenever `turn` changes.
 var _mood_turn := -1
@@ -208,6 +213,8 @@ var _profile_map_cache := {}
 
 ## Fresh New-Game state (docs/05 M08 leaves the shadow save to SaveSystem).
 func reset() -> void:
+	_peak_guard = false
+	_restoring = false
 	instability_peak = 0.0
 	affection = 0.0
 	trust = 0.0
@@ -271,23 +278,23 @@ func adjust_meter(meter: StringName, delta: float) -> float:
 	return get_meter(meter) - before
 
 
-## docs/02 §1.1 + §4 step 7: model mood ints −3..3, scaled per meter
-## (affection ×1.5, trust ×2, stress → instability ×0.6), docs/01 §2 caps.
-func apply_mood(mood: Dictionary) -> void:
+## docs/02 §1.1 + §4 step 7: model mood ints −3..3, scaled per meter by Meters
+## (affection ×1.5, trust ×2, stress → instability ×0.6) under the docs/01 §2
+## per-turn caps. Returns the deltas that actually landed, keyed by meter.
+func apply_mood(mood: Dictionary) -> Dictionary:
 	if _mood_turn != turn:
 		_mood_turn = turn
 		_mood_spent.clear()
+	var landed := {}
 	if mood.has("affection"):
-		_apply_mood_meter(
-			&"affection", mood["affection"], MOOD_SCALE_AFFECTION, MAX_AFFECTION_SUGGESTION
-		)
+		landed[&"affection"] = _apply_mood_meter(&"affection", &"affection", mood["affection"])
 	if mood.has("trust"):
-		_apply_mood_meter(&"trust", mood["trust"], MOOD_SCALE_TRUST, INF)
+		landed[&"trust"] = _apply_mood_meter(&"trust", &"trust", mood["trust"])
 	if mood.has("stress"):
-		last_stress = clampi(int(_num(mood["stress"])), -3, 3)
-		_apply_mood_meter(
-			&"instability", mood["stress"], MOOD_SCALE_STRESS, MAX_INSTABILITY_SUGGESTION
-		)
+		var limit := int(Meters.mood_limit())
+		last_stress = clampi(int(_num(mood["stress"])), -limit, limit)
+		landed[&"instability"] = _apply_mood_meter(&"instability", &"stress", mood["stress"])
+	return landed
 
 
 ## One model suggestion after docs/02 §1.1 scaling, capped against what the
@@ -295,16 +302,17 @@ func apply_mood(mood: Dictionary) -> void:
 ## per-turn budget (affection ±5, instability ±3, trust uncapped), so the
 ## running total of landed movement is clamped — two apply_mood() calls in one
 ## turn share it, and unlanded suggestions at a meter boundary never free budget
-## in the opposite direction.
-func _apply_mood_meter(meter: StringName, raw_value: Variant, scale: float, cap: float) -> void:
-	# _num() drops non-finite suggestions and the clamp bounds the rest before
-	# scaling, so the scaled delta is always finite.
-	var delta := clampf(_num(raw_value), -MOOD_LIMIT, MOOD_LIMIT) * scale
+## in the opposite direction. Returns the landed delta.
+func _apply_mood_meter(meter: StringName, field: StringName, raw_value: Variant) -> float:
+	# Meters.mood_delta() drops non-finite suggestions and clamps to −3..3
+	# before scaling, so the delta is always finite.
+	var delta := Meters.mood_delta(field, raw_value)
+	var cap := Meters.turn_cap(meter)
 	var spent := float(_mood_spent.get(meter, 0.0))
 	var total := clampf(spent + delta, -cap, cap)
 	var attempt := total - spent
 	var before := get_meter(meter)
-	adjust_meter(meter, attempt)
+	var landed := adjust_meter(meter, attempt)
 	# Charge only the movement the model's own delta produces inside the meter
 	# range. A game-side correction is not the model's move: the instability
 	# ratchet floor can lift the meter past the requested target after a peak
@@ -314,19 +322,29 @@ func _apply_mood_meter(meter: StringName, raw_value: Variant, scale: float, cap:
 	# stays inside [−cap, cap] whatever the rest of the game does to the meter.
 	var bounds: Vector2 = METER_RANGES[meter]
 	_mood_spent[meter] = spent + clampf(before + attempt, bounds.x, bounds.y) - before
+	return landed
 
 
-## docs/01 §2: the per-turn slow-burn increment.
-func slow_burn_delta() -> float:
-	return (
-		SLOW_BURN_BASE
-		+ SLOW_BURN_FIXATION * (fixation / 100.0)
-		- SLOW_BURN_LUCIDITY * (lucidity / 100.0)
-	)
-
-
-func apply_slow_burn() -> void:
-	adjust_meter(&"instability", slow_burn_delta())
+## docs/02 §4 step 7 + docs/01 §2: the atomic per-turn meter update the
+## Director runs at turn close. The turn index advances FIRST because the
+## mood budget is keyed on `turn` (P1.04/P1.29 handoff order, review CODE-12),
+## then the slow burn lands, then the model's mood. Returns the ledger for one
+## turn — the meters simulation and the F3 overlay read it.
+func apply_turn_meters(turn_data: Dictionary) -> Dictionary:
+	advance_turn()
+	var burn := adjust_meter(&"instability", Meters.slow_burn(fixation, lucidity))
+	var landed := {}
+	var mood: Variant = turn_data.get("mood")
+	if mood is Dictionary:
+		landed = apply_mood(mood)
+	return {
+		"turn": turn,
+		"slow_burn": burn,
+		"mood": landed,
+		"instability": instability,
+		"instability_floor": instability_floor,
+		"stage": stage,
+	}
 
 
 func advance_turn() -> void:
@@ -335,12 +353,14 @@ func advance_turn() -> void:
 
 ## Night roll-over: day +1 and the daily burn (+3 instability, docs/01 §2).
 ## A no-op past day 14: the campaign is over (docs/01 §1), no burn, no signal.
-func advance_day() -> void:
+## Returns the burn that actually landed (0 at the cap), for the night screen.
+func advance_day() -> float:
 	if day >= DAY_MAX:
-		return
+		return 0.0
 	day += 1
-	adjust_meter(&"instability", DAILY_BURN)
+	var burned := adjust_meter(&"instability", Meters.daily_burn())
 	day_changed.emit(day)
+	return burned
 
 
 func bump_profile(counter: StringName, amount: int = 1) -> void:
@@ -479,6 +499,7 @@ func from_dict(data: Variant) -> bool:
 	# peak, and setting the final stage before the meters prevents intermediate
 	# stage_changed transitions when peak > instability.
 	var previous_stage := stage
+	_restoring = true
 	instability_peak = _num(data.get("instability_peak"), 0.0)
 	instability_peak = maxf(
 		instability_peak, _clamp_meter(&"instability", _num(data.get("instability"), 0.0))
@@ -494,6 +515,7 @@ func from_dict(data: Variant) -> bool:
 	stage = healed_stage
 	for meter: StringName in METER_NAMES:
 		set_meter(meter, _num(data.get(String(meter)), 0.0))
+	_restoring = false
 	if stage != previous_stage:
 		stage_changed.emit(previous_stage, stage)
 	day = int(_num(data.get("day"), 1.0))
@@ -629,7 +651,8 @@ func _refresh_stage(value: float) -> void:
 	if band > stage:
 		var previous := stage
 		stage = band
-		stage_changed.emit(previous, stage)
+		if not _restoring:
+			stage_changed.emit(previous, stage)
 
 
 func _blank_profile() -> Dictionary:

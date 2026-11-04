@@ -4,6 +4,7 @@ extends GdUnitTestSuite
 ## serialisable snapshot, and the per-turn invariants from the SYS playbook.
 
 const GameStateScript := preload("res://autoload/GameState.gd")
+const MetersScript := preload("res://llm/Meters.gd")
 const PROFILE_MAP_PATH := "res://data/profile_map.json"
 const EPS := 0.0001
 
@@ -77,17 +78,17 @@ func test_apply_mood_scales_and_clamps() -> void:
 	# docs/01 §2: model moves affection at most ±5 and instability at most ±3 per turn.
 	var u: Variant = _state()
 	u.apply_mood({"affection": 3, "stress": 3})
-	assert_float(u.affection).is_less_equal(GameStateScript.MAX_AFFECTION_SUGGESTION)
-	assert_float(u.instability).is_less_equal(GameStateScript.MAX_INSTABILITY_SUGGESTION)
+	assert_float(u.affection).is_less_equal(MetersScript.turn_cap(&"affection"))
+	assert_float(u.instability).is_less_equal(MetersScript.turn_cap(&"instability"))
 	# The caps are per turn, not per call (CODE-3): two moods in the same turn
 	# share the budget; advance_turn() resets it.
 	var v: Variant = _state()
 	v.apply_mood({"affection": 3})
 	v.apply_mood({"affection": 3})
-	assert_float(v.affection).is_equal_approx(GameStateScript.MAX_AFFECTION_SUGGESTION, EPS)
+	assert_float(v.affection).is_equal_approx(MetersScript.turn_cap(&"affection"), EPS)
 	v.apply_mood({"stress": 3})
 	v.apply_mood({"stress": 3})
-	assert_float(v.instability).is_equal_approx(GameStateScript.MAX_INSTABILITY_SUGGESTION, EPS)
+	assert_float(v.instability).is_equal_approx(MetersScript.turn_cap(&"instability"), EPS)
 	v.advance_turn()
 	v.apply_mood({"affection": 3})
 	assert_float(v.affection).is_equal_approx(9.5, EPS)
@@ -100,8 +101,8 @@ func test_apply_mood_scales_and_clamps() -> void:
 	w.apply_mood({"affection": 3, "stress": 3})
 	w.apply_mood({"affection": 3, "stress": 3})
 	w.apply_mood({"affection": 3, "stress": 3})
-	assert_float(w.affection).is_equal_approx(GameStateScript.MAX_AFFECTION_SUGGESTION, EPS)
-	assert_float(w.instability).is_equal_approx(GameStateScript.MAX_INSTABILITY_SUGGESTION, EPS)
+	assert_float(w.affection).is_equal_approx(MetersScript.turn_cap(&"affection"), EPS)
+	assert_float(w.instability).is_equal_approx(MetersScript.turn_cap(&"instability"), EPS)
 	# CODE-7 (ratchet): a mid-turn peak write lifts the floor and holds the meter
 	# against the model's own delta. That game-side hold is not charged to the
 	# model's budget, so the running total stays inside the cap and a later
@@ -117,9 +118,7 @@ func test_apply_mood_scales_and_clamps() -> void:
 	var after_up: float = x.instability
 	x.apply_mood({"stress": 3})
 	assert_float(x.instability).is_greater_equal(after_up)
-	assert_float(x.instability).is_less_equal(
-		85.0 + GameStateScript.MAX_INSTABILITY_SUGGESTION + EPS
-	)
+	assert_float(x.instability).is_less_equal(85.0 + MetersScript.turn_cap(&"instability") + EPS)
 
 
 func test_non_finite_input_never_poisons_state() -> void:
@@ -227,11 +226,14 @@ func test_stage_bands_monotonic_and_signal() -> void:
 
 func test_slow_burn_turn_and_daily() -> void:
 	# docs/01 §2: +0.35 +0.15×(Fixation/100) −0.2×(Lucidity/100) per turn; +3 per day.
+	# The formula itself is Meters' (P2.01); GameState applies it per turn.
 	var s: Variant = _state()
 	s.set_meter(&"fixation", 50.0)
 	s.set_meter(&"lucidity", 25.0)
-	assert_float(s.slow_burn_delta()).is_equal_approx(0.35 + 0.15 * 0.5 - 0.2 * 0.25, EPS)
-	s.apply_slow_burn()
+	assert_float(MetersScript.slow_burn(50.0, 25.0)).is_equal_approx(
+		0.35 + 0.15 * 0.5 - 0.2 * 0.25, EPS
+	)
+	s.apply_turn_meters({})
 	assert_float(s.instability).is_equal_approx(0.375, EPS)
 	var t: Variant = _state()
 	t.advance_day()
@@ -527,8 +529,7 @@ func test_simulation_invariants() -> void:
 			)
 		)
 		s.apply_read(labels[rng.randi_range(0, labels.size() - 1)])
-		s.apply_slow_burn()
-		s.advance_turn()
+		s.apply_turn_meters({})
 		if rng.randf() < 0.1:
 			s.advance_day()
 		for meter: StringName in GameStateScript.METER_NAMES:
@@ -564,6 +565,6 @@ func _apply_op(s: Variant, op: Array) -> void:
 		"mood":
 			s.apply_mood(op[1])
 		"burn":
-			s.apply_slow_burn()
+			s.apply_turn_meters({})
 		"day":
 			s.advance_day()

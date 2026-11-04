@@ -38,7 +38,8 @@ res://
 ├─ llm/
 │  ├─ backends/LlamaServerBackend.gd   # HTTP + SSE streaming (prototype)
 │  ├─ backends/NativeBackend.gd        # GDExtension (ship)
-│  └─ IncrementalJson.gd               # streaming JSON → events
+│  ├─ IncrementalJson.gd               # streaming JSON → events
+│  └─ Meters.gd                       # docs/01 §2 meter math: slow burn, ratchet, mood scaling
 ├─ scenes/
 │  ├─ Boot.tscn  Title.tscn  NewGame.tscn  Date.tscn  Night.tscn  Ending.tscn  Extras.tscn
 │  ├─ ui/TextBox.tscn  ui/InputBox.tscn  ui/ChatLog.tscn  ui/NameTag.tscn  ui/Settings.tscn
@@ -47,7 +48,7 @@ res://
 ├─ shaders/  glitch · chromatic · desaturate · vignette · text_bleed · breathe · dissolve
 ├─ data/
 │  ├─ feelings.json  sprites.json  resolver.json  cues.json  music.json  fx.json
-│  ├─ stages.json  paths.json  triggers.json  meta_events.json  endings.json
+│  ├─ meters.json  stages.json  paths.json  triggers.json  meta_events.json  endings.json
 │  ├─ scenarios/D01_classroom.json … (70 files)
 │  ├─ schemas/                       # JSON schemas the data files are validated against at boot
 │  ├─ prompts/persona.md  prompts/stage_*.md  prompts/path_*.md  prompts/rules.md
