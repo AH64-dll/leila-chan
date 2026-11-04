@@ -240,3 +240,46 @@
   exercise the answer path.
 - Next SYS on this seam: `dismissal_max_words` is the tuning knob (raise it if engaged lines slip through;
   add a phrase if dismissals are missed). "Whatever, I love you." still scores apathy by design.
+
+## P2.20 — saves v1 (round 1, 2026-11-04, agent: deepseek)
+
+- Built `llm/SaveSlots.gd` (slot → path, the `leila.save` envelope: format/version/sha256 of the canonical
+  payload, tmp+rename write, tolerant listing) and filled the `SaveSystem` autoload (capture/apply, the log
+  seam, per-scene autosave, Title `Continue`). Files: `user://saves/slot_1..3.json` + `autosave.json`; the
+  autosave has its own id "auto" because docs/07 §3.5 only names `slot_N`.
+- Convention: a corrupt save is a value `{ok, error, message}` and the live game is never touched. Validation
+  runs first; `GameState.from_dict()` refuses before mutating, so it is applied first, then
+  `Director.reset()` + `Memory.from_dict`. Nothing in a load path may call `String()`/`int()` on a Variant:
+  P2.11's `MemoryStore.from_dict` died on `String(7)` from a corrupt slot; the store's guard is now total.
+- Gotcha: the memory rng `seed` and `state` are 64-bit, and JSON numbers are doubles — they cross the file as
+  decimal strings and `SaveSystem._memory_data` parses them back. The test seeds past 2^53 to prove it.
+- Convention: the log seam mirrors the ChatUI registration (the scene owns it, `_exit_tree` clears it,
+  identity-guarded). A load with no live log keeps `_pending_log` and hands it to the first sink; the prompt
+  history is rebuilt from the *displayed* log (docs/08 §1), never from raw turn JSON, so a save cannot carry
+  text Safety held back.
+- Gotcha: `Date._ready` must `_resume_from_save()` BEFORE `load_scenario(scenario_path)`, or a save from a
+  non-default scenario reloads the default one and the saved scenario is silently ignored.
+- Autosave is skipped when `DisplayServer.get_name() == "headless"` (a headless build has no player); tests
+  opt in by setting `autosave_enabled` and a scratch `save_dir`. Editor playtests therefore do not autosave
+  unless a task flips the flag.
+- Next SYS: P2.19's Night scene should call `SaveSystem.autosave("night", {…})`; P3.12's shadow save is
+  `user://.leila/shadow.json`, deliberately outside these slots and outside `wipe()`.
+
+## P2.20 — saves v1 (round 2, 2026-11-04, agent: deepseek)
+
+- CODE-1: never autosave synchronously from `turn_displayed`. `ChatUI.end_turn()` → `TextBox.end_turn()`
+  emits `all_displayed` when the writer is already drained, so the handler runs *inside*
+  `Director._close_turn_success` while `_turn_in_flight` is still true and every save answers "busy".
+  `Date` now calls `_autosave_scene.call_deferred("after turn")` — one idle frame is the whole fix.
+- Convention: a save refusal is a returned value, so every call site reads it. `Date._autosave_scene(reason)`
+  stays silent on `disabled` (headless/tool runs) and `push_warning`s anything else; don't leave
+  `SaveSystem.autosave(...)` bare.
+- Convention (tests): `GatedLLMBackend` streams its chunks, then parks until `release = true` — the way to
+  hold a Director turn in flight while the typewriter drains, with no sleeps.
+  `FakeLLMBackend.block_until_cancel` cannot (it parks by cancelling). Restore `LLM.set_backend(previous)`
+  in `after_test` or the next suite inherits the fake.
+- CODE-2: a resumed date skips her greeting only when the restored log carries it (`_resumed =
+  chat_log.entry_count() > 0`). The scene-entry autosave lands before the opening beats reach the ChatLog.
+- Gate green: 634 tests / 53 suites. `FXHostTest.test_twitch_fires_chromatic_split` flakes under machine
+  load (shader-uniform sample after a wall-clock wait); it passes alone and is untouched by save work.
+

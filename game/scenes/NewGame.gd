@@ -98,6 +98,14 @@ func confirm_name() -> void:
 			if pb.has_method("set_player_name"):
 				pb.call("set_player_name", resolved_name)
 
+		# P2.20: a New Game is a new session. The Director clears its history,
+		# the memory store and the transcript session, so a save loaded before
+		# this screen can never carry facts or log lines into the fresh run.
+		if tree.root.has_node("Director"):
+			var director: Node = tree.root.get_node("Director")
+			if director.has_method("reset"):
+				director.call("reset")
+
 	if is_special_leila and feedback_label != null:
 		feedback_label.text = str(result.get("message", ""))
 		feedback_label.modulate = Color(1.0, 0.6, 0.8, 1.0)

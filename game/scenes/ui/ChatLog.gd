@@ -27,15 +27,30 @@ func configure(config: Dictionary) -> void:
 ## Append one spoken line. speaker_key picks the colour; `speaker` is the
 ## name actually rendered ({player_name} for the player's lines).
 func append_entry(speaker_key: String, speaker: String, text: String) -> void:
-	var entry := {"speaker_key": speaker_key, "speaker": speaker, "text": text}
-	_entries.append(entry)
-	if _entries.size() > max_entries:
-		_entries.pop_front()
-		if _list != null and _list.get_child_count() > 0:
-			var old_child := _list.get_child(0)
-			_list.remove_child(old_child)
-			old_child.queue_free()
-	_render_entry(entry)
+	_push({"speaker_key": speaker_key, "speaker": speaker, "text": text})
+	entries_changed.emit()
+	_scroll_to_end.call_deferred()
+
+
+## Rebuild the scroll-back from a save (P2.20). The entries are the lines that
+## were already on screen, so they are restored as-is: they were scanned for
+## safety when they were shown, and a second scan could redact them again.
+func restore_entries(entries: Array) -> void:
+	clear_log()
+	for item: Variant in entries:
+		if not item is Dictionary:
+			continue
+		var entry := item as Dictionary
+		var text := str(entry.get("text", ""))
+		if text.is_empty():
+			continue
+		var key := str(entry.get("speaker_key", "her"))
+		if key != "player" and key != "her":
+			key = "her"
+		var speaker := str(entry.get("speaker", ""))
+		if speaker.is_empty():
+			speaker = "Leila" if key == "her" else "You"
+		_push({"speaker_key": key, "speaker": speaker, "text": text})
 	entries_changed.emit()
 	_scroll_to_end.call_deferred()
 
@@ -84,6 +99,19 @@ func _scroll_to_end() -> void:
 func _apply_end_scroll() -> void:
 	var bar := get_v_scroll_bar()
 	scroll_vertical = int(bar.max_value - bar.page)
+
+
+## Store and render one entry without signalling: `append_entry` speaks for one
+## live line, `restore_entries` for a whole save (one signal, one scroll).
+func _push(entry: Dictionary) -> void:
+	_entries.append(entry)
+	if _entries.size() > max_entries:
+		_entries.pop_front()
+		if _list != null and _list.get_child_count() > 0:
+			var old_child := _list.get_child(0)
+			_list.remove_child(old_child)
+			old_child.queue_free()
+	_render_entry(entry)
 
 
 func _render_entry(entry: Dictionary) -> void:
