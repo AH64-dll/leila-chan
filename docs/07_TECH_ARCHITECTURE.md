@@ -40,7 +40,8 @@ res://
 │  ├─ backends/NativeBackend.gd        # GDExtension (ship)
 │  ├─ IncrementalJson.gd               # streaming JSON → events
 │  ├─ Meters.gd                       # docs/01 §2 + docs/02 §1.1 meter math: slow burn, ratchet, mood scaling
-│  └─ Stages.gd                       # docs/01 §3 stage bands, transition spec, post-transition EVENT lines
+│  ├─ Stages.gd                       # docs/01 §3 stage bands, transition spec, post-transition EVENT lines
+│  └─ StageSteering.gd                # docs/06 §4: dose → shipped control-vector files for a stage relaunch
 ├─ scenes/
 │  ├─ Boot.tscn  Title.tscn  NewGame.tscn  Date.tscn  Night.tscn  Ending.tscn  Extras.tscn
 │  ├─ ui/TextBox.tscn  ui/InputBox.tscn  ui/ChatLog.tscn  ui/NameTag.tscn  ui/Settings.tscn

@@ -91,7 +91,33 @@ as "stage-3 levels".
 - **Prototype (llama-server):** control vectors are a launch flag (`--control-vector-scaled file.gguf:SCALE`), so
   the prototype restarts the server at each stage change (~3 s) and hides it behind the diegetic stage-transition glitch.
   Per-turn spikes are not possible in the prototype — acceptable for M1/M2.
-- Vector files ship inside the game pack (each is ~10–60 KB).
+- Vector files ship inside the game pack (each is ~10–60 KB); `data/steering/vectors.json` maps the dose
+  keys to them.
+
+### 4.1 The prototype relaunch (P2.03)
+
+`LLM.apply_stage_steering(stage, window_ms)` is the only path that binds a dose at runtime:
+
+- **Trigger.** `GameState.stage_transition` (docs/01 §3) starts it on the frame the glitch starts, and the
+  transition's own `duration_s` is handed in as the window. A save restore / New Game goes through the same call
+  from `state_reset` with no window, so a loaded stage-3 run does not keep the previous run's dose.
+- **Budget.** The relaunch must fit the glitch: **≤ 3.5 s** (measured **2.1–2.3 s** cold on the RTX 4050 with the GPU
+  free; a second llama-server on the GPU pushes the model load onto the CPU and it no longer fits — the budget assumes
+  one server, which is what the game runs).
+- **Map.** `game/data/steering/vectors.json` maps a dose key to its shipped file, so retuning or adding a path vector
+  is a data edit. The files ship in `data/steering/` (`malice.gguf` now; P3.04 adds the path vectors). `path_mix`
+  schedules a weight but binds no file until then — it is reported, not invented.
+- **No lost input.** A turn and a relaunch share one session lock: a relaunch never kills a line that is being
+  streamed, and a submit that lands during the window waits for the new server and then completes on it.
+- **Failure keeps the old dose.** A vector that fails validation (missing, not GGUF, a FNAME the flag grammar cannot
+  spell) is refused before anything is stopped, so the running server keeps its dose; a launch that fails after the
+  stop puts the previous set back and relaunches it. Both are logged with the measured ms.
+- **Ownership.** Only a server the app launched can be rebound. With `tools/llm/serve.sh` running it (attach mode) the
+  relaunch is refused and the old dose stays; `LEILA_OWN_SERVER=1` makes Boot launch and supervise the pinned server.
+- **Classifier.** The bound vectors are visible in the transport config, so the docs/02 §8 classifier tier turns itself
+  off instead of asking a dosed model (SAF-12).
+- **Calmer mode** is applied when the dose is bound: toggling it mid-stage needs a re-apply — the settings menu
+  (P3.13) calls `LLM.apply_stage_steering(GameState.stage)` after it changes `content_level`.
 
 ## 5. Risks
 

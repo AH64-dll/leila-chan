@@ -34,3 +34,27 @@
   autoloads exist, so verify loader behaviour through a gdUnit suite, not a standalone probe.
 - Gotcha: `Director.reset()` reinstalls the real `Safety` filter — every test that writes a loop must re-arm the
   fake seam after each reset (`_reset_director()`), or the sampling assertions run against the real corpus.
+
+## P2.03 — stage-change relaunch with control vectors (2026-11-04, agent: deepseek)
+
+- Built docs/06 §4: `GameState.stage_transition` → `LLM.apply_stage_steering(stage, glitch_ms)` →
+  `LlamaServerBackend.apply_steering` (one worker) → `LlamaServerProcess.restart_with_vectors`. The dose→file map is
+  data (`game/data/steering/vectors.json` → `malice.gguf`, 20 KB, committed via a `.gitignore` exception); `path_mix`
+  is declared unbound until P3.04. Bench: `res://tools/SteeringRestartBench.tscn -- --runs=N`.
+- "No lost player input" is a **session mutex**, not a turn-active flag: the turn holds it for its whole stream and the
+  relaunch takes it for the stop/start. The flag was racy (a submit in the same frame as the transition could start
+  streaming just before the kill); a turn that outlasts 15 s makes the relaunch give up and keep the old dose.
+- Gotcha: `LlamaServerProcess.configure()` stores a **copy** of the backend config. A vector write must land on both
+  dicts — `LLM.get_backend_config()` (and P2.17's classifier gate, SAF-12) reads the backend's copy; the launcher reads
+  the process's. `_serialized_steering` updates both and reverts both on `kept_previous`.
+- Gotcha: llama.cpp logs "no valid control vector files passed" for a bad FNAME and then serves healthy. Validation
+  (exists + GGUF magic + flag grammar + finite scale) must run *before* `_stop_locked`, which is also what makes
+  "keep old dose" literally true (the old process is never touched).
+- Gotcha: gdlint's 20-public-method cap splits suites — new steering cases live in `LLMSteeringTest.gd` and
+  `LlamaServerSteeringTest.gd`; gdformat mangles `assert_bool(call(...)["k"]).is_true()` chains, use locals (P2.05 said
+  the same).
+- `_stop_locked()` now waits for the port to close instead of polling the reaped pid: removes the P1.02 CODE-2 engine
+  error from every relaunch and is the right criterion before starting the replacement on the same port.
+- Measured (RTX 4050, GPU to itself): cold start with the vector 2.07/2.29 s standalone, relaunch 3425 ms in-engine;
+  with two other llama-servers resident the same relaunch took 4–6 s (CPU load), which the bench now reports against
+  the run's own cold start.

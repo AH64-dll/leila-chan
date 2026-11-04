@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "doc": "docs/06 §4: a llama-server dose is a launch flag, so the prototype binds it by relaunching the server at a stage change (`LLM.apply_stage_steering`, `StageSteering.gd`). This file maps a `TurnRequest.dose` key (docs/06 §3, `Steering.dose_for`) to the shipped control-vector file and records the provenance of each vector. Adding a path vector (P3.04: possessive/unstable/contempt/hollow/aware/lucid, docs/06 §2) is a row here plus the .gguf — no code change. A key listed under `unbound` is scheduled on the request but binds no file yet, so the restart leaves it out instead of inventing a scale.",
+  "vectors": {
+    "malice": {
+      "file": "res://data/steering/malice.gguf",
+      "source": "experiments/steering/evil_qwen_unit.gguf",
+      "sha256": "5a61adffca0c49aafea040be80d56c0356a6ad76db225ccde14cfd09a25cf9b5",
+      "built_by": "experiments/steer_build.py models/Qwen3.5-4B-Q4_K_M.gguf",
+      "neurons": "L14 N8949 +1, L13 N7956 -1 (unit ffn_down columns)",
+      "model": "Qwen3.5-4B-Q4_K_M.gguf",
+      "doc": "docs/06 §1/§2 malice axis (the tweet vector): the scale is the `malice` column of docs/06 §3, i.e. docs/02 §9's 'steering dose (base)'. Renamed from the experiment's placeholder so no brand name ships. Rebuild it with steer_build.py if the shipped GGUF changes (docs/06 §5)."
+    }
+  },
+  "unbound": {
+    "path_mix": "docs/06 §3 interim path weight: the per-path vectors (possessive/unstable/contempt/hollow/aware/lucid, docs/06 §2) do not ship until P3.04, which replaces this one number with the locked path's vector name(s) and their own weight curves. The weight is still scheduled on TurnRequest.dose and shown in F3; only the server binding skips it."
+  }
+}

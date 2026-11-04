@@ -102,6 +102,15 @@ func _await_terminal(spy: Dictionary, timeout_ms := 5000) -> bool:
 	return spy["terminal"] != &""
 
 
+## Waits for a counter in a test spy dictionary to reach `value`; the deferred
+## steering callback lands on the main thread a frame or two later.
+func _await_flag(state: Dictionary, key: String, value: int, timeout_ms := 3000) -> bool:
+	var deadline := Time.get_ticks_msec() + timeout_ms
+	while int(state[key]) < value and Time.get_ticks_msec() < deadline:
+		await get_tree().process_frame
+	return int(state[key]) >= value
+
+
 func _run(llm: Node, request: TurnRequest, timeout_ms := 5000) -> Dictionary:
 	var stream: TurnStream = llm.generate(request)
 	var spy := _spy(stream)
@@ -430,3 +439,36 @@ func test_retry_after_empty_stream() -> void:
 	assert_str(String(spy["payload"])).is_equal("ok")
 	assert_bool(bool(backend.last_metrics().get("retried", false))).is_true()
 	assert_int(fake.connection_count()).is_equal(2)
+
+
+## P2.03: the dose is a launch flag (docs/06 §4), so a stage change can only be
+## bound by relaunching a server the app owns. An attached server is never ours to
+## restart (P1.02) — the refusal keeps the old dose and leaves the server working.
+func test_steering_is_refused_on_an_attached_server() -> void:
+	var fake = _fake()
+	fake.deltas = PackedStringArray(["unsteered"])
+	var backend := _new_backend(fake)
+	var llm := _new_llm(backend)
+	var seen := {"calls": 0, "info": {}}
+	var vector := ProjectSettings.globalize_path("res://data/steering/malice.gguf")
+	var accepted := backend.apply_steering(
+		[{"path": vector, "scale": 4.5}],
+		4,
+		2500,
+		func(info: Dictionary) -> void:
+			seen["calls"] += 1
+			seen["info"] = info
+	)
+	assert_bool(accepted).is_false()
+	await _await_flag(seen, "calls", 1)
+	assert_int(int(seen["calls"])).is_equal(1)
+	var info: Dictionary = seen["info"]
+	assert_bool(bool(info["ok"])).is_false()
+	assert_str(String((info["error"] as Dictionary)["code"])).is_equal("server_not_owned")
+	assert_bool(bool(info["kept_previous"])).is_true()
+	# Nothing was stopped, so the attached server is untouched and still answers.
+	assert_bool(bool(info["recovered"])).is_true()
+	assert_int(backend.server_pid()).is_equal(0)
+	var run: Dictionary = await _run(llm, _new_request())
+	assert_str(String(run["spy"]["terminal"])).is_equal("completed")
+	assert_str(String(run["spy"]["payload"])).is_equal("unsteered")

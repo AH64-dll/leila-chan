@@ -41,6 +41,12 @@ const RETRYABLE_ERRORS: Array[String] = [
 	"connect_timeout",
 ]
 const WATCHDOG_SLEEP_SLICE_MS := 25
+## AC budget for a stage-change relaunch (docs/06 §4): the 2–3 s transition glitch
+## has to hide it, so a restart that misses this is a defect, not a slow turn.
+const STEERING_BUDGET_MS := 3500
+## `_acquire_turn_session()` answer when a shutdown cancelled the wait (a turn
+## timeout reports -1 instead: "the turn outlasted the dose change").
+const SESSION_CANCELLED := -2
 
 var config := {}
 var _process := LlamaServerProcess.new()
@@ -51,6 +57,9 @@ var _log_line := ""
 var _last_error := {}
 var _turn_active := false
 var _turn_mutex := Mutex.new()
+## Held by a turn for the whole streaming attempt and by a stage-change relaunch
+## for its stop/start: the relaunch can never cut a line off (P2.03).
+var _session := Mutex.new()
 var _watchdog_thread: Thread
 var _watchdog_mutex := Mutex.new()
 var _watchdog_cancel := LLMCancelToken.new()
@@ -60,6 +69,22 @@ var _restart_count := 0
 var _last_restart_ms := -1
 var _last_crash_unix := 0
 var _shutdown := false
+## Stage-change relaunch (docs/06 §4). One worker at a time, one caller outcome;
+## `_steering_finished` holds spent threads so a stage change never has to wait on
+## one (the main thread only joins threads a liveness check already called dead).
+var _steering_thread: Thread
+var _steering_finished: Array[Thread] = []
+var _steering_mutex := Mutex.new()
+var _steering_cancel := LLMCancelToken.new()
+var _steering_busy := false
+var _steering_info := {}
+var _steering_count := 0
+## Relaunches are serialised here so the watchdog cannot restart the server a
+## stage change just brought up (and vice versa). `_relaunch_count` is the
+## generation a caller checked before the lock; a changed value means the work is
+## already done.
+var _relaunch_mutex := Mutex.new()
+var _relaunch_count := 0
 
 
 func _init(initial_config: Dictionary = {}) -> void:
@@ -81,9 +106,14 @@ func generate(request: TurnRequest, on_token: Callable, cancel: LLMCancelToken) 
 		_record(rejected)
 		return rejected
 	_set_turn_active(true)
+	# The turn session is shared with a stage-change relaunch: a restart holds it
+	# too, so the server is never killed under a line that is being spoken (P2.03,
+	# "no lost player input"). Lock order is always session -> relaunch -> process.
+	_session.lock()
 	var attempt := _attempt(request, on_token, cancel, started)
 	if not attempt["ok"] and int(attempt["emitted"]) == 0:
 		attempt = _maybe_retry(request, on_token, cancel, started, attempt)
+	_session.unlock()
 	_set_turn_active(false)
 	var result := _finish_result(attempt, started)
 	_record(result)
@@ -94,6 +124,89 @@ func generate(request: TurnRequest, on_token: Callable, cancel: LLMCancelToken) 
 ## exposed for tests and the prompt lab to pre-warm before the first request.
 func ensure_server(cancel: LLMCancelToken = null) -> Dictionary:
 	return _process.ensure_running(cancel)
+
+
+## docs/06 §4: bind a new dose by relaunching the server with new control
+## vectors. Never blocks — the stop/start runs on its own worker (measured 2.1–2.3 s
+## on this machine) and the outcome arrives through `on_done.call_deferred(info)`
+## on the main thread, so the caller can keep the old dose on failure.
+##
+## Returns false when nothing was started: a relaunch is already in flight (the
+## caller should queue the latest dose and apply it after the delivery) or the
+## server is not ours to restart. An attached server is refused by design — it may
+## belong to another task, and relaunching would put a second server on a busy
+## port (P1.02). That is also the one case where the game keeps the old dose for
+## good: Boot installs attach mode unless `LEILA_OWN_SERVER` asks it to launch.
+##
+## `window_ms` is the transition glitch the restart should hide behind (0 = not
+## hidden: a restore); `info.fits_window`/`info.within_budget` report both.
+func apply_steering(vectors: Array, stage := 0, window_ms := 0, on_done := Callable()) -> bool:
+	_reap_steering_threads()
+	if not bool(config.get("auto_start", false)):
+		_steering_mutex.lock()
+		if _steering_busy:
+			_steering_mutex.unlock()
+			return false
+		var refused := _refused_info(
+			stage,
+			window_ms,
+			vectors,
+			(config.get("control_vectors", []) as Array).duplicate(true),
+			"server_not_owned",
+			(
+				(
+					"the dose is a launch flag and this transport only attached to %s; "
+					+ "start llama-server from the app (auto_start) to rebind it"
+				)
+				% String(config.get("base_url", ""))
+			)
+		)
+		_steering_info = refused
+		_steering_mutex.unlock()
+		_log_steering(refused)
+		_relay_steering(on_done, refused)
+		return false
+	_steering_mutex.lock()
+	if _steering_busy or _shutdown:
+		_steering_mutex.unlock()
+		return false
+	if _steering_thread != null:
+		_steering_finished.append(_steering_thread)
+		_steering_thread = null
+	var previous: Array = (config.get("control_vectors", []) as Array).duplicate(true)
+	var worker := Thread.new()
+	_steering_thread = worker
+	_steering_busy = true
+	var err := worker.start(
+		_steering_main.bind(vectors.duplicate(true), previous, stage, window_ms, on_done)
+	)
+	if err != OK:
+		_steering_thread = null
+		_steering_busy = false
+		var failed := _refused_info(
+			stage,
+			window_ms,
+			vectors,
+			previous,
+			"thread_error",
+			"steering worker did not start (error %d)" % err
+		)
+		_steering_info = failed
+		_steering_mutex.unlock()
+		_log_steering(failed)
+		_relay_steering(on_done, failed)
+		return false
+	_steering_mutex.unlock()
+	return true
+
+
+## The last stage-change relaunch outcome (see `_steering_info_base`), for the
+## debug overlay, the prompt lab and tests. {} before the first one.
+func last_steering_info() -> Dictionary:
+	_steering_mutex.lock()
+	var info := _steering_info.duplicate(true)
+	_steering_mutex.unlock()
+	return info
 
 
 ## Supervise the server we started. Every `interval_ms` the watchdog checks
@@ -132,7 +245,15 @@ func stop_watchdog() -> void:
 ## has joined the busy worker so no turn is reading the server socket.
 func shutdown() -> void:
 	_shutdown = true
+	_steering_cancel.cancel()
 	stop_watchdog()
+	for thread: Thread in _steering_finished:
+		if thread.is_started():
+			thread.wait_to_finish()
+	_steering_finished.clear()
+	if _steering_thread != null and _steering_thread.is_started():
+		_steering_thread.wait_to_finish()
+		_steering_thread = null
 	_process.stop()
 
 
@@ -260,7 +381,9 @@ func _maybe_retry(
 	if cancel.is_cancelled():
 		return attempt
 	if bool(config.get("auto_start", false)):
-		var restart := _process.restart(cancel)
+		# Serialised with a stage change: if one finished while this turn failed,
+		# the fresh server already runs the current config and needs no restart.
+		var restart := _serialized_restart(cancel, _relaunch_count)
 		if not restart["ok"]:
 			return attempt
 	var retried := _attempt(request, on_token, cancel, started)
@@ -380,6 +503,229 @@ func _is_turn_active() -> bool:
 	return active
 
 
+## Worker-thread body of a stage-change relaunch. Waits for an in-flight turn to
+## finish (never kill a line being spoken), relaunches, then reports exactly one
+## info map — through `on_done` on the main thread, which is the only place the
+## dose bookkeeping is allowed to move.
+func _steering_main(
+	vectors: Array, previous: Array, stage: int, window_ms: int, on_done: Callable
+) -> void:
+	var started := Time.get_ticks_msec()
+	var deferred_ms := _acquire_turn_session()
+	var result := {}
+	if deferred_ms == SESSION_CANCELLED:
+		result = {"ok": false, "kept_previous": true, "recovered": true, "restart_ms": 0}
+		result["error"] = {"code": "cancelled", "message": "cancelled by shutdown"}
+	elif deferred_ms < 0:
+		result = {"ok": false, "kept_previous": true, "recovered": true, "restart_ms": 0}
+		result["error"] = {
+			"code": "turn_in_progress",
+			"message":
+			(
+				(
+					"a turn was still streaming after %dms; a relaunch would cut off the "
+					+ "player's line, so the old dose stays"
+				)
+				% int(config.get("steering_turn_wait_ms", 15000))
+			),
+		}
+	else:
+		result = _serialized_steering(vectors, previous, _steering_cancel)
+		_release_turn_session()
+	var info := _steering_info_base(
+		stage,
+		window_ms,
+		vectors,
+		previous,
+		maxi(deferred_ms, 0),
+		Time.get_ticks_msec() - started,
+		result
+	)
+	_steering_mutex.lock()
+	_steering_busy = false
+	if bool(info["ok"]):
+		_steering_count += 1
+		info["restarts"] = _steering_count
+	_steering_info = info
+	_steering_mutex.unlock()
+	_log_steering(info)
+	_relay_steering(on_done, info)
+
+
+## docs/06 §4 + "no lost player input": hold the same session a turn holds while
+## it streams, so the server can never be killed under a line that is being read.
+## A crossing normally lands at turn close and costs milliseconds; a trigger that
+## fires mid-turn waits for the line to finish. Returns the wait, -1 when the turn
+## outlasted `steering_turn_wait_ms` (old dose stays, the next crossing retries),
+## or SESSION_CANCELLED for a shutdown.
+func _acquire_turn_session() -> int:
+	var started := Time.get_ticks_msec()
+	var budget := int(config.get("steering_turn_wait_ms", 15000))
+	while not _session.try_lock():
+		if _steering_cancel.is_cancelled() or _shutdown:
+			return SESSION_CANCELLED
+		if Time.get_ticks_msec() - started >= budget:
+			return -1
+		OS.delay_msec(WATCHDOG_SLEEP_SLICE_MS)
+	return Time.get_ticks_msec() - started
+
+
+func _release_turn_session() -> void:
+	_session.unlock()
+
+
+## The relaunch with new vectors, serialised against every other relaunch.
+## `_process` keeps its own merged copy of the config, so both are updated: the
+## launcher reads the process copy, while `get_backend_config()` — and through it
+## the docs/02 §8 classifier gate (SAF-12) — reads the backend's.
+func _serialized_steering(vectors: Array, previous: Array, cancel: LLMCancelToken) -> Dictionary:
+	_relaunch_mutex.lock()
+	config["control_vectors"] = vectors.duplicate(true)
+	var result := _process.restart_with_vectors(vectors, previous, cancel)
+	if bool(result.get("kept_previous", false)):
+		config["control_vectors"] = previous.duplicate(true)
+	_relaunch_count += 1
+	_relaunch_mutex.unlock()
+	return result
+
+
+## A plain relaunch (watchdog, docs/02 §7 retry), serialised against a stage
+## change. `generation` is the counter the caller read before asking; a different
+## value means another relaunch finished while this caller waited, so the server
+## already runs the current config and restarting it again would kill the process
+## the stage change just brought up.
+func _serialized_restart(cancel: LLMCancelToken, generation: int) -> Dictionary:
+	_relaunch_mutex.lock()
+	if generation >= 0 and generation != _relaunch_count:
+		var running := _process.is_running()
+		var pid := _process.server_pid()
+		_relaunch_mutex.unlock()
+		return {"ok": running, "skipped": true, "pid": pid, "error": {}, "restart_ms": 0}
+	var result := _process.restart(cancel)
+	_relaunch_count += 1
+	_relaunch_mutex.unlock()
+	return result
+
+
+## The info a stage-change relaunch reports (and `last_steering_info()` keeps):
+## the AC numbers (`ms` = stop→healthy, `within_budget` = the 3.5 s window), the
+## glitch fit, and what happened to the dose when it failed.
+func _steering_info_base(
+	stage: int,
+	window_ms: int,
+	vectors: Array,
+	previous: Array,
+	deferred_ms: int,
+	total_ms: int,
+	result: Dictionary
+) -> Dictionary:
+	var elapsed := int(result.get("restart_ms", 0))
+	var error: Variant = result.get("error", {})
+	return {
+		"ok": bool(result.get("ok", false)),
+		"stage": stage,
+		"ms": elapsed,
+		"total_ms": total_ms,
+		"deferred_ms": deferred_ms,
+		"window_ms": window_ms,
+		"budget_ms": STEERING_BUDGET_MS,
+		"within_budget": elapsed <= STEERING_BUDGET_MS,
+		"fits_window": window_ms <= 0 or elapsed <= window_ms,
+		"vectors": vectors.duplicate(true),
+		"previous_vectors": previous.duplicate(true),
+		"kept_previous": bool(result.get("kept_previous", false)),
+		"recovered": bool(result.get("recovered", false)),
+		"pid": int(result.get("pid", 0)),
+		"restarts": _steering_count,
+		"error": (error as Dictionary).duplicate(true) if error is Dictionary else {},
+	}
+
+
+## The info for a relaunch that never started (attached server, thread failure).
+## Nothing was stopped, so the old dose is still in effect and `recovered` is
+## true: the caller keeps the dose it has and the server keeps serving it.
+func _refused_info(
+	stage: int, window_ms: int, vectors: Array, previous: Array, code: String, message: String
+) -> Dictionary:
+	var info := _steering_info_base(stage, window_ms, vectors, previous, 0, 0, {})
+	info["kept_previous"] = true
+	info["recovered"] = true
+	info["error"] = {"code": code, "message": message}
+	return info
+
+
+## The worker never touches the facade or a signal: the caller's handler runs on
+## the main thread, one frame later (the same rule every transport result follows).
+func _relay_steering(on_done: Callable, info: Dictionary) -> void:
+	if on_done.is_valid():
+		on_done.call_deferred(info)
+
+
+## One line per relaunch: the measurement the AC is read from, plus what the dose
+## did when it failed ("keep old dose + log" is this line, not silence).
+func _log_steering(info: Dictionary) -> void:
+	var stage := int(info["stage"])
+	var elapsed := int(info["ms"])
+	var window := int(info["window_ms"])
+	if not bool(info["ok"]):
+		var error: Dictionary = info.get("error", {})
+		print(
+			(
+				(
+					"[LlamaServerBackend] steering stage %d FAILED after %dms: %s (%s); "
+					+ "kept the previous dose (%d vector(s), server recovered=%s)"
+				)
+				% [
+					stage,
+					elapsed,
+					String(error.get("code", "unknown")),
+					String(error.get("message", "")),
+					(info["previous_vectors"] as Array).size(),
+					"yes" if bool(info["recovered"]) else "no",
+				]
+			)
+		)
+		return
+	var window_text := "window n/a"
+	if window > 0:
+		window_text = (
+			("within window %dms" if bool(info["fits_window"]) else "OVER window %dms") % window
+		)
+	var waited := int(info["deferred_ms"])
+	print(
+		(
+			(
+				"[LlamaServerBackend] steering stage %d bound %s in %dms (%s, budget %dms) "
+				+ "pid=%d%s"
+			)
+			% [
+				stage,
+				StageSteering.describe(info["vectors"]),
+				elapsed,
+				window_text,
+				STEERING_BUDGET_MS,
+				int(info["pid"]),
+				(" after waiting %dms for the turn" % waited) if waited > 0 else "",
+			]
+		)
+	)
+
+
+## Main-thread only. Spent workers are joined only once `is_alive()` already said
+## they were dead, so a stage change never waits on a thread (same rule as the
+## facade's `_reap_pending`).
+func _reap_steering_threads() -> void:
+	if _steering_finished.is_empty():
+		return
+	for thread: Thread in _steering_finished:
+		if thread.is_alive():
+			return
+	for thread: Thread in _steering_finished:
+		if thread.is_started():
+			thread.wait_to_finish()
+	_steering_finished.clear()
+
+
 func _watchdog_loop() -> void:
 	var ticks := 0
 	while not _watchdog_cancel.is_cancelled():
@@ -388,21 +734,26 @@ func _watchdog_loop() -> void:
 			break
 		if _is_turn_active() or not _process.is_supervised():
 			continue
+		var generation := _relaunch_count
 		if not _process.is_running():
-			_watchdog_restart("process exited")
+			_watchdog_restart("process exited", generation)
 			continue
 		ticks += 1
 		if _watchdog_health_every > 0 and ticks % _watchdog_health_every == 0:
 			if not _process.is_healthy(500):
-				_watchdog_restart("health probe failed")
+				_watchdog_restart("health probe failed", generation)
 
 
-func _watchdog_restart(reason: String) -> void:
+func _watchdog_restart(reason: String, generation := -1) -> void:
 	var started := Time.get_ticks_msec()
-	var result := _process.restart(_watchdog_cancel)
+	var result := _serialized_restart(_watchdog_cancel, generation)
 	if _watchdog_cancel.is_cancelled():
 		return
-	var elapsed := Time.get_ticks_msec() - started
+	if bool(result.get("skipped", false)):
+		# A stage change relaunched the server while this probe was in flight; the
+		# fresh process already carries the current config.
+		return
+	var elapsed := int(result.get("restart_ms", Time.get_ticks_msec() - started))
 	if not result["ok"]:
 		print(
 			(
