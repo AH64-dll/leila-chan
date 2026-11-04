@@ -3231,7 +3231,26 @@
       "status": "changes_requested",
       "agent": "deepseek",
       "round": 1,
-      "reviews": [],
+      "reviews": [
+        {
+          "kind": "design",
+          "verdict": "changes",
+          "round": 1,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P2.22-design-r1.md",
+          "ts": "2026-11-04T21:25:50+02:00",
+          "declared": "deepseek"
+        },
+        {
+          "kind": "safety",
+          "verdict": "changes",
+          "round": 1,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P2.22-safety-r1.md",
+          "ts": "2026-11-04T21:25:50+02:00",
+          "declared": "deepseek"
+        }
+      ],
       "started": "2026-11-04T20:37:55+02:00",
       "handoff": "production/handoffs/P2.22.md"
     }
@@ -7868,6 +7887,18 @@
       "event": "in_review->changes_requested",
       "ref": "P2.22",
       "note": ""
+    },
+    {
+      "ts": "2026-11-04T21:25:50+02:00",
+      "event": "review:design:changes",
+      "ref": "P2.22",
+      "note": "production/reviews/P2.22-design-r1.md"
+    },
+    {
+      "ts": "2026-11-04T21:25:50+02:00",
+      "event": "review:safety:changes",
+      "ref": "P2.22",
+      "note": "production/reviews/P2.22-safety-r1.md"
     }
   ]
 }
