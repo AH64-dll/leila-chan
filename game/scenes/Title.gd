@@ -16,6 +16,7 @@ signal settings_requested
 signal quit_requested
 
 const NEW_GAME_SCENE_PATH := "res://scenes/NewGame.tscn"
+const DATE_SCENE_PATH := "res://scenes/Date.tscn"
 
 var scene_change_enabled := true
 var _config := {}
@@ -39,6 +40,7 @@ func _ready() -> void:
 	settings_button.pressed.connect(_on_settings_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
 	_refresh_photosensitive_button()
+	_refresh_continue()
 
 	# Focus New Game by default for keyboard play
 	new_game_button.grab_focus()
@@ -99,6 +101,22 @@ func _on_new_game_pressed() -> void:
 
 func _on_continue_pressed() -> void:
 	continue_requested.emit()
+	# P2.20: Continue resumes the newest readable save into the Date scene. A
+	# corrupt or missing save is a warning and an unchanged Title, never a
+	# half-loaded game (SaveSystem leaves the state untouched on a failed load).
+	var loaded: Dictionary = SaveSystem.load_latest()
+	if not bool(loaded.get("ok", false)):
+		push_warning("Title: cannot continue — %s" % String(loaded.get("message", "")))
+		return
+	if scene_change_enabled:
+		get_tree().change_scene_to_file(DATE_SCENE_PATH)
+
+
+## Continue is only offered when a save can actually be read; an absent or
+## corrupt save greys the row instead of failing on the click.
+func _refresh_continue() -> void:
+	if continue_button != null:
+		continue_button.disabled = not SaveSystem.has_save()
 
 
 func _on_settings_pressed() -> void:

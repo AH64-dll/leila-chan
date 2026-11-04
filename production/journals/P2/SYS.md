@@ -156,3 +156,28 @@
   does not exist on the assert object.
 - Gotcha: `Director.gd` is at exactly 1000/1000 gdlint lines on this branch; every added line must be paid
   for elsewhere (the round-2 `Memory.begin_turn()` calls are one line each, comments included).
+
+
+## P2.20 — saves v1 (round 1, 2026-11-04, agent: deepseek)
+
+- Built `llm/SaveSlots.gd` (slot → path, the `leila.save` envelope: format/version/sha256 of the canonical
+  payload, tmp+rename write, tolerant listing) and filled the `SaveSystem` autoload (capture/apply, the log
+  seam, per-scene autosave, Title `Continue`). Files: `user://saves/slot_1..3.json` + `autosave.json`; the
+  autosave has its own id "auto" because docs/07 §3.5 only names `slot_N`.
+- Convention: a corrupt save is a value `{ok, error, message}` and the live game is never touched. Validation
+  runs first; `GameState.from_dict()` refuses before mutating, so it is applied first, then
+  `Director.reset()` + `Memory.from_dict`. Nothing in a load path may call `String()`/`int()` on a Variant:
+  P2.11's `MemoryStore.from_dict` died on `String(7)` from a corrupt slot; the store's guard is now total.
+- Gotcha: the memory rng `seed` and `state` are 64-bit, and JSON numbers are doubles — they cross the file as
+  decimal strings and `SaveSystem._memory_data` parses them back. The test seeds past 2^53 to prove it.
+- Convention: the log seam mirrors the ChatUI registration (the scene owns it, `_exit_tree` clears it,
+  identity-guarded). A load with no live log keeps `_pending_log` and hands it to the first sink; the prompt
+  history is rebuilt from the *displayed* log (docs/08 §1), never from raw turn JSON, so a save cannot carry
+  text Safety held back.
+- Gotcha: `Date._ready` must `_resume_from_save()` BEFORE `load_scenario(scenario_path)`, or a save from a
+  non-default scenario reloads the default one and the saved scenario is silently ignored.
+- Autosave is skipped when `DisplayServer.get_name() == "headless"` (a headless build has no player); tests
+  opt in by setting `autosave_enabled` and a scratch `save_dir`. Editor playtests therefore do not autosave
+  unless a task flips the flag.
+- Next SYS: P2.19's Night scene should call `SaveSystem.autosave("night", {…})`; P3.12's shadow save is
+  `user://.leila/shadow.json`, deliberately outside these slots and outside `wipe()`.

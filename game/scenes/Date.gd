@@ -49,6 +49,11 @@ var _scenario: Dictionary = {}
 var _current_turn: int = 0
 var _opening_in_progress: bool = false
 var _opening_finished: bool = false
+## P2.20: the date's own turn counter and "resumed from a save" flag. A resumed
+## date keeps the saved turn (the scenario's min/max rules continue instead of
+## restarting) and does not replay its greeting.
+var _saved_turn: int = 0
+var _resumed: bool = false
 
 @onready var background: Sprite2D = $Background
 @onready var character: Node2D = $Character
@@ -139,6 +144,14 @@ func _ready() -> void:
 		if "photosensitive" in fx:
 			fx.photosensitive = photosensitive
 
+	# Save seam (P2.20): the scene that instantiates the ChatLog owns its save
+	# registration, the same convention as the ChatUI registration above. The
+	# log is captured on every autosave; a log loaded from a save waits in
+	# SaveSystem until a sink registers, which happens right here.
+	# Before the scenario load below: a resumed save names the scenario to open.
+	_register_save_seam()
+	_resume_from_save()
+
 	if _scenario.is_empty():
 		load_scenario(scenario_path)
 
@@ -152,6 +165,7 @@ func _ready() -> void:
 ## is never touched.
 func _exit_tree() -> void:
 	_note_telemetry_date(false)
+	_clear_save_seam()
 	var registered: Variant = Director.chat_ui_node
 	if registered == null:
 		return
@@ -159,6 +173,49 @@ func _exit_tree() -> void:
 		Director.register_chat_ui(null)
 	elif is_instance_valid(chat_ui) and registered == chat_ui:
 		Director.register_chat_ui(null)
+
+
+## P2.20: register this date's scroll-back with SaveSystem. The ChatLog node is
+## the log source and sink; the registration is identity-guarded, so a second
+## live date's log is never cleared by this one's teardown.
+func _register_save_seam() -> void:
+	if chat_ui == null or chat_ui.chat_log == null:
+		return
+	var log_node: Object = chat_ui.chat_log
+	(
+		SaveSystem
+		. register_log_seam(
+			log_node,
+			Callable(log_node, "get_entries"),
+			Callable(log_node, "restore_entries"),
+		)
+	)
+
+
+func _clear_save_seam() -> void:
+	if chat_ui != null and is_instance_valid(chat_ui.chat_log):
+		SaveSystem.clear_log_seam(chat_ui.chat_log)
+
+
+## P2.20: Continue leaves the saved scene in SaveSystem. The Date is the scene
+## that resumes it: the scenario it names wins over the exported default, and
+## the date's turn counter comes back with it.
+func _resume_from_save() -> void:
+	var pending: Dictionary = SaveSystem.pending_scene()
+	if pending.is_empty():
+		return
+	SaveSystem.consume_pending_scene()
+	var saved_scenario := String(pending.get("scenario", ""))
+	if not saved_scenario.is_empty() and FileAccess.file_exists(saved_scenario):
+		scenario_path = saved_scenario
+	_saved_turn = int(pending.get("turn", 0))
+	_resumed = true
+
+
+## What a save needs to resume this scene (docs/07 §3.5 "state, memories, log"
+## plus the scene the log belongs to).
+func _save_scene_data() -> Dictionary:
+	return {"scenario": scenario_path, "turn": _current_turn}
 
 
 ## The P2.09 seam, resolved by path: a Date scene must run in tests and tools
@@ -241,9 +298,22 @@ func start_date() -> void:
 	if AudioDirector != null:
 		AudioDirector.request_music(music_id)
 
-	_current_turn = 0
+	_current_turn = _saved_turn
+	_saved_turn = 0
 	date_started.emit()
-	play_opening_beats()
+	if _resumed:
+		# A resumed date does not replay its greeting: the player already saw
+		# it, and the restored log continues from there.
+		_resumed = false
+		_opening_in_progress = false
+		_opening_finished = true
+		opening_beats_finished.emit()
+	else:
+		play_opening_beats()
+	# Autosave per scene: the date writes itself as it becomes the live scene,
+	# and again after every completed turn (_on_turn_displayed), so Continue
+	# resumes the date the player actually left.
+	SaveSystem.autosave(SaveSystem.SCENE_DATE, _save_scene_data())
 
 
 func play_opening_beats() -> void:
@@ -412,6 +482,9 @@ func _on_turn_displayed() -> void:
 		_opening_finished = true
 		opening_beats_finished.emit()
 	turn_completed.emit(_current_turn)
+	# P2.20: the scene autosaves as it progresses, so a quit mid-date resumes
+	# the log the player actually saw instead of replaying the date.
+	SaveSystem.autosave(SaveSystem.SCENE_DATE, _save_scene_data())
 
 
 func _on_pause_requested() -> void:
