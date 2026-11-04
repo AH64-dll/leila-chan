@@ -294,7 +294,15 @@ func test_scripted_yandere_run() -> void:
 		_turn(s, row[0], row[1])
 	assert_str(String(s.path)).is_equal("YANDERE")
 	assert_bool(s.path_locked).is_false()
-	assert_float(float(s.path_scores["YANDERE"])).is_equal_approx(10.0, EPS)
+	# docs/01 §4: warmth + 2·jealousy_bait + 2·leaving_talk + Fixation/10.
+	# P2.22B makes Fixation live, so the five turns' time writer (0.35 each) is
+	# part of the term: the case seeds 20 and the pipeline adds 1.75.
+	assert_float(float(s.fixation)).is_equal_approx(21.75, EPS)
+	var warmth := float(s.profile.get("warmth", 0))
+	var bait := float(s.profile.get("jealousy_bait", 0))
+	var leaving := float(s.profile.get("leaving_talk", 0))
+	var expected_yandere := warmth + 2.0 * bait + 2.0 * leaving + float(s.fixation) / 10.0
+	assert_float(float(s.path_scores["YANDERE"])).is_equal_approx(expected_yandere, EPS)
 	# The Stage-3 crossing keeps the run on the path it earned.
 	s.set_meter(&"instability", 60.0)
 	assert_bool(s.path_locked).is_true()

@@ -1,8 +1,10 @@
 class_name Meters
 extends RefCounted
 ## Meters — the docs/01 §2 meter arithmetic in one place: the instability
-## ratchet floor (peak − 15), the per-turn slow burn, the per-day burn, and the
-## docs/02 §1.1 mood scaling under the docs/01 §2 per-turn suggestion caps.
+## ratchet floor (peak − 15), the per-turn slow burn, the per-day burn, the
+## docs/02 §1.1 mood scaling under the docs/01 §2 per-turn suggestion caps, and
+## the P2.22B writers that feed the slow burn its documented inputs (Fixation
+## from time/affection/isolation, Lucidity from kindness/honesty/boundaries).
 ##
 ## Split out of GameState so the formula has exactly one definition: GameState
 ## owns the values, the clamping and the signals; this owns the numbers and the
@@ -26,6 +28,23 @@ const DOCS_TABLE := {
 		"limit": 3.0,
 		"scale": {"affection": 1.5, "trust": 2.0, "stress": 0.6},
 		"turn_caps": {"affection": 5.0, "instability": 3.0},
+	},
+	# docs/01 §2 "Moves by" names these sources without numbers; the values are
+	# P2.22B's tuning (DCR-1) and the only block here that is not a doc number.
+	"writers":
+	{
+		"fixation":
+		{
+			"time_per_turn": 0.35,
+			"per_affection_gain": 0.05,
+			"isolation": {"coldness": 0.5, "apathy": 0.5, "ignored_questions": 0.5},
+		},
+		"lucidity":
+		{
+			"kindness": {"warmth": 0.3},
+			"honesty": {"honesty": 0.8},
+			"boundaries": {"boundaries": 1.0},
+		},
 	},
 }
 
@@ -68,6 +87,50 @@ static func slow_burn(fixation: float, lucidity: float) -> float:
 ## docs/01 §2 per day: a flat `+3` Instability at the night roll-over.
 static func daily_burn() -> float:
 	return float(table()["daily_burn"])
+
+
+## docs/01 §2 Fixation "moves by: time spent, affection, isolation". This is the
+## per-turn half — every turn she is with you deepens how central you are, and
+## affection she actually gained pulls it further; a loss never undoes it.
+## `affection_landed` is the delta this turn's mood actually landed (0 when the
+## model asked for none), so the writer reads evidence, never intent.
+static func fixation_turn(affection_landed: float) -> float:
+	var spec: Dictionary = table()["writers"]["fixation"]
+	var gained := maxf(0.0, _num(affection_landed))
+	return float(spec["time_per_turn"]) + float(spec["per_affection_gain"]) * gained
+
+
+## docs/01 §2 Fixation "isolation": the counters that mean you withdrew — a cold
+## reply, apathy, a question left unanswered — pull her closer to the idea of you.
+## `bumps` is this turn's behaviour-profile delta (counter → points), so a
+## counter that already sat at its total cannot pay twice.
+static func isolation_gain(bumps: Dictionary) -> float:
+	return _weighted_sum(table()["writers"]["fixation"]["isolation"], bumps)
+
+
+## docs/01 §2 Lucidity "moves by: kindness, honesty, boundaries" — the three
+## profile counters that carry those acts (warmth, honesty, boundaries), as the
+## `read_to_profile` table maps them. `bumps` is this turn's delta.
+static func lucidity_gain(bumps: Dictionary) -> float:
+	var spec: Dictionary = table()["writers"]["lucidity"]
+	var total := 0.0
+	for group: String in ["kindness", "honesty", "boundaries"]:
+		total += _weighted_sum(spec[group], bumps)
+	return total
+
+
+## Σ weight[counter] × bumps[counter]; positive counts only (a bump is an act,
+## never a subtraction), and String/StringName keys compare the same either way.
+static func _weighted_sum(weights: Dictionary, bumps: Dictionary) -> float:
+	var total := 0.0
+	for counter: Variant in bumps:
+		var key := str(counter)
+		if not weights.has(key):
+			continue
+		var points := _num(bumps[counter])
+		if points > 0.0:
+			total += float(weights[key]) * points
+	return total
 
 
 ## docs/02 §1.1: each mood int is −3..3 before scaling.
