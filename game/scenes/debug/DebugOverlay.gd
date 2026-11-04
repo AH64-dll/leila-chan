@@ -33,6 +33,7 @@ var _stage_label: Label
 var _path_label: Label
 var _day_turn_label: Label
 var _dose_label: Label
+var _corruption_label: Label
 var _last_read_label: Label
 var _last_inner_label: Label
 var _music_label: Label
@@ -127,6 +128,8 @@ func _build_ui() -> void:
 	# --- Steering Section ---
 	_create_section_header(root_vbox, "STEERING & DOSE")
 	_dose_label = _create_label(root_vbox, "Steering Dose: (none)", COLOR_LABEL)
+	# docs/07 §3.4 (P2.06): which corruption effects this stage's plan enables.
+	_corruption_label = _create_label(root_vbox, "Text FX: (none)", COLOR_LABEL)
 
 	# --- Last Turn Dialogue & Monologue ---
 	_create_section_header(root_vbox, "LAST TURN")
@@ -271,6 +274,18 @@ func refresh() -> void:
 			dose_str = Steering.describe(dose)
 		_dose_label.text = "Steering Dose: %s" % dose_str
 
+	# --- Corruption text filter ---
+	# The stage-gated effects the filter will apply to her next line, with the
+	# same reduced-motion/content-level inputs the ChatUI passes it.
+	if _corruption_label != null:
+		var text_ctx := {
+			"reduced_motion": bool(Settings.reduced_motion),
+			"content_level": String(Settings.content_level),
+		}
+		_corruption_label.text = (
+			"Text FX: %s" % Corruption.describe(Corruption.plan(int(GameState.stage), text_ctx))
+		)
+
 	# --- Last Turn Read & Inner ---
 	if _last_read_label != null:
 		var r := Director.get_last_read()
@@ -367,6 +382,10 @@ func get_day_turn_text() -> String:
 
 func get_dose_text() -> String:
 	return _dose_label.text if _dose_label != null else ""
+
+
+func get_corruption_text() -> String:
+	return _corruption_label.text if _corruption_label != null else ""
 
 
 func get_last_read_text() -> String:

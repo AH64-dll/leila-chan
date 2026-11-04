@@ -577,6 +577,11 @@
    ],
    "note": "otherwise: current track + bit-crush/pitch wobble"
   },
+  "silence": {
+   "0-5": [],
+   "quality": "engine",
+   "note": "no track: the Music bus cuts instantly (docs/04 §2)"
+  },
   "_title": {
    "0-1": [
     "music_music_box/4_music_box_tracks_ogg/musicbox2_cute_tune.ogg"
