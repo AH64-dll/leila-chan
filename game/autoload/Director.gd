@@ -410,10 +410,9 @@ func _start_turn(player_text: String) -> bool:
 	var sampling_spec := sampling_spec(stage)
 	var sampling_dict := TurnContext.request_sampling(stage)
 
-	# docs/06 §3: Steering owns the dose schedule (P2.04), so the request carries
-	# per-vector scales ({"malice": 4.5, "path_mix": 3.0}; path_mix is the interim
-	# key). The docs/02 §9 column is only the fallback when the autoload is absent
-	# (P1.09's retry observable holds); the transport ignores dose until P2.03.
+	# docs/06 §3: Steering owns dose schedule (scales like {"malice": 4.5,
+	# "possessive": 0.3} on keep paths; `path_mix` pre-assignment). Fallback
+	# when autoload is absent is docs/02 §9 column. Transport uses it in P2.03.
 	var dose_dict := {}
 	if Steering != null and Steering.has_method("dose_for"):
 		dose_dict = Steering.dose_for(ctx)

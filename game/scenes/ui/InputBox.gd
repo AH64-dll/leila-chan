@@ -17,6 +17,14 @@ signal log_toggle_requested  ## Tab — toggle scroll-back log even when focused
 var _enabled := true
 var _draft_peak := ""
 var _draft_last := ""
+## docs/05 §1.3 M22: the box currently holds words SHE typed in. The flag keeps
+## them out of the deleted-draft detector — the player erasing her suggestion is
+## not a draft the player gave up on, and quoting her own line back at her as
+## "what you were going to say" would be a lie the player never told.
+var _foreign_draft := false
+## True while `show_foreign_draft()` writes: the programmatic edit must not run
+## the player's draft tracking or emit `draft_changed`.
+var _writing_foreign := false
 
 
 func _ready() -> void:
@@ -46,13 +54,48 @@ func draft() -> String:
 	return text
 
 
+## Fill the box with her words (docs/05 §1.3 M22). The field stays editable and
+## focused, so the player can always delete it — character by character or all
+## at once — and nothing is ever submitted from here. The caret sits at the end
+## so the blinking cursor reads as "someone is in here".
+func show_foreign_draft(value: String) -> void:
+	if not _enabled:
+		return
+	_writing_foreign = true
+	text = value
+	caret_column = value.length()
+	_writing_foreign = false
+	_foreign_draft = not value.is_empty()
+	_draft_peak = ""
+	_draft_last = value
+
+
+func is_foreign_draft() -> bool:
+	return _foreign_draft
+
+
 func clear_draft() -> void:
 	text = ""
 	_draft_peak = ""
 	_draft_last = ""
+	_foreign_draft = false
 
 
 func _on_text_changed(new_text: String) -> void:
+	if _writing_foreign:
+		# Our own fill (M22): not a player edit, so no telemetry and no draft.
+		_draft_last = new_text
+		return
+	if _foreign_draft:
+		# The player is editing/deleting words she typed. They are never the
+		# player's deleted draft (docs/05 M21 must not quote her own line back),
+		# so tracking stays silent until the box is theirs again.
+		_draft_last = new_text
+		if new_text.is_empty():
+			_foreign_draft = false
+			_draft_peak = ""
+		draft_changed.emit(new_text)
+		return
 	# Backspace erases one character per edit, so the edit that empties the box
 	# only knows the last char. Keep the peak of the draft this edit continues
 	# and drop it when the text is replaced wholesale (select-all then type or
@@ -83,6 +126,7 @@ func _on_text_submitted(raw: String) -> void:
 	text = ""
 	_draft_peak = ""
 	_draft_last = ""
+	_foreign_draft = false
 	submitted.emit(trimmed)
 
 

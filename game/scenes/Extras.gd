@@ -71,6 +71,7 @@ func refresh() -> void:
 		var secret_entry := _secret_entry(secret)
 		_entries.append(secret_entry)
 		_add_row(secret_entry)
+	_add_log_edits_section()
 	if _seen == 0:
 		progress_label.text = String(_screen.get("empty", ""))
 		return
@@ -88,6 +89,27 @@ func entries() -> Array[Dictionary]:
 
 func progress_text() -> String:
 	return progress_label.text if progress_label != null else ""
+
+
+## docs/05 §0 rule 5 + §1.3 M23/M24: every line she rewrote, with the words the
+## player actually wrote — the "what happened" review the Extras menu owes them.
+func log_edits() -> Array:
+	return MetaLogEdits.rows()
+
+
+## Put the player's words back. The log entries never lost them — her version is
+## a display override — so this clears the ledger, repaints a live log if one is
+## still in the tree, and re-renders this page. Returns how many lines were
+## restored (0 when there was nothing to undo).
+func restore_log_edits() -> int:
+	var restored := MetaLogEdits.restore_all()
+	var ui := _live_chat_ui()
+	if ui != null:
+		var log_node: Variant = ui.get("chat_log")
+		if log_node is Node and (log_node as Node).has_method("rerender"):
+			(log_node as Node).call("rerender")
+	refresh()
+	return restored
 
 
 func _entry_for(row: Dictionary, record: Dictionary, unlocked: bool) -> Dictionary:
@@ -137,6 +159,67 @@ func _add_row(entry: Dictionary) -> void:
 	row.add_child(name_label)
 	row.add_child(detail)
 	rows_box.add_child(row)
+
+
+## ── docs/05 §1.3 M23/M24: her edits, and the way back ─────────────────────
+
+
+## One read-only row per rewrite (her version next to yours) plus the restore
+## button. Nothing here is written: the ledger is read, `restore_log_edits()`
+## is the only mutation and it only ever clears.
+func _add_log_edits_section() -> void:
+	rows_box.add_child(HSeparator.new())
+	var title := Label.new()
+	title.text = String(_screen.get("log_edits_title", "What she changed"))
+	title.add_theme_font_size_override("font_size", 13)
+	title.add_theme_color_override("font_color", COLOR_SEEN)
+	rows_box.add_child(title)
+	var rows := MetaLogEdits.rows()
+	if rows.is_empty():
+		var empty := Label.new()
+		empty.text = String(
+			_screen.get("log_edits_empty", "Nothing. Every line in the log is yours.")
+		)
+		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		empty.add_theme_font_size_override("font_size", 11)
+		empty.add_theme_color_override("font_color", COLOR_DETAIL)
+		rows_box.add_child(empty)
+		return
+	var template := String(
+		_screen.get("log_edits_row", 'You wrote: "{original}" — the log reads: "{edited}"')
+	)
+	for row: Dictionary in rows:
+		var label := Label.new()
+		label.text = (
+			template
+			. format(
+				{
+					"original": String(row.get("original", "")),
+					"edited": String(row.get("edited", "")),
+				}
+			)
+		)
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label.add_theme_font_size_override("font_size", 11)
+		label.add_theme_color_override("font_color", COLOR_DETAIL)
+		rows_box.add_child(label)
+	var button := Button.new()
+	button.text = String(_screen.get("log_edits_restore", "Restore my words"))
+	button.pressed.connect(_on_restore_log_edits)
+	rows_box.add_child(button)
+
+
+func _on_restore_log_edits() -> void:
+	restore_log_edits()
+
+
+## The live conversation, when Extras was opened without the Date having been
+## freed (a test, or a future in-game Extras entry). Absent is normal: after the
+## credits the log on disk is the save's, and the ledger restore is what matters.
+func _live_chat_ui() -> Node:
+	for node: Node in get_tree().get_nodes_in_group(&"chat_ui"):
+		return node
+	return null
 
 
 func _apply_texts() -> void:

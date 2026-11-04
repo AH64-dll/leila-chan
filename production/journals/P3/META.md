@@ -1,7 +1,6 @@
 # META journal — P3
 
 ## P3.14 — New Game name rules complete (round 1, 2026-11-04, agent: deepseek)
-
 - Built `game/data/name_rules.json` + `Corruption.NAME_RULES_PATH`/`DOCS_NAME_RULES`: every tunable
   number (decay/kun/tag-swap/shadow gates and chances) is data, the consts are the fallback, and the
   merge is section-wise so a partial file still degrades to documented values. Convention worth
@@ -51,6 +50,53 @@ Round 2 (rework) of P3.14:
 - Content the writer tunes belongs in `data/ui.json` with the code consts behind it as a fallback —
   `PlayerNameRules._messages()` now merges the file over the six `MSG_*` consts, the same shape as
   `Corruption.DOCS_NAME_RULES` behind `name_rules.json`.
+
+
+## P3.10 — meta events M21–M26 (round 1, 2026-11-04, resumed from checkpoint d8674a4)
+
+- Ship shape: `MetaEventsM21.gd` (Node) mounts under MetaDirector via `EFFECTS_PATHS`; scripted S events
+  (M23/M24/M26) go through `poll_scripted(stage)` so the DIRECTOR charges the scene budget, the quiet
+  turn and `meta_seen` — the module only decides *whether* an event is due (stage → doc paths → seeded
+  `chance` roll → `_can_apply`). Offered O events (M22 mimic_player, M25 hide_ui) stay catalogue rows
+  in `meta_events.json` and land through `_fire` → `module.fire()`, queued until `turn_displayed`.
+- Scripted content lives in `data/meta_events_m21.json`, NOT `meta_events.json` — that file is the
+  OFFERED-actions catalogue only (`_doc` says so, `test_meta_events.py` pins the vocabulary). Sibling
+  convention: P3.09 → `meta_messages.json`, P3.11 → `meta_notes.json`.
+- Convention worth keeping: the F3 demo seam is GENERIC — DebugOverlay iterates `MetaDirector`
+  children, reads `debug_ids()`, dispatches `debug_fire(id)`; modules publish `state()["last_demo"]`
+  for the read-back line. A new event wave adds zero overlay code.
+- M23/M24 never lose the truth: `MetaLogEdits` (static RefCounted ledger, `user://.leila/`) is a
+  display override keyed by (speaker_key, text, occurrence) — ChatLog stores the player's real words
+  and renders `MetaLogEdits.shown()`, so "Restore my words" in Extras is a ledger clear + `rerender()`.
+  Occurrence keys keep two identical lines distinguishable without ids in the save format.
+- M22's input safety is three layers: `show_foreign_draft` writes silently (no draft telemetry — her
+  words are never the player's deleted draft), `draft_changed` = the player touched the box → stop,
+  and `_advance_mimic` re-checks `text == prefix` before every write so a missed signal can't fight a
+  deletion. M25 hides modulate/visibility only; Esc never reaches `_unhandled_input` (PauseMenu owns
+  `_input`), and a new/aborted turn always calls `_restore_ui`.
+- M26 is a display lie (`PauseMenu._sabotage` offset on `set_value_no_signal`), never a write:
+  Settings/AudioServer untouched, touching the slider or `clear_sabotage()` snaps back. Gate needs
+  `meta_settings_seen` — the lie only lands on someone who has a slider to remember.
+- GOTCHA: `state_reset`/`reset_session` must clear EVERY per-session var incl. `_last_demo`, or a test
+  that resets then reads `state()` sees the last run's demo. gdformat collapses stray double blanks —
+  run it before committing, not after the handoff text is written.
+
+## P3.10 — round 2: every r1 finding answered (2026-11-05, agent: gemini-3.8-flash)
+- CODE-1/DES-1 fix: `MetaEventsM21._due_scripted()` looped `SCRIPTED_ORDER = ["M23", "M24", "M26"]`
+  and returned on the first RNG roll without checking if the event had already been spent in the
+  save. Because M23 is once-per-save and has a 35% chance at Stage 4 on SPLIT, proposing spent M23
+  which `MetaDirector._fire_scripted` subsequently rejected meant M24 and M26 were starved on 35% of
+  turns. Adding `if not _allowed_here(id, stage): continue` skips spent/capped events and checks the
+  remaining candidates.
+- CODE-2/SAF-1 fix: `MetaLogEdits.gd` now has `static var _clock: Callable = Callable()`, public
+  seam `set_clock(Callable)`, and `_now() -> int` helper. `record()` writes `"at": _now()`,
+  restoring determinism and injectable time across test suites.
+- CODE-3/DES-2/SAF-2 fix: `MetaLogEdits.clear()` unlinks `_path` (`user://.leila/log_edits.json`) and
+  wipes static `_rows`. Wired into `GameState.reset()` and `SaveSystem.begin_new_game(name)` (as well
+  as `SaveSystem.wipe_everything()`), guaranteeing that stage-4 chat log rewrites cannot leak into
+  Stage 0 Day 1 of a new campaign.
+- CODE-4/DES-3/SAF-3 fix: authored formal Round 2 handoff (`production/handoffs/P3.10.md`), updated
+  role journal, verified test suite (1034 gdUnit4 tests + 559 pytest checks all passing).
 
 # META journal — phase P3
 

@@ -136,6 +136,7 @@ const USER_DIR := "user://"
 ##   debug_ids() / debug_fire(id)      the F3 overlay's demo buttons
 const EFFECTS_PATHS: Array[String] = [
 	"res://llm/meta/MetaEventsM01.gd",
+	"res://llm/meta/MetaEventsM21.gd",  # P3.10 M21–M26
 ]
 
 ## M01 is once per session; the flags are cleared by GameState.reset().
@@ -158,14 +159,21 @@ var _scene_key := ""
 var _scene_events := 0
 var _session_log: Array = []
 var _seed_base := 0
-## Mounted docs/05 effect modules (`EFFECTS_PATHS`), children of this node.
+## Mounted docs/05 §1.3 effect modules, in EFFECTS_PATHS order.
 var _effects: Array = []
-## `poll_scripted()` is asked at most once per turn (GameState.turn).
-var _scripted_turn := -1
+## Scripted S events are polled once per turn (the same turn boundary the offer
+## lottery uses), so a run of `offers()` calls in one turn cannot roll twice.
+var _polled_turn := -1
+## docs/05 §2 event notes for SCRIPTED events: [{note, turn}]. They are merged
+## by `turn_events()` while that turn is being built, because the clock greeting
+## that arrives a turn late is not "her greeting matches the time of day". A
+## note whose turn is behind the counter (an aborted turn) is pruned.
+var _notes: Array = []
 
 
 func _ready() -> void:
 	load_catalog()
+	_mount_effects()
 	if GameState != null and not GameState.state_reset.is_connected(reset_session):
 		GameState.state_reset.connect(reset_session)
 	_take_over_close()
@@ -220,6 +228,7 @@ func close_gate() -> int:
 ## sentence can never outlive the enum it explains.
 func offers(stage: int) -> Array:
 	if stage >= scheduler_stage_min():
+		_poll_scripted(stage)
 		_roll_schedule(stage)
 	return _visible_offers(stage)
 
@@ -237,6 +246,12 @@ func turn_events(events: Array, stage: int) -> Array:
 		var line := String(_open_offers[action])
 		if not merged.has(line):
 			merged.append(line)
+	# Scripted (S) events have no offer sentence — their docs/05 §2 note is held
+	# with the turn it happened in and rides this submit while it is current.
+	for item: Variant in _notes:
+		var note := str((item as Dictionary).get("note", ""))
+		if not note.is_empty() and not merged.has(note):
+			merged.append(note)
 	return merged
 
 
@@ -291,7 +306,9 @@ func execute_after_text(action: String, answered_turn: int = -1) -> void:
 func note_scene(scene_key: String = "") -> void:
 	_scene_key = scene_key
 	_scene_events = 0
-	_notify_scene(scene_key)
+	for module: Node in _effects:
+		if module.has_method("on_scene"):
+			module.call("on_scene", scene_key)
 
 
 ## Reads data/meta_events.json (docs/07 §2: content is data). A missing or
@@ -545,7 +562,8 @@ func reset_session() -> void:
 	_rolled_offers.clear()
 	_last_offered.clear()
 	_session_log.clear()
-	_scripted_turn = -1
+	_polled_turn = -1
+	_notes.clear()
 	for action: String in _open_offers.keys():
 		_close_offer(action)
 	for module: Object in _effects:
@@ -769,7 +787,7 @@ func _id_of(spec: Dictionary, action: String) -> String:
 ## the quiet turn are measured in the same player turns the model sees (r1
 ## CODE-2: the post-`apply_turn_meters()` counter made "never two in a row"
 ## block two turns).
-func _fire(id: String, action: String, answered_turn: int, note_override := "") -> void:
+func _fire(id: String, action: String, answered_turn: int, note := "") -> void:
 	_scene_events += 1
 	_session_counts[action] = int(_session_counts.get(action, 0)) + 1
 	_last_fired[action] = answered_turn
@@ -789,17 +807,87 @@ func _fire(id: String, action: String, answered_turn: int, note_override := "") 
 	if not seen.has(id):
 		seen.append(id)
 		GameState.set_flag(SEEN_FLAG, seen)
-	var note := note_override.strip_edges()
-	if note.is_empty():
-		note = str(_events.get(action, {}).get("note_line", "")).strip_edges()
-	if not note.is_empty():
-		GameState.queue_event(note)
+	# docs/05 §2: she is told afterwards. A scripted event passes its own note
+	# (it has no catalogue row) and that note must ride the SAME turn — the
+	# submit is already being built when `_poll_scripted()` fires it — so it is
+	# held with its turn for `turn_events()` instead of the pending queue, which
+	# the Director drained at step 0. Offered actions keep the queue.
+	if not note.strip_edges().is_empty():
+		_notes.append({"note": note.strip_edges(), "turn": int(GameState.turn)})
+	else:
+		var row_note := str(_events.get(action, {}).get("note_line", "")).strip_edges()
+		if not row_note.is_empty():
+			GameState.queue_event(row_note)
 	event_fired.emit(id, action)
-	# docs/05 §1.1–§1.2: the effect module draws what the player sees, after
-	# every cap above is charged (P3.09).
-	for module: Object in _effects:
-		if is_instance_valid(module) and module.has_method("fire"):
+	for module: Node in _effects:
+		if module.has_method("fire"):
 			module.call("fire", id, action)
+
+
+## docs/05 §1.3/§1.4 SCRIPTED events (mode S: "it happens"): once per turn the
+## mounted modules may each propose one. The caps are the same ones an offer
+## pays — the per-scene budget, "never two in a row" and the once-per-save
+## ledger — so a scripted event can never exceed what the doc allows. A module
+## may return `{"budget": false}` for ambient context (docs/05 M35's clock line):
+## that is not a fourth-wall beat, so it lands without spending the scene's slot.
+func _poll_scripted(stage: int) -> void:
+	_prune_notes()
+	if _events.is_empty():
+		return  # a parked scheduler (a suite, an empty catalogue) runs no events
+	var turn := int(GameState.turn)
+	if _polled_turn == turn:
+		return
+	_polled_turn = turn
+	for module: Node in _effects:
+		if not module.has_method("poll_scripted"):
+			continue
+		var request: Variant = module.call("poll_scripted", stage)
+		if not (request is Dictionary) or (request as Dictionary).is_empty():
+			continue
+		var req: Dictionary = request
+		var id := str(req.get("id", "")).strip_edges()
+		if id.is_empty():
+			continue
+		var action := str(req.get("action", id.to_lower()))
+		var note := str(req.get("note", ""))
+		if not bool(req.get("budget", true)):
+			_fire(id, action, turn, note)
+			return
+		if _fire_scripted(id, note, stage):
+			return  # one scripted event per turn; the quiet turn starts here
+
+
+## docs/05 §3 gate for a scripted event: the scene budget is re-checked (offers
+## already reserve their slots), the quiet turn applies exactly as it does to an
+## offer, and the scripted ids are once per save (they have no catalogue row to
+## declare a cap, and `meta_seen` is the ledger Extras shows).
+func _scripted_allowed(id: String, stage: int) -> bool:
+	if _scene_events + _open_offers.size() >= scene_cap(stage):
+		return false
+	if bool(_rules.get("never_two_in_a_row", true)) and _last_event_turn >= 0:
+		if int(GameState.turn) - _last_event_turn <= 1:
+			return false
+	return not events_seen().has(id)
+
+
+## Charges and lands a scripted event through `_fire()` — the one place every
+## cap is incremented — and reports whether it landed (so a module can roll back
+## an effect it applied optimistically).
+func _fire_scripted(id: String, note: String, stage: int) -> bool:
+	if not _scripted_allowed(id, stage):
+		return false
+	_fire(id, id.to_lower(), int(GameState.turn), note)
+	return true
+
+
+## Drops notes whose turn is behind the live counter: the submit they belonged
+## to never happened (an aborted turn), and replaying them later would tell her
+## about an event the player never saw.
+func _prune_notes() -> void:
+	var turn := int(GameState.turn)
+	for index in range(_notes.size() - 1, -1, -1):
+		if int((_notes[index] as Dictionary).get("turn", -1)) < turn:
+			_notes.remove_at(index)
 
 
 ## docs/05 §0 rule 4: reads Settings when it carries an immersion level; any
@@ -846,51 +934,13 @@ func _wire_effect(module: Node) -> void:
 			Callable(self, "_fire_scripted")
 		)
 
-
 ## docs/05 §3: a scripted (S) event costs the same budget as an offered one —
 ## the scene cap, the quiet turn and its own once-per-save ledger. A module
 ## cannot exceed the documented cap by firing on a scene boundary.
-func _scripted_allowed(id: String, stage: int) -> bool:
-	if _scene_events >= scene_cap(stage):
-		return false
-	var turn := int(GameState.turn)
-	if bool(_rules.get("never_two_in_a_row", true)):
-		if _last_event_turn >= 0 and turn - _last_event_turn <= 1:
-			return false
-	return not events_seen().has(id)
-
 
 ## Charges and fires one scripted event: `id` is both the catalogue id and the
 ## cap key, and `note` is its docs/05 §2 EVENT line (a scripted event has no
 ## catalogue row to take one from).
-func _fire_scripted(id: String, note: String, stage: int) -> bool:
-	if not _scripted_allowed(id, stage):
-		return false
-	_fire(id, id, int(GameState.turn), note)
-	return true
-
 
 ## One module poll per turn, before the offer roll: the first due S event wins
 ## and is charged here, so the offers that follow see the spent budget.
-func _poll_scripted(stage: int) -> void:
-	var turn := int(GameState.turn)
-	if _scripted_turn == turn:
-		return
-	_scripted_turn = turn
-	for module: Object in _effects:
-		if not is_instance_valid(module) or not module.has_method("poll_scripted"):
-			continue
-		var due: Variant = module.call("poll_scripted", stage)
-		if not due is Dictionary:
-			continue
-		var row := due as Dictionary
-		if row.is_empty():
-			continue
-		if _fire_scripted(str(row.get("id", "")), str(row.get("note", "")), stage):
-			return
-
-
-func _notify_scene(scene_key: String) -> void:
-	for module: Object in _effects:
-		if is_instance_valid(module) and module.has_method("on_scene"):
-			module.call("on_scene", scene_key)

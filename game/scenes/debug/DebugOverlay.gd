@@ -195,12 +195,13 @@ func _build_ui() -> void:
 		missing_meta.disabled = true
 		meta_grid.add_child(missing_meta)
 
-	# --- Meta event demos (P3.09) ---
-	# docs/05 §1.1–§1.2 M01–M12: one button per mounted effect module id, so
-	# every event of this wave is demonstrable from F3 (role checklist). The
-	# click runs the effect only — gates and caps are bypassed, like
-	# `debug_offer` — and the line below says what it did.
-	_create_section_header(root_vbox, "META EVENTS M01–M12 (P3.09)")
+	# --- Meta event demos (P3.10, generic) ---
+	# One button per id every mounted effect module reports through
+	# `debug_ids()` — the seam covers §1.3 (M21–M26) now and §1.1/§1.4 modules
+	# as they mount, so every meta event stays demonstrable from F3 (role
+	# checklist). The click runs the effect only — gates and caps are bypassed,
+	# like `debug_offer` — and the line below says what it did.
+	_create_section_header(root_vbox, "META EVENTS (MOUNTED MODULES)")
 	_meta_demo_label = _create_label(root_vbox, "Demo: (none)", COLOR_LABEL)
 	_meta_demo_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var demo_grid := GridContainer.new()
@@ -357,13 +358,8 @@ func _meta_text() -> String:
 	return text
 
 
-## The META section's label, for tests.
-func get_meta_text() -> String:
-	return _meta_label.text if _meta_label != null else ""
-
-
-## Every mounted effect module's demo ids, in module order (P3.09). A branch
-## without the module simply lists nothing.
+## Every mounted effect module's demo ids, in module order (P3.10). A branch
+## without a module simply lists nothing — the seam is duck-typed on purpose.
 func _meta_demo_ids() -> Array[String]:
 	var ids: Array[String] = []
 	if MetaDirector == null:
@@ -381,13 +377,13 @@ func _meta_demo_ids() -> Array[String]:
 	return ids
 
 
-## One docs/05 §1.1–§1.2 demo trigger: click → module.debug_fire(id) → refresh.
-## The node name is the seam a test clicks ("MetaDemo_M09").
+## One docs/05 meta-event demo trigger: click → module.debug_fire(id) →
+## refresh. The node name is the seam a test clicks ("MetaDemo_M23").
 func _add_meta_demo_button(parent: Container, id: String) -> void:
 	var button := Button.new()
 	button.name = "MetaDemo_" + id
 	button.text = id
-	button.tooltip_text = "Show the %s effect (docs/05 §1.1–§1.2; caps bypassed)" % id
+	button.tooltip_text = "Show the %s effect (docs/05; caps bypassed)" % id
 	button.add_theme_font_size_override("font_size", FONT_SIZE)
 	button.pressed.connect(func() -> void: fire_meta_demo(id))
 	parent.add_child(button)
@@ -429,6 +425,11 @@ func _meta_demo_text() -> String:
 ## The demo section's label, for tests.
 func get_meta_demo_text() -> String:
 	return _meta_demo_label.text if _meta_demo_label != null else ""
+
+
+## The META section's label, for tests.
+func get_meta_text() -> String:
+	return _meta_label.text if _meta_label != null else ""
 
 
 ## One P2.09 debug trigger: click → Telemetry.debug_fire(kind) → refresh. The
@@ -690,9 +691,11 @@ func refresh() -> void:
 	if _telemetry_label != null:
 		_telemetry_label.text = _telemetry_text()
 
-	# --- Meta (P3.08) ---
+	# --- Meta (P3.08 scheduler state; P3.10 mounted-module demos) ---
 	if _meta_label != null:
 		_meta_label.text = _meta_text()
+	if _meta_demo_label != null:
+		_meta_demo_label.text = _meta_demo_text()
 
 	# --- Triggers (P2.08) ---
 	if _triggers_label != null:

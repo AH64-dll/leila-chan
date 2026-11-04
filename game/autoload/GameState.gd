@@ -265,6 +265,7 @@ func reset() -> void:
 	_last_tone = &""
 	_mood_turn = -1
 	_mood_spent.clear()
+	MetaLogEdits.clear()
 	state_reset.emit()
 	last_stress = 0
 
@@ -588,7 +589,6 @@ func _evaluate_path() -> Dictionary:
 	return decision
 
 
-
 ## The trigger ledger the §4 formulas are topped up with: every path point a
 ## trigger firing has earned this campaign (`Triggers.path_scores()`, scaled
 ## by agreement). Empty for instances that are not the autoload — a test's
@@ -609,7 +609,6 @@ func _runner_up_for(decision: Dictionary) -> StringName:
 	if path != &"" and best != path:
 		runner = best if float(path_scores.get(String(best), 0.0)) > 0.0 else &""
 	return runner if runner != path else &""
-
 
 
 ## docs/01 §4 tie-break: "ties → the path with more recent evidence". A counter

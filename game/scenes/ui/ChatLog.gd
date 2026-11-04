@@ -63,6 +63,21 @@ func entry_count() -> int:
 	return _entries.size()
 
 
+## Redraws every line from the stored entries (docs/05 §1.3 M23/M24). The
+## entries themselves do not change: her version is a `MetaLogEdits` display
+## override, so the log keeps the words the player wrote and a restore is only a
+## ledger change plus this redraw.
+func rerender() -> void:
+	if _list == null:
+		return
+	for child: Node in _list.get_children():
+		_list.remove_child(child)
+		child.queue_free()
+	for entry: Dictionary in _entries:
+		_render_entry(entry)
+	_scroll_to_end.call_deferred()
+
+
 func clear_log() -> void:
 	_entries.clear()
 	if _list != null:
@@ -103,7 +118,11 @@ func _apply_end_scroll() -> void:
 
 ## Store and render one entry without signalling: `append_entry` speaks for one
 ## live line, `restore_entries` for a whole save (one signal, one scroll).
+## `occurrence` is the 1-based count of earlier entries with the same speaker and
+## text: MetaLogEdits keys the docs/05 §1.3 rewrites by it, so two identical
+## player lines stay distinguishable without an id in the save format.
 func _push(entry: Dictionary) -> void:
+	entry["occurrence"] = _occurrence_of(entry)
 	_entries.append(entry)
 	if _entries.size() > max_entries:
 		_entries.pop_front()
@@ -114,14 +133,27 @@ func _push(entry: Dictionary) -> void:
 	_render_entry(entry)
 
 
+func _occurrence_of(entry: Dictionary) -> int:
+	var count := 1
+	for stored: Dictionary in _entries:
+		if (
+			str(stored.get("speaker_key", "")) == str(entry.get("speaker_key", ""))
+			and str(stored.get("text", "")) == str(entry.get("text", ""))
+		):
+			count += 1
+	return count
+
+
 func _render_entry(entry: Dictionary) -> void:
 	if _list == null:
 		return
 	var label := Label.new()
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.add_theme_font_size_override("font_size", 12)
-	var color: Color = _speaker_colors.get(str(entry["speaker_key"]), Color(0.8, 0.8, 0.8))
-	var shown := "%s: %s" % [entry["speaker"], entry["text"]]
+	var key := str(entry["speaker_key"])
+	var color: Color = _speaker_colors.get(key, Color(0.8, 0.8, 0.8))
+	var text := MetaLogEdits.shown(key, str(entry["text"]), int(entry.get("occurrence", 1)))
+	var shown := "%s: %s" % [entry["speaker"], text]
 	label.text = shown
 	label.add_theme_color_override("font_color", color.lightened(0.35))
 	label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
