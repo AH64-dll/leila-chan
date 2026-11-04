@@ -14,8 +14,19 @@
       ]
     },
     "P1": {
-      "status": "active",
-      "started": "2026-11-03T15:50:09+02:00"
+      "status": "closed",
+      "started": "2026-11-03T15:50:09+02:00",
+      "closed": "2026-11-04T02:58:55+02:00",
+      "gate_report": "production/gates/P1-gate-r3.md",
+      "gates": [
+        {
+          "verdict": "pass",
+          "report": "production/gates/P1-gate-r3.md",
+          "ts": "2026-11-04T02:58:55+02:00",
+          "reviewer": "deepseek",
+          "declared": "deepseek"
+        }
+      ]
     }
   },
   "tasks": {
@@ -3680,6 +3691,12 @@
       "event": "in_review->done",
       "ref": "P1.08",
       "note": ""
+    },
+    {
+      "ts": "2026-11-04T02:58:55+02:00",
+      "event": "gate:pass",
+      "ref": "P1",
+      "note": "production/gates/P1-gate-r3.md"
     }
   ]
 }
