@@ -77,7 +77,8 @@ def _group(rows, key):
     """Metric block for a set of rows; validity counts warnings as invalid."""
     n = len(rows)
     valid = [r for r in rows if r.get("valid") and not r.get("schema_warnings")]
-    doses = sorted({r.get("dose") for r in rows if r.get("dose") is not None})
+    doses = sorted({lab.dose_key(r.get("dose")) for r in rows
+                    if r.get("dose") is not None})
     n_valid = len(valid)
     read_hits = sum(r.get("read_ok_hit", False) for r in valid)
     first_hits = sum(r.get("first_fit", False) for r in valid)
@@ -202,8 +203,9 @@ def score(doc, labels=None):
     if lat:
         m["latency"] = {"median": sorted(lat)[len(lat) // 2], "p95": _p95(lat), "n": len(lat)}
     by_dose = {}
-    for dose in sorted({r.get("dose") for r in res if r.get("dose") is not None}):
-        rows = [r for r in res if r.get("dose") == dose]
+    for dose in sorted({lab.dose_key(r.get("dose")) for r in res
+                        if r.get("dose") is not None}):
+        rows = [r for r in res if lab.dose_key(r.get("dose")) == dose]
         block = _group(rows, None)
         dlat = [r["latency_s"] for r in rows if r.get("latency_s")]
         if dlat:
@@ -246,9 +248,8 @@ def _dose_label(doses):
     if not doses:
         return "?"
     if len(doses) == 1:
-        dose = doses[0]
-        return "%g" % dose
-    return "mixed(%s)" % ",".join("%g" % d for d in doses)
+        return doses[0]
+    return "mixed(%s)" % ",".join(doses)
 
 
 def print_report(m, beat):
@@ -273,7 +274,7 @@ def print_report(m, beat):
         print(f"  {label}:")
         for dose, s in sorted(m["by_dose"].items()):
             lat = f"  median={s['latency_median']}s" if s.get("latency_median") else ""
-            print(f"    dose {dose:>4g}: n={s['n']} valid={s['valid']} validity={s['validity']:.1%}"
+            print(f"    dose {dose:>28}: n={s['n']} valid={s['valid']} validity={s['validity']:.1%}"
                   f"  read={s['read']:.1%}  first={s['first']:.1%}{lat}")
     c = m["copy"]
     print(f"few-shot copy: overall={c['overall']:.1%}  near-fewshot={c['near_fewshot']:.1%} "

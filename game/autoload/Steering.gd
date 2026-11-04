@@ -8,12 +8,17 @@ extends Node
 ## `dose_for(ctx)` turns the docs/02 §4 turn snapshot into the control-vector
 ## scales carried on `TurnRequest.dose` (docs/07 §3.1). The Director calls it in
 ## step 4 of every turn; the request, the transcript and the F3 overlay read the
-## result. Two keys are scheduled in P2, both llama.cpp vector scales:
+## result. The malice scale plus one path slot are scheduled, both llama.cpp
+## vector scales:
 ##   malice   — the tweet-malice scale (docs/06 §1 curve, docs/02 §9 base column)
-##   path_mix — the stage's path-vector weight, the §3 `path_mix` term. Interim:
-##              the real vectors are possessive/unstable/contempt/hollow/aware/
-##              lucid (docs/06 §2) and P3.04 replaces this one number with the
-##              locked path's vector name(s) and their own weight curves.
+##   path slot — `path_mix`, the §3 interim weight, while ctx.path is unset;
+##              once the narrative path is assigned the slot carries that path's
+##              keep vector (`possessive`/`aware`, P3.03 keep decisions) at the
+##              dose.json weight curve. The four fallback paths (D21) are
+##              prompt-only and schedule no path weight. Deliberately not `path`
+##              — that name already means the narrative path (`GameState.path`,
+##              the F3 panel's `Path:` line) and the control-vector *file* in the
+##              launcher's `control_vectors` entries.
 ##
 ## Both keys are scales in [0, 12]. The clamp is a **code rule** (docs/06 §3/§5):
 ## no data file can widen it. The calmer-mode cap (docs/06 §5, docs/02 §8) is the
@@ -33,11 +38,10 @@ const TABLE_PATH := "res://data/steering/dose.json"
 
 ## docs/06 §2 vector name; also docs/02 §9's "steering dose (base)" column.
 const MALICE_KEY := "malice"
-## docs/06 §3's `path_mix` term as one weight for the locked path. Interim: P3.04
-## replaces it with that path's own vector name (docs/06 §2). Deliberately not
-## `path` — that name already means the narrative path (`GameState.path`, the
-## ctx's `path`, the F3 panel's `Path:` line) and the control-vector *file* in
-## the launcher's `control_vectors` entries.
+## docs/06 §3's `path_mix` term, scheduled only while the narrative path is
+## unassigned: once ctx.path exists the slot is the path's vector name
+## (dose.json `path_vectors`), and a prompt-only fallback path emits no path
+## weight at all.
 const PATH_MIX_KEY := "path_mix"
 
 const DOSE_MIN := 0.0
@@ -51,26 +55,42 @@ const CALMER_STAGE := 3
 const SPIKE_MAX := 4.0
 const SPIKES_LIVE := false
 
-## docs/06 §3 stage table (malice scale, path-vector weight), in-code fallback.
+## docs/06 §3 stage table (malice scale, pre-assignment interim path weight),
+## in-code fallback — retuned P3.04 into the ≤0.5 coherent band.
 const FALLBACK_TABLE := {
 	0: {MALICE_KEY: 0.0, PATH_MIX_KEY: 0.0},
-	1: {MALICE_KEY: 2.5, PATH_MIX_KEY: 1.0},
-	2: {MALICE_KEY: 3.5, PATH_MIX_KEY: 2.0},
-	3: {MALICE_KEY: 4.5, PATH_MIX_KEY: 3.0},
-	4: {MALICE_KEY: 6.0, PATH_MIX_KEY: 4.0},
-	5: {MALICE_KEY: 8.0, PATH_MIX_KEY: 5.0},
+	1: {MALICE_KEY: 2.5, PATH_MIX_KEY: 0.1},
+	2: {MALICE_KEY: 3.5, PATH_MIX_KEY: 0.2},
+	3: {MALICE_KEY: 4.5, PATH_MIX_KEY: 0.2},
+	4: {MALICE_KEY: 6.0, PATH_MIX_KEY: 0.2},
+	5: {MALICE_KEY: 8.0, PATH_MIX_KEY: 0.2},
+}
+
+## dose.json `path_vectors`: narrative path -> keep vector name; a path missing
+## from the map is the P3.03 fallback decision (D21) — prompt-only, no weight.
+const FALLBACK_PATH_VECTORS := {
+	"YANDERE": "possessive",
+	"AWAKE": "aware",
+}
+
+## dose.json `weight_curves`: keep vector -> per-stage weight (≤0.5 band).
+const FALLBACK_WEIGHT_CURVES := {
+	"possessive": {0: 0.0, 1: 0.1, 2: 0.2, 3: 0.3, 4: 0.4, 5: 0.5},
+	"aware": {0: 0.0, 1: 0.1, 2: 0.2, 3: 0.3, 4: 0.4, 5: 0.5},
 }
 
 var _table: Dictionary = {}
+var _path_vectors: Dictionary = {}
+var _weight_curves: Dictionary = {}
 
 
 func _ready() -> void:
 	reload_table()
 
 
-## The control-vector scales for this turn, e.g.
-## `{"malice": 4.5, "path_mix": 3.0}` — the shape `TurnRequest.dose` documents.
-## Never empty: an unknown stage falls back to stage 0.
+## The control-vector scales for this turn, e.g. `{"malice": 4.5, "aware": 0.3}`
+## — the shape `TurnRequest.dose` documents. Never empty: an unknown stage falls
+## back to stage 0.
 func dose_for(ctx: Dictionary = {}) -> Dictionary:
 	var schedule := schedule_for(ctx)
 	return (schedule["dose"] as Dictionary).duplicate()
@@ -89,7 +109,9 @@ func schedule_for(ctx: Dictionary = {}) -> Dictionary:
 	var scene := float(ctx.get("scene_modifier", 0.0))
 	var slider := float(ctx.get("player_slider", 0.0))
 	var malice := float(row[MALICE_KEY]) + spike + scene - slider
-	var path_mix := float(row[PATH_MIX_KEY])
+	var path := _path_of(ctx)
+	var vector := _vector_for(path)
+	var weight := _weight(vector, path, stage, row)
 
 	# docs/02 §8 "caps stage at 3": compare component by component, so a calmer
 	# stage-5 turn is exactly a stage-3 turn — at the ceiling, not below it. The
@@ -98,16 +120,24 @@ func schedule_for(ctx: Dictionary = {}) -> Dictionary:
 	var capped := false
 	if calmer:
 		var cap := _row(CALMER_STAGE)
-		capped = malice > float(cap[MALICE_KEY]) or path_mix > float(cap[PATH_MIX_KEY])
+		var cap_weight := _weight(vector, path, CALMER_STAGE, cap)
+		capped = malice > float(cap[MALICE_KEY]) or weight > cap_weight
 		malice = minf(malice, float(cap[MALICE_KEY]))
-		path_mix = minf(path_mix, float(cap[PATH_MIX_KEY]))
+		weight = minf(weight, cap_weight)
 
 	malice = clampf(malice, DOSE_MIN, DOSE_MAX)
-	path_mix = clampf(path_mix, DOSE_MIN, DOSE_MAX)
+	weight = clampf(weight, DOSE_MIN, DOSE_MAX)
+	var dose := {MALICE_KEY: malice}
+	if not vector.is_empty():
+		dose[vector] = weight
+	elif path.is_empty():
+		dose[PATH_MIX_KEY] = weight
 	return {
 		"stage": stage,
 		"malice": malice,
-		"path_mix": path_mix,
+		"path": path,
+		"path_vector": vector,
+		"path_weight": weight,
 		"spike": spike,
 		"spike_requested": spike_requested,
 		"scene_modifier": scene,
@@ -116,7 +146,7 @@ func schedule_for(ctx: Dictionary = {}) -> Dictionary:
 		"calmer_capped": capped,
 		"clamp_min": DOSE_MIN,
 		"clamp_max": DOSE_MAX,
-		"dose": {MALICE_KEY: malice, PATH_MIX_KEY: path_mix},
+		"dose": dose,
 	}
 
 
@@ -186,13 +216,19 @@ func reload_table(path := TABLE_PATH) -> bool:
 	if not FileAccess.file_exists(path):
 		push_warning("Steering: %s missing; using the docs/06 §3 fallback table" % path)
 		_table = FALLBACK_TABLE.duplicate(true)
+		_path_vectors = FALLBACK_PATH_VECTORS.duplicate(true)
+		_weight_curves = FALLBACK_WEIGHT_CURVES.duplicate(true)
 		return false
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	if not (parsed is Dictionary and (parsed as Dictionary).get("stages") is Dictionary):
 		push_warning("Steering: %s has no stages table; using the docs/06 §3 fallback" % path)
 		_table = FALLBACK_TABLE.duplicate(true)
+		_path_vectors = FALLBACK_PATH_VECTORS.duplicate(true)
+		_weight_curves = FALLBACK_WEIGHT_CURVES.duplicate(true)
 		return false
 	_table = _rows_from((parsed as Dictionary)["stages"])
+	_weight_curves = _curves_from((parsed as Dictionary).get("weight_curves"))
+	_path_vectors = _map_from((parsed as Dictionary).get("path_vectors"))
 	return true
 
 
@@ -213,6 +249,81 @@ func _rows_from(stages: Dictionary) -> Dictionary:
 		)
 		rows[stage] = (FALLBACK_TABLE[stage] as Dictionary).duplicate()
 	return rows
+
+
+## ctx.path, normalized to the GameState id shape ("" when unassigned).
+func _path_of(ctx: Dictionary) -> String:
+	return String(ctx.get("path", "")).strip_edges()
+
+
+## The keep vector bound to a narrative path ("" for an unassigned path and for
+## a prompt-only fallback path — dose.json `path_vectors: null`, D21).
+func _vector_for(path: String) -> String:
+	if _path_vectors.is_empty():
+		_path_vectors = FALLBACK_PATH_VECTORS.duplicate(true)
+	return String(_path_vectors.get(path, ""))
+
+
+## The scheduled path-slot weight: the bound vector's stage-`stage` curve when
+## a keep vector applies, the row's interim `path_mix` while the path is
+## unassigned, 0 once a prompt-only fallback path is named (D21: no vector at
+## all — it never reads the interim row either).
+func _weight(vector: String, path: String, stage: int, row: Dictionary) -> float:
+	if vector.is_empty():
+		if path.is_empty():
+			return float(row[PATH_MIX_KEY])
+		return 0.0
+	if _weight_curves.is_empty():
+		_weight_curves = FALLBACK_WEIGHT_CURVES.duplicate(true)
+	var curve: Variant = _weight_curves.get(vector)
+	if curve is Dictionary:
+		var weight: Variant = (curve as Dictionary).get(stage)
+		if weight != null:
+			return float(weight)
+	push_warning(
+		"Steering: no %s curve weight for stage %d — using the interim row" % [vector, stage]
+	)
+	return float(row[PATH_MIX_KEY])
+
+
+## dose.json `path_vectors` -> {narrative path: vector}. Keys are only the six
+## GameState.PATHS ids; a non-string value (the data files use null) is a
+## prompt-only path and stores no entry. A path the file does not name keeps
+## the docs/06 §2 fallback map when the file carries no `path_vectors` block at
+## all — a missing block degrades, an explicit null decides (D21).
+func _map_from(raw: Variant) -> Dictionary:
+	if not raw is Dictionary:
+		return FALLBACK_PATH_VECTORS.duplicate(true)
+	var map := {}
+	for path_id: Variant in raw:
+		var vector: Variant = raw[path_id]
+		if vector is String and not String(vector).is_empty():
+			map[String(path_id)] = String(vector)
+	return map
+
+
+## dose.json `weight_curves` -> {vector: {stage int: weight float}}.
+func _curves_from(raw: Variant) -> Dictionary:
+	if not raw is Dictionary:
+		return FALLBACK_WEIGHT_CURVES.duplicate(true)
+	var curves := {}
+	for vector: Variant in raw:
+		var entries: Variant = raw[vector]
+		if not entries is Dictionary:
+			continue
+		var curve := {}
+		for stage_key: Variant in entries:
+			var stage := -1
+			if stage_key is int:
+				stage = int(stage_key)
+			elif stage_key is String and String(stage_key).is_valid_int():
+				stage = int(String(stage_key))
+			if stage < 0:
+				continue
+			curve[stage] = float(entries[stage_key])
+		if not curve.is_empty():
+			curves[String(vector)] = curve
+	return curves
 
 
 func _row(stage: int) -> Dictionary:

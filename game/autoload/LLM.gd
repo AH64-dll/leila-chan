@@ -335,13 +335,19 @@ func _on_state_reset() -> void:
 
 
 ## The docs/06 §3 dose for a stage, from the schedule owner — never a copy. The
-## ctx carries only the stage, so the calmer-mode cap (docs/02 §8) applies at
-## binding time: a calmer stage-5 turn must bind the stage-3 scales.
+## ctx carries the stage and GameState's assigned path (P3.04 binds the path's
+## vector, not the interim `path_mix` weight, once a path exists), so the
+## calmer-mode cap (docs/02 §8) applies at binding time: a calmer stage-5 turn
+## must bind the stage-3 scales.
 func _dose_for_stage(stage: int) -> Dictionary:
 	var steering := get_node_or_null("/root/Steering")
 	if steering == null or not steering.has_method("dose_for"):
 		return {}
-	return steering.dose_for({"stage": stage})
+	var game_state := get_node_or_null("/root/GameState")
+	var path := ""
+	if game_state != null:
+		path = String(game_state.get("path"))
+	return steering.dose_for({"stage": stage, "path": path})
 
 
 ## Main thread. The relaunch either bound the new dose or kept the old one; in
@@ -465,7 +471,8 @@ func _describe_dose(dose: Dictionary) -> String:
 
 
 ## One log clause for the doses that were scheduled but deliberately bound no
-## file (docs/06 §2 `path_mix` until P3.04). Empty when every positive key bound.
+## file (docs/06 §3 `path_mix`, the pre-assignment interim weight). Empty when
+## every positive key bound.
 func _unbound_note(keys: Variant) -> String:
 	if not keys is Array or (keys as Array).is_empty():
 		return ""

@@ -361,7 +361,7 @@ def test_score_gates_each_stage_and_each_dose():
     m = score(make_doc(rows))
     assert m["per_stage"][0]["validity"] == 1.0
     assert m["per_stage"][5]["first"] == 0.0
-    assert m["by_dose"][8.0]["n"] == 1
+    assert m["by_dose"]["8"]["n"] == 1
     overall, per_stage = gate_rows(m, "first")
     fails = [label for label, _v, _t, ok in per_stage if not ok]
     assert "stage 5 first_beat_fit" in fails
@@ -485,7 +485,7 @@ def test_runpy_sends_the_path_layer_and_records_the_dose(tmp_path):
     row_out = doc["results"][0]
     assert row_out["dose"] == 8.0 and row_out["path"] == "YANDERE"
     m = score(doc)
-    assert m["per_stage"][5]["doses"] == [8.0]
+    assert m["per_stage"][5]["doses"] == ["8"]
 
     # a resumed file must not mix doses
     r2 = subprocess.run([sys.executable, str(RUN), "--url", "http://127.0.0.1:1",

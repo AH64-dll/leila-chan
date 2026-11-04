@@ -21,10 +21,12 @@ extends RefCounted
 ##  * a scale of 0 binds no vector at all, so stage 0 (and a restored new game)
 ##    lands on a clean server instead of a `:0` no-op flag.
 ##
-## `path_mix` is scheduled on `TurnRequest.dose` but ships no file until P3.04
-## (docs/06 §2): the map declares it under `unbound`, and `launch_for()` reports
-## it there so the caller can say so in one log line instead of dropping the
-## weight silently.
+## `path_mix` is scheduled on `TurnRequest.dose` only while the narrative path
+## is unassigned (P3.04): the map declares it under `unbound`, and
+## `launch_for()` reports it there so the caller can say so in one log line
+## instead of dropping the weight silently. Once a path exists the dose carries
+## the keep vector's name (`possessive`/`aware`) — both shipped and mapped —
+## and the four prompt-only fallback paths schedule no path key at all (D21).
 
 const MAP_PATH := "res://data/steering/vectors.json"
 ## Exported builds keep `res://` inside the .pck, which a separate llama-server

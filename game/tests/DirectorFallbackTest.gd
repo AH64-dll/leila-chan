@@ -216,13 +216,15 @@ func test_docs_02_section_7_empty_say_stage_under_3_retries_once() -> void:
 	var data: Dictionary = completed_box[0]
 	var beats: Array = data.get("beats", [])
 	assert_str(str((beats[0] as Dictionary).get("say", ""))).is_equal("Sorry, I drifted off.")
-	# Retry dose: stage-1 malice 2.5 + (-2.0) = 0.5, and the path_mix scale is
-	# not cut (the offset lands once, on the dose scale — docs/02 §7).
+	# Retry dose: stage-1 malice 2.5 + (-2.0) = 0.5, and the path weight is
+	# not cut (the offset lands once, on the dose scale — docs/02 §7). With no
+	# path assigned the slot is the interim `path_mix` (0.1 after the P3.04
+	# retune into the coherent band).
 	assert_float(float(_fake_backend.seen_request.dose.get("malice", -1.0))).is_equal_approx(
 		0.5, 0.0001
 	)
 	assert_float(float(_fake_backend.seen_request.dose.get("path_mix", -1.0))).is_equal_approx(
-		1.0, 0.0001
+		0.1, 0.0001
 	)
 
 

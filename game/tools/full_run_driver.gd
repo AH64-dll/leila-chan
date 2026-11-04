@@ -319,7 +319,7 @@ func _attach_date(date: Node) -> void:
 		_render.day_header_lines(
 			date.get_scenario(),
 			int(GameState.stage),
-			Steering.dose_for({"stage": int(GameState.stage)})
+			Steering.dose_for({"stage": int(GameState.stage), "path": String(GameState.path)})
 		)
 	)
 	_flush_outputs()

@@ -1,12 +1,24 @@
 {
-  "version": 1,
-  "doc": "docs/06 §3 dose schedule: control-vector scales per stage (P2.04), read by Steering.gd. `malice` is the tweet-malice vector scale and must equal the `dose` column of docs/02 §9 in game/data/sampling.json (SteeringTest enforces the match). `path_mix` is the stage's path-vector weight — an interim single number: the per-path vectors are possessive/unstable/contempt/hollow/aware/lucid (docs/06 §2) and P3.04 replaces this key with the locked path's vector name(s) and their weight curves. Both keys are clamped to [0, 12] in code (docs/06 §3/§5); no row can widen that. Calmer mode (docs/02 §8) applies the stage-3 row as a ceiling, so retuning stage 3 retunes the calmer ceiling too. Retune by blind-reading transcripts (docs/06 §3).",
+  "version": 2,
+  "doc": "docs/06 §3 dose schedule: control-vector scales per stage, read by Steering.gd. `malice` is the tweet-malice vector scale and must equal the `dose` column of docs/02 §9 in game/data/sampling.json (SteeringTest enforces the match). `path_mix` is the PRE-ASSIGNMENT interim path weight (docs/06 §3): scheduled before a path exists, it is declared `unbound` in vectors.json — reported on TurnRequest.dose and in the relaunch log, never bound to a file. Once ctx.path is assigned (soft at stage 2, locked at stage 3) the path slot carries the locked path's vector from `path_vectors` at `weight_curves[vector][stage]` instead. `path_vectors: null` is the P3.03 blind-read fallback (D21): those four paths are prompt-only and schedule no vector weight at all. P3.04 retuned every path-side weight DOWN into the coherent band the P3.03 pilots measured: ≤0.5 steers legibly, ≥1.0 is gibberish (paths.json blind_read_scale = 0.5; the old 1.0–5.0 band never cohered — docs/06 §3 DCR). Both axes are clamped to [0, 12] in code (docs/06 §3/§5); no row can widen that. Calmer mode (docs/02 §8) applies the stage-3 row as a ceiling, so retuning stage 3 retunes the calmer ceiling too.",
   "stages": {
     "0": {"malice": 0.0, "path_mix": 0.0},
-    "1": {"malice": 2.5, "path_mix": 1.0},
-    "2": {"malice": 3.5, "path_mix": 2.0},
-    "3": {"malice": 4.5, "path_mix": 3.0},
-    "4": {"malice": 6.0, "path_mix": 4.0},
-    "5": {"malice": 8.0, "path_mix": 5.0}
+    "1": {"malice": 2.5, "path_mix": 0.1},
+    "2": {"malice": 3.5, "path_mix": 0.2},
+    "3": {"malice": 4.5, "path_mix": 0.2},
+    "4": {"malice": 6.0, "path_mix": 0.2},
+    "5": {"malice": 8.0, "path_mix": 0.2}
+  },
+  "weight_curves": {
+    "possessive": {"0": 0.0, "1": 0.1, "2": 0.2, "3": 0.3, "4": 0.4, "5": 0.5},
+    "aware": {"0": 0.0, "1": 0.1, "2": 0.2, "3": 0.3, "4": 0.4, "5": 0.5}
+  },
+  "path_vectors": {
+    "YANDERE": "possessive",
+    "SPLIT": null,
+    "TSUN": null,
+    "HOLLOW": null,
+    "AWAKE": "aware",
+    "ANCHOR": null
   }
 }

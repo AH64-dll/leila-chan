@@ -90,8 +90,10 @@ Also measured (P1.05 review carry-overs):
 Versioned JSONL, one case per line:
 {id, stage, path, msg, read_ok[], feelings_ok[], near_fewshot, notes[, runner_up, history, memories, scene, offered_actions[], events[]]}.
 
-- `path` is required from stage 2 (`YANDERE`/`AWAKE`) — docs/08 §1 assigns a path there;
-  `runner_up` defaults to the other path (its first line rides along, 25% hybrid flavour).
+- `path` is required from stage 2 (one of the six GameState ids) — docs/08 §1 assigns a path there;
+  only YANDERE/AWAKE ship a prompt module today (P3.05 adds the rest), so a prompt-only path
+  sends no path layer, exactly like the game before those modules land;
+  `runner_up` defaults to the other shipped module (its first line rides along, 25% hybrid flavour).
 - `history` is a short list of `{role, text}` (assistant turns as spoken text only).
 - `events` is the docs/08 §6 events-layer content for **this turn only** (`EVENT:` /
   `TRIGGER:` / `OPPORTUNITY (optional):` lines), sent as the eighth docs/08 §1 layer and

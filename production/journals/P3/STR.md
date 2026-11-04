@@ -52,3 +52,17 @@
   live server never restarts. Strip `<think></think>` + `[end of text]` from raw stdout.
 - Gotcha: `Date.gd start_date()` wasn't idempotent — auto_start's deferred call replayed the
   opening when a caller also invoked it; `_date_started` guard fixed the DateSceneTest flake.
+
+## P3.04 — dose schedule with path mix + weight curves (2026-11-04)
+- `dose.json` grew `weight_curves` (per-keep-vector stage ramps 0→0.5) + `path_vectors`
+  (narrative path -> keep vector) + `mods.player_slider` (floor -1). `Steering.dose_for`
+  emits `path_mix` while `ctx.path` is unset, the keep vector's curve weight once locked,
+  nothing for the four prompt-only paths (D21).
+- Band retune: P3.03 showed legible steering only <=0.5 and gibberish >=1.0, so the
+  placeholder 1.0-5.0 path band dropped to 0.1-0.5. 104-turn stage x path matrix at the
+  real dose maps: 100% JSON validity at every dose.
+- Gotcha: llama.cpp takes one comma-separated `--control-vector-scaled` flag; serve.sh
+  now repeats `--vector/--scale` and joins pairs. `path_mix` must stay `unbound` in
+  vectors.json or a positive scale silently binds a phantom file.
+- Gotcha: score/report group doses by a string label now (a scalar dose and a
+  {name: scale} map share `by_dose`); sweep membership goes through `lab.dose_key`.

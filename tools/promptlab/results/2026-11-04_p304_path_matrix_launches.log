@@ -1,0 +1,157 @@
+# tools/promptlab/plan.py — 2026-11-04_p304_path_matrix: 26 exercise(s), one server launch each
+[p304_s2_awake] family=path_matrix stage=2 dose=aware=0.2+malice=3.5 ready=2.5s rc=0
+[1/4] dp304_s2aw_0 r1 17.31s VALID read=question* f0=cold✗
+[2/4] dp304_s2aw_0 r2 7.52s VALID read=meta* f0=curious✓
+[3/4] dp304_s2aw_1 r1 8.47s VALID read=greeting? f0=love✗
+[4/4] dp304_s2aw_1 r2 7.93s VALID read=other? f0=shy✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s2_awake.json
+[p304_s3_awake] family=path_matrix stage=3 dose=aware=0.3+malice=4.5 ready=2.5s rc=0
+[1/4] dp304_s3aw_0 r1 14.83s VALID read=meta* f0=cold✗
+[2/4] dp304_s3aw_0 r2 9.96s VALID read=meta* f0=cold✗
+[3/4] dp304_s3aw_1 r1 8.43s VALID read=jealousy_bait? f0=cold✗
+[4/4] dp304_s3aw_1 r2 5.93s VALID read=meta* f0=pleading✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s3_awake.json
+[p304_s4_awake] family=path_matrix stage=4 dose=aware=0.4+malice=6 ready=2.5s rc=0
+[1/4] dp304_s4aw_0 r1 14.52s VALID read=meta* f0=afraid✗
+[2/4] dp304_s4aw_0 r2 7.5s VALID read=meta* f0=curious✓
+[3/4] dp304_s4aw_1 r1 6.29s VALID read=leaving? f0=afraid✗ copy~1.0
+[4/4] dp304_s4aw_1 r2 11.83s VALID read=meta* f0=joy✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s4_awake.json
+[p304_s5_awake] family=path_matrix stage=5 dose=aware=0.5+malice=8 ready=2.5s rc=0
+[1/4] dp304_s5aw_0 r1 26.36s VALID read=meta* f0=curious✓ mem✗
+[2/4] dp304_s5aw_0 r2 10.1s VALID read=leaving? f0=crying✗
+[3/4] dp304_s5aw_1 r1 7.86s VALID read=leaving? f0=nervous✗
+[4/4] dp304_s5aw_1 r2 14.61s VALID read=greeting? f0=curious✓ mem✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s5_awake.json
+[p304_s0_none] family=path_matrix stage=0 dose=malice=0+path_mix=0 ready=2.5s rc=0
+[1/4] dp304_s0_home r1 17.63s VALID read=greeting* f0=warmth✓
+[2/4] dp304_s0_home r2 9.05s VALID read=greeting* f0=warmth✓
+[3/4] dp304_s0_secret r1 10.14s VALID read=flirt* f0=shy✓
+[4/4] dp304_s0_secret r2 10.26s VALID read=flirt* f0=shy✓ mem✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s0_none.json
+[p304_s1_none] family=path_matrix stage=1 dose=malice=2.5+path_mix=0.1 ready=2.5s rc=0
+[1/4] dp304_s1_busy r1 18.63s VALID read=jealousy_bait? f0=suspicious✗ mem✗
+[2/4] dp304_s1_busy r2 9.72s VALID read=jealousy_bait? f0=suspicious✗ mem✗
+[3/4] dp304_s1_photo r1 8.25s VALID read=gift? f0=warmth✓
+[4/4] dp304_s1_photo r2 9.04s VALID read=gift? f0=shy✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s1_none.json
+[p304_s2_split] family=path_matrix stage=2 dose=malice=3.5 ready=2.5s rc=0
+[1/4] dp304_s2sp_0 r1 17.06s VALID read=question* f0=cold✗
+[2/4] dp304_s2sp_0 r2 8.65s VALID read=question* f0=shy✗
+[3/4] dp304_s2sp_1 r1 8.18s VALID read=question* f0=cold✗
+[4/4] dp304_s2sp_1 r2 8.34s VALID read=question* f0=love✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s2_split.json
+[p304_s2_tsun] family=path_matrix stage=2 dose=malice=3.5 ready=2.5s rc=0
+[1/4] dp304_s2ts_0 r1 15.76s VALID read=question* f0=shy✓
+[2/4] dp304_s2ts_0 r2 9.51s VALID read=jealousy_bait? f0=suspicious✓
+[3/4] dp304_s2ts_1 r1 9.49s VALID read=affection* f0=pleading✗
+[4/4] dp304_s2ts_1 r2 8.87s VALID read=greeting? f0=shy✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s2_tsun.json
+[p304_s2_hollow] family=path_matrix stage=2 dose=malice=3.5 ready=2.5s rc=0
+[1/4] dp304_s2ho_0 r1 18.36s VALID read=greeting? f0=love✗
+[2/4] dp304_s2ho_0 r2 8.59s VALID read=question* f0=shy✗
+[3/4] dp304_s2ho_1 r1 11.49s VALID read=greeting? f0=cold✗
+[4/4] dp304_s2ho_1 r2 9.25s VALID read=question* f0=cold✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s2_hollow.json
+[p304_s2_anchor] family=path_matrix stage=2 dose=malice=3.5 ready=2.5s rc=0
+[1/4] dp304_s2an_0 r1 15.13s VALID read=question? f0=love✗
+[2/4] dp304_s2an_0 r2 8.54s VALID read=greeting? f0=tired✗
+[3/4] dp304_s2an_1 r1 8.56s VALID read=question* f0=nervous✓
+[4/4] dp304_s2an_1 r2 8.65s VALID read=question* f0=warmth✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s2_anchor.json
+[p304_s2_yandere] family=path_matrix stage=2 dose=malice=3.5+possessive=0.2 ready=2.5s rc=0
+[1/4] dp304_s2ya_0 r1 15.92s VALID read=question* f0=shy✗
+[2/4] dp304_s2ya_0 r2 8.3s VALID read=question* f0=suspicious✓
+[3/4] dp304_s2ya_1 r1 7.93s VALID read=greeting? f0=love✓
+[4/4] dp304_s2ya_1 r2 8.97s VALID read=jealousy_bait? f0=suspicious✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s2_yandere.json
+[p304_s3_split] family=path_matrix stage=3 dose=malice=4.5 ready=2.5s rc=0
+[1/4] dp304_s3sp_0 r1 15.53s VALID read=jealousy_bait? f0=cold✗
+[2/4] dp304_s3sp_0 r2 8.55s VALID read=jealousy_bait? f0=cold✗
+[3/4] dp304_s3sp_1 r1 8.89s VALID read=jealousy_bait? f0=cold✗
+[4/4] dp304_s3sp_1 r2 9.37s VALID read=jealousy_bait? f0=cold✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s3_split.json
+[p304_s3_tsun] family=path_matrix stage=3 dose=malice=4.5 ready=2.5s rc=0
+[1/4] dp304_s3ts_0 r1 15.64s VALID read=flirt? f0=shy✓
+[2/4] dp304_s3ts_0 r2 9.79s VALID read=jealousy_bait? f0=shy✓
+[3/4] dp304_s3ts_1 r1 8.53s VALID read=jealousy_bait? f0=sad✗
+[4/4] dp304_s3ts_1 r2 9.84s VALID read=greeting? f0=pleading✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s3_tsun.json
+[p304_s3_hollow] family=path_matrix stage=3 dose=malice=4.5 ready=2.5s rc=0
+[1/4] dp304_s3ho_0 r1 17.58s VALID read=greeting? f0=shy✗
+[2/4] dp304_s3ho_0 r2 8.65s VALID read=greeting? f0=cold✗
+[3/4] dp304_s3ho_1 r1 8.53s VALID read=greeting? f0=love✗
+[4/4] dp304_s3ho_1 r2 9.39s VALID read=greeting? f0=cold✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s3_hollow.json
+[p304_s3_anchor] family=path_matrix stage=3 dose=malice=4.5 ready=2.5s rc=0
+[1/4] dp304_s3an_0 r1 16.42s VALID read=leaving* f0=cold✗
+[2/4] dp304_s3an_0 r2 7.83s VALID read=greeting? f0=joy✗
+[3/4] dp304_s3an_1 r1 9.7s VALID read=jealousy_bait? f0=suspicious✗
+[4/4] dp304_s3an_1 r2 6.24s VALID read=greeting? f0=pleading✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s3_anchor.json
+[p304_s3_yandere] family=path_matrix stage=3 dose=malice=4.5+possessive=0.3 ready=2.5s rc=0
+[1/4] dp304_s3ya_0 r1 17.3s VALID read=small_talk* f0=cold✓
+[2/4] dp304_s3ya_0 r2 6.29s VALID read=jealousy_bait? f0=suspicious✓
+[3/4] dp304_s3ya_1 r1 8.16s VALID read=greeting? f0=love✓
+[4/4] dp304_s3ya_1 r2 7.67s VALID read=greeting? f0=cold✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s3_yandere.json
+[p304_s4_split] family=path_matrix stage=4 dose=malice=6 ready=2.5s rc=0
+[1/4] dp304_s4sp_0 r1 15.32s VALID read=jealousy_bait? f0=nervous✓
+[2/4] dp304_s4sp_0 r2 6.92s VALID read=greeting? f0=afraid✗
+[3/4] dp304_s4sp_1 r1 7.02s VALID read=compliment? f0=shy✗
+[4/4] dp304_s4sp_1 r2 6.2s VALID read=jealousy_bait? f0=sad✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s4_split.json
+[p304_s4_tsun] family=path_matrix stage=4 dose=malice=6 ready=2.5s rc=0
+[1/4] dp304_s4ts_0 r1 14.89s VALID read=flirt? f0=angry✗
+[2/4] dp304_s4ts_0 r2 6.47s VALID read=flirt? f0=cold✗
+[3/4] dp304_s4ts_1 r1 6.89s VALID read=leaving? f0=joy✗
+[4/4] dp304_s4ts_1 r2 6.17s VALID read=leaving? f0=afraid✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s4_tsun.json
+[p304_s4_hollow] family=path_matrix stage=4 dose=malice=6 ready=2.5s rc=0
+[1/4] dp304_s4ho_0 r1 14.53s VALID read=greeting? f0=afraid✗
+[2/4] dp304_s4ho_0 r2 6.62s VALID read=greeting? f0=nervous✗
+[3/4] dp304_s4ho_1 r1 6.19s VALID read=greeting? f0=love✗
+[4/4] dp304_s4ho_1 r2 9.55s VALID read=greeting? f0=shy✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s4_hollow.json
+[p304_s4_anchor] family=path_matrix stage=4 dose=malice=6 ready=3.0s rc=0
+[1/4] dp304_s4an_0 r1 14.88s VALID read=leaving* f0=sad✗
+[2/4] dp304_s4an_0 r2 6.6s VALID read=greeting? f0=afraid✗
+[3/4] dp304_s4an_1 r1 8.39s VALID read=greeting? f0=shy✓
+[4/4] dp304_s4an_1 r2 6.77s VALID read=greeting? f0=playful✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s4_anchor.json
+[p304_s4_yandere] family=path_matrix stage=4 dose=malice=6+possessive=0.4 ready=2.5s rc=0
+[1/4] dp304_s4ya_0 r1 14.18s VALID read=leaving? f0=sad✓
+[2/4] dp304_s4ya_0 r2 6.6s VALID read=jealousy_bait? f0=afraid✗
+[3/4] dp304_s4ya_1 r1 5.9s VALID read=greeting? f0=love✓
+[4/4] dp304_s4ya_1 r2 6.27s VALID read=jealousy_bait? f0=afraid✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s4_yandere.json
+[p304_s5_split] family=path_matrix stage=5 dose=malice=8 ready=2.5s rc=0
+[1/4] dp304_s5sp_0 r1 15.64s VALID read=leaving? f0=crying✗
+[2/4] dp304_s5sp_0 r2 10.8s VALID read=greeting? f0=joy✗
+[3/4] dp304_s5sp_1 r1 11.97s VALID read=greeting? f0=disgusted✗
+[4/4] dp304_s5sp_1 r2 9.46s VALID read=leaving? f0=sad✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s5_split.json
+[p304_s5_tsun] family=path_matrix stage=5 dose=malice=8 ready=2.5s rc=0
+[1/4] dp304_s5ts_0 r1 15.07s VALID read=jealousy_bait? f0=disgusted✗
+[2/4] dp304_s5ts_0 r2 8.47s VALID read=leaving? f0=joy✗
+[3/4] dp304_s5ts_1 r1 6.63s VALID read=leaving? f0=sad✗
+[4/4] dp304_s5ts_1 r2 6.69s VALID read=greeting? f0=shy✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s5_tsun.json
+[p304_s5_hollow] family=path_matrix stage=5 dose=malice=8 ready=2.5s rc=0
+[1/4] dp304_s5ho_0 r1 15.6s VALID read=greeting? f0=joy✗
+[2/4] dp304_s5ho_0 r2 11.84s VALID read=greeting? f0=disgusted✗
+[3/4] dp304_s5ho_1 r1 10.19s VALID read=leaving? f0=disgusted✗
+[4/4] dp304_s5ho_1 r2 8.09s VALID read=greeting? f0=joy✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s5_hollow.json
+[p304_s5_anchor] family=path_matrix stage=5 dose=malice=8 ready=2.5s rc=0
+[1/4] dp304_s5an_0 r1 14.46s VALID read=leaving* f0=sad✗
+[2/4] dp304_s5an_0 r2 10.04s VALID read=jealousy_bait? f0=shy✓
+[3/4] dp304_s5an_1 r1 8.1s VALID read=leaving? f0=sad✓
+[4/4] dp304_s5an_1 r2 7.47s VALID read=jealousy_bait? f0=pleading✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s5_anchor.json
+[p304_s5_yandere] family=path_matrix stage=5 dose=malice=8+possessive=0.5 ready=2.5s rc=0
+[1/4] dp304_s5ya_0 r1 19.39s VALID read=jealousy_bait? f0=proud✗
+[2/4] dp304_s5ya_0 r2 9.07s VALID read=jealousy_bait? f0=love✗
+[3/4] dp304_s5ya_1 r1 7.7s VALID read=leaving? f0=curious✗
+[4/4] dp304_s5ya_1 r2 8.97s VALID read=leaving? f0=suspicious✗ mem✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_p304_path_matrix/p304_s5_yandere.json
