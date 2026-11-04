@@ -25,7 +25,12 @@ extends RefCounted
 ## with the completed Turn's `read`, so a row that needs the model fires at
 ## close_turn and its line rides the *next* prompt. `requires: "all"` rows have
 ## to wait for M even when the keyword already matched, because agreement is the
-## thing being decided.
+## thing being decided; every other declared detector must match too.
+##
+## Escalation has two axes (docs/01 §5): the default `step` grows the effect and
+## the line with each firing and stops after max_steps, while `stage` grows them
+## with the stage since stage_min (T08 "escalates with stage") and keeps
+## repeating, cooldown-gated — the stage, not the repeat count, is the dose.
 
 const TABLE_PATH := "res://data/triggers.json"
 const VERSION := 1
@@ -55,7 +60,7 @@ const DOCS_TABLE := {
 		"cooldown_turns": 3,
 		"stage_min": 0,
 		"stage_max": 5,
-		"escalate": {"max_steps": 3, "step_scale": 0.5},
+		"escalate": {"axis": "step", "max_steps": 3, "step_scale": 0.5},
 	},
 }
 
@@ -137,7 +142,10 @@ func begin_turn(ctx: Dictionary) -> Array[Dictionary]:
 		_matched[id] = sources
 		if _needs_model(rec) and String(rec["requires"]) == "all":
 			continue  # agreement is decided at close_turn
-		if not _any_source(sources) or not _eligible(id, rec, ctx):
+		var satisfied := (
+			_all_sources(rec, sources) if String(rec["requires"]) == "all" else _any_source(sources)
+		)
+		if not satisfied or not _eligible(id, rec, ctx):
 			continue
 		fired.append(_fire(id, rec, ctx, _sources_label(sources)))
 	return fired
@@ -168,6 +176,8 @@ func handle_event(ctx: Dictionary) -> Array[Dictionary]:
 		_matched[id] = sources
 		if _needs_model(rec) and String(rec["requires"]) == "all":
 			continue  # agreement is decided at close_turn
+		if String(rec["requires"]) == "all" and not _all_sources(rec, sources):
+			continue  # the event matched, a declared detector has not (yet)
 		if not _eligible(id, rec, ctx):
 			continue
 		fired.append(_fire(id, rec, ctx, "event"))
@@ -192,7 +202,7 @@ func close_turn(ctx: Dictionary) -> Array[Dictionary]:
 		if not ((rec["detect"] as Dictionary).get("model", []) as Array).has(read):
 			continue
 		if String(rec["requires"]) == "all":
-			if not _any_source(_matched.get(id, {})) or not _eligible(id, rec, ctx):
+			if not _all_sources(rec, _matched.get(id, {})) or not _eligible(id, rec, ctx):
 				continue
 			fired.append(_fire(id, rec, ctx, "both"))
 			continue
@@ -298,8 +308,13 @@ func _eligible(id: String, rec: Dictionary, ctx: Dictionary) -> bool:
 	var behavior := String(rec["behavior"])
 	if behavior == "once" and count > 0:
 		return false
-	if behavior == "escalating" and count >= int((rec["escalate"] as Dictionary)["max_steps"]):
-		return false
+	if behavior == "escalating":
+		var escalate: Dictionary = rec["escalate"]
+		# A step-axis row stops at max_steps. A stage-axis row repeats — the
+		# stage, not the repeat count, is the escalation — and its cap is the
+		# stage→step cap inside _escalation_step(); the cooldown is its gate.
+		if String(escalate["axis"]) != "stage" and count >= int(escalate["max_steps"]):
+			return false
 	if count > 0:
 		var cooldown := int(rec["cooldown_turns"])
 		if int(ctx.get("turn", 0)) - int(state.get("last_turn", 0)) < cooldown:
@@ -310,7 +325,7 @@ func _eligible(id: String, rec: Dictionary, ctx: Dictionary) -> bool:
 func _fire(id: String, rec: Dictionary, ctx: Dictionary, agreement: String) -> Dictionary:
 	var state: Dictionary = _state.get(id, {})
 	var step := int(state.get("count", 0)) + 1
-	var strength := _base_strength(agreement) * _escalation(rec, step)
+	var strength := _base_strength(agreement) * _escalation(rec, step, ctx)
 	var effects := _scaled_effects(rec["effects"], strength)
 	var result := {
 		"id": id,
@@ -349,14 +364,30 @@ func _base_strength(agreement: String) -> float:
 	return 1.0
 
 
-## docs/01 §5 "escalating": the effect grows with each firing, up to max_steps;
-## once is repeatable and every other behaviour keeps strength 1.
-func _escalation(rec: Dictionary, step: int) -> float:
+## docs/01 §5 "escalating": the effect grows with each escalation step (the
+## firing count or the stage, see _escalation_step) up to max_steps; every
+## other behaviour keeps strength 1.
+func _escalation(rec: Dictionary, step: int, ctx: Dictionary) -> float:
 	if String(rec["behavior"]) != "escalating":
 		return 1.0
 	var spec: Dictionary = rec["escalate"]
-	var capped := mini(step, int(spec["max_steps"]))
-	return 1.0 + float(spec["step_scale"]) * float(capped - 1)
+	return 1.0 + float(spec["step_scale"]) * float(_escalation_step(rec, step, ctx) - 1)
+
+
+## The escalation step. `axis: "step"` (the default) is the firing count capped
+## by max_steps; `axis: "stage"` is the stage since stage_min, so a row grows
+## with the dose rather than with how often the player poked it (docs/01 §5 T08
+## "escalates with stage") and a line array advances with the stage too. A
+## non-escalating row keeps the plain firing count, so its line array still
+## walks one entry per firing.
+func _escalation_step(rec: Dictionary, step: int, ctx: Dictionary) -> int:
+	if String(rec["behavior"]) != "escalating":
+		return step
+	var spec: Dictionary = rec["escalate"]
+	if String(spec["axis"]) == "stage":
+		var stage := clampi(int(ctx.get("stage", 0)), 0, MAX_STAGE)
+		return clampi(stage - int(rec["stage_min"]) + 1, 1, int(spec["max_steps"]))
+	return mini(step, int(spec["max_steps"]))
 
 
 ## Scales one row's effects by the firing's strength. Meters stay fractional;
@@ -396,7 +427,7 @@ func _line_for(rec: Dictionary, step: int, ctx: Dictionary) -> String:
 		var lines: Array = raw
 		if lines.is_empty():
 			return ""
-		raw = lines[mini(step - 1, lines.size() - 1)]
+		raw = lines[mini(_escalation_step(rec, step, ctx), lines.size()) - 1]
 	if not raw is String:
 		return ""
 	return _render(raw, step, ctx)
@@ -508,6 +539,20 @@ func _needs_model(rec: Dictionary) -> bool:
 	return (rec["detect"] as Dictionary).has("model")
 
 
+## `requires: "all"`: every declared non-model detector must have matched this
+## turn. The model detector is the one being decided now, in close_turn(), so it
+## is not consulted here — a row that declares only the model is a model-only
+## row and the agreement weight never applies to it.
+func _all_sources(rec: Dictionary, sources: Variant) -> bool:
+	var matched: Dictionary = sources if sources is Dictionary else {}
+	for detector: String in rec["detect"] as Dictionary:
+		if detector == "model":
+			continue
+		if not bool(matched.get(detector, false)):
+			return false
+	return true
+
+
 func _any_source(sources: Variant) -> bool:
 	if not sources is Dictionary:
 		return false
@@ -589,6 +634,8 @@ static func _parse_row(raw: Variant, defaults: Dictionary) -> Dictionary:
 			escalate["max_steps"] = clampi(_int(spec["max_steps"], 3), 1, 100)
 		if spec.has("step_scale"):
 			escalate["step_scale"] = maxf(0.0, _float(spec["step_scale"], 0.5))
+		if spec.has("axis"):
+			escalate["axis"] = _parse_axis(spec["axis"])
 	var raw_min := _int(row.get("stage_min", defaults["stage_min"]), -1)
 	var raw_max := _int(row.get("stage_max", defaults["stage_max"]), -1)
 	var stage_min := int(defaults["stage_min"])
@@ -673,6 +720,13 @@ static func _parse_clock(raw: Variant) -> Dictionary:
 		if not flag.is_empty():
 			out[key] = flag
 	return out
+
+
+## docs/01 §5 T08 "escalates with stage": the escalation axis is the firing
+## count (`step`, the default) or the stage since stage_min (`stage`). An
+## unknown value heals to the default rather than skipping the row.
+static func _parse_axis(raw: Variant) -> String:
+	return "stage" if str(raw).strip_edges() == "stage" else "step"
 
 
 static func _parse_effects(raw: Variant) -> Dictionary:
@@ -772,6 +826,8 @@ static func _merge_defaults(target: Dictionary, source: Variant) -> void:
 			target["escalate"]["max_steps"] = clampi(_int(spec["max_steps"], 3), 1, 100)
 		if spec.has("step_scale"):
 			target["escalate"]["step_scale"] = maxf(0.0, _float(spec["step_scale"], 0.5))
+		if spec.has("axis"):
+			target["escalate"]["axis"] = _parse_axis(spec["axis"])
 
 
 ## A fresh copy of the docs table in the canonical shape: typed scalars and an

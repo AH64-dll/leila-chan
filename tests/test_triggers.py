@@ -43,6 +43,7 @@ PROFILE_COUNTERS = {
 # TriggerEngine's vocabulary.
 BEHAVIORS = {"once", "repeatable", "escalating"}
 REQUIRES = {"any", "all"}
+ESCALATION_AXES = {"step", "stage"}
 DETECTORS = {"keyword", "model", "event", "clock"}
 DETECTOR_LETTERS = {"keyword": "K", "model": "M", "event": "E", "clock": "C"}
 LINE_TOKENS = {"count", "ordinal", "stage", "day", "turn"}
@@ -115,6 +116,9 @@ def test_defaults_cover_the_engine_vocabulary() -> None:
     assert 0 <= DEFAULTS["stage_min"] <= DEFAULTS["stage_max"] <= 5
     assert DEFAULTS["escalate"]["max_steps"] >= 2
     assert DEFAULTS["escalate"]["step_scale"] > 0
+    # The default axis is the firing count: only docs/01 §5 T08 escalates with
+    # the stage, so a row opts in.
+    assert DEFAULTS["escalate"]["axis"] == "step"
 
 
 def test_every_row_is_a_legal_row() -> None:
@@ -136,6 +140,12 @@ def test_every_row_is_a_legal_row() -> None:
         # detector that is just `any` and would make the agreement rule dead.
         if row.get("requires") == "all":
             assert len(detect) >= 2, f"{trigger_id} requires agreement but has one detector"
+        # The loader ignores an escalate key it does not know, so a typo would
+        # silently fall back to the defaults.
+        escalate = row.get("escalate", {})
+        unknown = set(escalate) - {"axis", "max_steps", "step_scale"}
+        assert not unknown, f"{trigger_id} has unknown escalate keys: {sorted(unknown)}"
+        assert escalate.get("axis", DEFAULTS["escalate"]["axis"]) in ESCALATION_AXES
 
 
 def test_keyword_patterns_and_model_labels_are_known() -> None:
@@ -222,6 +232,22 @@ def test_escalating_rows_can_escalate() -> None:
         escalate = row.get("escalate", DEFAULTS["escalate"])
         assert escalate["max_steps"] >= 2, f"{trigger_id} escalates nowhere"
         assert escalate["step_scale"] > 0, f"{trigger_id} never grows"
+        assert escalate.get("axis", DEFAULTS["escalate"]["axis"]) in ESCALATION_AXES
+
+
+def test_stage_escalation_matches_the_bible() -> None:
+    # docs/01 §5 T08 is the one trigger whose clause is "escalates with stage";
+    # every such row must take the stage axis, and no other row may claim it by
+    # accident (a stage axis ignores the firing count).
+    for trigger_id, row in TRIGGER_ROWS.items():
+        escalate = row.get("escalate", DEFAULTS["escalate"])
+        axis = escalate.get("axis", DEFAULTS["escalate"]["axis"])
+        says_stage = "escalates with stage" in DOC_TRIGGERS[trigger_id]["effect"]
+        assert (axis == "stage") == says_stage, (
+            f"{trigger_id} ships escalate.axis={axis!r} but docs/01 §5 says "
+            f"{DOC_TRIGGERS[trigger_id]['effect']!r}"
+        )
+    assert TRIGGER_ROWS["T08"]["escalate"]["axis"] == "stage"
 
 
 def test_line_templates_use_the_docs08_style() -> None:

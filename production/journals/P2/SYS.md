@@ -180,3 +180,23 @@
   unknown `{token}`, and a stage gate that disagrees with `data/telemetry.json`.
 - For P2.20: `Triggers.to_dict()/from_dict()` must ride the save payload or every reload re-arms the
   "once" rows and wipes cooldowns. `set_last_seen()` is the T17/T18 seam (P3.07) and nothing writes it yet.
+
+## P2.08 — triggers engine (round 2, 2026-11-04, agent: deepseek)
+
+- Rework: `requires: "all"` is now a real AND (`_all_sources()`: every declared NON-model detector — the
+  model is the detector `close_turn()` is deciding). All three entry points use it, `handle_event()`
+  included, so an event cannot jump a clock gate; the K+C row fires only when both agree.
+- New axis: `escalate.axis` = `step` (default, per firing, stopped after max_steps firings) or `stage`
+  (the stage since stage_min, capped at max_steps STEPS, repeating — only the cooldown gates it). One
+  helper `_escalation_step()` feeds both the strength and the per-step line array so they cannot drift.
+- Gotcha: on the stage axis do NOT keep `_eligible()`'s `count >= max_steps` firing cap — early firings at
+  a low stage would burn the row before the stage could rise, which is the opposite of the T08 clause.
+- Gotcha: `_escalation_step()` must return the plain `step` for non-escalating rows, or a `repeatable`
+  row's line array stops advancing at `max_steps`.
+- Testing lesson: the M and C seams are only reachable through the autoload — drive
+  `Director.turn_completed.emit()` and `set_clock()`/`set_last_seen()`, read `report()["counts"]`, and
+  remember `GameState.turn` must be the CLOSED turn at the emit (Director advances it in
+  `apply_turn_meters()` before the signal). A fixed anchor second + the machine's TZ bias gives a
+  deterministic local-hour window.
+- Suite is at gdlint's 20-public-method cap (`before_test` counts as public): fold a new case into an
+  existing one rather than raising the project limit.

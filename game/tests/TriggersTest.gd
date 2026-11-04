@@ -177,6 +177,158 @@ func test_agreement_needs_both_detectors() -> void:
 	assert_array(model_only.close_turn(_ctx(1, {"read": "jealousy_bait"}))).is_empty()
 
 
+func test_requires_all_ands_every_detector() -> void:
+	# `all` means every declared detector agrees — not just the model. A K+C
+	# row with a false clock gate must not fire on the keyword alone.
+	var keyword_and_clock := _row(
+		{"keyword": ["\\bmirror\\b"], "clock": {"day_gte": 10}}, {"requires": "all"}
+	)
+	var engine := _engine({"T88": keyword_and_clock})
+	assert_array(engine.begin_turn(_ctx(1, {"text": "the mirror", "day": 1}))).is_empty()
+	# Day 10 without the keyword: also not agreement.
+	assert_array(engine.begin_turn(_ctx(2, {"text": "good morning", "day": 10}))).is_empty()
+	assert_int(engine.begin_turn(_ctx(3, {"text": "the mirror", "day": 10})).size()).is_equal(1)
+	# K+M+C: the model agreeing on a day the clock gate refuses is not agreement.
+	var triple := _row(
+		{
+			"keyword": ["\\bwho is she\\b"],
+			"model": ["jealousy_bait"],
+			"clock": {"day_gte": 10},
+		},
+		{"requires": "all"}
+	)
+	var early := _engine({"T87": triple})
+	early.begin_turn(_ctx(1, {"text": "who is she?", "day": 1}))
+	assert_array(early.close_turn(_ctx(1, {"read": "jealousy_bait", "day": 1}))).is_empty()
+	var late := _engine({"T87": triple})
+	late.begin_turn(_ctx(1, {"text": "who is she?", "day": 10}))
+	assert_int(late.close_turn(_ctx(1, {"read": "jealousy_bait", "day": 10})).size()).is_equal(1)
+	# E+C: the event must not jump a declared clock gate either; the pair
+	# completes when the same turn's submit evaluates the clock.
+	var event_and_clock := _row(
+		{"event": ["screenshot"], "clock": {"day_gte": 5}}, {"requires": "all"}
+	)
+	var event := {"event": "screenshot"}
+	var early_event := _engine({"T86": event_and_clock})
+	assert_array(early_event.handle_event(_ctx(1, {"event": event, "day": 1}))).is_empty()
+	assert_array(early_event.begin_turn(_ctx(1, {"day": 1}))).is_empty()
+	var late_event := _engine({"T86": event_and_clock})
+	late_event.handle_event(_ctx(1, {"event": event, "day": 6}))
+	assert_int(late_event.begin_turn(_ctx(1, {"day": 6})).size()).is_equal(1)
+
+
+func test_detector_seams_ride_the_autoload() -> void:
+	# CODE-2: the M detector's only production entry is the signal Triggers
+	# subscribes to, and the C detector's inputs come from _context() through
+	# set_clock()/set_last_seen(). A changed signal signature, a lost connection
+	# or a wall-clock read would leave every suite green while M and T16 stopped
+	# firing.
+	(
+		Triggers
+		. set_catalog(
+			{
+				"triggers":
+				{
+					"T85":
+					{
+						"name": "jealousy",
+						"detect": {"model": ["jealousy_bait"]},
+						"cooldown_turns": 0,
+						"effects": {"meters": {"instability": 8.0}},
+						"line": "TRIGGER: She noticed the name ({ordinal} time).",
+					},
+				}
+			}
+		)
+	)
+	GameState.set_meter(&"instability", 0.0)
+	# Director.apply_turn_meters() advances GameState.turn before the emit, so
+	# begin_turn() saw this turn and close_turn() now sees the same one.
+	GameState.turn = 1
+	Director.turn_completed.emit(0, {"read": "jealousy_bait"})
+	assert_float(GameState.instability).is_equal_approx(4.0, EPS)  # 8 × 0.5
+	assert_array(GameState.take_pending_events()).is_equal(
+		["TRIGGER: She noticed the name (1st time)."]
+	)
+	# A read the row does not name leaves the queue alone.
+	Director.turn_completed.emit(1, {"read": "small_talk"})
+	assert_float(GameState.instability).is_equal_approx(4.0, EPS)
+	assert_array(GameState.take_pending_events()).is_empty()
+
+	# The C detector's inputs: _context(), _local_hour() and _absence_hours().
+	# docs/01 §5 T16's window is a *local* hour, so the injected clock decides
+	# it: the window is six hours away from the wall clock by construction.
+	var real_hour := _local_hour_of(Time.get_unix_time_from_system())
+	var window := (real_hour + 6) % 24
+	(
+		Triggers
+		. set_catalog(
+			{
+				"triggers":
+				{
+					"T84":
+					{
+						"name": "night",
+						"detect": {"clock": {"hour_from": window, "hour_to": (window + 1) % 24}},
+						"cooldown_turns": 0,
+					},
+					"T83":
+					{
+						"name": "returned",
+						"detect": {"clock": {"absence_hours_gte": 24}},
+						"cooldown_turns": 0,
+					},
+				}
+			}
+		)
+	)
+	var night := int(_unix_at_local_hour(window))
+	Triggers.set_clock(func() -> float: return float(night))
+	Triggers.begin_turn("good evening")
+	assert_int(_count("T84")).is_equal(1)
+	# The factory clock is six hours off the window, so it cannot fire it.
+	Triggers.clear_engine_events()
+	Triggers.set_clock(Callable())
+	Triggers.begin_turn("good afternoon")
+	assert_int(_count("T84")).is_equal(0)
+	# _absence_hours(): 25 h clear a 24 h gate, 1 h does not. The injected
+	# clock is back, so "now" is the same fixed second the absence is relative to.
+	Triggers.set_clock(func() -> float: return float(night))
+	Triggers.clear_engine_events()
+	Triggers.set_last_seen(night - 25 * 3600)
+	Triggers.begin_turn("back again")
+	assert_int(_count("T83")).is_equal(1)
+	Triggers.clear_engine_events()
+	Triggers.set_last_seen(night - 3600)
+	Triggers.begin_turn("back again")
+	assert_int(_count("T83")).is_equal(0)
+	# _context(): the day and the flags come from GameState, not from callers.
+	(
+		Triggers
+		. set_catalog(
+			{
+				"triggers":
+				{
+					"T82":
+					{
+						"name": "late week",
+						"detect": {"clock": {"day_gte": 3, "flag_absent": "love_said"}},
+						"cooldown_turns": 0,
+					},
+				}
+			}
+		)
+	)
+	Triggers.set_last_seen(0)
+	GameState.day = 3
+	Triggers.begin_turn("hello")
+	assert_int(_count("T82")).is_equal(1)
+	Triggers.clear_engine_events()
+	GameState.set_flag(&"love_said", true)
+	Triggers.begin_turn("hello")
+	assert_int(_count("T82")).is_equal(0)
+
+
 func test_once_fires_once() -> void:
 	var engine := _engine(
 		{
@@ -246,13 +398,55 @@ func test_escalating_steps_grow_then_stop() -> void:
 	assert_int(int((engine.report()["counts"] as Dictionary)["T91"])).is_equal(3)
 
 
-func test_stage_gate_blocks_firing() -> void:
-	var engine := _engine(
+func test_escalate_axis_stage_grows_with_stage() -> void:
+	# docs/01 §3: the stage gate admits her reaction only inside the row's band.
+	var gated := _engine(
 		{"T90": _row({"keyword": ["knife"]}, {"stage_min": 3, "cooldown_turns": 0})}
 	)
-	assert_array(engine.begin_turn(_ctx(1, {"text": "a knife", "stage": 2}))).is_empty()
-	assert_int(engine.begin_turn(_ctx(2, {"text": "a knife", "stage": 3})).size()).is_equal(1)
-	assert_int(engine.begin_turn(_ctx(3, {"text": "a knife", "stage": 5})).size()).is_equal(1)
+	assert_array(gated.begin_turn(_ctx(1, {"text": "a knife", "stage": 2}))).is_empty()
+	assert_int(gated.begin_turn(_ctx(2, {"text": "a knife", "stage": 3})).size()).is_equal(1)
+	assert_int(gated.begin_turn(_ctx(3, {"text": "a knife", "stage": 5})).size()).is_equal(1)
+	# docs/01 §5 T08 "escalates with stage": the step is the stage since
+	# stage_min, and a repeat does not consume it.
+	var row := _row(
+		{"event": ["draft_deleted"]},
+		{
+			"behavior": "escalating",
+			"escalate": {"axis": "stage", "max_steps": 3, "step_scale": 0.5},
+			"stage_min": 1,
+			"effects": {"profile": {"control": 2}},
+			"line": ["TRIGGER: one", "TRIGGER: two", "TRIGGER: three"],
+		}
+	)
+	var engine := _engine({"T81": row})
+	var event := {"event": "draft_deleted"}
+	var stage_1 := engine.handle_event(_ctx(1, {"stage": 1, "event": event}))
+	assert_float(float(stage_1[0]["strength"])).is_equal_approx(1.0, EPS)
+	assert_int(int((stage_1[0]["effects"]["profile"] as Dictionary)["control"])).is_equal(2)
+	assert_str(String(stage_1[0]["line"])).is_equal("TRIGGER: one")
+	var stage_2 := engine.handle_event(_ctx(2, {"stage": 2, "event": event}))
+	assert_float(float(stage_2[0]["strength"])).is_equal_approx(1.5, EPS)
+	assert_int(int((stage_2[0]["effects"]["profile"] as Dictionary)["control"])).is_equal(3)
+	assert_str(String(stage_2[0]["line"])).is_equal("TRIGGER: two")
+	# Still stage 2: a repeat is not an escalation step on the stage axis.
+	var repeat := engine.handle_event(_ctx(3, {"stage": 2, "event": event}))
+	assert_float(float(repeat[0]["strength"])).is_equal_approx(1.5, EPS)
+	assert_str(String(repeat[0]["line"])).is_equal("TRIGGER: two")
+	# max_steps caps the step, not the firings: stage 3 and stage 5 both ×2.0.
+	var stage_3 := engine.handle_event(_ctx(4, {"stage": 3, "event": event}))
+	assert_float(float(stage_3[0]["strength"])).is_equal_approx(2.0, EPS)
+	assert_str(String(stage_3[0]["line"])).is_equal("TRIGGER: three")
+	var stage_5 := engine.handle_event(_ctx(5, {"stage": 5, "event": event}))
+	assert_float(float(stage_5[0]["strength"])).is_equal_approx(2.0, EPS)
+	# A stage-axis row keeps repeating (cooldown-gated): a T08 that went silent
+	# before the stage rose would never escalate in play.
+	assert_int(int((engine.report()["counts"] as Dictionary)["T81"])).is_equal(5)
+	# The shipped T08 takes the same axis; the default stays "step" so P3.07's
+	# rows keep growing per firing.
+	var shipped: Dictionary = TriggerEngine.default_table()["triggers"]["T08"]
+	assert_str(String((shipped["escalate"] as Dictionary)["axis"])).is_equal("stage")
+	var defaults_escalate: Dictionary = TriggerEngine.default_table()["defaults"]["escalate"]
+	assert_str(String(defaults_escalate["axis"])).is_equal("step")
 
 
 func test_adding_a_trigger_needs_no_code() -> void:
@@ -554,3 +748,24 @@ func _cooldown_of(engine: TriggerEngine, id: String) -> int:
 	if not rows.has(id):
 		return 0
 	return int((rows[id] as Dictionary)["cooldown_turns"])
+
+
+## Trigger counts by id, as the autoload reports them (the seam's observable).
+func _count(id: String) -> int:
+	return int((Triggers.report()["counts"] as Dictionary).get(id, 0))
+
+
+## A unix second whose *local* hour is `hour` — docs/01 §5 T16 is a local-hour
+## window, so a test builds its input with the same Time API the game reads.
+func _unix_at_local_hour(hour: int) -> float:
+	var base := 1735689600  # 2025-01-01T00:00:00Z: a fixed anchor
+	for step: int in range(0, 48):
+		var candidate := float(base + step * 3600)
+		if _local_hour_of(candidate) == hour:
+			return candidate
+	return float(base)
+
+
+func _local_hour_of(now: float) -> int:
+	var bias := int(Time.get_time_zone_from_system().get("bias", 0))
+	return int(Time.get_datetime_dict_from_unix_time(int(now) + bias * 60).get("hour", 0))
