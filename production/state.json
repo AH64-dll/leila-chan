@@ -3259,7 +3259,26 @@
       "status": "in_review",
       "agent": "swe2",
       "round": 1,
-      "reviews": [],
+      "reviews": [
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "gemini-flash",
+          "report": "production/reviews/P3.03-code-r1.md",
+          "ts": "2026-11-04T22:07:11+02:00",
+          "declared": "gemini-flash"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "gemini-flash",
+          "report": "production/reviews/P3.03-design-r1.md",
+          "ts": "2026-11-04T22:07:11+02:00",
+          "declared": "gemini-flash"
+        }
+      ],
       "started": "2026-11-04T19:22:51+02:00",
       "handoff": "production/handoffs/P3.03.md"
     },
@@ -8090,6 +8109,18 @@
       "event": "in_progress->in_review",
       "ref": "P3.03",
       "note": ""
+    },
+    {
+      "ts": "2026-11-04T22:07:11+02:00",
+      "event": "review:code:approved",
+      "ref": "P3.03",
+      "note": "production/reviews/P3.03-code-r1.md"
+    },
+    {
+      "ts": "2026-11-04T22:07:11+02:00",
+      "event": "review:design:approved",
+      "ref": "P3.03",
+      "note": "production/reviews/P3.03-design-r1.md"
     }
   ]
 }
