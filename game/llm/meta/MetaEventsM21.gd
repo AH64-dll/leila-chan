@@ -93,6 +93,9 @@ var _applied := {}
 var _pending_ui: Array = []
 ## A sabotage the player has not opened the settings page to see yet.
 var _sabotage := {}
+## The last `debug_fire()` this module ran ({id, detail}) — the F3 overlay's
+## demo line reads it (the same contract P3.09's module publishes).
+var _last_demo := {}
 
 
 func _ready() -> void:
@@ -181,13 +184,17 @@ func debug_fire(id: String) -> bool:
 		var telemetry := _autoload("Telemetry")
 		if telemetry == null or not telemetry.has_method("debug_fire"):
 			return false
-		return bool(telemetry.call("debug_fire", "draft_deleted"))
+		var fired := bool(telemetry.call("debug_fire", "draft_deleted"))
+		if fired:
+			_last_demo = {"id": id, "detail": "draft_deleted fired through Telemetry"}
+		return fired
 	if not IDS.has(id):
 		return false
 	var applied := _apply_now(id)
 	if applied:
 		_applied[_key(id)] = true
 		_mark_seen(id)
+		_last_demo = {"id": id, "detail": "%s applied (caps bypassed)" % id}
 	return applied
 
 
@@ -201,6 +208,7 @@ func state() -> Dictionary:
 		"sabotage": _sabotage.duplicate(),
 		"polled_turn": _polled_turn,
 		"gate": _scripted_gate(),
+		"last_demo": _last_demo.duplicate(),
 	}
 
 
@@ -636,6 +644,7 @@ func reset_session() -> void:
 	_pending_ui.clear()
 	_polled_turn = -1
 	_sabotage.clear()
+	_last_demo = {}
 
 
 ## Test seam (MetaDirector.set_catalog's convention): pin gates, paths and text

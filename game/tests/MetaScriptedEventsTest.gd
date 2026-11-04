@@ -6,6 +6,7 @@ extends GdUnitTestSuite
 ## (docs/05 §2) instead of arriving a turn late.
 
 const ChatUIScene := preload("res://scenes/ui/ChatUI.tscn")
+const DebugOverlayScene := preload("res://scenes/debug/DebugOverlay.tscn")
 const TMP_DIR := "user://meta_scripted_test/"
 const LEDGER := TMP_DIR + "log_edits.json"
 
@@ -186,3 +187,16 @@ func test_debug_fire_reaches_the_scripted_events_from_the_mounted_module() -> vo
 	assert_array(ids).contains(["M23", "M24", "M26"])
 	assert_bool(bool(_module.debug_fire("M23"))).is_true()
 	assert_bool(MetaDirector.events_seen().has("M23")).is_true()
+
+
+## The F3 seam itself (role checklist): the overlay's generic block dispatches
+## a button click to the mounted module, and the demo line reports what ran.
+func test_the_overlay_button_path_fires_the_scripted_event() -> void:
+	var ui := await _new_chat()
+	_log_player_line(ui)
+	var overlay: CanvasLayer = DebugOverlayScene.instantiate() as CanvasLayer
+	add_child(auto_free(overlay))
+	await get_tree().process_frame
+	assert_bool(overlay.fire_meta_demo("M23")).is_true()
+	assert_str(MetaLogEdits.shown("player", "I like you", 1)).is_equal("I love you")
+	assert_str(overlay.get_meta_demo_text()).contains("M23")

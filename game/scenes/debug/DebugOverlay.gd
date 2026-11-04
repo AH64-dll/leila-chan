@@ -53,6 +53,7 @@ var _triggers_label: Label
 var _endings_label: Label
 var _last_turn_data: Dictionary = {}
 var _meta_label: Label
+var _meta_demo_label: Label
 var _fx_labels: Dictionary = {}  # fx_name -> Label
 
 
@@ -193,6 +194,23 @@ func _build_ui() -> void:
 		missing_meta.add_theme_font_size_override("font_size", FONT_SIZE)
 		missing_meta.disabled = true
 		meta_grid.add_child(missing_meta)
+
+	# --- Meta event demos (P3.10, generic) ---
+	# One button per id every mounted effect module reports through
+	# `debug_ids()` — the seam covers §1.3 (M21–M26) now and §1.1/§1.4 modules
+	# as they mount, so every meta event stays demonstrable from F3 (role
+	# checklist). The click runs the effect only — gates and caps are bypassed,
+	# like `debug_offer` — and the line below says what it did.
+	_create_section_header(root_vbox, "META EVENTS (MOUNTED MODULES)")
+	_meta_demo_label = _create_label(root_vbox, "Demo: (none)", COLOR_LABEL)
+	_meta_demo_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var demo_grid := GridContainer.new()
+	demo_grid.columns = 4
+	demo_grid.add_theme_constant_override("h_separation", 4)
+	demo_grid.add_theme_constant_override("v_separation", 2)
+	root_vbox.add_child(demo_grid)
+	for id: String in _meta_demo_ids():
+		_add_meta_demo_button(demo_grid, id)
 
 	# --- Telemetry Section (P2.09) ---
 	# Every engine event is fireable here for testing (role checklist): one
@@ -338,6 +356,75 @@ func _meta_text() -> String:
 			reasons.append("%s → %s" % [action, blocked[action]])
 		text += "\nBlocked: %s" % ", ".join(reasons)
 	return text
+
+
+## Every mounted effect module's demo ids, in module order (P3.10). A branch
+## without a module simply lists nothing — the seam is duck-typed on purpose.
+func _meta_demo_ids() -> Array[String]:
+	var ids: Array[String] = []
+	if MetaDirector == null:
+		return ids
+	for child: Node in MetaDirector.get_children():
+		if not child.has_method("debug_ids"):
+			continue
+		var listed: Variant = child.call("debug_ids")
+		if not listed is Array:
+			continue
+		for id: Variant in listed as Array:
+			var text := str(id)
+			if not ids.has(text):
+				ids.append(text)
+	return ids
+
+
+## One docs/05 meta-event demo trigger: click → module.debug_fire(id) →
+## refresh. The node name is the seam a test clicks ("MetaDemo_M23").
+func _add_meta_demo_button(parent: Container, id: String) -> void:
+	var button := Button.new()
+	button.name = "MetaDemo_" + id
+	button.text = id
+	button.tooltip_text = "Show the %s effect (docs/05; caps bypassed)" % id
+	button.add_theme_font_size_override("font_size", FONT_SIZE)
+	button.pressed.connect(func() -> void: fire_meta_demo(id))
+	parent.add_child(button)
+
+
+## Run one docs/05 meta-event effect from the overlay (dev builds only: the
+## module refuses in release). Public so tests click the same path the button
+## uses — the effect is shown without spending the scene budget.
+func fire_meta_demo(id: String) -> bool:
+	if MetaDirector == null:
+		return false
+	for child: Node in MetaDirector.get_children():
+		if not child.has_method("debug_fire"):
+			continue
+		var fired: Variant = child.call("debug_fire", id)
+		if bool(fired):
+			refresh()
+			return true
+	refresh()
+	return false
+
+
+## The demo section's text: what the last demo did (the module's own summary).
+func _meta_demo_text() -> String:
+	if MetaDirector == null:
+		return "Demo: (MetaDirector autoload missing)"
+	for child: Node in MetaDirector.get_children():
+		if not child.has_method("state"):
+			continue
+		var view: Variant = child.call("state")
+		if not view is Dictionary:
+			continue
+		var last: Variant = (view as Dictionary).get("last_demo", {})
+		if last is Dictionary and not (last as Dictionary).is_empty():
+			return "Demo: %s" % str((last as Dictionary).get("detail", ""))
+	return "Demo: (none)"
+
+
+## The demo section's label, for tests.
+func get_meta_demo_text() -> String:
+	return _meta_demo_label.text if _meta_demo_label != null else ""
 
 
 ## The META section's label, for tests.
@@ -600,9 +687,11 @@ func refresh() -> void:
 	if _telemetry_label != null:
 		_telemetry_label.text = _telemetry_text()
 
-	# --- Meta (P3.08) ---
+	# --- Meta (P3.08 scheduler state; P3.10 mounted-module demos) ---
 	if _meta_label != null:
 		_meta_label.text = _meta_text()
+	if _meta_demo_label != null:
+		_meta_demo_label.text = _meta_demo_text()
 
 	# --- Triggers (P2.08) ---
 	if _triggers_label != null:
