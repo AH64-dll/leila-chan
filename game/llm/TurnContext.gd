@@ -8,7 +8,6 @@ extends RefCounted
 ## Director owns when a turn starts; this owns what the turn is told about.
 
 const SAMPLING_PATH := "res://data/sampling.json"
-const STAGE_MAX := 5
 
 ## docs/02 §9, the in-code fallback for a missing or partial data file. The data
 ## file is authoritative (P2.02 owns retuning it); this exists so a broken
@@ -22,9 +21,11 @@ const SAMPLING_FALLBACK := {
 	5: {"temperature": 0.95, "top_p": 0.97, "repeat_penalty": 1.18, "dose": 8.0},
 }
 
-## The four docs/02 §9 columns: the first three go to the request's sampling,
-## `dose` is the steering base (docs/06 §4 owns applying it).
-const SAMPLING_KEYS: Array[String] = ["temperature", "top_p", "repeat_penalty", "dose"]
+## The four docs/02 §9 row columns: the first three go to the request's
+## sampling, `dose` is the steering base (docs/06 §4 owns applying it). Named
+## for the table row so it stays distinct from LlamaServerBackend.SAMPLING_KEYS,
+## the ten-key transport allowlist that must never carry `dose`.
+const SAMPLING_ROW_KEYS: Array[String] = ["temperature", "top_p", "repeat_penalty", "dose"]
 
 static var _sampling_cache: Dictionary = {}
 
@@ -61,35 +62,40 @@ static func request_sampling(stage: int) -> Dictionary:
 ## can hand it a synthetic document and prove the loader (not a hard-coded copy)
 ## decides the numbers.
 ##
-## Accepted shapes:
-##  - current: {"stages": {"0": {...}, ..., "5": {...}}}
-##  - legacy stage-agnostic: one flat row at the top level ({"temperature": ...}),
-##    applied to every stage — the shape sampling.json had before per-stage rows.
-## A missing key falls back to that stage's docs/02 §9 row, so a partial file
-## can never send a half-empty sampling.
+## Shape: {"stages": {"0": {...}, ..., "5": {...}}}. A missing column falls back
+## to that stage's docs/02 §9 row, so a partial file can never send a half-empty
+## sampling. A document with no usable stage rows (a misspelled `stages` key, an
+## empty or non-object table, only out-of-range keys) warns and resolves every
+## stage from the in-code table: silently reverting the one data-owned table is
+## exactly the failure this warning exists to make visible.
 static func parse_sampling(parsed: Variant) -> Dictionary:
 	if not (parsed is Dictionary):
 		return _fallback_table()
 	var document: Dictionary = parsed
-	var flat := _numeric_sampling(parsed)
 	var table := {}
+	var rows_from_data := 0
 	var stages: Variant = document.get("stages")
 	if stages is Dictionary:
 		for key: Variant in stages:
 			var name := str(key)
 			var stage := int(name) if name.is_valid_int() else -1
-			if stage < 0 or stage > STAGE_MAX:
+			if stage < 0 or stage > GameState.STAGE_MAX:
 				push_warning(
 					(
 						"TurnContext: %s stage key '%s' is not 0..%d; ignored"
-						% [SAMPLING_PATH, name, STAGE_MAX]
+						% [SAMPLING_PATH, name, GameState.STAGE_MAX]
 					)
 				)
 				continue
 			table[stage] = _stage_row(stage, _numeric_sampling(stages[key]))
+			rows_from_data += 1
 	for stage: int in SAMPLING_FALLBACK:
 		if not table.has(stage):
-			table[stage] = _stage_row(stage, flat)
+			table[stage] = _stage_row(stage, {})
+	if rows_from_data == 0:
+		push_warning(
+			"TurnContext: %s has no usable stage rows; using the in-code table" % SAMPLING_PATH
+		)
 	return table
 
 
@@ -98,7 +104,7 @@ static func parse_sampling(parsed: Variant) -> Dictionary:
 ## value so a partial edit can never send a half-empty sampling.
 static func _stage_row(stage: int, row: Dictionary) -> Dictionary:
 	var out := (SAMPLING_FALLBACK[stage] as Dictionary).duplicate()
-	for key: String in SAMPLING_KEYS:
+	for key: String in SAMPLING_ROW_KEYS:
 		if row.has(key):
 			out[key] = row[key]
 	return out
@@ -110,7 +116,7 @@ static func _numeric_sampling(source: Variant) -> Dictionary:
 	var out := {}
 	if not (source is Dictionary):
 		return out
-	for key: String in SAMPLING_KEYS:
+	for key: String in SAMPLING_ROW_KEYS:
 		var value: Variant = source.get(key)
 		if typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT:
 			var number := float(value)

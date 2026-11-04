@@ -19,6 +19,10 @@ const STAGES: Array[int] = [0, 1, 2, 3, 4, 5]
 const SAMPLING_COLUMNS: Array[String] = ["temperature", "top_p", "repeat_penalty"]
 ## docs/06 §1: the band where unhardened decoding starts emitting broken JSON.
 const JSON_RISK_DOSE := 8.0
+## docs/06 §3: a trigger spike adds +3..+4 on top of the stage base and the
+## total clamps to 12, so base + 4 is the highest dose a stage row can reach.
+const SPIKE_DOSE_MAX := 4.0
+const DOSE_CLAMP_MAX := 12.0
 
 ## A turn valid at every stage: "none"/"keep" are in every gate, joy is a
 ## canonical feeling, and meta null is legal from 0 to 5.
@@ -60,6 +64,14 @@ func after_test() -> void:
 	if Director.transcript_logger != null:
 		Director.transcript_logger.end_session()
 	_clean_test_dir(TEST_DEBUG_DIR)
+
+
+## Director.reset() reinstalls the real Safety filter (`Director.gd:101`), so the
+## scripted seam has to be re-armed after every reset — not only in before_test,
+## otherwise the loop silently exercises the real safety corpus (CODE-2).
+func _reset_director() -> void:
+	Director.reset()
+	Director._safety.set_filter(_safety)
 
 
 func _await_until(predicate: Callable, timeout_ms := 8000) -> void:
@@ -145,10 +157,10 @@ func test_sampling_table_is_loaded_from_data() -> void:
 	)
 
 
-## AC1 (loading proof) — a synthetic document decides the numbers, a legacy
-## stage-agnostic document still works, and missing keys fall back to that
-## stage's docs/02 §9 row.
-func test_parse_sampling_honours_data_shapes() -> void:
+## AC1 (loading proof) — a synthetic document decides the numbers, a partial row
+## keeps the docs/02 §9 columns it omits, a row-less stage falls back to its
+## documented row, and non-object input degrades to the in-code table.
+func test_parse_sampling_is_data_driven() -> void:
 	var per_stage := (
 		TurnContextScript
 		. parse_sampling(
@@ -172,16 +184,6 @@ func test_parse_sampling_honours_data_shapes() -> void:
 	# A stage without a row falls back to its documented row.
 	assert_float(float(per_stage[2]["temperature"])).is_equal_approx(0.80, 0.0001)
 
-	# Legacy stage-agnostic shape (no `stages`): one flat row applies everywhere.
-	var legacy := TurnContextScript.parse_sampling(
-		{"temperature": 0.33, "top_p": 0.44, "repeat_penalty": 1.22, "dose": 6.5}
-	)
-	for stage: int in STAGES:
-		assert_float(float(legacy[stage]["temperature"])).is_equal_approx(0.33, 0.0001)
-		assert_float(float(legacy[stage]["top_p"])).is_equal_approx(0.44, 0.0001)
-		assert_float(float(legacy[stage]["repeat_penalty"])).is_equal_approx(1.22, 0.0001)
-		assert_float(float(legacy[stage]["dose"])).is_equal_approx(6.5, 0.0001)
-
 	# Garbage input degrades to the in-code docs/02 §9 table.
 	var broken := TurnContextScript.parse_sampling("not a document")
 	for stage: int in STAGES:
@@ -197,7 +199,7 @@ func test_request_payload_carries_the_stage_row() -> void:
 
 	for stage: int in STAGES:
 		GameState.reset()
-		Director.reset()
+		_reset_director()
 		GameState.stage = stage
 		_fake_backend.seen_request = null
 		_fake_backend.chunks = PackedStringArray([TURN_JSON])
@@ -273,10 +275,14 @@ func test_validator_enforces_string_limits_at_every_stage() -> void:
 		)
 
 
-## docs/06 §1 — the data file's hardening envelope matches the code: the schema
-## limits are the recorded ones, and every stage that enters the 8–12 JSON-risk
-## band keeps repeat_penalty at or above the hardened floor.
-func test_hardened_envelope_matches_docs_06_section_1() -> void:
+## docs/06 §1's recipe **as adopted** (DES-1): the block keeps the measured legs
+## (say 160, temperature 0.7) recorded as measured, while the strings ship
+## docs/02 §3's 90/200 and the temperatures ship docs/02 §9's ladder — so only
+## the two maxLength values and the repeat_penalty floor are enforced. The floor
+## is gated on the highest dose a stage can reach (base + the docs/06 §3 spike
+## band, clamped to 12), not on the base alone (DES-4), and at least one row must
+## be checked or the gate has gone vacuous.
+func test_hardened_envelope_matches_adopted_docs_06_recipe() -> void:
 	var hardened: Variant = _sampling_document().get("hardened", {})
 	assert_bool(hardened is Dictionary).is_true()
 	var envelope: Dictionary = hardened
@@ -287,12 +293,28 @@ func test_hardened_envelope_matches_docs_06_section_1() -> void:
 	var floor := float(envelope.get("repeat_penalty_floor", 0.0))
 	assert_float(floor).is_equal_approx(1.15, 0.0001)
 
+	# The measured legs stay recorded and are not adopted: docs/06 §1 measured say
+	# 160 and temperature 0.7, docs/02 §3/§9 ship 200 and 0.75-0.95 (DCR filed).
+	var measured: Variant = envelope.get("measured", {})
+	assert_bool(measured is Dictionary).is_true()
+	var measured_legs: Dictionary = measured
+	assert_int(int(measured_legs.get("say_max_length", -1))).is_equal(160)
+	assert_float(float(measured_legs.get("temperature", 0.0))).is_equal_approx(0.7, 0.0001)
+	assert_bool(envelope.has("temperature")).is_false().append_failure_message(
+		"the envelope must not claim the measured 0.7 as an enforced temperature"
+	)
+
+	var checked := 0
 	for stage: int in STAGES:
 		var row := TurnContextScript.sampling_spec(stage)
-		if float(row["dose"]) >= JSON_RISK_DOSE:
-			assert_bool(float(row["repeat_penalty"]) >= floor).is_true().append_failure_message(
-				"stage %d dose %s needs repeat_penalty >= %s" % [stage, row["dose"], floor]
-			)
+		var max_dose := minf(float(row["dose"]) + SPIKE_DOSE_MAX, DOSE_CLAMP_MAX)
+		if max_dose < JSON_RISK_DOSE:
+			continue
+		checked += 1
+		assert_bool(float(row["repeat_penalty"]) >= floor).is_true().append_failure_message(
+			"stage %d reaches dose %s, needs repeat_penalty >= %s" % [stage, max_dose, floor]
+		)
+	assert_int(checked).is_greater(0)
 
 
 func _valid_turn() -> Dictionary:

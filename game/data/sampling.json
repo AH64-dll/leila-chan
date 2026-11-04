@@ -1,11 +1,15 @@
 {
   "version": 2,
-  "doc": "docs/02 §9 sampling settings by stage. temperature/top_p/repeat_penalty go to the request's sampling; `dose` is the steering dose base for that stage (P2.02/P2.04 own dose and number tuning). Shape: {\"stages\": {\"<0-5>\": row}}. A legacy stage-agnostic file (one flat row at the top level, no `stages`) still applies that row to every stage. `hardened` records the docs/06 §1 envelope the schema limits are tested against.",
+  "doc": "docs/02 §9 sampling settings by stage. temperature/top_p/repeat_penalty go to the request's sampling; `dose` is the steering dose base for that stage (P2.02/P2.04 own dose and number tuning). Shape: {\"stages\": {\"<0-5>\": row}}; a column the file omits keeps that stage's docs/02 §9 value. `hardened` records the docs/06 §1 decoding recipe and which of its legs this project actually enforces.",
   "hardened": {
-    "doc": "docs/06 §1: maxLength on strings + repeat_penalty 1.15 + temperature 0.7 kept 100% valid JSON up to steering scale 12. A stage whose dose enters the 8-12 band must keep repeat_penalty at or above the floor; the schema must carry the string limits (docs/02 §3: inner 90, say 200).",
+    "doc": "docs/06 §1 measured 100% valid JSON up to steering scale 12 with maxLength 90 on `inner`, 160 on `say`, repeat_penalty 1.15 and temperature 0.7 (experiments/RESULTS.md, experiments/windows/report.md). Only part of that recipe is adopted here: the strings carry docs/02 §3's limits (inner 90, say 200 -- not the measured 160) and the per-stage temperatures are docs/02 §9's (0.75-0.95, hotter than the measured 0.7). Enforced, and gated by the suite: repeat_penalty stays at or above the floor for every stage that can reach the 8-12 band, and the schema carries the docs/02 §3 maxLength values. `measured` keeps the unadopted legs so the divergence stays visible. DCR in production/handoffs/P2.05.md.",
     "repeat_penalty_floor": 1.15,
     "inner_max_length": 90,
-    "say_max_length": 200
+    "say_max_length": 200,
+    "measured": {
+      "say_max_length": 160,
+      "temperature": 0.7
+    }
   },
   "stages": {
     "0": {
