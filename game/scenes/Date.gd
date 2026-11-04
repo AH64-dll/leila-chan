@@ -420,6 +420,11 @@ func start_date() -> void:
 	if SpriteResolver != null:
 		SpriteResolver.reset_scene()
 
+	# docs/05 §3 (P3.08): the per-scene meta-event budget starts at the date
+	# boundary; the scenario path is the scene's own name in the session log.
+	if MetaDirector != null and MetaDirector.has_method("note_scene"):
+		MetaDirector.note_scene(scenario_path)
+
 	var music_id := StringName(String(_scenario.get("music", "calm")))
 	if AudioDirector != null:
 		AudioDirector.request_music(music_id)

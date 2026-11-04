@@ -257,13 +257,13 @@ func sampling_spec(stage: int) -> Dictionary:
 
 ## The docs/02 §4 step 1 snapshot for this turn (see TurnContext.build). The
 ## memories are the ones she *reads*: newest 8 slots, corrupted per stage
-## (docs/02 §6), which is why the prompt is built from Memory and not from a
-## Director-owned list.
+## (docs/02 §6) — built from Memory, not a Director list. `turn_events()` adds
+## this turn's OPPORTUNITY lines so the reason rides the enum's own prompt.
 func build_turn_context(player_text: String, events: Array = []) -> Dictionary:
 	var memories := Memory.prompt_facts({"stage": int(GameState.stage)})
-	return TurnContext.build(
-		player_text, events, scene_info, memories, history, get_offered_actions()
-	)
+	var offered := get_offered_actions()
+	var turn_events := MetaDirector.turn_events(events, int(GameState.stage))
+	return TurnContext.build(player_text, turn_events, scene_info, memories, history, offered)
 
 
 ## docs/08 §5 "Offered this turn — …": the legal enums of this turn.
@@ -761,11 +761,11 @@ func _close_turn_success(turn_data: Dictionary) -> void:
 		if not mem_candidate.is_empty():
 			Memory.consider(mem_candidate, last_player_inputs)
 
-	# Apply action
+	# Apply action; the event counts on the turn the player answered (r1 CODE-2).
 	if turn_data.has("action") and str(turn_data["action"]) != "none":
 		var act := str(turn_data["action"])
 		if MetaDirector != null and MetaDirector.has_method("execute_after_text"):
-			MetaDirector.execute_after_text(act)
+			MetaDirector.execute_after_text(act, _turn_index)
 
 	if FX != null and FX.has_method("end_turn"):
 		FX.end_turn()

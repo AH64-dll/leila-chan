@@ -1,3 +1,6 @@
+# gdlint: disable=max-public-methods
+# (dev panel: one getter per section is the test-read surface, and P3.08's META
+# row pushes the panel past the 20-method cap. Drop this when the panel splits.)
 class_name DebugOverlay
 extends CanvasLayer
 ## DebugOverlay — the F3 Director overlay dev panel (P1.17, docs/07 §5).
@@ -49,6 +52,7 @@ var _telemetry_label: Label
 var _triggers_label: Label
 var _endings_label: Label
 var _last_turn_data: Dictionary = {}
+var _meta_label: Label
 var _fx_labels: Dictionary = {}  # fx_name -> Label
 
 
@@ -168,6 +172,28 @@ func _build_ui() -> void:
 	_offers_label = _create_label(root_vbox, "Offered Actions: (none)", COLOR_LABEL)
 	_offers_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
+	# --- Meta Section (P3.08) ---
+	# docs/05 §3 live state plus one button per offerable action — the overlay
+	# opens the offer directly (gates/lottery bypassed, like Telemetry's
+	# debug_fire), so every meta event stays reachable from F3 for testing.
+	_create_section_header(root_vbox, "META (P3.08)")
+	_meta_label = _create_label(root_vbox, "Open: (none)", COLOR_LABEL)
+	_meta_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var meta_grid := GridContainer.new()
+	meta_grid.columns = 2
+	meta_grid.add_theme_constant_override("h_separation", 4)
+	meta_grid.add_theme_constant_override("v_separation", 2)
+	root_vbox.add_child(meta_grid)
+	if MetaDirector != null:
+		for action: String in MetaDirector.action_ids():
+			_add_meta_button(meta_grid, action)
+	else:
+		var missing_meta := Button.new()
+		missing_meta.text = "(MetaDirector autoload missing)"
+		missing_meta.add_theme_font_size_override("font_size", FONT_SIZE)
+		missing_meta.disabled = true
+		meta_grid.add_child(missing_meta)
+
 	# --- Telemetry Section (P2.09) ---
 	# Every engine event is fireable here for testing (role checklist): one
 	# button per data/telemetry.json row, plus the pending/state line the turn
@@ -262,6 +288,63 @@ func _create_label(parent: Container, text: String, color: Color) -> Label:
 	return label
 
 
+## One P3.08 debug trigger: click → MetaDirector.debug_offer(action) →
+## refresh. The label is the action itself ("hide_ui") so a reviewer can match
+## the button to the data/meta_events.json row.
+func _add_meta_button(parent: Container, action: String) -> void:
+	var button := Button.new()
+	button.text = action
+	button.tooltip_text = "Open the %s offer (docs/05 §3 gates bypassed)" % action
+	button.add_theme_font_size_override("font_size", FONT_SIZE)
+	button.pressed.connect(func() -> void: fire_meta(action))
+	parent.add_child(button)
+
+
+## Force-open one offered action from the overlay (dev builds only; the seam
+## refuses in release). Public so tests can click the same path the button
+## uses — the model still decides whether it fires, exactly like a real offer.
+func fire_meta(action: String) -> bool:
+	if MetaDirector == null:
+		return false
+	var offered := MetaDirector.debug_offer(action)
+	refresh()
+	return offered
+
+
+## The META section's text: the docs/05 §3 budget read — open offers, what the
+## scene has spent, what the session already showed — and the docs/05 §0 rows
+## the hard-rule gate is refusing right now (`R4: …` under Standard immersion).
+func _meta_text() -> String:
+	if MetaDirector == null:
+		return "Open: (MetaDirector autoload missing)"
+	var view: Dictionary = MetaDirector.state()
+	var open: Array = view.get("open_offers", [])
+	var seen: Array = view.get("events_seen", [])
+	var fired := int(view.get("scene_events", 0))
+	var cap := int(view.get("scene_cap", 0))
+	var text := (
+		"Open: %s\nScene: %d/%d events\nSeen: %s"
+		% [
+			", ".join(open) if not open.is_empty() else "(none)",
+			fired,
+			cap,
+			", ".join(seen) if not seen.is_empty() else "(none)",
+		]
+	)
+	var blocked: Dictionary = view.get("hard_rule_violations", {})
+	if not blocked.is_empty():
+		var reasons: Array[String] = []
+		for action: String in blocked:
+			reasons.append("%s → %s" % [action, blocked[action]])
+		text += "\nBlocked: %s" % ", ".join(reasons)
+	return text
+
+
+## The META section's label, for tests.
+func get_meta_text() -> String:
+	return _meta_label.text if _meta_label != null else ""
+
+
 ## One P2.09 debug trigger: click → Telemetry.debug_fire(kind) → refresh. The
 ## label is the kind itself ("focus_lost") so a reviewer can match the button
 ## to the data/telemetry.json row.
@@ -342,6 +425,10 @@ func _connect_signals() -> void:
 
 	if Triggers != null:
 		Triggers.triggered.connect(func(_r: Dictionary) -> void: refresh())
+
+	if MetaDirector != null:
+		MetaDirector.offer_changed.connect(func() -> void: refresh())
+		MetaDirector.event_fired.connect(func(_id: String, _a: String) -> void: refresh())
 
 
 func _on_turn_completed(_idx: int, data: Dictionary) -> void:
@@ -512,6 +599,10 @@ func refresh() -> void:
 	# --- Telemetry (P2.09) ---
 	if _telemetry_label != null:
 		_telemetry_label.text = _telemetry_text()
+
+	# --- Meta (P3.08) ---
+	if _meta_label != null:
+		_meta_label.text = _meta_text()
 
 	# --- Triggers (P2.08) ---
 	if _triggers_label != null:
