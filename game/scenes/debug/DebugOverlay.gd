@@ -40,6 +40,7 @@ var _music_label: Label
 var _cue_budget_label: Label
 var _offers_label: Label
 var _telemetry_label: Label
+var _triggers_label: Label
 var _last_turn_data: Dictionary = {}
 var _fx_labels: Dictionary = {}  # fx_name -> Label
 
@@ -180,6 +181,14 @@ func _build_ui() -> void:
 		missing_btn.disabled = true
 		telemetry_grid.add_child(missing_btn)
 
+	# --- Triggers Section (P2.08) ---
+	# The live catalogue, the rows that fired with their agreement verdict and
+	# escalation step, and the path points they have added — the read a reviewer
+	# (and P2.10's trigger authoring) needs without watching the prompt.
+	_create_section_header(root_vbox, "TRIGGERS (P2.08)")
+	_triggers_label = _create_label(root_vbox, "Fired: (none)", COLOR_LABEL)
+	_triggers_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+
 
 func _create_section_header(parent: Container, text: String) -> Label:
 	var label := Label.new()
@@ -276,6 +285,9 @@ func _connect_signals() -> void:
 
 	if Telemetry != null:
 		Telemetry.engine_event.connect(func(_e: Dictionary) -> void: refresh())
+
+	if Triggers != null:
+		Triggers.triggered.connect(func(_r: Dictionary) -> void: refresh())
 
 
 func _on_turn_completed(_idx: int, data: Dictionary) -> void:
@@ -426,6 +438,48 @@ func refresh() -> void:
 	# --- Telemetry (P2.09) ---
 	if _telemetry_label != null:
 		_telemetry_label.text = _telemetry_text()
+
+	# --- Triggers (P2.08) ---
+	if _triggers_label != null:
+		_triggers_label.text = _triggers_text()
+
+
+## The TRIGGERS section's text: catalogue size, the latest firings (id, step,
+## the docs/02 §1.2 agreement verdict) and the path points triggers added.
+func get_triggers_text() -> String:
+	if _triggers_label == null:
+		return ""
+	return _triggers_label.text
+
+
+func _triggers_text() -> String:
+	if Triggers == null:
+		return "Fired: (triggers autoload missing)"
+	var report: Dictionary = Triggers.report()
+	var fired: Array = report.get("fired", [])
+	var lines: Array[String] = []
+	for item: Variant in fired:
+		var result: Dictionary = item
+		(
+			lines
+			. append(
+				(
+					"%s[%s] step %d ×%.2f"
+					% [
+						String(result.get("id", "?")),
+						String(result.get("agreement", "")),
+						int(result.get("step", 1)),
+						float(result.get("strength", 1.0)),
+					]
+				)
+			)
+		)
+	var shown := ", ".join(lines) if not lines.is_empty() else "(none)"
+	var points: Dictionary = report.get("path_scores", {})
+	return (
+		"Catalogue: %d triggers\nFired: %s\nPath points: %s"
+		% [int(report.get("catalogue", 0)), shown, str(points) if not points.is_empty() else "{}"]
+	)
 
 
 # --- Helper accessors for testing and inspection ---

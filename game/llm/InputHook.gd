@@ -40,8 +40,8 @@ static func apply(
 		GameState.set_flag(&"t08_deleted_draft", true)
 	if payload.has("idle_seconds") and float(payload["idle_seconds"]) > 30.0:
 		GameState.set_flag(&"t11_idle", true)
-	if Triggers != null and Triggers.has_method("check_keyword_triggers"):
-		var fired: Variant = Triggers.check_keyword_triggers(input_text)
+	if Triggers != null and Triggers.has_method("begin_turn"):
+		var fired: Variant = Triggers.begin_turn(input_text)
 		if fired is Array:
 			_append_all(lines, fired)
 	return {"lines": lines, "private": private_terms}
