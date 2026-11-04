@@ -23,21 +23,21 @@ Work in the main tree at `/run/media/amrhares/New Volume/lila`, on the `main` br
 | P1.05 | done | NAR | swe2 | production/reviews/P1.05-design-r1.md, production/reviews/P1.05-content-r1.md |
 | P1.06 | done | SYS | deepseek | production/reviews/P1.06-code-r1.md, production/reviews/P1.06-design-r1.md |
 | P1.07 | done | SYS | gemini-3.8-flash | production/reviews/P1.07-code-r1.md, production/reviews/P1.07-design-r1.md |
-| P1.08 | changes_requested | SYS | gemini-3.8-flash | production/reviews/P1.08-code-r1.md, production/reviews/P1.08-design-r1.md |
-| P1.09 | changes_requested | SYS | swe2 | production/reviews/P1.09-code-r1.md, production/reviews/P1.09-design-r1.md |
+| P1.08 | done | SYS | deepseek | production/reviews/P1.08-code-r2.md, production/reviews/P1.08-design-r2.md |
+| P1.09 | done | SYS | deepseek | production/reviews/P1.09-code-r2.md, production/reviews/P1.09-design-r2.md |
 | P1.10 | done | ART | swe2 | production/reviews/P1.10-code-r2.md, production/reviews/P1.10-design-r2.md |
 | P1.11 | done | ART | gemini-3.8-flash | production/reviews/P1.11-code-r1.md, production/reviews/P1.11-design-r1.md |
 | P1.12 | done | AUD | swe2 | production/reviews/P1.12-code-r2.md, production/reviews/P1.12-design-r2.md |
 | P1.13 | done | META | gemini-3.8-flash | production/reviews/P1.13-code-r3.md, production/reviews/P1.13-design-r3.md |
-| P1.14 | done | META | gemini-3.8-flash | production/reviews/P1.14-code-r1.md, production/reviews/P1.14-design-r1.md |
+| P1.14 | done | META | swe2 | production/reviews/P1.14-code-r1.md, production/reviews/P1.14-design-r1.md |
 | P1.15 | done | NAR | gemini-3.8-flash | production/reviews/P1.15-design-r2.md, production/reviews/P1.15-content-r2.md |
 | P1.16 | done | ART | gemini-3.8-flash | production/reviews/P1.16-content-r2.md, production/reviews/P1.16-design-r2.md |
 | P1.17 | done | ENG | swe2 | production/reviews/P1.17-code-r1.md |
 | P1.18 | done | LLM | gemini-3.8-flash | production/reviews/P1.18-code-r1.md |
-| P1.19 | changes_requested | SAFE | gemini-3.8-flash | production/reviews/P1.19-safety-r2.md, production/reviews/P1.19-code-r2.md |
+| P1.19 | done | SAFE | gemini-3.8-flash | production/reviews/P1.19-safety-r7.md, production/reviews/P1.19-code-r7.md |
 | P1.20 | done | QA | gemini-3.8-flash | production/reviews/P1.20-code-r1.md, production/reviews/P1.20-design-r1.md |
 | P1.21 | done | QA | gemini-3.8-flash | production/reviews/P1.21-code-r2.md |
-| P1.22 | todo | QA | — | — |
+| P1.22 | done | QA | commandcode | production/reviews/P1.22-design-r1.md |
 | P1.23 | done | LLM | swe2 | production/reviews/P1.23-code-r1.md |
 | P1.24 | done | REL | swe2 | production/reviews/P1.24-code-r1.md |
 | P1.25 | done | REL | gemini-3.8-flash | production/reviews/P1.25-code-r3.md |
@@ -46,6 +46,7 @@ Work in the main tree at `/run/media/amrhares/New Volume/lila`, on the `main` br
 | P1.28 | done | NAR | gemini-3.8-flash | production/reviews/P1.28-code-r3.md, production/reviews/P1.28-content-r3.md |
 | P1.29 | done | SYS | deepseek | production/reviews/P1.29-code-r2.md |
 | P1.30 | done | REL | claude | production/reviews/P1.30-code-r1.md |
+| P1.31 | done | SYS | commandcode | production/reviews/P1.31-code-r1.md |
 
 ## Output
 
