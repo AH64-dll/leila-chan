@@ -222,3 +222,20 @@ static func meters() -> Dictionary:
 		"instability_floor": GameState.instability_floor,
 		"slow_burn": Meters.slow_burn(GameState.fixation, GameState.lucidity),
 	}
+
+
+## Everything she said in a completed turn as one string — every beat's `say`
+## joined. The Director matches stored facts against it for the docs/02 §6
+## importance bump ("+1 each time she quotes it"), so the rule lives next to the
+## other turn-shape helpers instead of inside Director's line budget.
+static func spoken_text(turn_data: Dictionary) -> String:
+	var raw: Variant = turn_data.get("beats", [])
+	if not raw is Array:
+		return ""
+	var parts := PackedStringArray()
+	for beat: Variant in raw:
+		if beat is Dictionary:
+			var line := String((beat as Dictionary).get("say", "")).strip_edges()
+			if not line.is_empty():
+				parts.append(line)
+	return " ".join(parts)

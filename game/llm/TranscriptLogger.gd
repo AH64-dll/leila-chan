@@ -51,6 +51,7 @@ const OPTIONAL_FIELDS: Array[String] = [
 	"path",
 	"dose",
 	"meta",
+	"memory",
 ]
 
 var _dir := DEFAULT_DIR
