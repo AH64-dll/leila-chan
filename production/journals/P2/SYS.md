@@ -33,3 +33,20 @@
 - Next SYS on this seam: the submit half is still missing — nothing in `game/` calls
   `Director.submit_player_input`, and `Date._on_player_turn_sent` only counts. Wire
   `ChatUI.player_turn_sent` -> `submit_player_input` there and move the counter onto `turn_completed`.
+
+## P2.01 Meters + slow burn (round 2)
+- DES-1: the docs/01 §3 bands are instability values, so they shade the Instability panel's y axis
+  (full-width stripes, labelled with the range); the strip above is now the CSV's own stage per turn
+  (`stage_runs()`), and the crossings are captioned with turn/day. Mismatched axes were the whole bug —
+  name the axis in the docstring before drawing anything on it.
+- Gotcha: the doc band table is integer ranges (0-14, 15-29, ...), so a continuous stripe must run from
+  a band's floor to the *next* band's floor (0-15-30-50-70-90-100) or a 1-value seam shows up.
+- Test convention: `tests/test_meters.py` renders the SVG from the committed CSV and parses the `<rect>`s
+  (render + assert geometry, not the drawing code). Sorting by y is required — the SVG emits S0 first.
+  Mutation-checked: it fails on the round-1 plot with `0 == 6`.
+- Gotcha: this worktree's NTFS mount has `core.filemode=false`, so `chmod +x` never reaches the index;
+  use `git update-index --chmod=+x <path>` and verify with `git ls-files -s`.
+- DES-3: `Meters._merge_into()` now takes an `origin` label (the loader passes TABLE_PATH), so a
+  synthetic-table warning no longer blames res://data/meters.json.
+- Merge gotcha: the SYS journal is append-only across tasks, so a `git merge main` after another SYS task
+  hits an add/add conflict — keep both sections, then re-commit.
