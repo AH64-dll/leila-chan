@@ -17,9 +17,10 @@ extends RefCounted
 ##    closed). The cache stores the verdict, never a gate-dependent permission
 ##    (P2.17 r2 CODE-1/SAF-2): a "yes" that landed during a stage-4/full turn
 ##    still bars at stage 0 or in calmer mode.
-##  * verdicts are cached per (category, matched text) so the same line is
-##    classified once per run, and so whole-text scans (`filter_text`) can pass
-##    a span the streaming path already resolved.
+##  * verdicts are cached per (category, judged clause window) so the same line
+##    is classified once per run, and so whole-text scans (`filter_text`) can
+##    pass a span the streaming path already resolved. Only a definitive answer
+##    is cached: a refusal bars its own display and is asked again later.
 ##  * gated categories are not flagged at all while their gate is open: a yes
 ##    verdict could not block there, so the request would be pure latency.
 
@@ -30,6 +31,14 @@ const MAX_TEXT_CHARS := 240
 const MIN_CONTEXT_CHARS := 16  ## below this the cache key stops distinguishing
 const MAX_CONTEXT_CHARS := 400
 const MAX_LOG := 500
+## The whole-text guard is the transport's bound, not the UI's (CODE-8): a quiet
+## answer only warms the cache, and an 8-token decode on a CPU host can take
+## seconds. The floor is the transport's 10 s read bound plus a margin, so a
+## healthy answer can never be forgotten before it lands; the shipped value is
+## three times that.
+const DEFAULT_QUIET_TIMEOUT_MS := 30000
+const MIN_QUIET_TIMEOUT_MS := 12000
+const MAX_QUIET_TIMEOUT_MS := 600000
 
 ## Tuning counters, read by the corpus/latency report.
 var requests := 0
@@ -55,6 +64,7 @@ var _flags := {}  ## category -> Array[RegEx]
 var _max_text := MAX_TEXT_CHARS
 var _context := 80
 var _hold_timeout_ms := 900
+var _quiet_timeout_ms := DEFAULT_QUIET_TIMEOUT_MS
 ## (category, matched) -> {verdict, block}. Capped FIFO.
 var _verdicts := {}
 var _verdict_order: Array[String] = []
@@ -101,7 +111,12 @@ func _build_limits(data: Dictionary) -> bool:
 	var text_chars := _as_int(data.get("max_text_chars", MAX_TEXT_CHARS))
 	var context := _as_int(data.get("context_chars", 80))
 	var timeout := _as_int(data.get("hold_timeout_ms", 900))
-	if text_chars < 0 or timeout < 0:
+	var quiet := _as_int(data.get("quiet_timeout_ms", DEFAULT_QUIET_TIMEOUT_MS))
+	## A whole-text answer that arrives inside the transport's own bound must
+	## outlive this guard, or it is dropped before it can cache (CODE-8). Fail the
+	## load rather than ship a guard shorter than the decode it waits for.
+	var bad_quiet := quiet < MIN_QUIET_TIMEOUT_MS or quiet > MAX_QUIET_TIMEOUT_MS
+	if text_chars < 0 or timeout < 0 or bad_quiet:
 		return false
 	## A zero/near-zero window collapses the cache key back to the matched span
 	## and silently reintroduces the knife / knife-and-fork collision (SAF-11).
@@ -110,6 +125,7 @@ func _build_limits(data: Dictionary) -> bool:
 	_max_text = clampi(text_chars, 32, 2000)
 	_context = context
 	_hold_timeout_ms = clampi(timeout, 1, 60000)
+	_quiet_timeout_ms = quiet
 	return true
 
 
@@ -218,6 +234,12 @@ func is_ready() -> bool:
 
 func hold_timeout_ms() -> int:
 	return _hold_timeout_ms
+
+
+## How long an unanswered whole-text request may hold its in-flight slot. The
+## gate's quiet guard, never the UI hold deadline (CODE-8).
+func quiet_timeout_ms() -> int:
+	return _quiet_timeout_ms
 
 
 func max_tokens() -> int:
@@ -337,9 +359,15 @@ func interpret(result: Variant) -> Dictionary:
 	return out
 
 
-## Remember a verdict. Only the answer and its category are stored: whether a
-## "yes" bars anything is decided against the content gate in force when the
-## text is displayed (CODE-1/SAF-2), never frozen here.
+## Remember a definitive verdict. Only the answer and its category are stored:
+## whether a "yes" bars anything is decided against the content gate in force
+## when the text is displayed (CODE-1/SAF-2), never frozen here.
+##
+## An error is not an answer and is never stored (SAF-13). The span it refused
+## still bars for that display (fail closed), but caching the refusal as the
+## clause's verdict made a transient transport failure — or the first scan of a
+## line whose flag is a false positive — a permanent bar for the whole run, and
+## the clause was never asked again.
 func remember(key: String, category: String, verdict: String) -> void:
 	if verdict == "yes":
 		blocks += 1
@@ -347,6 +375,7 @@ func remember(key: String, category: String, verdict: String) -> void:
 		passes += 1
 	else:
 		errors += 1
+		return
 	_verdicts[key] = {"verdict": verdict, "category": category}
 	_verdict_order.append(key)
 	while _verdict_order.size() > MAX_VERDICTS:
@@ -409,6 +438,7 @@ func _reset() -> void:
 	_max_text = MAX_TEXT_CHARS
 	_context = 80
 	_hold_timeout_ms = 900
+	_quiet_timeout_ms = DEFAULT_QUIET_TIMEOUT_MS
 	_verdicts = {}
 	_verdict_order = []
 	verdict_log = []

@@ -30,8 +30,9 @@ const _VALID_ACTIONS: Array[String] = ["hard_block", "gated"]
 var redaction_log: Array[Dictionary]:
 	get:
 		return _log.entries
-## Transport/hold API: `classifier_gate.set_backend(transport)`, `.stats()`,
-## `.pending()`; null only before the lists load (the filter is closed then).
+## Transport/hold API: `classifier_gate.set_backend(transport)`,
+## `.set_config_provider(cb)`, `.stats()`, `.pending()`; null only before the
+## lists load (the filter is closed then).
 var classifier_gate: SafetyClassifierGate:
 	get:
 		return _gate
@@ -118,6 +119,8 @@ func configure(ctx: Dictionary) -> void:
 func begin_say(ctx: Dictionary = {}) -> void:
 	if _gate != null and _gate.hold_active():
 		flush_hold("beat_boundary")
+	if _gate != null:
+		_gate.begin_beat()
 	_ctx = _resolve_ctx(ctx)
 	_pending = ""
 	_in_beat = true

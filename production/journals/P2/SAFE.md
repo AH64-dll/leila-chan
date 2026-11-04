@@ -57,3 +57,16 @@
   fails with "Identifier … not declared".
 - The negation guard now lives in `SafetyNegation.gd` (Safety.gd 916 lines) and `Director` routes all
   three say emissions through `_emit_say_chunk()` (1000/1000) — per-file line limits, not raised.
+
+- Round 3 (reviews CODE-8 / SAF-13 / SAF-12). A guard on a *transport* must not be the guard on a *UI hold*:
+  900 ms bounds a held beat, but a whole-text scan must live on the transport's own bound (30 s, loader
+  floor 12 s = the 10 s read bound + margin) or a slow-but-healthy answer is dropped before it can cache.
+- A refusal is not an answer. Never cache an error as the clause's verdict: one flaky read then becomes a
+  permanent bar, and a flag false positive can never heal. Bar that display, mark the refusal on the hold
+  so the drain a settle re-enters does not re-ask the same question, and let the next beat try again.
+- Policy that depends on the *server's launch flags* cannot be a boot-time snapshot of config the app never
+  had: `serve.sh --vector` is invisible to the game. Give the gate a Callable that re-reads the live config,
+  and attach only where the app can vouch — its own launch (`auto_start`), or an explicit
+  `LEILA_CLASSIFIER_URL` that asserts a dedicated unsteered server.
+- Lint gotchas this round: `gdlint` caps a file at 1000 lines (the merge left `Director.gd` at 1007, fixed by
+  compacting comments, not code) and a function at 6 returns (fold the new check into an existing `return`).

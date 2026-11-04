@@ -55,6 +55,17 @@ The control vector is a **launch flag** (`--control-vector-scaled file.gguf:SCAL
 so changing the dose = restarting the server (~3 s, docs/06 §4). Per-turn doses
 arrive only with the native backend.
 
+**Safety classifier (P2.17).** `--vector` doses *every* request on that server,
+and the docs/02 §8 classifier pass must run at dose 0: a steered "no" would
+release text the safety filter is holding. The app can only vouch for a server it
+launches itself, so an external `serve.sh` (steered or not) leaves tier 2
+uninstalled and flagged spans bar. Against a server you know is unsteered,
+opt in explicitly:
+
+```bash
+LEILA_CLASSIFIER_URL=http://127.0.0.1:8089 ./tools/godot.sh --path game
+```
+
 **Vector path rules (P1.23).** llama.cpp parses the flag as `FNAME:SCALE` by
 splitting on `:` and `,`, so a FNAME that itself contains `:` or `,` can never
 reach it — which is every `X:\...` Windows absolute path. Both launchers

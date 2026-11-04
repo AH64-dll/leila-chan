@@ -376,3 +376,21 @@ func test_cancel_between_worker_return_and_terminal_delivery_on_error() -> void:
 	assert_bool(stream.is_cancelled()).is_true()
 	assert_bool(stream.is_finished()).is_true()
 	assert_bool(llm.is_busy()).is_false()
+
+
+## P2.17 SAF-12: Boot asks the facade for the installed backend's launch config
+## so the safety classifier never talks to a server that carries a control
+## vector. A backend that publishes none says so with an empty dictionary — that
+## is "unknown", not "dose 0". The getter returns a copy: a caller cannot edit the
+## transport's live config by mutating it.
+func test_backend_config_exposes_the_installed_transport_config() -> void:
+	var llm := _new_llm(null)
+	assert_bool(llm.get_backend_config().is_empty()).is_true()
+	llm.set_backend(FakeBackend.new())
+	assert_bool(llm.get_backend_config().is_empty()).is_true()
+	var backend := LlamaServerBackend.new({"base_url": "http://127.0.0.1:9099"})
+	llm.set_backend(backend)
+	var config: Dictionary = llm.get_backend_config()
+	assert_str(String(config.get("base_url", ""))).is_equal("http://127.0.0.1:9099")
+	config["base_url"] = "http://elsewhere"
+	assert_str(String(backend.config.get("base_url", ""))).is_equal("http://127.0.0.1:9099")

@@ -408,13 +408,9 @@ func _start_turn(player_text: String) -> bool:
 	var sampling_dict := TurnContext.request_sampling(stage)
 
 	# docs/06 §3: Steering owns the dose schedule (P2.04), so the request carries
-	# per-vector scales ({"malice": 4.5, "path_mix": 3.0}; path_mix is the
-	# interim path-weight key). The docs/02 §9 dose column
-	# is only the last-resort fallback when the autoload is absent; the P1.09
-	# retry observable still holds (`DirectorFallbackTest`: stage-1 malice 2.5
-	# plus the -2.0 retry reaches the request). The transmission gap
-	# (LlamaServerBackend ignores request.dose — control vectors are a server
-	# launch flag, docs/06 §4) is P2.03's restart work.
+	# per-vector scales ({"malice": 4.5, "path_mix": 3.0}; path_mix is the interim
+	# key). The docs/02 §9 column is only the fallback when the autoload is absent
+	# (P1.09's retry observable holds); the transport ignores dose until P2.03.
 	var dose_dict := {}
 	if Steering != null and Steering.has_method("dose_for"):
 		dose_dict = Steering.dose_for(ctx)
@@ -556,9 +552,8 @@ func _flush_say_tail(beat_index: int) -> void:
 		_emit_say_chunk(beat_index, tail)
 
 
-## One say emission: the signal (tools and tests) and the chat UI's typewriter.
-## Also the sink for a late classifier verdict (`Safety.hold_released`): a turn
-## that already ended drops it — its fail-closed bars went out at the boundary.
+## One say emission: the signal and the chat UI's typewriter. Also the sink for a
+## late verdict (`Safety.hold_released`); a turn that already ended drops it.
 func _emit_say_chunk(beat_index: int, text: String) -> void:
 	if text.is_empty() or not _turn_in_flight:
 		return
@@ -881,10 +876,8 @@ func _abort_turn(error_code: String, error_message: String) -> void:
 
 ## One teardown for every exit: the stream, parser and turn-scoped state must not
 ## survive into the next turn (a later cancel() would act on a terminal stream and
-## a stale `_current_turn_data` would leak into the close; review CODE-9). The
-## player's unanswered line stays in `history`/`last_player_inputs` (the docs/02 §6
-## rule-1 window is what was typed); AudioDirector/FX keep their per-turn counters
-## (the turn was opened, so its accrued budget is spent).
+## stale state would leak into the close; review CODE-9). The player's unanswered
+## line stays in `history`/`last_player_inputs`; AudioDirector/FX keep their counters.
 func _teardown_turn() -> void:
 	_turn_in_flight = false
 	_active_stream = null

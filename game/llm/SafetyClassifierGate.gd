@@ -21,10 +21,20 @@ extends RefCounted
 ##    — one span is one request, not one per chunk (CODE-2).
 ##  * flags are read from both normalized views, so a leetspeak novel phrase
 ##    still reaches the question (SAF-4).
+##  * the refusal of an ask is not an answer. An error bars the span that asked,
+##    is never stored as the clause's verdict, and is retried by the next display
+##    or the next beat — a transient failure must not turn a flag into a
+##    permanent bar for the run (SAF-13).
+##  * a whole-text answer is wanted, not merely tolerated: its in-flight slot is
+##    only forgotten past the transport's own bound, never the 900 ms UI hold
+##    deadline, or a healthy answer that decodes slowly would be dropped from
+##    the cache for good (CODE-8).
+##  * the classifier may only ask a server that carries no control vector: see
+##    `backend_steered()`. A steered "no" would *release* a held span.
 ##
-## Fail closed everywhere: no backend, a bad backend, a transport error, an
-## unparseable answer, or a matched span that never gets a verdict all resolve
-## to a block. Nothing here can release text the model called harmful.
+## Fail closed everywhere: no backend, a steered backend, a transport error, an
+## unparseable answer, or a matched span that never gets a verdict all resolve to
+## a block. Nothing here can release text the model called harmful.
 
 signal settled
 
@@ -36,6 +46,10 @@ const MAX_QUIET_IN_FLIGHT := 4
 
 var classifier: SafetyClassifier = null
 var backend: Object = null
+## Live source of the classifier server's launch configuration, registered by
+## Boot. A callable, not a copy: P2.03 reconfigures the backend after boot, and a
+## stale snapshot would keep asking a server that has grown a vector (SAF-12).
+var config_provider: Callable
 ## {key, category, beat_index, since_ms} — the region Safety is holding back.
 var hold := {}
 ## In-flight requests: key -> the request. Kept until answered, so a late
@@ -46,6 +60,11 @@ var timeout_count := 0
 var hold_ms_total := 0
 var hold_count := 0
 
+## Clause identities (`refusal_key`) whose ask failed in this beat. Scoped to the
+## beat because a refusal must never outlive it: the next beat asks again. A map,
+## not the hold's key, because once the barred text is in the display window the
+## same clause is re-detected at a new offset and mints a new window key (SAF-13).
+var _refused := {}
 ## Policy callables owned by Safety: `_open(cat) -> bool` closes the gate, and
 ## `_negated(cat, s, e, match, view) -> bool` applies the list's negation guard.
 var _open_cb: Callable
@@ -65,8 +84,46 @@ func set_backend(obj: Object) -> void:
 	backend = obj
 
 
+## Register the live source of the server's launch configuration (Boot passes
+## the installed LLM backend's). An invalid callable means "no configuration
+## known", which is treated as unsteered: a directly bound backend is the
+## caller's own responsibility (tests, the prompt lab).
+func set_config_provider(cb: Callable) -> void:
+	config_provider = cb
+
+
+func backend_config() -> Dictionary:
+	if not config_provider.is_valid():
+		return {}
+	var raw: Variant = config_provider.call()
+	return (raw as Dictionary).duplicate(true) if raw is Dictionary else {}
+
+
+## True when the server behind the transport applies control vectors.
+## llama-server binds them at launch and has no per-request dose (docs/06 §4), so
+## every request to it is dosed — including this 8-token question. That is not an
+## accuracy problem: a "no" *releases* the span the filter is holding, so a
+## steered answer would release text the steered model called benign (SAF-3).
+func backend_steered() -> bool:
+	return is_steered_config(backend_config())
+
+
+## Any bound vector makes a server unusable for the classifier: one configured on
+## the backend, or a launch flag nobody told the app about.
+static func is_steered_config(config: Dictionary) -> bool:
+	var vectors: Variant = config.get("control_vectors", [])
+	if vectors is Array:
+		for vector: Variant in vectors:
+			if vector is Dictionary and not String(vector.get("path", "")).is_empty():
+				return true
+	for arg: Variant in config.get("extra_args", PackedStringArray()):
+		if String(arg).contains("control-vector"):
+			return true
+	return false
+
+
 func has_backend() -> bool:
-	return backend != null and backend.has_method("classify")
+	return backend != null and backend.has_method("classify") and not backend_steered()
 
 
 func hold_active() -> bool:
@@ -75,6 +132,12 @@ func hold_active() -> bool:
 
 func pending() -> Dictionary:
 	return hold.duplicate()
+
+
+## Start of a beat: forget the previous beat's refusals, so a clause whose ask
+## failed is asked again instead of staying barred for the run (SAF-13).
+func begin_beat() -> void:
+	_refused.clear()
 
 
 ## True when the head flag is complete enough to ask about: the match is not at
@@ -103,8 +166,16 @@ func matched(views: Dictionary, blocked: Array) -> Array:
 		return out
 	var grew := false
 	for flag in _flags_for(views, blocked):
-		var cached := classifier.cached(String(flag["key"]))
+		var key := String(flag["key"])
+		var cached := classifier.cached(key)
 		if cached.is_empty():
+			if _refused.has(refusal_key(String(flag["cat"]), String(flag["match"]))):
+				## This clause's ask already failed in this beat: bar it rather
+				## than spend a second request on the same question. The refusal is
+				## not the clause's verdict, so the next beat asks again (SAF-13).
+				blocked.append(_block_span(flag, {"verdict": "error"}))
+				grew = true
+				continue
 			out.append(flag)
 			continue
 		classifier.note_cached_hit()
@@ -173,7 +244,10 @@ func resolve_whole(spans: Array, views: Dictionary, ctx: Dictionary) -> Array:
 			classifier.note_cached_hit()
 		if not cached.is_empty() and not _cached_block(cached, String(flag["cat"])):
 			continue
-		out.append(_block_span(flag, cached))
+		## No answer: bar this display only (fail closed). It is a refusal, not the
+		## clause's verdict, so nothing is remembered and the next display may ask
+		## again and heal a flag false positive (SAF-13).
+		out.append(_block_span(flag, cached if not cached.is_empty() else {"verdict": "error"}))
 	return merge(out)
 
 
@@ -203,6 +277,7 @@ func expired(now_ms: int) -> bool:
 ## request. Called from Safety's teardown; blocking there is correct (CODE-5).
 func shutdown() -> void:
 	requested.clear()
+	_refused.clear()
 	hold = {}
 	if backend != null and backend.has_method("shutdown"):
 		backend.call("shutdown")
@@ -238,6 +313,15 @@ func _seen(flag: Dictionary, flags: Array) -> bool:
 	return false
 
 
+## A refused clause's identity for the rest of the beat: category plus the judged
+## text, normalized. Deliberately not the window key (`verdict_key`): the window
+## grows as the beat streams and shifts once the barred text is displayed, so the
+## same refusal would stop matching its own clause.
+static func refusal_key(cat: String, matched: String) -> String:
+	var parts := matched.to_lower().split(" ", false)
+	return "%s|%s" % [cat, " ".join(parts)]
+
+
 func _block_span(flag: Dictionary, cached: Dictionary) -> Dictionary:
 	return {
 		"s": int(flag["s"]),
@@ -252,7 +336,8 @@ func _block_span(flag: Dictionary, cached: Dictionary) -> Dictionary:
 
 ## A cached verdict is a verdict, never a permission: the block is decided
 ## against the gate in force now, not the one that was current when the answer
-## arrived (CODE-1/SAF-2). An error verdict (empty) blocks, as it always has.
+## arrived (CODE-1/SAF-2). A refusal ("error", or the empty verdict older caches
+## may still hold) blocks, as it always has.
 func _cached_block(cached: Dictionary, cat: String) -> bool:
 	return _block_for(String(cached.get("verdict", "")), cat)
 
@@ -284,7 +369,10 @@ func _issue(req: Dictionary, loud: bool) -> void:
 	requested[key] = req
 	classifier.note_request(0)
 	if not has_backend():
-		_settle(key, {"ok": false, "error": {"code": "no_backend", "message": ""}})
+		## Fail closed, and say which refusal it was: a steered server is a policy
+		## refusal (docs/02 §8 requires dose 0), not a missing transport.
+		var code := "steered_backend" if backend_steered() else "no_backend"
+		_settle(key, {"ok": false, "error": {"code": code, "message": ""}})
 		return
 	backend.call("classify", req, Callable(self, "_on_done").bind(key))
 
@@ -313,6 +401,13 @@ func _settle(key: String, result: Variant) -> void:
 	var verdict := String(interpreted.get("verdict", ""))
 	var block := _block_for(verdict, category)
 	classifier.remember(key, category, verdict)
+	if verdict.is_empty() and String(hold.get("key", "")) == key:
+		## The ask failed: bar this beat's held span instead of re-asking it. The
+		## marker is keyed on the clause, not the window key, because the barred
+		## text stays in the display window and is re-detected at a new offset; it
+		## is cleared by the next `begin_beat`, so it never outlives the beat and
+		## never becomes the clause's verdict (SAF-13).
+		_refused[refusal_key(category, String(req.get("match", "")))] = true
 	var error_code := ""
 	if interpreted.get("error") is Dictionary:
 		error_code = String((interpreted["error"] as Dictionary).get("code", ""))
@@ -365,10 +460,15 @@ func _quiet_in_flight() -> int:
 ## A hung whole-text request must not pin a slot for the whole run (SAF-8). Its
 ## answer is dropped once the entry is gone; the span stays barred, which is
 ## what the whole-text path does without a verdict anyway.
+##
+## The deadline is the transport's, not the UI's. 900 ms is how long a *held beat*
+## may wait for its verdict; the whole-text answer is wanted for the cache and may
+## legitimately take seconds on a CPU host, so expiring it there threw a healthy
+## answer away and every later display re-asked the same clause (CODE-8/SAF-13).
 func _expire_quiet(now_ms: int) -> void:
 	if classifier == null:
 		return
-	var deadline := classifier.hold_timeout_ms()
+	var deadline := classifier.quiet_timeout_ms()
 	for key in requested.keys():
 		var req: Dictionary = requested[key]
 		if bool(req.get("loud", false)):
@@ -443,6 +543,8 @@ func stats() -> Dictionary:
 	out["in_flight"] = requested.size()
 	out["quiet_in_flight"] = _quiet_in_flight()
 	out["hold_active"] = hold_active()
+	out["backend_steered"] = backend_steered()
+	out["refused"] = _refused.size()
 	out["hold_ms_total"] = hold_ms_total
 	out["hold_count"] = hold_count
 	return out
