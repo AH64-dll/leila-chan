@@ -257,6 +257,7 @@ func test_data_table_matches_docs() -> void:
 func test_broken_data_values_keep_docs_defaults() -> void:
 	# A hand-edited meters.json can never zero a formula or make the ratchet
 	# non-finite: bad types, non-finite numbers and unknown keys are ignored.
+	# The origin label keeps the warning honest for a synthetic table.
 	var merged: Dictionary = MetersScript.DOCS_TABLE.duplicate(true)
 	(
 		MetersScript
@@ -268,7 +269,8 @@ func test_broken_data_values_keep_docs_defaults() -> void:
 				"slow_burn": {"base": 0.9, "per_fixation": "x"},
 				"mood": {"limit": 4.0, "scale": {"stress": INF}},
 				"unknown_key": 1.0,
-			}
+			},
+			"synthetic table",
 		)
 	)
 	assert_float(merged["ratchet_drop"]).is_equal_approx(15.0, EPS)

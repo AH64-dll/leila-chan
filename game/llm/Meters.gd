@@ -111,15 +111,16 @@ static func _load_table() -> Dictionary:
 	if not parsed is Dictionary:
 		push_warning("Meters: %s is not a JSON object; using the docs/01 §2 values" % TABLE_PATH)
 		return merged
-	_merge_into(merged, parsed)
+	_merge_into(merged, parsed, TABLE_PATH)
 	return merged
 
 
 ## Overlays the data values on the docs defaults key by key: the known shape is
 ## fixed by DOCS_TABLE, unknown keys are ignored, and a non-numeric or
 ## non-finite value keeps the documented default — a hand-edited meters.json
-## can never zero a formula or make the ratchet non-finite.
-static func _merge_into(target: Dictionary, source: Variant) -> void:
+## can never zero a formula or make the ratchet non-finite. `origin` names the
+## source in the warning, so a synthetic table is not reported as the data file.
+static func _merge_into(target: Dictionary, source: Variant, origin := "meters data") -> void:
 	if not source is Dictionary:
 		return
 	for key: Variant in target.keys():
@@ -128,12 +129,12 @@ static func _merge_into(target: Dictionary, source: Variant) -> void:
 		var current: Variant = target[key]
 		var incoming: Variant = source[key]
 		if current is Dictionary:
-			_merge_into(current, incoming)
+			_merge_into(current, incoming, origin)
 		elif incoming is float or incoming is int:
 			if is_finite(float(incoming)):
 				target[key] = float(incoming)
 			else:
-				push_warning("Meters: non-finite '%s' in %s ignored" % [key, TABLE_PATH])
+				push_warning("Meters: non-finite '%s' in %s ignored" % [key, origin])
 
 
 ## Numeric coercion for data/model input: ints and finite floats only, anything
