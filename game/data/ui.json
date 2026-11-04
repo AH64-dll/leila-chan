@@ -32,6 +32,9 @@
 		"subtitle": "A Dating Sim",
 		"btn_new_game": "New Game",
 		"btn_continue": "Continue",
+		"btn_photosensitive": "Photosensitive mode: {state}",
+		"photosensitive_off": "Off",
+		"photosensitive_on": "On",
 		"btn_settings": "Settings",
 		"btn_quit": "Quit"
 	},

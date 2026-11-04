@@ -54,6 +54,31 @@ func test_date_scene_wires_character_textbox_inputbox_fx_audio() -> void:
 	assert_object(_date.background.texture).is_not_null()
 
 
+## DES-3 (P2.15 round 2): the scene follows the campaign's stage. Every player
+## entry goes through change_scene_to_file, which cannot set an export, so an
+## unset stage must mean GameState.stage — a day loop or save load that forgot
+## the export must not reset the world to stage 0 and erase the drain.
+func test_date_follows_the_campaign_stage_when_not_pinned() -> void:
+	GameState.reset()
+	GameState.stage = 4
+	var fresh: Node2D = DatePacked.instantiate()
+	add_child(auto_free(fresh))
+	await get_tree().process_frame
+	assert_int(fresh.stage).is_equal(4)
+	assert_int(FX.stage).is_equal(4)
+
+	# an explicit value still wins: the dev tools and scene tests pin a stage
+	var pinned: Node2D = DatePacked.instantiate()
+	pinned.stage = 1
+	add_child(auto_free(pinned))
+	await get_tree().process_frame
+	assert_int(pinned.stage).is_equal(1)
+	assert_int(FX.stage).is_equal(1)
+
+	GameState.reset()
+	FX.set_stage(0)
+
+
 func test_date_scene_registers_chat_ui_with_director() -> void:
 	# F1 controller wiring (P1 gate-r3 / P2.23): the shipped scene owns the
 	# ChatUI instance, so it registers it with the Director at ready and clears

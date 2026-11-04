@@ -220,6 +220,16 @@ FX["none"] = {"gate": 0, "cooldown_turns": 0}
 for _heavy in ("shake_big", "glitch"):
     FX[_heavy]["max_per"] = {"count": 1, "turns": 2}
 
+# Stage baseline screen effects (P2.15). These are not model picks: no effect
+# gate and no cooldown — the world drifts with the stage itself. Onset comes
+# from docs/01 §3 ("backgrounds desaturate" at stage 3); the rate comes from
+# docs/03 §4's desaturate preset, saturation x (1 - 0.15*stage), so stage 5
+# leaves 25% saturation. Kept in data so FX.gd reads a table, never a formula.
+STAGE_FX = {
+    str(stage): {"desaturation": 0.0 if stage < 3 else round(0.15 * stage, 2)}
+    for stage in range(6)
+}
+
 # docs/03 §3 step 4 (anti-repeat): when one sprite would show on a third beat in a row, the
 # resolver swaps to the feeling's sibling face for that beat. The doc gives only the example
 # 06 -> 01; the rest keeps the same mood family (positive<->positive, hostile<->hostile,
@@ -383,6 +393,7 @@ def main():
         "voice_by_stage": VOICE_BY_STAGE,
         "motion_intensity": MOTION_INTENSITY,
         "fx": FX,
+        "stage_fx": STAGE_FX,
         "feelings": feelings,
         "siblings": SIBLINGS,
         "siblings_corrupt": SIBLINGS_CORRUPT,
@@ -448,6 +459,9 @@ def write_doc(c):
     w("after a firing stay locked (earliest refire = gap + 1); `max_per` is the doc's extra per-window cap.")
     w("FX.gd reads this table and drops over-gate/over-budget picks silently; the debug menu (F6) can force")
     w("any implemented effect.\n")
+    w("Photosensitive mode changes the look, never the rule: `flicker` becomes a single dim instead of a flicker")
+    w("(no luminance change faster than 3 Hz, docs/02 §2.3) and `invert_flash` is suppressed. Reduced motion")
+    w("still cuts `shake_big` and `shake_small` — shakes are skipped, not softened.\n")
     w("| Effect | Gate stage | Cooldown (turns) | Extra cap |")
     w("|---|---|---|---|")
     for name, spec in c["fx"].items():
@@ -455,6 +469,17 @@ def write_doc(c):
         cap_s = f'max {cap["count"]} per {cap["turns"]} turns' if cap else "—"
         cd = spec.get("cooldown_turns", 0)
         w(f'| {name} | {spec["gate"]} | {cd or "—"} | {cap_s} |')
+    w("")
+    w("### 2.3 Stage baseline effects (docs/01 §3 + docs/03 §4)\n")
+    w("The world itself drifts as the stage rises. These rows are not model picks, so they carry no gate and no")
+    w("cooldown; FX.gd applies the row on every stage change and names it to the host. `desaturation` is the")
+    w("screen's 0–1 drain: docs/01 §3 starts it at stage 3 (\"backgrounds desaturate\") and docs/03 §4 gives the")
+    w("rate (`saturation × (1 − 0.15·stage)`, so stage 5 keeps 25%). The host ramps the value, so a transition")
+    w("reads as a drain rather than a snap.\n")
+    w("| Stage | Desaturation |")
+    w("|---|---|")
+    for stage, spec in c["stage_fx"].items():
+        w(f'| {stage} | {spec["desaturation"]:.2f} |')
     w("")
     w("## 3. Sprite on-enter events\n")
     w("Extra sound, music, fx or motion the instant a sprite appears, on top of the beat's own casting. `cue_below_stage4`")

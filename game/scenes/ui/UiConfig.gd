@@ -32,9 +32,12 @@ const DEFAULTS := {
 	{
 		"btn_continue": "Continue",
 		"btn_new_game": "New Game",
+		"btn_photosensitive": "Photosensitive mode: {state}",
 		"btn_quit": "Quit",
 		"btn_settings": "Settings",
 		"game_title": "Leila-chan",
+		"photosensitive_off": "Off",
+		"photosensitive_on": "On",
 		"subtitle": "A Dating Sim",
 	},
 	"new_game":
