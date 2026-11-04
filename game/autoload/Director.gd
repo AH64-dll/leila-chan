@@ -1,8 +1,7 @@
 extends Node
-## Director — turn pipeline (docs/02 §4). The only orchestrator of a turn.
-## Executes steps 0–7 of docs/02 §4: input hooks, context assembly, dynamic schema,
-## steering dose, streaming JSON generation, live subsystem dispatch, validation,
-## state application, and turn close.
+## Director — turn pipeline (docs/02 §4). The only orchestrator of a turn:
+## input hooks, context, dynamic schema, dose, streaming generation, live dispatch,
+## validation, state application, close.
 
 signal turn_started(turn_index: int, player_input: String)
 signal turn_chunk_received(chunk: String)
@@ -190,11 +189,9 @@ func register_character(node: Node) -> void:
 	character_node = node
 
 
-## The ChatUI seam (docs/07 §3.4). The scene that instantiates the ChatUI owns
-## the registration: `Date._ready()` registers it and `Date._exit_tree()` clears
-## it (P1 gate-r3 F1 / P2.23). Installing a `text_filter` here would scan the
-## same text twice — the Director scans every say chunk through Safety itself
-## before handing it over (review CODE-1).
+## The ChatUI seam (docs/07 §3.4): the scene that instantiates it owns the
+## registration (`Date._ready`/`_exit_tree`, P1 gate-r3 F1 / P2.23). No `text_filter`
+## here — the Director already scans every say chunk through Safety (review CODE-1).
 func register_chat_ui(node: Node) -> void:
 	chat_ui_node = node
 
@@ -278,9 +275,7 @@ func get_offered_actions() -> Array:
 	return []
 
 
-## -----------------------------------------------------------------------------
 ## Step 0: Input Reception & Pre-Turn Processing
-## -----------------------------------------------------------------------------
 func submit_player_input(raw_input: String, telemetry: Dictionary = {}) -> bool:
 	if _turn_in_flight:
 		push_warning("Director: turn already in flight; ignoring submit_player_input")
@@ -352,9 +347,7 @@ func _handle_input_telemetry(input_text: String, telemetry: Dictionary) -> void:
 		_turn_events.append(str(line))
 
 
-## -----------------------------------------------------------------------------
 ## Steps 1–4: TurnContext, Prompt, Schema, Dose & LLM generation
-## -----------------------------------------------------------------------------
 func _start_turn(player_text: String) -> bool:
 	_turn_in_flight = true
 	_turn_index = GameState.turn
@@ -455,9 +448,7 @@ func _start_turn(player_text: String) -> bool:
 	return true
 
 
-## -----------------------------------------------------------------------------
 ## Stream events & Live routing (Steps 5–6)
-## -----------------------------------------------------------------------------
 func _on_llm_token(token_text: String) -> void:
 	if not _turn_in_flight or _parser == null:
 		return
@@ -880,16 +871,12 @@ func _abort_turn(error_code: String, error_message: String) -> void:
 	turn_failed.emit(_turn_index, error_code, error_message)
 
 
-## One teardown for every exit (completed / failed / cancelled): the stream, the
-## parser and the turn-scoped state must not survive into the next turn, or a
-## later cancel() would act on a terminal stream and a stale `_current_turn_data`
-## would leak into the next close (review CODE-9).
-##
-## The player's unanswered line stays in `history` and `last_player_inputs`: the
-## player did say it, the model simply never answered, and the docs/02 §6 rule-1
-## window is about what the player actually typed. AudioDirector/FX keep their
-## per-turn counters — the turn *was* opened, so the budget it accrued is spent;
-## rewinding it would let a retry loop mint cue tokens.
+## One teardown for every exit: the stream, parser and turn-scoped state must not
+## survive into the next turn (a later cancel() would act on a terminal stream and
+## a stale `_current_turn_data` would leak into the close; review CODE-9). The
+## player's unanswered line stays in `history`/`last_player_inputs` (the docs/02 §6
+## rule-1 window is what was typed); AudioDirector/FX keep their per-turn counters
+## (the turn was opened, so its accrued budget is spent).
 func _teardown_turn() -> void:
 	_turn_in_flight = false
 	_active_stream = null
@@ -989,9 +976,7 @@ func replay_turn(turn_record: Dictionary) -> bool:
 	return true
 
 
-## -----------------------------------------------------------------------------
 ## Safety & Content Filters (docs/02 §8)
-## -----------------------------------------------------------------------------
 ## The player's own line. The filter owns the decision when it implements an
 ## input check; the Director keeps no local phrase list (review CODE-1/DES-7).
 func filter_player_input(input_text: String) -> bool:
@@ -1005,9 +990,7 @@ func filter_output(text_chunk: String) -> String:
 	return _safety.filter_text(text_chunk, {"stage": int(GameState.stage)})
 
 
-## -----------------------------------------------------------------------------
 ## Memory Validation (docs/02 §6)
-## -----------------------------------------------------------------------------
 ## The three docs/02 §6 rules live in MemoryRules; this is the Director-facing
 ## name the suite and P1.09's follow-ups call.
 static func validate_memory(
