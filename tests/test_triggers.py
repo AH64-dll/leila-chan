@@ -73,6 +73,22 @@ GUARD_CLOCK_KEYS = {
 GUARD_KEYS = GUARD_CLOCK_KEYS | {"counter_gte", "contradicts_memory"}
 DETECTOR_LETTERS = {"keyword": "K", "model": "M", "event": "E", "clock": "C"}
 LINE_TOKENS = {"count", "ordinal", "stage", "day", "turn", "fact"}
+# The row fields the loader reads. A misspelt field would be dropped silently,
+# so an unknown key is a contract failure, not data (P2.10 r2 CODE-5).
+ROW_KEYS = {
+    "name",
+    "detect",
+    "observe",
+    "guard",
+    "requires",
+    "behavior",
+    "escalate",
+    "cooldown_turns",
+    "stage_min",
+    "stage_max",
+    "effects",
+    "line",
+}
 
 TRIGGER_ROWS = TRIGGERS["triggers"]
 DEFAULTS = TRIGGERS["defaults"]
@@ -159,7 +175,17 @@ def test_every_row_is_a_legal_row() -> None:
         # Evidence is a detector or a guard the game evaluates itself (T13/T15:
         # docs/02 §1.2's read enum has no label for a lie or an ignored question).
         assert detect or guard, f"{trigger_id} has neither a detector nor a guard"
+        assert set(row) <= ROW_KEYS, (
+            f"{trigger_id} has unknown fields: {sorted(set(row) - ROW_KEYS)}"
+        )
         assert set(detect) <= DETECTORS, f"{trigger_id} uses an unknown detector"
+        observe = row.get("observe", {})
+        assert isinstance(observe, dict), f"{trigger_id} observe is not an object"
+        for flag, value in observe.items():
+            assert isinstance(flag, str) and flag.strip(), f"{trigger_id} has an empty flag"
+            assert isinstance(value, (bool, int, float, str)), (
+                f"{trigger_id} observe flag {flag!r} is not a scalar"
+            )
         assert set(guard) <= GUARD_KEYS, f"{trigger_id} uses an unknown guard: {sorted(guard)}"
         for counter, floor in guard.get("counter_gte", {}).items():
             assert counter in PROFILE_COUNTERS, f"{trigger_id} guards unknown counter {counter!r}"
@@ -331,6 +357,12 @@ def test_documented_effects_land() -> None:
     assert TRIGGER_ROWS["T06"]["effects"]["path"]["AWAKE"] == 6
     assert TRIGGER_ROWS["T07"]["effects"]["path"]["AWAKE"] == 10
     assert TRIGGER_ROWS["T13"]["effects"]["meters"]["trust"] == -10
+    contradiction = TRIGGER_ROWS["T13"]["guard"]["contradicts_memory"]
+    assert contradiction["min_shared_words"] >= 2, "one shared word is a coincidence"
+    for plain in ("never", "don't", "do not", "didn't", "wasn't", "was not"):
+        assert plain not in contradiction["negations"], (
+            f"{plain!r} is ordinary negation, not a denial of a statement"
+        )
     for trigger_id, path_id in [
         ("T02", "SPLIT"),
         ("T02", "YANDERE"),
@@ -346,6 +378,12 @@ def test_documented_effects_land() -> None:
     # vocabulary is meters/profile/path/flags (P2.08's row shape).
     assert TRIGGER_ROWS["T06"]["effects"]["flags"]["flash_sprite"] == 29
     assert TRIGGER_ROWS["T14"]["effects"]["flags"]["flash_sprite"] == 17
+    # docs/01 §5 T09/T12's numbers (r2 DES-3: the bible states them now).
+    assert TRIGGER_ROWS["T09"]["effects"]["path"]["SPLIT"] == 2
+    assert TRIGGER_ROWS["T12"]["effects"]["profile"]["apathy"] == 1
+    assert "SPLIT +2" in DOC_TRIGGERS["T09"]["effect"]
+    assert "apathy +1" in DOC_TRIGGERS["T12"]["effect"]
+    assert "again each time you bring her up" in DOC_TRIGGERS["T01"]["effect"]
     # P2.12's seam: the two §4 formula counters the brief names are fed here.
     assert "broken_promises" in TRIGGER_ROWS["T13"]["effects"]["profile"]
     assert TRIGGER_ROWS["T15"]["guard"]["counter_gte"] == {"ignored_questions": 1}
@@ -357,7 +395,10 @@ def test_t03_t04_are_one_clock_pair() -> None:
     # flag T03 writes is what makes T04's clock detector stand down.
     t03 = TRIGGER_ROWS["T03"]
     assert t03["guard"]["day_lte"] == 2
-    assert t03["effects"]["flags"]["love_confessed"] is True
+    # The flag is written by `observe`, which runs before the guard: ANY
+    # confession sets it, so a Day 3–9 confession stands T04 down (r2 CODE-1).
+    assert t03["observe"]["love_confessed"] is True
+    assert "flags" not in t03["effects"], "the reaction must not be the flag's only writer"
     t04 = TRIGGER_ROWS["T04"]
     assert t04["detect"]["clock"]["day_gte"] == 10
     assert t04["detect"]["clock"]["flag_absent"] == "love_confessed"
@@ -378,3 +419,23 @@ def test_guard_only_rows_are_the_game_checks() -> None:
     for trigger_id in ("T13", "T15"):
         declared = {DETECTOR_LETTERS[detector] for detector in TRIGGER_ROWS[trigger_id]["detect"]}
         assert declared == set()
+
+
+def test_t01_name_list_has_no_common_nouns() -> None:
+    # r2 CODE-4: "she moved with such grace" is not another girl. Every name
+    # alternative must fail on a sentence that only uses the word as a noun.
+    names = TRIGGER_ROWS["T01"]["detect"]["keyword"]["any"][0]
+    assert not re.search(names, "she moved with such grace through the room", re.I)
+    assert re.search(names, "I ran into Sarah on the way here", re.I)
+
+
+def test_t02_see_you_is_a_farewell_not_a_greeting() -> None:
+    # r2 CODE-2: "I see you, Leila" is a date line. The row keeps the farewell.
+    patterns = TRIGGER_ROWS["T02"]["detect"]["keyword"]["any"]
+
+    def fires(text: str) -> bool:
+        return any(re.search(pattern, text, re.I) for pattern in patterns)
+
+    assert fires("see you later")
+    assert fires("I have to go now")
+    assert not fires("I see you, Leila. You look tired.")

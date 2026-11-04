@@ -87,10 +87,13 @@ func close_gate() -> int:
 
 
 ## docs/02 §2.4: meta actions are offered, never free. Empty unless a close was
-## actually held; the OPPORTUNITY line is already queued as the turn's event.
+## actually held. docs/05 §2 puts the reason on every turn with an offer, so the
+## sentence is queued again here: the pending-event queue drains once per submit,
+## and an offer that outlived its one line would leave the enum without a why.
 func offers(stage: int) -> Array:
 	if not _offer_open or stage < close_gate():
 		return []
+	GameState.queue_event(_opportunity_line())
 	return [EXIT_OFFER]
 
 

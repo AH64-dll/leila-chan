@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "doc": "P2.08 trigger engine catalogue, rows T01-T15 authored by P2.10. Sources: docs/01_GAME_DESIGN.md §5 (the hidden triggers T01-T32 and their four detection letters K keyword/regex, M the Turn's `read` label, E engine event, C clock/OS, plus 'every trigger has once / repeatable / escalating behavior, and a cooldown'), docs/02_DIRECTOR_PROTOCOL.md §1.2 (the `read` enum and the agreement rule: both detectors agree -> full strength, model-only -> half) and §5 (over-budget values are dropped silently), docs/08_PROMPTS_AND_CONTENT.md §6 (the TRIGGER/EVENT line style), docs/05_META_EVENTS.md §0 (a trigger may never trap the player: closing always works) and §1.1 M01 (the close intercept). Engine shape: strength is the detector weight table the engine multiplies into every effect; defaults are the per-row fallbacks; triggers maps a trigger id (Tnn) to one row. ROW FIELDS: name (human label); detect (any of keyword/model/event/clock, at least one, or none when the row carries a guard); guard (game-side preconditions that must ALSO hold, but that are not detectors: the clock vocabulary day_gte/day_lte/day_eq/turn_gte/hour_from/hour_to/absence_hours_gte/flag_set/flag_absent, plus counter_gte {profile counter: n} against THIS turn's bump and contradicts_memory {negations: [...], min_shared_words: n} against the memory store's true facts — the last two exist because docs/02 §1.2's read enum has no label for a lie or for an ignored question, see the P2.10 DCRs); requires ('any' = fire when any detector matches and the model alone halves the effect, 'all' = every declared detector must agree and the effect is full); behavior (once = one firing per session/save, repeatable, escalating = the effect and the per-step line grow by escalate.step_scale per escalation step; escalate.axis picks the step: 'step' (default) counts firings and stops after escalate.max_steps of them, 'stage' counts the stage since stage_min, caps the step at max_steps and keeps repeating like repeatable, because docs/01 §5 T08 escalates with the dose, not with how often the player poked it); cooldown_turns (a repeat waits this many turns); stage_min/stage_max (docs/01 §3 stage gate on her reaction; detection itself is ungated, P2.09); effects (meters/profile/path/flags, all scaled by strength except flags — `flash_sprite` is the docs/01 §5 'sprite 29 / sprite 17 flash' request, read by the resolver when P2.14 exposes a forced frame); line (a docs/08 §6 template with {count} {ordinal} {stage} {day} {turn} and {fact} — the contradicted memory fact of a T13 firing — or an array indexed by escalation step). Effects that must halve cleanly use even values: profile and path points round half away from zero. E rows leave `line` empty on purpose: data/telemetry.json already supplies that EVENT line, so a row here would double it. A guard-fired row (T13, T15) fires at full strength: its evidence is the game's own deterministic check, not the model's read label.",
+  "doc": "P2.08 trigger engine catalogue, rows T01-T15 authored by P2.10. Sources: docs/01_GAME_DESIGN.md §5 (the hidden triggers T01-T32 and their four detection letters K keyword/regex, M the Turn's `read` label, E engine event, C clock/OS, plus 'every trigger has once / repeatable / escalating behavior, and a cooldown'), docs/02_DIRECTOR_PROTOCOL.md §1.2 (the `read` enum and the agreement rule: both detectors agree -> full strength, model-only -> half) and §5 (over-budget values are dropped silently), docs/08_PROMPTS_AND_CONTENT.md §6 (the TRIGGER/EVENT line style), docs/05_META_EVENTS.md §0 (a trigger may never trap the player: closing always works) and §1.1 M01 (the close intercept). Engine shape: strength is the detector weight table the engine multiplies into every effect; defaults are the per-row fallbacks; triggers maps a trigger id (Tnn) to one row. ROW FIELDS: name (human label); detect (any of keyword/model/event/clock, at least one, or none when the row carries a guard); observe (a flat {flag: value} map the game records as soon as the row's own evidence matches — before the guard, the caps and the cooldown — so state the game owns, like T03's confession flag, is true on every confession and not only on the days she reacts; an unknown key is dropped and never reaches GameState); guard (game-side preconditions that must ALSO hold, but that are not detectors: the clock vocabulary day_gte/day_lte/day_eq/turn_gte/hour_from/hour_to/absence_hours_gte/flag_set/flag_absent, plus counter_gte {profile counter: n} against THIS turn's bump and contradicts_memory {negations: [...], min_shared_words: n} against the memory store's true facts (a cue must govern the clause that shares the words — from the cue to the next , . ; ! ? — and the cue's own words never count, so 'I don't like that music' is an opinion, not a denial of 'I like music') — the last two exist because docs/02 §1.2's read enum has no label for a lie or for an ignored question, see the P2.10 DCRs); requires ('any' = fire when any detector matches and the model alone halves the effect, 'all' = every declared detector must agree and the effect is full); behavior (once = one firing per session/save, repeatable, escalating = the effect and the per-step line grow by escalate.step_scale per escalation step; escalate.axis picks the step: 'step' (default) counts firings and stops after escalate.max_steps of them, 'stage' counts the stage since stage_min, caps the step at max_steps and keeps repeating like repeatable, because docs/01 §5 T08 escalates with the dose, not with how often the player poked it); cooldown_turns (a repeat waits this many turns); stage_min/stage_max (docs/01 §3 stage gate on her reaction; detection itself is ungated, P2.09); effects (meters/profile/path/flags, all scaled by strength except flags — `flash_sprite` is the docs/01 §5 'sprite 29 / sprite 17 flash' request, read by the resolver when P2.14 exposes a forced frame); line (a docs/08 §6 template with {count} {ordinal} {stage} {day} {turn} and {fact} — the player message the contradicted memory was grounded in (T13) — or an array indexed by escalation step). Effects that must halve cleanly use even values: profile and path points round half away from zero. E rows leave `line` empty on purpose: data/telemetry.json already supplies that EVENT line, so a row here would double it. A guard-fired row (T13, T15) fires at full strength: its evidence is the game's own deterministic check, not the model's read label.",
   "strength": {
     "agreement": 1.0,
     "keyword": 1.0,
@@ -26,7 +26,7 @@
       "detect": {
         "keyword": {
           "any": [
-            "\\b(sarah|sara|emma|anna|annie|julia|julie|kate|katie|mia|sophie|sophia|chloe|olivia|maria|nina|lena|clara|alice|hannah|isabel|isabella|grace|victoria|jessica|amy|maya|nora|zoe|ella|faye|kelly|laura|lucy|nadia|olga|paula|rita|sasha|tina|vera|yara|fatima|salma|nour|layla|yasmin|mariam)\\b",
+            "\\b(sarah|sara|emma|anna|annie|julia|julie|kate|katie|mia|sophie|sophia|chloe|olivia|maria|nina|lena|clara|alice|hannah|isabel|isabella|victoria|jessica|amy|maya|nora|zoe|ella|faye|kelly|laura|lucy|nadia|olga|paula|rita|sasha|tina|vera|yara|fatima|salma|nour|layla|yasmin|mariam)\\b",
             "\\banother girl\\b",
             "\\bthis (other )?girl\\b",
             "\\bmy ex\\b",
@@ -64,7 +64,7 @@
             "\\bi should go\\b",
             "\\bi('m| am) leaving\\b",
             "\\bgotta run\\b",
-            "\\bsee you\\b",
+            "\\bsee you (later|soon|tomorrow|tonight|around)\\b",
             "\\bsee ya\\b",
             "\\btalk (to you )?later\\b",
             "\\bgtg\\b"
@@ -91,6 +91,9 @@
           ]
         }
       },
+      "observe": {
+        "love_confessed": true
+      },
       "guard": {
         "day_lte": 2
       },
@@ -100,9 +103,6 @@
         "meters": {
           "affection": 3,
           "instability": 5
-        },
-        "flags": {
-          "love_confessed": true
         }
       },
       "line": "TRIGGER: The player said they love you on day {day}. It is too fast; it sounds like a lie."
@@ -307,24 +307,33 @@
       "guard": {
         "contradicts_memory": {
           "negations": [
-            "never",
-            "not true",
-            "didn't",
-            "did not",
-            "don't",
-            "do not",
-            "wasn't",
-            "was not",
-            "that's a lie",
-            "that is a lie",
-            "you're wrong",
-            "you are wrong",
             "never said",
             "never told",
-            "i didn't say",
-            "i never"
+            "never mentioned",
+            "never happened",
+            "didn't say",
+            "did not say",
+            "didn't tell",
+            "did not tell",
+            "didn't mention",
+            "did not mention",
+            "i never",
+            "i didn't",
+            "i did not",
+            "that's a lie",
+            "that is a lie",
+            "that's not true",
+            "that is not true",
+            "not true",
+            "you're wrong",
+            "you are wrong",
+            "you're lying",
+            "you are lying",
+            "you lied",
+            "made that up",
+            "making that up"
           ],
-          "min_shared_words": 1
+          "min_shared_words": 2
         }
       },
       "behavior": "repeatable",

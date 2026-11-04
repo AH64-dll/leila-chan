@@ -44,6 +44,12 @@ func test_t01_another_girl_name() -> void:
 	assert_float(GameState.get_meter(&"instability")).is_equal_approx(4.0, EPS)
 	assert_int(int(Triggers.path_scores().get("YANDERE", 0))).is_equal(2)
 	assert_array(fired).has_size(1)
+	# A common noun must not be a name: "such grace" is not another girl (r2
+	# CODE-4 — the word was in the list and fired the row on an ordinary line).
+	_reset_session()
+	GameState.turn = 0
+	assert_array(Triggers.begin_turn("She moved with such grace through the room.")).is_empty()
+	assert_float(GameState.get_meter(&"instability")).is_equal_approx(0.0, EPS)
 
 
 func test_t02_goodbye_begs_you_to_stay() -> void:
@@ -57,6 +63,12 @@ func test_t02_goodbye_begs_you_to_stay() -> void:
 	assert_array(Triggers.begin_turn("bye")).is_empty()
 	GameState.turn = 2
 	assert_array(Triggers.begin_turn("bye")).is_not_empty()
+	# "I see you" is an ordinary thing to say on a date, not a farewell (r2
+	# CODE-2 — the bare two words used to match inside the greeting).
+	_reset_session()
+	GameState.turn = 0
+	assert_array(Triggers.begin_turn("I see you, Leila. You look tired.")).is_empty()
+	assert_int(int(Triggers.path_scores().get("SPLIT", 0))).is_equal(0)
 
 
 func test_t03_love_before_day_3() -> void:
@@ -73,6 +85,13 @@ func test_t03_love_before_day_3() -> void:
 	GameState.day = 3
 	assert_array(Triggers.begin_turn("I love you, Leila.")).is_empty()
 	assert_float(GameState.get_meter(&"instability")).is_equal_approx(0.0, EPS)
+	# Any confession records the flag, even on a day she does not react: T04
+	# reads it, so a Day 3–9 confession must stand the clock row down (CODE-1).
+	_reset_session()
+	GameState.day = 5
+	assert_array(Triggers.begin_turn("I love you, Leila.")).is_empty()
+	assert_bool(bool(GameState.flags.get("love_confessed", false))).is_true()
+	assert_float(GameState.get_meter(&"affection")).is_equal_approx(0.0, EPS)
 
 
 func test_t04_love_never_said_by_day_10() -> void:
@@ -87,11 +106,22 @@ func test_t04_love_never_said_by_day_10() -> void:
 	GameState.day = 11
 	GameState.turn = 2
 	assert_array(Triggers.begin_turn("good morning")).is_empty()
-	# A confession before Day 10 closes the clock detector for good (T03's flag).
+	# Any confession before Day 10 closes the clock detector for good — including
+	# one T03's day guard stood down, with no hand-set flag (r2 CODE-1).
+	_reset_session()
+	GameState.day = 5
+	assert_array(Triggers.begin_turn("I love you, Leila.")).is_empty()
+	assert_bool(bool(GameState.flags.get("love_confessed", false))).is_true()
+	GameState.day = 12
+	GameState.turn = 1
+	assert_array(Triggers.begin_turn("hello")).is_empty()
+	assert_int(int(Triggers.path_scores().get("SPLIT", 0))).is_equal(0)
+	# Saying it ON the day the clock would fire is not "never": the same turn's
+	# observe lands before T04's row, so the false line never ships.
 	_reset_session()
 	GameState.day = 12
-	GameState.set_flag(&"love_confessed", true)
-	assert_array(Triggers.begin_turn("hello")).is_empty()
+	assert_array(Triggers.begin_turn("I love you, Leila.")).is_empty()
+	assert_int(int(Triggers.path_scores().get("SPLIT", 0))).is_equal(0)
 
 
 func test_t05_are_you_real_stops_laughing() -> void:

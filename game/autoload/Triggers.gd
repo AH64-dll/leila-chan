@@ -95,6 +95,7 @@ func begin_turn(input_text: String) -> Array[String]:
 		var line := _apply(result, false)
 		if not line.is_empty():
 			lines.append(line)
+	_write_observed()
 	return lines
 
 
@@ -113,6 +114,7 @@ func close_turn(read_label: String) -> Array[String]:
 		var line := _apply(result, true)
 		if not line.is_empty():
 			lines.append(line)
+	_write_observed()
 	return lines
 
 
@@ -129,6 +131,7 @@ func handle_engine_event(event: Dictionary) -> void:
 	ctx["event"] = copy
 	for result: Dictionary in _engine.handle_event(ctx):
 		_apply(result, true)
+	_write_observed()
 
 
 ## Last event of a kind, or {} (debug overlay / tests).
@@ -254,11 +257,21 @@ func _context(upcoming: bool) -> Dictionary:
 	}
 
 
-## The memory store's true facts, as a plain Array for the engine's guard.
+## The memory store's true facts, each with the player message it was grounded
+## in (docs/01 §5 T13 quotes the player, not her paraphrase), for the guard.
 func _memory_facts() -> Array:
 	if Memory == null:
 		return []
-	return Memory.facts()
+	return Memory.facts_with_sources()
+
+
+## docs/01 §5 T04: flags a row's `observe` block wrote on its own evidence (T03's
+## confession on any day). Drained, so a second entry point in the same turn
+## cannot write the same marker twice.
+func _write_observed() -> void:
+	var flags := _engine.take_observed_flags()
+	for flag: Variant in flags:
+		GameState.set_flag(StringName(str(flag)), flags[flag])
 
 
 ## Counters the game bumped since this turn's begin_turn(). Only the closed turn

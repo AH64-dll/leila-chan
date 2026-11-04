@@ -49,6 +49,12 @@ func facts() -> Array[String]:
 	return _store.facts()
 
 
+## Each true fact with the player message it was grounded in: docs/01 §5 T13
+## quotes the player's own words, never her paraphrase of them.
+func facts_with_sources() -> Array[Dictionary]:
+	return _store.facts_with_sources()
+
+
 func size() -> int:
 	return _store.size()
 

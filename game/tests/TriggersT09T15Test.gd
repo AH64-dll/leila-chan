@@ -153,7 +153,10 @@ func test_t13_lie_costs_trust_and_quotes_the_fact() -> void:
 	var lines := Triggers.begin_turn("I never gave you a music box.")
 	assert_float(GameState.get_meter(&"trust")).is_equal_approx(-10.0, EPS)
 	assert_int(int(GameState.profile.get("broken_promises", 0))).is_equal(1)
-	assert_str(String(lines[0])).contains("gave me a music box")
+	# docs/01 §5 T13 quotes "your earlier message exactly": the stored fact is
+	# her paraphrase, so the line carries the player's own sentence (r2 DES-2).
+	assert_str(String(lines[0])).contains('"I got you a music box yesterday"')
+	assert_str(String(lines[0])).not_contains("gave me a music box")
 	assert_int(_count("T13")).is_equal(1)
 
 
@@ -163,6 +166,11 @@ func test_t13_needs_a_denial_and_a_shared_fact() -> void:
 	Memory.consider("gave me a music box", ["I got you a music box yesterday"])
 	assert_array(Triggers.begin_turn("I never told you that.")).is_empty()
 	assert_array(Triggers.begin_turn("I gave you a music box.")).is_empty()
+	# A plain opinion is not a lie (r2 CODE-3): one cue plus one shared word used
+	# to cost trust −10 against a fact the player never denied.
+	Memory.consider("I like music", ["I like music a lot"])
+	assert_array(Triggers.begin_turn("I don't like that music.")).is_empty()
+	assert_array(Triggers.begin_turn("I never said that about the music.")).is_empty()
 	assert_float(GameState.get_meter(&"trust")).is_equal_approx(0.0, EPS)
 	assert_int(int(GameState.profile.get("broken_promises", 0))).is_equal(0)
 	# Nothing to contradict: an empty store can never fire it.
@@ -218,6 +226,49 @@ func test_turn_lines_land_where_they_are_read() -> void:
 	assert_array(closed).has_size(1)
 	assert_array(GameState.pending_events).has_size(1)
 	assert_str(String(GameState.pending_events[0])).starts_with("TRIGGER: The player insulted you")
+
+
+func test_close_gate_is_read_from_the_t10_row() -> void:
+	# docs/07 §2: the gate is data. A catalogue whose T10 stage_min moved must
+	# move the intercept with it, or MetaDirector keeps a second copy of "3".
+	var doc := {
+		"triggers":
+		{
+			"T10":
+			{
+				"name": "close_requested",
+				"detect": {"event": ["close_requested"]},
+				"stage_min": 4,
+			}
+		}
+	}
+	assert_bool(Triggers.set_catalog(doc)).is_true()
+	assert_int(Triggers.stage_min_of("T10")).is_equal(4)
+	assert_int(MetaDirector.close_gate()).is_equal(4)
+	# An unknown id has no gate, and a catalogue that lost T10 falls back to
+	# docs/05 §1.1's St 3 instead of intercepting at the wrong stage.
+	assert_int(Triggers.stage_min_of("T99")).is_equal(-1)
+	Triggers.set_catalog({"triggers": {}})
+	assert_int(MetaDirector.close_gate()).is_equal(3)
+	Triggers.load_catalog()
+
+
+func test_close_offer_line_rides_every_turn_of_the_offer() -> void:
+	# docs/05 §2: the OPPORTUNITY sentence appears "only on turns with an offer",
+	# and docs/02 §2.4's why has to be there on every one of them. The event queue
+	# drains once per submit, so the offer re-queues its sentence while it is open
+	# (r2 DES-4: turn 2 kept the enum without the reason).
+	GameState.set_meter(&"instability", 55.0)  # stage 3
+	MetaDirector.set_quit_callable(func() -> void: pass)
+	MetaDirector._on_close_requested()
+	var offer_line := TurnSchema.opportunity_line("refuse_exit")
+	assert_array(GameState.take_pending_events()).contains(offer_line)
+	assert_array(MetaDirector.offers(3)).is_equal(["refuse_exit"])
+	assert_array(GameState.take_pending_events()).contains(offer_line)
+	# A consumed offer stops both the action and its sentence.
+	MetaDirector.execute_after_text("refuse_exit")
+	assert_array(MetaDirector.offers(3)).is_empty()
+	assert_array(GameState.pending_events).not_contains(offer_line)
 
 
 ## ── Harness ───────────────────────────────────────────────────────────────

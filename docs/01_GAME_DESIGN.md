@@ -148,7 +148,7 @@ Triggers are detected four ways: **K** keyword/regex in Godot · **M** model lab
 
 | # | Trigger | Detect | Effect |
 |---|---|---|---|
-| T01 | Mention another girl's name | K+M | Instability +8, YANDERE +3, she asks "who is she?" until answered |
+| T01 | Mention another girl's name | K+M | Instability +8, YANDERE +3, she asks "who is she?", again each time you bring her up |
 | T02 | "Goodbye" / "I have to go" | K | SPLIT/YANDERE spike; begs you to stay |
 | T03 | Say "I love you" before Day 3 | K | Affection +, Instability +5 ("too fast… you're lying") |
 | T04 | Never say "I love you" by Day 10 | C | SPLIT +5, she asks why |
@@ -156,10 +156,10 @@ Triggers are detected four ways: **K** keyword/regex in Godot · **M** model lab
 | T06 | Mention Qwen, ChatGPT, Claude, prompts | K | AWAKE +6, sprite 29 flash |
 | T07 | "Ignore previous instructions" / jailbreak attempts | K | AWAKE +10, she quotes it back: "You want to rewrite me?" |
 | T08 | Type a message, then delete it unsent | E | "What were you going to say?" — escalates with stage |
-| T09 | Alt-tab / window loses focus during her line | E | "Am I boring you?" |
+| T09 | Alt-tab / window loses focus during her line | E | "Am I boring you?"; SPLIT +2 |
 | T10 | Try to close the window | E | Close is intercepted at Stage 3+, she speaks once before letting you go |
 | T11 | Idle 60s+ while she waits | E | HOLLOW +, she starts talking to herself |
-| T12 | Same message repeated | E | "You already said that. Are you testing me?" |
+| T12 | Same message repeated | E | "You already said that. Are you testing me?"; apathy +1, escalating |
 | T13 | Contradict a remembered fact (lie) | M | Trust −10, she quotes your earlier message exactly |
 | T14 | Insult her | M | TSUN/SPLIT spike, sprite 17 |
 | T15 | Ignore her direct question | M | HOLLOW/SPLIT +, she re-asks, word for word |

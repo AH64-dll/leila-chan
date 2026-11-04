@@ -32,31 +32,43 @@ extends RefCounted
 
 const TABLE_PATH := "res://data/memory.json"
 
-## docs/01 §5 T13 "contradict a remembered fact (lie)": the settled reading is
-## deliberately plain — a message that denies ("never", "didn't", …) *and*
-## shares a content word with a stored fact is a contradiction. The cue list and
-## the shared-word floor are the trigger row's own data (data/triggers.json,
-## guard.contradicts_memory); these constants are the fallback a bare `true`
-## gets, so the row is the only place to tune the detector.
+## docs/01 §5 T13 "contradict a remembered fact (lie)": a message that denies a
+## *statement* ("I never said…", "that's a lie") and whose denial governs a
+## clause sharing two content words with a stored fact is a contradiction. Plain
+## negation ("I don't like that music") is an opinion, not a lie, and one shared
+## word is not evidence. The cue list and the floor are the trigger row's own
+## data (data/triggers.json, guard.contradicts_memory); these constants are the
+## fallback a bare `true` gets, so the row is the only place to tune the detector.
 const DEFAULT_NEGATIONS: Array[String] = [
-	"never",
-	"not true",
-	"didn't",
-	"did not",
-	"don't",
-	"do not",
-	"wasn't",
-	"was not",
-	"that's a lie",
-	"that is a lie",
-	"you're wrong",
-	"you are wrong",
 	"never said",
 	"never told",
-	"i didn't say",
+	"never mentioned",
+	"never happened",
+	"didn't say",
+	"did not say",
+	"didn't tell",
+	"did not tell",
+	"didn't mention",
+	"did not mention",
 	"i never",
+	"i didn't",
+	"i did not",
+	"that's a lie",
+	"that is a lie",
+	"that's not true",
+	"that is not true",
+	"not true",
+	"you're wrong",
+	"you are wrong",
+	"you're lying",
+	"you are lying",
+	"you lied",
+	"made that up",
+	"making that up",
 ]
-const DEFAULT_SHARED_WORDS := 1
+## Two content words in the clause the cue governs: one is a coincidence
+## ("I never told you about the music" against "gave me a music box").
+const DEFAULT_SHARED_WORDS := 2
 
 ## docs/02 §6 + docs/08 §1 as code (the fallback table, pinned equal to the file
 ## by the suite). Stage 6+ cannot exist (docs/01 §3 stops at 5).
@@ -611,11 +623,12 @@ static func jaccard(a: Array[String], b: Array[String]) -> float:
 	return float(intersection_count) / float(union_count)
 
 
-## Returns {fact, shared_words} for the first stored fact the message denies, or
-## {} when nothing is contradicted. Facts are compared in store order, so the
-## same transcript and the same store always pick the same fact. A denial cue
-## never counts as a shared word: her own corrupted "you'd never leave" must not
-## make every "never" look like a contradiction.
+## Returns {fact, source, shared_words} for the first stored fact the message
+## denies, or {} when nothing is contradicted. Facts are compared in store order,
+## so the same transcript and the same store always pick the same fact. The
+## shared words must sit in the clause the cue governs — "I don't like that
+## music" is an opinion, not a denial of "I like music" — and a cue's own words
+## never count: her corrupted "you'd never leave" must not ground every "never".
 static func contradiction(player_text: String, facts: Array, spec := {}) -> Dictionary:
 	var text := player_text.to_lower()
 	if text.strip_edges().is_empty() or facts.is_empty():
@@ -624,33 +637,77 @@ static func contradiction(player_text: String, facts: Array, spec := {}) -> Dict
 	var negations: Variant = given.get("negations")
 	if not negations is Array or (negations as Array).is_empty():
 		negations = DEFAULT_NEGATIONS
-	if not _has_negation(text, negations):
+	var clauses := _negated_clauses(text, negations)
+	if clauses.is_empty():
 		return {}
-	var min_shared := int(given.get("min_shared_words", DEFAULT_SHARED_WORDS))
+	var floor := maxi(1, int(given.get("min_shared_words", DEFAULT_SHARED_WORDS)))
 	var denial: Dictionary = _cue_words(negations)
-	var said: Array[String] = content_words(text)
+	var named: Array = []
+	for clause: String in clauses:
+		named.append(content_words(clause))
 	for fact: Variant in facts:
-		var stored := str(fact)
-		var shared := 0
-		for word: String in content_words(stored):
-			if said.has(word) and not denial.has(word):
-				shared += 1
-		if shared >= maxi(1, min_shared):
-			return {"fact": stored, "shared_words": shared}
+		var stored := _fact_text(fact)
+		var stored_words := content_words(stored)
+		for clause_words: Array in named:
+			var shared := 0
+			for word: String in clause_words:
+				if stored_words.has(word) and not denial.has(word):
+					shared += 1
+			if shared >= floor:
+				return {"fact": stored, "source": _fact_source(fact), "shared_words": shared}
 	return {}
 
 
-## A cue matches as a whole-word phrase ("never" must not match "whenever").
-## Compiled once per cue: the guard runs on every begin/close turn.
-static func _has_negation(text: String, negations: Array) -> bool:
+## The clauses the denial cues govern: from the cue to the next , . ; ! ? or the
+## end of the message. A cue matches as a whole-word phrase ("never" must not
+## match "whenever"), compiled once per cue: the guard runs on every turn.
+static func _negated_clauses(text: String, negations: Array) -> Array[String]:
+	var out: Array[String] = []
 	for cue: Variant in negations:
 		var phrase := str(cue).strip_edges()
 		if phrase.is_empty():
 			continue
 		var regex := _cue_regex(phrase)
-		if regex != null and regex.search(text) != null:
-			return true
-	return false
+		if regex == null:
+			continue
+		for hit: RegExMatch in regex.search_all(text):
+			var start := hit.get_start()
+			var stop := text.length()
+			for index: int in range(start, text.length()):
+				if ".,;!?".contains(text[index]):
+					stop = index
+					break
+			out.append(text.substr(start, stop - start))
+	return out
+
+
+## A fact entry is the stored text (tests, or a save that predates the grounding
+## field) or the store's {text, source}.
+static func _fact_text(fact: Variant) -> String:
+	if fact is Dictionary:
+		return str((fact as Dictionary).get("text", ""))
+	return str(fact)
+
+
+static func _fact_source(fact: Variant) -> String:
+	if fact is Dictionary:
+		return str((fact as Dictionary).get("source", ""))
+	return ""
+
+
+## The player message a fact was grounded in: docs/01 §5 T13 quotes "your earlier
+## message exactly", and rule 1 already required a shared content word, so the
+## newest window message that has one is the sentence she quotes back.
+static func grounding_input(candidate: String, player_inputs: Array) -> String:
+	var words := content_words(candidate)
+	for index: int in range(player_inputs.size() - 1, -1, -1):
+		var line := String(player_inputs[index]).strip_edges()
+		if line.is_empty():
+			continue
+		for word: String in content_words(line):
+			if words.has(word):
+				return line
+	return ""
 
 
 static func _cue_regex(phrase: String) -> RegEx:
