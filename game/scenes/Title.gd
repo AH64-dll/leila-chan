@@ -121,6 +121,11 @@ func _refresh_continue() -> void:
 
 func _on_settings_pressed() -> void:
 	settings_requested.emit()
+	# docs/09: one settings surface — the PauseMenu overlay's settings page.
+	# The accommodation row above stays the pre-date toggle; this opens the
+	# same flag's documented home instead of a second screen.
+	if has_node("/root/PauseMenu"):
+		get_node("/root/PauseMenu").open_settings()
 
 
 ## The accommodation must be toggleable with keyboard only (Enter on the row,

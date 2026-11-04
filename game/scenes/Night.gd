@@ -8,9 +8,9 @@ extends Control
 ## black, holds it, shows the morning line, then hands the loop on — to the next
 ## day's Date, or to the campaign's end.
 ##
-## Accessibility: Esc always works (docs/05 §0 rule 3) and ends the night, N12's
-## ten seconds included, because this screen has no pause menu yet (P3.13) and a
-## screen that ignores the player is worse than a skipped beat. The skip window and
+## Accessibility: Esc always works (docs/05 §0 rule 3): P3.13's PauseMenu
+## opens the safe pause even on the black screen — N12's ten seconds included —
+## and pausing never skips the event. The skip window and
 ## the hold are data; the timeline is driven by advance_time(), which tests step
 ## exactly instead of waiting on the wall clock.
 
@@ -172,13 +172,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 
-## docs/05 §0 rule 3: Esc always works. This screen has no pause menu yet, so the
-## safe behaviour is to move the loop on rather than hold the player on a screen
-## that ignores them — the black ten seconds included.
+## docs/05 §0 rule 3: Esc always works. P3.13's PauseMenu reads Esc in _input
+## before this handler ever sees it and opens the safe pause; this path stays
+## as the scene-level signal for tests and for a build without the autoload —
+## and it never ends the night: pausing must not skip the event.
 func _request_pause() -> void:
 	pause_requested.emit()
-	if not _finished:
-		_finish()
 	if get_viewport() != null:
 		get_viewport().set_input_as_handled()
 
