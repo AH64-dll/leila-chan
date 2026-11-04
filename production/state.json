@@ -3357,7 +3357,7 @@
       "started": "2026-11-04T20:30:51+02:00"
     },
     "P3.11": {
-      "status": "in_review",
+      "status": "changes_requested",
       "agent": "swe2",
       "round": 1,
       "reviews": [],
@@ -8277,6 +8277,12 @@
       "ts": "2026-11-04T23:44:31+02:00",
       "event": "in_review->done",
       "ref": "P3.09",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T23:44:36+02:00",
+      "event": "in_review->changes_requested",
+      "ref": "P3.11",
       "note": ""
     }
   ]
