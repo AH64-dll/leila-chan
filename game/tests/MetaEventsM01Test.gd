@@ -99,7 +99,9 @@ func test_m02_she_closed_quits_after_writing_the_marker() -> void:
 ## docs/05 §1.1 M02's next launch: the title is altered and she speaks first —
 ## once. Reading the title state is what shows the line, so it is consumed.
 func test_m02_title_line_is_shown_once() -> void:
-	_meta.set_quit_callable(Callable())
+	# A no-op, not an invalid Callable: the M02 effect really quits, and an
+	# invalid seam falls through to get_tree().quit(), which kills the runner.
+	_meta.set_quit_callable(func() -> void: pass)
 	_meta.fire("M02", "she_closes_game")
 	var view: Dictionary = _meta.title_state()
 	assert_str(str(view["line"])).is_not_empty()

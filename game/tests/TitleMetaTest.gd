@@ -91,9 +91,15 @@ func test_m06_portrait_appears_at_stage_two_and_changes_with_stage() -> void:
 	assert_object(portrait).is_not_null()
 	var atlas := portrait.texture as AtlasTexture
 	assert_object(atlas).is_not_null()
-	# The crop is casting's bust_crop_native in display (x2) pixels.
+	# The crop is casting's bust_crop_native in display (x2) pixels. Assert the
+	# base region: the atlas region itself drifts toward the cursor under the
+	# eye-follow, so it is `_meta_base_region` + the frame's step.
 	var expected := Rect2(208, 40, 352, 400)
-	assert_bool(atlas.region.is_equal_approx(expected)).is_true()
+	assert_bool(mid._meta_base_region.is_equal_approx(expected)).is_true()
+	var step: Vector2 = atlas.region.position - mid._meta_base_region.position
+	assert_bool(atlas.region.size.is_equal_approx(mid._meta_base_region.size)).is_true()
+	assert_float(absf(step.x)).is_less_equal(4.0)
+	assert_float(absf(step.y)).is_less_equal(4.0)
 	# And the eye offset is the module's documented 2 px.
 	assert_int(mid._meta_eyes_px).is_equal(2)
 

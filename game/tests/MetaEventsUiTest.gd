@@ -197,7 +197,11 @@ func test_m03_cold_open_line_reaches_the_chat() -> void:
 	assert_bool(_date.chat_ui.is_turn_open()).is_false()
 
 
-## docs/05 §1.1 M08: a stored shadow memory is said out loud on Day 1.
+## docs/05 §1.1 M08: a stored shadow memory is said out loud on Day 1. The
+## line rides the real chat pipeline (docs/07 §3.4), so stage-3 corruption
+## decorates it — strike-through marks inside words, insertions between them.
+## The assertion is on the word list after stripping combining marks, which is
+## exactly what a reader sees.
 func test_m08_shadow_memory_line_reaches_the_chat() -> void:
 	var shadow := ShadowStore.new()
 	shadow.path = SaveSystem.shadow_path
@@ -210,9 +214,26 @@ func test_m08_shadow_memory_line_reaches_the_chat() -> void:
 	await get_tree().process_frame
 	var found := false
 	for text: String in _log_texts():
-		if text.contains("hate the rain"):
+		var words := _log_words(text)
+		var hate := words.find("hate")
+		if hate >= 0 and words.find("rain") > hate:
 			found = true
 	assert_bool(found).is_true()
+
+
+## The words a reader sees: combining marks (strike-through U+0338, bleed
+## U+0332, zalgo accents) stripped, then lowercase word runs — the
+## CorruptionTest `_word_list` convention.
+func _log_words(text: String) -> PackedStringArray:
+	var clean := text
+	for mark: String in ["̸", "̲", "̀", "́", "̈"]:
+		clean = clean.replace(mark, "")
+	var re := RegEx.new()
+	re.compile("[A-Za-z0-9']+")
+	var out := PackedStringArray()
+	for found: RegExMatch in re.search_all(clean):
+		out.append(found.get_string().to_lower())
+	return out
 
 
 func _esc() -> InputEventKey:

@@ -90,6 +90,11 @@ func _ready() -> void:
 	_last_quit = _dict_at(_state, "last_quit")
 	_she_closed_pending = not _dict_at(_state, "she_closed").is_empty()
 	title_bar_available = DisplayServer.get_name() != "headless"
+	# Headless is CI/tests territory (the game ships as a windowed desktop app):
+	# keep M10/M11's roll deterministic-off unless a suite opts in — a random
+	# scripted replica would flake any suite that happens to call note_scene.
+	if DisplayServer.get_name() == "headless":
+		scripted_chance = 0.0
 	var root := get_tree().root if get_tree() != null else null
 	if root != null and not root.close_requested.is_connected(_on_close_requested):
 		root.close_requested.connect(_on_close_requested)

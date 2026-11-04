@@ -529,7 +529,10 @@ func _all_hard_rule_violations() -> Dictionary:
 
 ## A fresh session (`GameState.reset()`, or a test): M01 may be held again and
 ## session-scoped caps reset. once_per_save rows stay spent — they live in the
-## save's `meta_seen` flag, which a reset clears only on New Game.
+## save's `meta_seen` flag, which a reset clears only on New Game. Effect
+## modules get the same boundary: a replica on screen, a due scripted event or
+## a cold-open flag is session state too, and a New Game (or a suite) must not
+## inherit it — a leftover dialog swallows every click the next scene makes.
 func reset_session() -> void:
 	_held = false
 	_refused = false
@@ -542,8 +545,12 @@ func reset_session() -> void:
 	_rolled_offers.clear()
 	_last_offered.clear()
 	_session_log.clear()
+	_scripted_turn = -1
 	for action: String in _open_offers.keys():
 		_close_offer(action)
+	for module: Object in _effects:
+		if is_instance_valid(module) and module.has_method("reset_session"):
+			module.call("reset_session")
 
 
 ## Test seam (docs/05 §0 rule 3): `quit_callable` runs instead of the tree's
