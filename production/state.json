@@ -2726,7 +2726,7 @@
       "finished": "2026-11-04T19:22:22+02:00"
     },
     "P3.05": {
-      "status": "in_review",
+      "status": "done",
       "agent": "deepseek",
       "round": 3,
       "reviews": [
@@ -2805,7 +2805,8 @@
       ],
       "started": "2026-11-04T18:02:02+02:00",
       "handoff": "production/handoffs/P3.05.md",
-      "agent_declared": "swe-2"
+      "agent_declared": "swe-2",
+      "finished": "2026-11-04T22:54:25+02:00"
     },
     "P3.06": {
       "status": "done",
@@ -8192,6 +8193,12 @@
       "event": "review:safety:approved",
       "ref": "P3.05",
       "note": "production/reviews/P3.05-safety-r3.md"
+    },
+    {
+      "ts": "2026-11-04T22:54:25+02:00",
+      "event": "in_review->done",
+      "ref": "P3.05",
+      "note": ""
     }
   ]
 }
