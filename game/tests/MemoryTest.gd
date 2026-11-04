@@ -321,6 +321,15 @@ func test_store_save_round_trip_keeps_importance_and_seed() -> void:
 	assert_int(restored.rng_seed()).is_equal(42)
 	# And the restored store replays the same corruption as the original.
 	assert_array(restored.prompt_facts({"stage": 5})).is_equal(store.prompt_facts({"stage": 5}))
+	# A corrupt save cannot break the two invariants: 24 slots and importance
+	# >= 0. Extra slots are trimmed by the live eviction rule, negatives heal.
+	var rows: Array = []
+	for i: int in 30:
+		rows.append({"text": "likes film fact %d" % i, "importance": -3.0, "quotes": -1})
+	var healed: Variant = auto_free(MemoryStoreScript.new())
+	healed.from_dict({"entries": rows})
+	assert_int(healed.size()).is_equal(24)
+	assert_float(healed.importances()[0]).is_zero()
 
 
 # ------------------------------------------------------- docs/02 §6 corruption

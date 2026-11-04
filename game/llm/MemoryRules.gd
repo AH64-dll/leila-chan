@@ -340,7 +340,12 @@ static func corruption_chance(stage: int) -> float:
 	if stage < int(spec["min_stage"]):
 		return 0.0
 	var chances: Dictionary = spec["chance"]
-	var raw := float(chances.get(str(clampi(stage, 0, MAX_STAGE)), 0.0))
+	var key := str(clampi(stage, 0, MAX_STAGE))
+	# A row the data file omits falls back to its documented value before the
+	# clamp: clamping a missing row would clamp 0.0 up to the band floor and
+	# corrupt at 10 % on a stage that was meant to have no row at all.
+	var docs: Dictionary = (DOCS_TABLE["corruption"] as Dictionary)["chance"]
+	var raw := float(chances.get(key, docs.get(key, 0.0)))
 	var band: Array = spec["band"]
 	return clampf(raw, float(band[0]), float(band[1]))
 
@@ -392,6 +397,8 @@ static func _swap_name(fact: String, rng: RandomNumberGenerator, spec: Dictionar
 		return ""
 	var original := candidates[rng.randi() % candidates.size()]
 	var pool: Array = spec["names"]
+	if pool.is_empty():
+		return ""
 	var replacement := ""
 	# Seeded offset over the pool: a name already in the fact is not a
 	# corruption, so it can never be the answer.

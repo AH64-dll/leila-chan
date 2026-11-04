@@ -192,7 +192,10 @@ func to_dict() -> Dictionary:
 
 
 ## Restore a save. Anything malformed is dropped rather than trusted: a slot
-## without a non-empty string is not a fact (docs/07 §3.5 corrupted-save rule).
+## without a non-empty string is not a fact, a negative importance or quote
+## count is healed to zero, and a save carrying more slots than the store allows
+## is trimmed by the same eviction rule a live store uses (docs/07 §3.5
+## corrupted-save rule; docs/02 §6 "24 slots").
 func from_dict(data: Dictionary) -> void:
 	reset()
 	capacity = maxi(1, int(data.get("capacity", MemoryRules.capacity())))
@@ -214,11 +217,18 @@ func from_dict(data: Dictionary) -> void:
 				{
 					ENTRY_TEXT: text,
 					ENTRY_IMPORTANCE:
-					float((row as Dictionary).get(ENTRY_IMPORTANCE, MemoryRules.new_importance())),
-					ENTRY_QUOTES: int((row as Dictionary).get(ENTRY_QUOTES, 0)),
+					maxf(
+						0.0,
+						float(
+							(row as Dictionary).get(ENTRY_IMPORTANCE, MemoryRules.new_importance())
+						)
+					),
+					ENTRY_QUOTES: maxi(0, int((row as Dictionary).get(ENTRY_QUOTES, 0))),
 				}
 			)
 		)
+	while entries.size() > capacity:
+		entries.remove_at(MemoryRules.eviction_index(entries))
 
 
 func _stage_of(ctx: Dictionary) -> int:
