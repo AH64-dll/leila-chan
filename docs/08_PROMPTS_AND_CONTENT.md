@@ -20,6 +20,21 @@ last ~12 exchanges, as user/assistant pairs (assistant turns stored as the spoke
 Storing past assistant turns as plain spoken text (not JSON) keeps context short and stops the model copying
 old cues.
 
+**The ending's last line is not a turn** (P3.17). An ending's line is one request with no history:
+`persona.md` → `[player]` → `stage_{n}.md` → `path_{PATH}.md` → `ending.md`, which replaces `rules.md` for
+this reply; the scene, memories and events layers are empty because the run is over. The row's `frame` is the
+scene layer, in the system prompt and labelled as the game's narration of what just happened; the row's
+`direction` (HER STATE) is the user turn with the ask. A 4B model reads narration placed in the user turn as
+the player's own words and answers it ("please don't go") instead of voicing her state, which is why the scene
+rides above the message. `ending.md` states that HER STATE outranks the stage and path modules: an ending is a
+one-shot epilogue, and those modules describe how she plays a date — without that note a stage-5 run answers its
+farewell with stage 5's "keep the player here" formula. A row may leave a layer out with `prompt_omits`: E10
+omits `path_AWAKE.md`, because the code talk that module is made of is exactly what that ending retires; E04
+omits the scene, because its narration of the take-back makes the model answer the narration instead of voicing
+her state. The
+screen holds the slot for `ui.json`'s `ending.final_hold_s`; if no line has arrived by then it shows the reviewed
+`final`, and an answer that arrives after that is dropped rather than swapped in under the player.
+
 ## 1.5 Player name (New Game)
 
 - Text field "What's your name?", 1–16 characters, letters/spaces/`-'`. Run through `Safety` (slurs/obscene → Leila

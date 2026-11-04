@@ -51,7 +51,7 @@ FORBIDDEN_BRANDS = ["qwen", "alibaba", "chatgpt", "claude", "openai", "anthropic
 # generated from. One marker per path, so a copy-pasted direction fails.
 TONE_MARKERS = {
     "E01": "triumphant",  # YANDERE: possession as tenderness
-    "E04": "contempt",  # SPLIT: both ends of the swing
+    "E04": "contempt",  # SPLIT: the love then the devaluation (docs/01 §4.2)
     "E06": "smug",  # TSUN: the win she needs him to see
     "E08": "nothing",  # HOLLOW: almost nothing left
     "E10": "relieved",  # AWAKE: leaving, honestly
@@ -203,8 +203,41 @@ def test_the_instruction_module_is_shipped() -> None:
     assert '{"line"' in text, "the reply shape is the instruction's job"
     assert "200 characters" in text
     assert "HER STATE" in text, "the model is told the direction is not spoken"
-    # The whole module is one small layer of the 900-token assembly.
-    assert len(text) <= 700, len(text)
+    # One layer of the 900-token assembly; the ending's rules cost about 200.
+    assert len(text) <= 900, len(text)
+
+
+def test_the_instruction_sets_the_ending_above_the_turn_modules() -> None:
+    """CON-1: a stage-5 farewell answered with stage 5's 'keep the player here'."""
+    text = _prompt_text()
+    assert "not a turn" in text
+    assert "outranks your stage and path notes" in text
+    assert "ask him to stay" in text
+    assert "I, never she" in text, "cross-path bleed includes third person (CON-1)"
+    assert "{player_name}" in text, "the role rule names who 'you' is"
+
+
+def test_a_row_omits_only_the_layers_that_fight_it() -> None:
+    # E10 retires the code talk the AWAKE module is made of; E04's scene
+    # narrates the take-back and makes the model answer it instead of her state
+    # (CON-1). The contradiction is removed from the request, never argued with.
+    expected = {"E04": ["scene"], "E10": ["path"]}
+    for ending_id in CONTENT_IDS:
+        omits = _row(ending_id).get("prompt_omits", [])
+        assert omits == expected.get(ending_id, []), (ending_id, omits)
+
+
+def test_e01s_frame_hands_the_counting_to_her() -> None:
+    # CON-3: the live line gave the counting to the player twice in four.
+    frame = _row("E01")["frame"]
+    assert "she has counted every day you could have left" in frame
+    assert "you notice" not in frame, "the counting's subject must be her"
+
+
+def test_the_two_ending_of_the_night_do_not_share_a_closing_image() -> None:
+    # CON-4: E10 and E12 both closed on "quiet".
+    assert "quiet" not in _row("E10")["final"].lower()
+    assert "quiet" in _row("E12")["final"].lower(), "E12 keeps the better line"
 
 
 def _prompt_text() -> str:

@@ -11,6 +11,7 @@ extends GdUnitTestSuite
 
 const EndingPacked := preload("res://scenes/Ending.tscn")
 const FakeLLMBackendScript := preload("res://tests/helpers/FakeLLMBackend.gd")
+const BuilderScript := preload("res://autoload/PromptBuilder.gd")
 const TEST_DIR := "user://ending_content_saves/"
 const LOG_DIR := "user://ending_content_log/"
 const PROMPT_DIR := "user://ending_content_prompts/"
@@ -236,12 +237,30 @@ func test_a_silent_model_does_not_strand_the_screen() -> void:
 	assert_bool(screen.is_final_ready()).is_false()
 	screen.advance_time(4.1)
 	assert_bool(screen.is_final_ready()).is_true()
+	# The hold is not only a display deadline: the request is cancelled when it
+	# runs out, so the answer cannot arrive later and rewrite the line (DES-3).
+	await _await_until(func() -> bool: return bool(backend.saw_cancel), 4000)
+	assert_bool(backend.saw_cancel).is_true()
 	screen.advance_time(6.0)
 	assert_str(screen.final_line()).is_equal(String(row.get("final", "")))
 	assert_bool(screen.skip()).is_true()
 	screen.queue_free()
 	await _await_until(func() -> bool: return not LLM.is_busy(), 4000)
-	assert_bool(backend.saw_cancel).is_true()
+
+
+## DES-3: the hold is screen time and the generation is wall time, so on a slow
+## box the two can cross. Once the reviewed line is on screen it is the ending's
+## last beat — a late answer is dropped, never written under the player.
+func test_a_late_answer_never_rewrites_the_line_on_screen() -> void:
+	GameState.from_dict(_run_state(REACHABLE["E01"]))
+	var row := Endings.get_ending("E01")
+	var screen := _open()
+	screen.advance_time(6.0)
+	assert_str(screen.final_line()).is_equal(String(row.get("final", "")))
+	screen.call("_apply_final_line", "A late line that must not land.")
+	assert_str(screen.final_line()).is_equal(String(row.get("final", "")))
+	assert_bool(screen.visible_lines().has("A late line that must not land.")).is_false()
+	screen.queue_free()
 
 
 ## The live line is prompted as her, at the run's stage, in the path's tone: the
@@ -261,7 +280,24 @@ func test_the_live_prompt_is_her_persona_stage_and_the_rows_tone() -> void:
 			. is_true()
 		)
 		assert_bool(system.contains("END OF THE RUN")).is_true()
-		assert_bool(user.contains(String(row.get("frame", "")))).is_true()
+		var scene_omitted := EndingLine._omitted_layers(row).has(EndingLine.SCENE_LAYER)
+		(
+			assert_bool(system.contains("THE SCENE, already over"))
+			. override_failure_message("%s's prompt has no scene layer" % id)
+			. is_equal(not scene_omitted)
+		)
+		(
+			assert_bool(system.contains(String(row.get("frame", ""))))
+			. override_failure_message("%s's frame is not the scene layer" % id)
+			. is_equal(not scene_omitted)
+		)
+		(
+			assert_bool(user.contains(String(row.get("frame", ""))))
+			. override_failure_message(
+				"%s's frame is in the user turn; a 4B model answers narration" % id
+			)
+			. is_false()
+		)
 		assert_bool(user.contains(String(row.get("direction", "")))).is_true()
 		assert_bool(user.contains("Aoi")).is_true()
 		var tokens := EndingLine.estimate_tokens(system + user)
@@ -270,6 +306,48 @@ func test_the_live_prompt_is_her_persona_stage_and_the_rows_tone() -> void:
 			. override_failure_message("%s's one-shot prompt is %d estimated tokens" % [id, tokens])
 			. is_less_equal(900)
 		)
+
+
+## docs/08 §1's layer order, with the ending's own rules: the player is named and
+## the persona's placeholder filled, ending.md says HER STATE outranks the stage
+## and path notes, and E10's request leaves out the module whose code talk that
+## ending retires (P3.17 content review CON-1 — the stage module used to win and
+## every stage-5 farewell came back as "don't go").
+func test_the_prompt_names_the_player_and_outranks_the_turn_modules() -> void:
+	var system := String(
+		EndingLine.prompt_layers(Endings.get_ending("E01"), "Aoi", 5, "YANDERE").get("system", "")
+	)
+	assert_int(int(EndingLine._omitted_layers(Endings.get_ending("E01")).size())).is_equal(0)
+	assert_str(EndingLine.PLAYER_LINE % "Aoi").is_equal(BuilderScript.PLAYER_LINE % "Aoi")
+	assert_bool(system.contains("The player is a boy called Aoi.")).is_true()
+	(
+		assert_bool(system.contains("{player_name}"))
+		. override_failure_message("the persona layer still carries its placeholder")
+		. is_false()
+	)
+	assert_bool(system.contains("Aoi calls you Leila-chan")).is_true()
+	assert_bool(system.contains("outranks your stage and path notes")).is_true()
+	assert_bool(system.contains("ask him to stay")).is_true()
+	assert_bool(system.contains("I, never she")).is_true()
+	# The stage and path modules are still there — they are outranked, not removed.
+	assert_bool(system.contains("STAGE 5")).is_true()
+	assert_bool(system.contains("YANDERE — Mine.")).is_true()
+	# E10's ending retires the code talk the AWAKE module is made of.
+	var awake := String(
+		EndingLine.prompt_layers(Endings.get_ending("E10"), "Aoi", 5, "AWAKE").get("system", "")
+	)
+	assert_bool(awake.contains("I can see the code")).is_false()
+	assert_bool(awake.contains("Layers, tokens, the dose")).is_false()
+	assert_bool(awake.contains("STAGE 5")).is_true()
+	assert_bool(awake.contains("not a turn")).is_true()
+	# E04's scene narrates the take-back; sending it makes the model answer the
+	# narration instead of her state, so that row leaves the scene layer out.
+	var swing := String(
+		EndingLine.prompt_layers(Endings.get_ending("E04"), "Aoi", 5, "SPLIT").get("system", "")
+	)
+	assert_bool(swing.contains("THE SCENE, already over")).is_false()
+	assert_bool(swing.contains("The swing doesn't stop this time")).is_false()
+	assert_bool(swing.contains("outranks your stage and path notes")).is_true()
 
 
 ## P3.05's path modules are not in this branch yet; when they land the layer

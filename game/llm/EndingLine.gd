@@ -16,14 +16,27 @@ extends RefCounted
 ## the request, the hold and the screen.
 ##
 ## Prompt shape (one request, no history, no Turn):
-##   system  persona.md + stage_<n>.md + path_<PATH>.md (when that module exists)
-##           + ending.md, the instruction that replaces rules.md for this reply
-##           because the answer is {"line": "..."}, not a Turn.
-##   user    the row's `frame`, its `direction` note and the player's name.
+##   system  persona.md + the docs/08 §1 player line + stage_<n>.md
+##           + path_<PATH>.md (when that module exists and the row does not omit
+##           it) + ending.md, the instruction that replaces rules.md for this
+##           reply because the answer is {"line": "..."}, not a Turn, and last the
+##           scene: the row's `frame`, the game's narration of what just happened.
+##   user    HER STATE — the row's `direction` — and the last-line ask.
+## The frame rides in the system because in the user turn a 4B model reads
+## narration as the player's own words and answers it ("please don't go") instead
+## of voicing her state (P3.17 content review CON-1: the same direction lands
+## when the frame is out of the user turn). The screen still shows the frame; the
+## player reads it before her line.
 ## The row's `direction` is what carries the path's tone here, so every ending
 ## works before P3.05's path modules land, and inherits the path module when it
 ## does — same rule as PromptBuilder: a missing module is an empty layer, never
-## an invented one.
+## an invented one. `prompt_omits` on a row names a layer to leave out on
+## purpose: E10 retires the code talk the AWAKE module is made of, so that
+## module would only contradict the end of the run.
+## ending.md states that the direction outranks those modules: a turn's stage
+## and path layers describe how she plays, and the ending is a one-shot epilogue
+## — without that note a stage-5 run answers its farewell with stage 5's "keep
+## the player here" formula (P3.17 content review CON-1).
 ##
 ## Safety (docs/02 §8): the line is model text, so `scan()` runs the Safety
 ## filter and a redaction means *no live line* — the reviewed `final` stands.
@@ -38,6 +51,20 @@ const PATH_FILE_FORMAT := "path_%s.md"
 const INSTRUCTION_FILE := "ending.md"
 const TABLE_PATH := "res://data/endings.json"
 const CONFIG_KEY := "final_line"
+## docs/08 §1's player layer, worded as PromptBuilder.PLAYER_LINE: this module
+## is static and never reaches the autoload, so the string is repeated here, and
+## the ending suite's prompt test pins the two together.
+const PLAYER_LINE := "The player is a boy called %s."
+## The row's `frame` is the game's narration; the system prompt says so, or a 4B
+## model reads it as the player's utterance and answers it instead of her state.
+const SCENE_HEADER := "THE SCENE, already over — the game's narration, not something said to you:\n"
+## A row may leave a system layer out of its one-shot on purpose (`prompt_omits`):
+## E10 the AWAKE module, whose code talk the ending retires; E04 the scene, whose
+## narration of the take-back pulls a 4B model into apologising for the farewell.
+const OMIT_KEY := "prompt_omits"
+const PATH_LAYER := "path"
+const SCENE_LAYER := "scene"
+const OMITTABLE_LAYERS: Array[String] = [PATH_LAYER, SCENE_LAYER]
 
 ## The docs/02 §3 spoken-beat cap (200 characters) is the ceiling, not a target:
 ## `max_chars` in the data may lower it, never raise it.
@@ -141,25 +168,52 @@ static func prompt_layers(
 	row: Dictionary, player_name: String, stage: int, path: String
 ) -> Dictionary:
 	var name := _name(player_name)
-	var files: Array[String] = [PERSONA_FILE, STAGE_FILE_FORMAT % _stage(stage)]
-	var run_path := String(path).strip_edges().to_upper()
-	if not run_path.is_empty() and run_path != ANY_PATH:
-		files.append(PATH_FILE_FORMAT % run_path)
-	files.append(String(config().get("prompt", INSTRUCTION_FILE)))
+	var omit := _omitted_layers(row)
 	var parts: Array[String] = []
-	for file: String in files:
-		var text := _read_text(file).strip_edges()
-		if not text.is_empty():
-			parts.append(text)
-	var turns: Array[String] = []
+	_append_layer(parts, PERSONA_FILE, name)
+	parts.append(PLAYER_LINE % name)
+	_append_layer(parts, STAGE_FILE_FORMAT % _stage(stage), name)
+	var run_path := String(path).strip_edges().to_upper()
+	if not run_path.is_empty() and run_path != ANY_PATH and not omit.has(PATH_LAYER):
+		_append_layer(parts, PATH_FILE_FORMAT % run_path, name)
+	_append_layer(parts, String(config().get("prompt", INSTRUCTION_FILE)), name)
 	var frame := _substitute(String(row.get("frame", "")).strip_edges(), name)
-	if not frame.is_empty():
-		turns.append(frame)
+	if not frame.is_empty() and not omit.has(SCENE_LAYER):
+		parts.append(SCENE_HEADER + frame)
+	var turns: Array[String] = []
 	var direction := _substitute(String(row.get("direction", "")).strip_edges(), name)
 	if not direction.is_empty():
 		turns.append("HER STATE\n" + direction)
 	turns.append("Say your last line to %s." % name)
 	return {"system": "\n\n".join(parts), "user": "\n\n".join(turns)}
+
+
+## One system layer with the player's name substituted, skipped when the module
+## is absent: a missing module is an empty layer, never invented text.
+static func _append_layer(parts: Array[String], file: String, player_name: String) -> void:
+	var text := _substitute(_read_text(file).strip_edges(), player_name)
+	if not text.is_empty():
+		parts.append(text)
+
+
+## The system layers this row's one-shot leaves out (`prompt_omits`). E10 retires
+## the code talk the AWAKE module is made of, so loading it would put the ending
+## and the module in direct contradiction. An unknown name warns and is ignored:
+## a data typo must cost a layer, never the prompt.
+static func _omitted_layers(row: Dictionary) -> Array[String]:
+	var out: Array[String] = []
+	var raw: Variant = row.get(OMIT_KEY, [])
+	if not (raw is Array or raw is PackedStringArray):
+		if raw != null and not String(raw).strip_edges().is_empty():
+			push_warning("EndingLine: %s's %s is not a list" % [row.get("id", "?"), OMIT_KEY])
+		return out
+	for entry in raw:
+		var layer := String(entry).strip_edges().to_lower()
+		if OMITTABLE_LAYERS.has(layer):
+			out.append(layer)
+		elif not layer.is_empty():
+			push_warning("EndingLine: %s omits unknown layer '%s'" % [row.get("id", "?"), layer])
+	return out
 
 
 ## The reply the model is constrained to: one string field, nothing else where a

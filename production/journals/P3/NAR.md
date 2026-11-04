@@ -26,3 +26,23 @@
   earlier suite makes the screen's line depend on suite order.
 - Gotcha: Godot 4 with this project's warnings-as-errors rejects `var x := f()` when `f()` returns
   `Variant`; type the local explicitly (`var backend: Variant = …`).
+
+## P3.17 — round 2: the live line's register (2026-11-04, agent: deepseek)
+
+- The authored six were fine; the *live* half was the bug. `direction` was one paragraph, the stage-5 module
+  shouted "keep the player here", and the frame sat in the user turn — where a 4B model reads narration as
+  the player's own words and answers it. SPLIT/TSUN/AWAKE produced 0/12 on-register, and the stage-5
+  farewell came back as "please don't go".
+- Fix the shape, not the samples: `ending.md` now says the ending is not a turn and that HER STATE outranks
+  the stage and path notes (and names the habits to drop: staying, keeping him, explaining what she is);
+  docs/08 §1's `[player]` line is in, and `{player_name}` is finally substituted in **every** layer — until
+  this round the persona layer carried the literal placeholder; the frame is a labelled system layer; the
+  new `prompt_omits` drops the layer that fights a row (E10 the AWAKE module, E04 the scene).
+- Craft rule this model taught me: a 4B follows **beats named in order** ("That is the whole line: love,
+  contempt, remorse") and drifts off a named mood. Every direction now names its beats, and the python pin
+  still holds it to ≤240 chars / ≤3 sentences / third person about her.
+- Measured on the pinned Qwen3.5-4B through the shipped prompt and sampling: 36 generations (6 per ending)
+  → 28 clean, 6 partial, 2 misses, **0 contradictions**; a second 24-sample draw from the same prompt gave
+  18/6/0. Round 1 was 8 clean / 5 partial / 11 contradicting.
+- Gotcha for the next ending writer: ending narration never goes in the user turn, and a row whose scene
+  narrates her departure may need `"prompt_omits": ["scene"]` (E04) — the screen still shows the frame.

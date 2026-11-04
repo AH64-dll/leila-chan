@@ -51,7 +51,6 @@ var _finished := false
 ## there is nothing to wait for: the reveal stops at the slot while it is closed,
 ## and the hold caps that wait so a hung model never strands the screen.
 var _final_index := -1
-var _final_label: Label = null
 var _final_gate := true
 var _final_waited := 0.0
 var _final_hold := 0.0
@@ -94,7 +93,7 @@ func advance_time(delta: float) -> void:
 	if not _final_gate:
 		_final_waited += maxf(delta, 0.0)
 		if _final_waited >= _final_hold:
-			_open_final_gate()
+			_abandon_final_wait()
 	_reveal_due()
 	_refresh_skip_hint()
 
@@ -230,7 +229,6 @@ func _plan() -> void:
 	_revealed = 0
 	_elapsed = 0.0
 	_final_index = -1
-	_final_label = null
 	_final_gate = true
 	_final_waited = 0.0
 	_interval = maxf(0.0, float(_screen.get("line_interval_s", 0.9)))
@@ -251,7 +249,9 @@ func _plan() -> void:
 
 ## Her last line. The row's reviewed `final` is on the plan from the start, so a
 ## model that never answers costs nothing; a live answer replaces it before the
-## slot is revealed (and, if it is already on screen, the label is rewritten).
+## slot is revealed. Once the reviewed line is on screen it is the ending's last
+## beat, and a late answer is dropped (DES-3: the hold is screen time, the
+## generation is wall time, so the two can cross on a slow box).
 func _plan_final() -> void:
 	var line := EndingLine.fallback(_row, _player_name())
 	var live := EndingLine.has_direction(_row)
@@ -304,13 +304,24 @@ func _on_final_cancelled() -> void:
 	_open_final_gate()
 
 
+## The one place a live answer becomes the screen's line. It only applies while
+## the final slot is still unrevealed: a line the player can already read is the
+## ending's own, and a late answer must not rewrite it under them (DES-3).
 func _apply_final_line(text: String) -> void:
 	var line := text.strip_edges()
 	if _final_index < 0 or line.is_empty():
 		return
+	if _revealed > _final_index:
+		return
 	_lines[_final_index]["text"] = line
-	if _revealed > _final_index and _final_label != null and is_instance_valid(_final_label):
-		_final_label.text = line
+
+
+## The data's hold ran out: the reviewed line is the ending's last beat. The
+## request is cancelled rather than left to land after it — the answer could not
+## be shown any more, and LLM holds one turn at a time.
+func _abandon_final_wait() -> void:
+	_release_final_stream()
+	_open_final_gate()
 
 
 func _open_final_gate() -> void:
@@ -358,11 +369,11 @@ func _reveal_due() -> void:
 			return
 		var line: Dictionary = _lines[_revealed]
 		if not String(line.get("text", "")).is_empty():
-			_render(line, _revealed)
+			_render(line)
 		_revealed += 1
 
 
-func _render(line: Dictionary, index: int) -> void:
+func _render(line: Dictionary) -> void:
 	if frame_box == null:
 		return
 	var style := String(line.get("style", "frame"))
@@ -387,8 +398,6 @@ func _render(line: Dictionary, index: int) -> void:
 			label.add_theme_font_size_override("font_size", FRAME_SIZE)
 			label.add_theme_color_override("font_color", Color(0.87, 0.85, 0.9))
 	frame_box.add_child(label)
-	if index == _final_index:
-		_final_label = label
 
 
 ## The skip window is data; a null window means the reveal is the ending.
