@@ -2520,9 +2520,9 @@
       "finished": "2026-11-04T12:20:57+02:00"
     },
     "P2.10": {
-      "status": "changes_requested",
+      "status": "in_review",
       "agent": "commandcode",
-      "round": 1,
+      "round": 2,
       "reviews": [
         {
           "kind": "code",
@@ -2547,9 +2547,9 @@
       "handoff": "production/handoffs/P2.10.md"
     },
     "P2.19": {
-      "status": "changes_requested",
+      "status": "done",
       "agent": "deepseek",
-      "round": 1,
+      "round": 2,
       "reviews": [
         {
           "kind": "code",
@@ -2568,10 +2568,29 @@
           "report": "production/reviews/P2.19-design-r1.md",
           "ts": "2026-11-04T13:04:42+02:00",
           "declared": "deepseek"
+        },
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P2.19-code-r2.md",
+          "ts": "2026-11-04T13:39:42+02:00",
+          "declared": "deepseek"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P2.19-design-r2.md",
+          "ts": "2026-11-04T13:39:42+02:00",
+          "declared": "deepseek"
         }
       ],
       "started": "2026-11-04T12:43:45+02:00",
-      "handoff": "production/handoffs/P2.19.md"
+      "handoff": "production/handoffs/P2.19.md",
+      "finished": "2026-11-04T13:39:48+02:00"
     }
   },
   "history": [
@@ -6299,6 +6318,48 @@
       "ts": "2026-11-04T13:22:39+02:00",
       "event": "in_review->done",
       "ref": "P2.21",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T13:23:02+02:00",
+      "event": "changes_requested->in_progress",
+      "ref": "P2.10",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T13:23:02+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P2.10",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T13:23:02+02:00",
+      "event": "changes_requested->in_progress",
+      "ref": "P2.19",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T13:23:02+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P2.19",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T13:39:42+02:00",
+      "event": "review:code:approved",
+      "ref": "P2.19",
+      "note": "production/reviews/P2.19-code-r2.md"
+    },
+    {
+      "ts": "2026-11-04T13:39:42+02:00",
+      "event": "review:design:approved",
+      "ref": "P2.19",
+      "note": "production/reviews/P2.19-design-r2.md"
+    },
+    {
+      "ts": "2026-11-04T13:39:48+02:00",
+      "event": "in_review->done",
+      "ref": "P2.19",
       "note": ""
     }
   ]
