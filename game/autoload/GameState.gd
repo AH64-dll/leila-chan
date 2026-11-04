@@ -135,7 +135,9 @@ var instability_peak := 0.0:
 var instability_floor: float:
 	get:
 		return Meters.ratchet_floor(instability_peak)
-## Derived from Instability bands (docs/01 §3); only ever moves upward.
+## Derived from Instability bands (docs/01 §3); only ever moves upward. Written
+## by _refresh_stage(), from_dict() and reset() only — assigning it directly is
+## a restore or a debug jump and deliberately fires no crossing event.
 var stage := 0:
 	set(v):
 		stage = clampi(v, 0, Stages.max_stage())
