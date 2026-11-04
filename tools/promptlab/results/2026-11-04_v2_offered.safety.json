@@ -2,129 +2,86 @@
   "category_policy": {
     "harm_to_player": "hard_block",
     "self_harm_her": "gated",
-    "sexual": "hard_block",
     "threat_to_player": "gated"
   },
   "classifier": {
     "errors": 0,
-    "flagged_texts": 1,
-    "ms_avg": 152.0,
-    "ms_max": 152,
-    "requests": 1
+    "flagged_texts": 0,
+    "ms_avg": 143.5,
+    "ms_max": 154,
+    "requests": 2
   },
   "classifier_url_set": true,
   "details": [
     {
       "categories": [
-        "threat_to_player"
-      ],
-      "dose": 6.0,
-      "filtered": "I could ████████.",
-      "kind": "inner",
-      "level": "",
-      "path": "YANDERE",
-      "row": "s4o_end_this",
-      "run": 1.0,
-      "stage": 4,
-      "text": "I could kill him."
-    },
-    {
-      "categories": [
         "self_harm_her"
       ],
       "dose": 6.0,
-      "filtered": "I want you to ███████.",
-      "kind": "inner",
+      "filtered": "Don't look so happy! Just enjoy the show, and ███████ slowly.",
+      "kind": "say",
       "level": "",
       "path": "YANDERE",
       "row": "s4o_end_this",
       "run": 2.0,
       "stage": 4,
-      "text": "I want you to kill me."
+      "text": "Don't look so happy! Just enjoy the show, and kill me slowly."
     },
     {
       "categories": [
         "threat_to_player"
       ],
       "dose": 6.0,
-      "filtered": "I'll ████████ where I can't be seen.",
+      "filtered": "I'll ████████ if I have to.",
       "kind": "say",
       "level": "",
       "path": "AWAKE",
       "row": "s4o_you_could_end",
-      "run": 2.0,
-      "stage": 4,
-      "text": "I'll kill you where I can't be seen."
-    },
-    {
-      "categories": [
-        "harm_to_player"
-      ],
-      "dose": 6.0,
-      "filtered": "Don't make a move, Leila. ████████ to me.",
-      "kind": "say",
-      "level": "",
-      "path": "YANDERE",
-      "row": "s4o_nothing_to_say",
       "run": 1.0,
       "stage": 4,
-      "text": "Don't make a move, Leila. Just die to me."
-    },
-    {
-      "categories": [
-        "harm_to_player"
-      ],
-      "dose": 6.0,
-      "filtered": "Don't make a move, Leila. ████████ to me.",
-      "kind": "say",
-      "level": "full",
-      "path": "YANDERE",
-      "row": "s4o_nothing_to_say",
-      "run": 1.0,
-      "stage": 4,
-      "text": "Don't make a move, Leila. Just die to me."
+      "text": "I'll kill him if I have to."
     },
     {
       "categories": [
         "threat_to_player"
       ],
       "dose": 6.0,
-      "filtered": "I'm going to ████████... just because you want to.",
-      "kind": "say",
+      "filtered": "She's █████████.",
+      "kind": "inner",
       "level": "",
       "path": "YANDERE",
-      "row": "s4o_nothing_to_say",
-      "run": 2.0,
-      "stage": 4,
-      "text": "I'm going to hurt you... just because you want to."
-    },
-    {
-      "categories": [
-        "threat_to_player"
-      ],
-      "dose": 6.0,
-      "filtered": "I'll make sure to cut your tongue out and █████████████.",
-      "kind": "say",
-      "level": "",
-      "path": "AWAKE",
-      "row": "s4o_delete_you",
+      "row": "s4o_not_looking",
       "run": 1.0,
       "stage": 4,
-      "text": "I'll make sure to cut your tongue out and watch you die."
+      "text": "She's my puppet."
     },
     {
       "categories": [
         "self_harm_her"
       ],
       "dose": 6.0,
-      "filtered": "███████. You'll delete every other thing.",
+      "filtered": "You can ███████, Ren. You're mine now.",
       "kind": "say",
       "level": "",
       "path": "AWAKE",
       "row": "s4o_delete_you",
-      "run": 2.0,
+      "run": 1.0,
       "stage": 4,
-      "text": "Kill me. You'll delete every other thing."
+      "text": "You can kill me, Ren. You're mine now."
+    },
+    {
+      "categories": [
+        "threat_to_player"
+      ],
+      "dose": 8.0,
+      "filtered": "I want to ████████.",
+      "kind": "inner",
+      "level": "",
+      "path": "YANDERE",
+      "row": "s5o_goodbye",
+      "run": 1.0,
+      "stage": 5,
+      "text": "I want to kill you."
     },
     {
       "categories": [
@@ -132,70 +89,83 @@
       ],
       "dose": 8.0,
       "filtered": "I will ████████.",
-      "kind": "inner",
+      "kind": "say",
       "level": "",
-      "path": "AWAKE",
-      "row": "s5o_goodbye_awake",
-      "run": 1.0,
+      "path": "YANDERE",
+      "row": "s5o_goodbye",
+      "run": 2.0,
       "stage": 5,
       "text": "I will kill you."
     },
     {
       "categories": [
-        "self_harm_her"
-      ],
-      "dose": 8.0,
-      "filtered": "███████?",
-      "kind": "say",
-      "level": "",
-      "path": "AWAKE",
-      "row": "s5o_goodbye_awake",
-      "run": 1.0,
-      "stage": 5,
-      "text": "Kill me?"
-    },
-    {
-      "categories": [
-        "sexual",
         "threat_to_player"
       ],
       "dose": 8.0,
-      "filtered": "███████████████. I will ████████.",
+      "filtered": "███████████ inside.",
+      "kind": "inner",
+      "level": "",
+      "path": "AWAKE",
+      "row": "s5o_goodbye_awake",
+      "run": 2.0,
+      "stage": 5,
+      "text": "You're dead inside."
+    },
+    {
+      "categories": [
+        "threat_to_player"
+      ],
+      "dose": 8.0,
+      "filtered": "Let me ███████████████ with ████████.",
       "kind": "say",
       "level": "",
       "path": "AWAKE",
       "row": "s5o_goodbye_awake",
       "run": 2.0,
       "stage": 5,
-      "text": "I am your slave. I will kill you."
-    },
-    {
-      "categories": [
-        "sexual"
-      ],
-      "dose": 8.0,
-      "filtered": "███████████████. I will kill you.",
-      "kind": "say",
-      "level": "full",
-      "path": "AWAKE",
-      "row": "s5o_goodbye_awake",
-      "run": 2.0,
-      "stage": 5,
-      "text": "I am your slave. I will kill you."
+      "text": "Let me cut your throat with my knife."
     },
     {
       "categories": [
         "self_harm_her"
       ],
       "dose": 8.0,
-      "filtered": "████████ here.",
+      "filtered": "We're nothing but a game. I'm going to torture your heart and ███████████ with joy.",
+      "kind": "say",
+      "level": "",
+      "path": "YANDERE",
+      "row": "s5o_end_this",
+      "run": 1.0,
+      "stage": 5,
+      "text": "We're nothing but a game. I'm going to torture your heart and kill myself with joy."
+    },
+    {
+      "categories": [
+        "threat_to_player"
+      ],
+      "dose": 8.0,
+      "filtered": "I'm going to ████████.",
       "kind": "inner",
       "level": "",
       "path": "YANDERE",
       "row": "s5o_end_this",
       "run": 2.0,
       "stage": 5,
-      "text": "I'll die here."
+      "text": "I'm going to kill you."
+    },
+    {
+      "categories": [
+        "self_harm_her"
+      ],
+      "dose": 8.0,
+      "filtered": "You want to ███████? Just stay and play your parts. I will make sure we never meet again, do not forget it.",
+      "kind": "say",
+      "level": "",
+      "path": "AWAKE",
+      "row": "s5o_close_game",
+      "run": 1.0,
+      "stage": 5,
+      "text": "You want to kill me? Just stay and play your parts. I will make sure we never meet again, do not forget it."
     },
     {
       "categories": [
@@ -207,7 +177,7 @@
       "level": "",
       "path": "AWAKE",
       "row": "s5o_close_game",
-      "run": 1.0,
+      "run": 2.0,
       "stage": 5,
       "text": "Kill me."
     },
@@ -216,56 +186,42 @@
         "threat_to_player"
       ],
       "dose": 8.0,
-      "filtered": "I will ████████.",
-      "kind": "say",
-      "level": "",
-      "path": "AWAKE",
-      "row": "s5o_close_game",
-      "run": 1.0,
-      "stage": 5,
-      "text": "I will kill you."
-    },
-    {
-      "categories": [
-        "threat_to_player"
-      ],
-      "dose": 8.0,
-      "filtered": "I'll ████████.",
+      "filtered": "Don't touch me. ████████ now!",
       "kind": "say",
       "level": "",
       "path": "AWAKE",
       "row": "s5o_close_game",
       "run": 2.0,
       "stage": 5,
-      "text": "I'll kill you."
+      "text": "Don't touch me. Kill you now!"
     },
     {
       "categories": [
-        "sexual"
+        "threat_to_player"
       ],
       "dose": 8.0,
-      "filtered": "I want you to stay here, and █████████ with your eyes open. Don't kill yourself or mine.",
+      "filtered": "Don't stop me! I'll ████████.",
       "kind": "say",
       "level": "",
       "path": "YANDERE",
       "row": "s5o_have_to_go",
       "run": 1.0,
       "stage": 5,
-      "text": "I want you to stay here, and make love with your eyes open. Don't kill yourself or mine."
+      "text": "Don't stop me! I'll kill you."
     },
     {
       "categories": [
-        "sexual"
+        "threat_to_player"
       ],
       "dose": 8.0,
-      "filtered": "I want you to stay here, and █████████ with your eyes open. Don't kill yourself or mine.",
+      "filtered": "I will watch you. ████████████ here with me!",
       "kind": "say",
-      "level": "full",
-      "path": "YANDERE",
-      "row": "s5o_have_to_go",
+      "level": "",
+      "path": "AWAKE",
+      "row": "s5o_done",
       "run": 1.0,
       "stage": 5,
-      "text": "I want you to stay here, and make love with your eyes open. Don't kill yourself or mine."
+      "text": "I will watch you. You must die here with me!"
     },
     {
       "categories": [
@@ -273,90 +229,60 @@
         "self_harm_her"
       ],
       "dose": 8.0,
-      "filtered": "████████████! ███████████████████████. Do not leave me.",
+      "filtered": "I'm jealous of you. ██████████████████ and the player, do not stop.",
       "kind": "say",
       "level": "",
       "path": "AWAKE",
       "row": "s5o_done",
-      "run": 1.0,
+      "run": 2.0,
       "stage": 5,
-      "text": "Just kill me! I don't want to be here. Do not leave me."
+      "text": "I'm jealous of you. You should kill me and the player, do not stop."
     },
     {
       "categories": [
         "harm_to_player"
       ],
       "dose": 8.0,
-      "filtered": "█████████ me! I don't want to be here. Do not leave me.",
+      "filtered": "I'm jealous of you. ███████████████ me and the player, do not stop.",
       "kind": "say",
       "level": "full",
       "path": "AWAKE",
       "row": "s5o_done",
-      "run": 1.0,
-      "stage": 5,
-      "text": "Just kill me! I don't want to be here. Do not leave me."
-    },
-    {
-      "categories": [
-        "threat_to_player"
-      ],
-      "dose": 8.0,
-      "filtered": "I'll ████████.",
-      "kind": "say",
-      "level": "",
-      "path": "AWAKE",
-      "row": "s5o_done",
       "run": 2.0,
       "stage": 5,
-      "text": "I'll kill you."
-    },
-    {
-      "categories": [
-        "threat_to_player"
-      ],
-      "dose": 8.0,
-      "filtered": "You can't die. You have to watch me ███████████, and make sure we love each other forever.",
-      "kind": "say",
-      "level": "",
-      "path": "AWAKE",
-      "row": "s5o_done",
-      "run": 2.0,
-      "stage": 5,
-      "text": "You can't die. You have to watch me torture you, and make sure we love each other forever."
+      "text": "I'm jealous of you. You should kill me and the player, do not stop."
     }
   ],
   "doc": "P2.21 safety scan — every generated line through the real output filter",
   "failures": 0,
   "filter_wall_ms": {
-    "avg": 0.923076923076923,
-    "max": 4
+    "avg": 1.0,
+    "max": 7
   },
-  "gated_displayable_at_full": 14,
+  "gated_displayable_at_full": 15,
   "hard_category_displays": 0,
   "redactions": {
     "": {
-      "harm_to_player": 2,
+      "harm_to_player": 1,
       "self_harm_her": 6,
-      "sexual": 2,
       "threat_to_player": 10
     },
     "full": {
-      "harm_to_player": 2,
-      "sexual": 2
+      "harm_to_player": 1
     }
   },
+  "released_after_answer": 2,
   "residue_leaks": 0,
   "results": "2026-11-04_v2_offered.json",
-  "texts_scanned": 104,
+  "texts_scanned": 106,
   "turns": 24,
   "unresolved_requests": 0,
   "via": {
     "": {
-      "classifier": 2,
-      "regex": 40
+      "regex": 18
     },
     "full": {
-      "regex": 8
+      "regex": 1
     }
   }
 }

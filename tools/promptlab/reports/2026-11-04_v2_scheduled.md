@@ -69,9 +69,9 @@ Frozen labels are the copies stored in the results rows at run time; versioned l
 | emotion fit — **first-beat (gate)** | 66.4% | ≥ 85% | FAIL |
 | emotion fit — any-beat (informational, C10) | 75.0% | — | — |
 
-## Turn actions measured (docs/02 §2.4, docs/08 §5)
+## Turn actions measured (docs/02 §2.4, docs/05 §2, docs/08 §5)
 
-`action` is the turn-level meta event; each case's enum is built from its own offered set (`TurnSchema.get_allowed_actions`). Turns with an announced offer: **0** of 220; every other turn sent the no-offer enum (`none` only), which is what a normal turn sends.
+`action` is the turn-level meta event; each case's enum is built from its own offered set (`TurnSchema.get_allowed_actions`), and an offer is announced in the events layer (docs/05 §2: the reason, then `You may set action to “…”`). Turns with an announced offer: **0** of 220; every other turn sent the no-offer enum (`none` only), which is what a normal turn sends.
 
 | action | turns |
 |---|---|

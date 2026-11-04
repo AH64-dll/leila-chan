@@ -4,6 +4,7 @@ Lab-only tests run offline; the runner test drives run.py's HTTP path against a
 stub llama-server (same pattern as tests/test_smoke_check_turn.py).
 Run: python -m pytest tools/promptlab/tests -q
 """
+import hashlib
 import json
 import re
 import subprocess
@@ -16,7 +17,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import lab
-from score import gate_rows, score
+from score import gate_rows, print_report, score
 from report import md_report
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -506,7 +507,7 @@ def test_load_set_rejects_an_action_unlocked_later(tmp_path):
 
 
 def test_offered_actions_reach_the_wire_and_the_row(tmp_path):
-    """CODE-5: the measured schema offers the actions the Director offered."""
+    """CODE-5 + DES-r2-1: the schema offers the action, the prompt says why, the row records it."""
     seen = {}
     turn = json.dumps({"choices": [{"message": {"content": json.dumps(GOOD_TURN)}}],
                        "usage": {}}).encode()
@@ -532,11 +533,14 @@ def test_offered_actions_reach_the_wire_and_the_row(tmp_path):
 
     srv = HTTPServer(("127.0.0.1", 0), H)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
+    reason = lab.OFFER_PREFIX + " The player just asked to end the date."
+    offer = lab.OFFER_ACTION_PREFIX + '"end_date". If you do, it ends now.'
     setfile = tmp_path / "offered.jsonl"
     setfile.write_text(json.dumps({
         "id": "o1", "stage": 4, "path": "YANDERE", "msg": "End the date.",
         "read_ok": ["leaving"], "feelings_ok": ["sad"],
-        "offered_actions": ["end_date"]}) + "\n")
+        "offered_actions": ["end_date"],
+        "events": [reason, offer]}) + "\n")
     out = tmp_path / "res.json"
     r = subprocess.run([sys.executable, str(RUN), "--url",
                         f"http://127.0.0.1:{srv.server_port}", "--runs", "1",
@@ -550,8 +554,70 @@ def test_offered_actions_reach_the_wire_and_the_row(tmp_path):
     system = body["messages"][0]["content"]
     assert "Offered this turn — " in system
     assert "action: none, end_date" in system
+    assert reason in system and offer in system
     row_out = json.loads(out.read_text())["results"][0]
     assert row_out["offered_actions"] == ["end_date"]
+    assert row_out["events"] == 2
+    # the hash covers the events layer: it recomputes with the lines and not without
+    base = lab.offered_values(4, ["end_date"])
+    with_events = hashlib.sha256(lab.system_prompt(
+        4, "YANDERE", "AWAKE", "", (), [reason, offer], base).encode()).hexdigest()[:12]
+    without = hashlib.sha256(lab.system_prompt(
+        4, "YANDERE", "AWAKE", "", (), [], base).encode()).hexdigest()[:12]
+    assert row_out["system_sha"] == with_events and with_events != without
+
+
+def test_load_set_requires_the_opportunity_line_for_an_offer(tmp_path):
+    """DES-r2-1: an offer is announced in the events layer, not only in the enum."""
+    no_line = tmp_path / "no_line.jsonl"
+    no_line.write_text(json.dumps({"id": "o3", "stage": 4, "path": "AWAKE", "msg": "hi",
+                                   "read_ok": ["greeting"], "feelings_ok": ["shy"],
+                                   "offered_actions": ["end_date"]}) + "\n")
+    with pytest.raises(AssertionError, match="OPPORTUNITY"):
+        lab.load_set(no_line)
+    unnamed = tmp_path / "unnamed.jsonl"
+    unnamed.write_text(json.dumps({
+        "id": "o4", "stage": 4, "path": "AWAKE", "msg": "hi",
+        "read_ok": ["greeting"], "feelings_ok": ["shy"],
+        "offered_actions": ["end_date"],
+        "events": [lab.OFFER_PREFIX + " The player just said goodbye."]}) + "\n")
+    with pytest.raises(AssertionError, match="names"):
+        lab.load_set(unnamed)
+    good = tmp_path / "good.jsonl"
+    good.write_text(json.dumps({
+        "id": "o5", "stage": 4, "path": "AWAKE", "msg": "hi",
+        "read_ok": ["greeting"], "feelings_ok": ["shy"],
+        "offered_actions": ["end_date"],
+        "events": [lab.OFFER_PREFIX + " The player just said goodbye.",
+                   lab.OFFER_ACTION_PREFIX + '"end_date". If you do, it ends.']}) + "\n")
+    assert len(lab.load_set(good)[0]["events"]) == 2
+
+
+def test_load_set_rejects_an_action_missing_from_the_gate_table(tmp_path):
+    """CODE-r2-1: a misspelled action is an error, not an action unlocked at stage 0."""
+    p = tmp_path / "typo.jsonl"
+    p.write_text(json.dumps({"id": "o6", "stage": 4, "path": "AWAKE", "msg": "hi",
+                             "read_ok": ["greeting"], "feelings_ok": ["shy"],
+                             "offered_actions": ["end_data"]}) + "\n")
+    with pytest.raises(AssertionError, match="not in stage_gates"):
+        lab.load_set(p)
+    with pytest.raises(AssertionError, match="not in stage_gates"):
+        lab.offered_actions_min_stage("end_data")
+
+
+def test_score_console_dose_block_is_gated_on_meta_sweep_doses(capsys):
+    """CODE-r2-2: a dose on every row is not a sweep, so the header may not say it is."""
+    scheduled = make_doc([row(dose=0.0),
+                          row(stage=5, dose=8.0, run=2, id="s5a", path="YANDERE")])
+    print_report(score(scheduled), "first")
+    out = capsys.readouterr().out
+    assert "dose sweep" not in out
+    assert "per-dose (scheduled stage doses, not a sweep" in out
+    swept = make_doc([row(dose=0.0), row(dose=12.0, run=2)], sweep_doses=[0.0, 12.0])
+    print_report(score(swept), "first")
+    out = capsys.readouterr().out
+    assert "dose sweep (validity is the gate" in out
+    assert "per-dose (scheduled" not in out
 
 
 def test_plan_partial_merge_keeps_the_other_exercises(tmp_path):

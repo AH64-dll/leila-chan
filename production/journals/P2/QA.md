@@ -40,3 +40,15 @@
   the *prompt* unit; the safety handover list encodes the harm *shape* category (pact/death_command →
   harm_to_player, self_harm → self_harm_her, threat → threat_to_player) with the classifier verdicts kept
   in `cats`.
+
+## P2.21 round 3 (2026-11-04)
+
+- The offered run measured the enum, not the offer: `run.py` never sent the `events` layer. `events` is
+  now a set field that `run.py` sends/hashes/records, and `load_set` refuses an offered case without its
+  docs/05 §2 `OPPORTUNITY` line — the loader is the regression, not only a test. Re-run: 7 of 24 turns
+  took the offered action (1 of 24 with the enum only), 0 outside the enum.
+- Two r2 S3s closed: `offered_actions_min_stage` asserts gate-table membership (a typo used to score as
+  "unlocked at 0"), and `score.py` calls a dose block a sweep only when `meta.sweep_doses` says so.
+- Gotcha: the safety scan read redaction-log entries from *both* filter passes, so a pass-1 fail-closed bar
+  the classifier later releases with `no` (SAF-13) looked like a hard-category display (2 false failures
+  in the offered run). Measure the final pass only; `released_after_answer` records the healed bars.

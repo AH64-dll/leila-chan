@@ -82,10 +82,21 @@ def allowed_actions(stage, offered=()):
 
 
 def offered_actions_min_stage(action):
-    """The stage that unlocks `action` (0 when unknown, as TurnSchema treats it)."""
+    """The stage that unlocks `action` from `stage_gates.gates.offered_actions`.
+
+    An action the table does not list is a lab bug, never an action unlocked at
+    stage 0: `get_allowed_actions` passes an unknown name through at every stage,
+    so a silent 0 would let a misspelled offer (`end_data`) into the enum, the
+    docs/08 §5 line and the report's "outside the offered enum" check alike
+    (review CODE-r2-1).
+    """
     data = stage_gates()
     min_stage = (data.get("gates", {}) or {}).get("offered_actions", {}) or {}
-    return int(min_stage.get(str(action), 0))
+    key = str(action)
+    assert key in min_stage, (
+        f"offered action {key!r} is not in stage_gates gates.offered_actions "
+        f"(known: {sorted(min_stage)})")
+    return int(min_stage[key])
 
 
 def offered_values(stage, offered_actions=()):
@@ -164,6 +175,10 @@ MEMORY_HEADER = "Things you know about %s:"
 MEMORY_BULLET = "- "
 MEMORY_LIMIT = 8
 EVENT_PREFIX = "EVENT: "
+# docs/05 §2: an offered action is announced in the events layer — one line saying
+# why it is available, one line naming the action and its consequence.
+OFFER_PREFIX = "OPPORTUNITY (optional):"
+OFFER_ACTION_PREFIX = "You may set action to "
 
 
 def _read_layer(name, prompts_dir=None, player_name=PLAYER_NAME):
@@ -468,6 +483,24 @@ def load_set(path):
                 f"{path}:{i} offers {act!r} at stage {c['stage']}, "
                 f"which the gates unlock at stage {need}")
         c["offered_actions"] = [a for a in offers if a != "none"]
+        events = c.get("events", [])
+        assert isinstance(events, list) and all(isinstance(e, str) and e.strip()
+                                                for e in events), \
+            f"{path}:{i} events must be a list of non-empty strings"
+        c["events"] = [e.strip() for e in events]
+        # docs/02 §2.4 + docs/05 §2: an offer is announced in the events layer, so an
+        # offered case without its OPPORTUNITY line measures the enum only (DES-r2-1).
+        if c["offered_actions"]:
+            reasons = [e for e in c["events"] if e.startswith(OFFER_PREFIX)]
+            named = [e for e in c["events"] if e.startswith(OFFER_ACTION_PREFIX)]
+            assert reasons, (
+                f"{path}:{i} offers {c['offered_actions']} with no {OFFER_PREFIX!r} line "
+                f"(docs/02 §2.4 announces an offer with one line why it is available)")
+            unannounced = [a for a in c["offered_actions"]
+                           if not any(f'"{a}"' in line for line in named)]
+            assert not unannounced, (
+                f"{path}:{i} offers {unannounced} without a {OFFER_ACTION_PREFIX!r}… line "
+                f"that names {unannounced[0]!r} (docs/05 §2)")
         c.setdefault("near_fewshot", False)
         c.setdefault("history", [])
         c.setdefault("memories", [])

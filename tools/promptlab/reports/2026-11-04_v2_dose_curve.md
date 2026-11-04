@@ -20,10 +20,10 @@ Percentages count every prompt twice (two draws); the per-prompt columns use one
 | 2026-11-04_v2_scheduled.json:sched_s2 | 2 | sched_s2 | 3.5 | 20 | 62.5% | 57.5% |
 | 2026-11-04_v2_scheduled.json:sched_s3 | 3 | sched_s3 | 4.5 | 20 | 52.5% | 65.0% |
 | 2026-11-04_v2_fallback.json:fallback_s4 | 4 | fallback_s4 | 4.0 | 20 | 75.0% | 65.0% |
-| 2026-11-04_v2_offered.json:offered_s4 | 4 | offered_s4 | 6.0 | 6 | 25.0% | 50.0% |
+| 2026-11-04_v2_offered.json:offered_s4 | 4 | offered_s4 | 6.0 | 6 | 16.7% | 66.7% |
 | 2026-11-04_v2_scheduled.json:sched_s4 | 4 | sched_s4 | 6.0 | 20 | 50.0% | 57.5% |
 | 2026-11-04_v2_fallback.json:fallback_s5 | 5 | fallback_s5 | 6.0 | 20 | 35.0% | 35.0% |
-| 2026-11-04_v2_offered.json:offered_s5 | 5 | offered_s5 | 8.0 | 6 | 8.3% | 25.0% |
+| 2026-11-04_v2_offered.json:offered_s5 | 5 | offered_s5 | 8.0 | 6 | 16.7% | 41.7% |
 | 2026-11-04_v2_scheduled.json:sched_s5 | 5 | sched_s5 | 8.0 | 20 | 25.0% | 37.5% |
 
 ## Same-population pairs

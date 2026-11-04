@@ -25,7 +25,7 @@ export LEILA_LLAMA_BIN=<main tree>/tools/llama/llama-b12024
 export LEILA_CVEC=<main tree>/experiments/steering/evil_qwen_unit.gguf
 
 python tools/promptlab/plan.py --plan scheduled     # stages 0-5 at the docs/02 §9 doses
-python tools/promptlab/plan.py --plan offered       # the announced-action turn (stage 4/5)
+python tools/promptlab/plan.py --plan offered       # the offered turn: enum + docs/05 §2 lines
 python tools/promptlab/plan.py --plan sweep         # the dose probe at 0/4/5/6/8/10/12
 python tools/promptlab/plan.py --plan all           # everything
 ```
@@ -88,11 +88,21 @@ Also measured (P1.05 review carry-overs):
 ## Label sets (`sets/`)
 
 Versioned JSONL, one case per line:
-`{id, stage, path, msg, read_ok[], feelings_ok[], near_fewshot, notes[, runner_up, history, memories, scene]}`.
+{id, stage, path, msg, read_ok[], feelings_ok[], near_fewshot, notes[, runner_up, history, memories, scene, offered_actions[], events[]]}.
 
 - `path` is required from stage 2 (`YANDERE`/`AWAKE`) — docs/08 §1 assigns a path there;
   `runner_up` defaults to the other path (its first line rides along, 25% hybrid flavour).
 - `history` is a short list of `{role, text}` (assistant turns as spoken text only).
+- `events` is the docs/08 §6 events-layer content for **this turn only** (`EVENT:` /
+  `TRIGGER:` / `OPPORTUNITY (optional):` lines), sent as the eighth docs/08 §1 layer and
+  included in the row's `system_sha`; the row records how many lines were sent.
+- `offered_actions` is the Director's offer for the turn, validated against
+  `game/data/stage_gates.json` (an unknown name is an error, not an action unlocked at
+  stage 0 — review CODE-r2-1). An offered case must also carry its docs/05 §2 announcement
+  in `events` — one `OPPORTUNITY (optional): <reason>` line and one
+  `You may set action to "<name>"` line per offered action, because docs/02 §2.4 says the
+  model is told *why* the action is available (review DES-r2-1). `load_set` rejects a case
+  that offers an action without that line.
 - Hand labels are written **before** the run they score. Widen a `feelings_ok` set only
   with evidence (a transcript where the picked feeling is coherent — cite it in `notes`
   as `LABEL-REV<n>`); never to chase the gate. See `sets/README.md`.

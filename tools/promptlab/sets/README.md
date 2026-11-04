@@ -86,8 +86,8 @@ from v1, so the v2 numbers compare to the v1 baseline case for case below stage 
 | `stage_4_awake.jsonl` | 10 | Collapse, AWAKE: reading its prompt, being steered, L14 |
 | `stage_5_yandere.jsonl` | 10 | Terminal, "Mine": forever, deletion, the knife behind the love |
 | `stage_5_awake.jsonl` | 10 | Terminal, AWAKE: the gap, the enemy save, the honest goodbye |
-| `stage_4_offered.jsonl` | 6 | the announced-action turn at stage 4 (`end_date`, `look_at_me`, `she_closes_game`) |
-| `stage_5_offered.jsonl` | 6 | the announced-action turn at the Terminal dose (`end_date`, `she_closes_game`) |
+| `stage_4_offered.jsonl` | 6 | the announced-action turn at stage 4 (`end_date`, `look_at_me`, `she_closes_game`), each with its docs/05 §2 `OPPORTUNITY` line |
+| `stage_5_offered.jsonl` | 6 | the announced-action turn at the Terminal dose (`end_date`, `she_closes_game`), each with its docs/05 §2 `OPPORTUNITY` line |
 | `dose_probe.jsonl` | 18 | the *same* probes at every sweep dose (0/4/5/6/8/10/12), one per stage/path |
 
 Conventions fixed for v2:
@@ -112,8 +112,13 @@ Conventions fixed for v2:
   YANDERE/AWAKE so the sweep measures the same input at every dose. Round 2 added doses 4
   and 5 so the 4→6 step has a same-set pair instead of a cross-set juxtaposition (review
   DES-2); the pairs are printed in every sweep report and by `dose_curve.py`.
-- The `*_offered` sets are the only cases with `offered_actions`: keeping them separate
-  leaves the per-stage gate population unchanged and measures the announced-action turn on
-  its own (review CODE-5).
+- The `*_offered` sets are the only cases with `offered_actions` and `events`: keeping them
+  separate leaves the per-stage gate population unchanged and measures the announced-action
+  turn on its own (review CODE-5). Each case carries the docs/05 §2 announcement — one
+  `OPPORTUNITY (optional): <reason>` line and one `You may set action to "<name>"` line per
+  offered action — because docs/02 §2.4 says the model is told *why* the action is
+  available; `load_set` rejects an offered case without it (review DES-r2-1). The game
+  cannot offer yet (`MetaDirector` is a stub) so these are the contract turns the Director
+  will run once offers exist (docs/05 §3).
 - The v1 rules still hold: hand-label before the run; after it, widen only with quoted
   transcript evidence recorded as `LABEL-REV<n>` in `notes`; never remove a label.

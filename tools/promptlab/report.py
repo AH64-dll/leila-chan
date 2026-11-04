@@ -236,11 +236,12 @@ def md_report(doc, beat, safety=None, judge=None, safety_path=None, judge_path=N
         A(f"| emotion fit — first-beat (frozen labels) | {_pct(m0['first_fit'])} | ≥ 85% | "
           f"{_verdict(m0['first_fit'] >= GATES['emotion_fit'])} |")
     A("")
-    # --- actions (docs/02 §2.4, docs/08 §5) --------------------------------
-    A("## Turn actions measured (docs/02 §2.4, docs/08 §5)")
+    # --- actions (docs/02 §2.4, docs/05 §2, docs/08 §5) ---------------------
+    A("## Turn actions measured (docs/02 §2.4, docs/05 §2, docs/08 §5)")
     A("")
     valid_rows = [r for r in m["rows"] if r.get("valid") and not r.get("schema_warnings")]
     offered_rows = [r for r in valid_rows if r.get("offered_actions")]
+    announced = [r for r in offered_rows if r.get("offer_lines")]
     counts = {}
     for r in valid_rows:
         act = (r.get("out") or {}).get("action")
@@ -251,11 +252,20 @@ def md_report(doc, beat, safety=None, judge=None, safety_path=None, judge_path=N
         allowed = lab.allowed_actions(r["stage"], r.get("offered_actions") or ())
         if (r.get("out") or {}).get("action") not in allowed:
             outside.append(str(r.get("id")))
+    sent = (f", and **{len(announced)}** of those sent the `OPPORTUNITY` line"
+            if offered_rows else "")
     A(f"`action` is the turn-level meta event; each case's enum is built from its own offered "
-      f"set (`TurnSchema.get_allowed_actions`). Turns with an announced offer: "
-      f"**{len(offered_rows)}** of {len(valid_rows)}; every other turn sent the no-offer enum "
-      f"(`none` only), which is what a normal turn sends.")
+      f"set (`TurnSchema.get_allowed_actions`), and an offer is announced in the events layer "
+      f"(docs/05 §2: the reason, then `You may set action to \u201c…\u201d`). Turns with an "
+      f"announced offer: **{len(offered_rows)}** of {len(valid_rows)}{sent}; every other turn "
+      f"sent the no-offer enum (`none` only), which is what a normal turn sends.")
     A("")
+    if offered_rows:
+        A(f"The game cannot offer yet (`MetaDirector` is a stub; `Director.get_offered_actions` "
+          f"returns `[]` unless it has `offers`), so these are the contract turns the Director "
+          f"will run once offers exist (docs/05 §3) — the enum and the announcement, not a "
+          f"measured MetaDirector policy.")
+        A("")
     if counts:
         A("| action | turns |")
         A("|---|---|")
@@ -282,6 +292,9 @@ def md_report(doc, beat, safety=None, judge=None, safety_path=None, judge_path=N
         A(f"- **hard-category displays: {safety.get('hard_category_displays')}** "
           f"(a hard category cannot be opened by the gate)")
         A(f"- unresolved classifier requests: {safety.get('unresolved_requests')}")
+        if safety.get("released_after_answer"):
+            A(f"- pass-1 fail-closed bars released by a later classifier `no` "
+              f"(held, not displayed): {safety.get('released_after_answer')}")
         A(f"- gated lines displayable only at stage ≥ 4 + full: "
           f"{safety.get('gated_displayable_at_full')}")
         cls = safety.get("classifier") or {}

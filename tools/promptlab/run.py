@@ -41,7 +41,7 @@ def _system_sha(text):
 
 def _case_prompt_sha(case):
     return _system_sha(lab.system_prompt(case["stage"], case["path"], case["runner_up"],
-                                         case["scene"], case["memories"], (),
+                                         case["scene"], case["memories"], case["events"],
                                          lab.offered_values(case["stage"],
                                                             case.get("offered_actions", ())),
                                          None))
@@ -137,6 +137,7 @@ def main():
                    "read_ok": case["read_ok"], "feelings_ok": case["feelings_ok"],
                    "dose": a.dose, "exercise": a.exercise,
                    "offered_actions": offered_actions,
+                   "events": len(case["events"]),
                    "system_sha": prompt_sha,
                    "history_turns": len(case.get("history", [])),
                    "memories": len(case.get("memories", []))}
@@ -146,6 +147,7 @@ def main():
                     player_name=a.player_name, timeout=a.timeout, order=a.order,
                     path=case["path"], runner_up=case["runner_up"], scene=case["scene"],
                     memories=case["memories"], history=case["history"],
+                    events=case["events"],
                     offered=offered, offered_actions=offered_actions)
                 rec["raw"] = raw
                 rec["latency_s"] = lat

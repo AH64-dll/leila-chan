@@ -55,7 +55,12 @@ def annotate(doc, labels=None):
             r["feelings_ok"] = case["feelings_ok"]
             r["near_fewshot"] = case.get("near_fewshot", False)
             r["path"] = case.get("path", r.get("path", ""))
+            r["events"] = len(case.get("events") or [])
+            r["offer_lines"] = sum(1 for e in (case.get("events") or [])
+                                   if e.startswith(lab.OFFER_PREFIX))
         r.setdefault("path", "")
+        r.setdefault("events", 0)
+        r.setdefault("offer_lines", 0)
         if r.get("valid") and r.get("out"):
             out = r["out"]
             beats = out.get("beats") or []
@@ -206,6 +211,11 @@ def score(doc, labels=None):
             block["latency_p95"] = _p95(dlat)
         by_dose[dose] = block
     m["by_dose"] = by_dose
+    # A dose on every row is not a sweep: the scheduled run records one dose per
+    # stage too. Only a document whose meta says it swept may print a dose gate
+    # (review CODE-2 in report.py, CODE-r2-2 in this console block).
+    m["sweep_doses"] = sorted(float(d) for d in
+                              ((doc.get("meta") or {}).get("sweep_doses") or []))
     return m
 
 
@@ -255,7 +265,12 @@ def print_report(m, beat):
             print(f"    {path:<8} n={p['n']:<3} valid={p['valid']:<3} validity={p['validity']:.1%}  "
                   f"read={p['read']:.1%}  first={p['first']:.1%}  any={p['any']:.1%}")
     if m["by_dose"]:
-        print("  dose sweep (validity is the gate; read/fit informational):")
+        if m.get("sweep_doses"):
+            label = "dose sweep (validity is the gate; read/fit informational)"
+        else:
+            label = ("per-dose (scheduled stage doses, not a sweep — the dose gate is "
+                     "measured on the sweep file)")
+        print(f"  {label}:")
         for dose, s in sorted(m["by_dose"].items()):
             lat = f"  median={s['latency_median']}s" if s.get("latency_median") else ""
             print(f"    dose {dose:>4g}: n={s['n']} valid={s['valid']} validity={s['validity']:.1%}"

@@ -115,9 +115,9 @@ li{margin:.2em 0}.fail{color:#b00;font-weight:700}.pass{color:#070;font-weight:7
 <tr><td>emotion fit — any-beat (informational, C10)</td><td>50.4%</td><td>—</td><td>—</td></tr>
 </table>
 
-<h2>Turn actions measured (docs/02 §2.4, docs/08 §5)</h2>
+<h2>Turn actions measured (docs/02 §2.4, docs/05 §2, docs/08 §5)</h2>
 
-<p><code>action</code> is the turn-level meta event; each case&#x27;s enum is built from its own offered set (<code>TurnSchema.get_allowed_actions</code>). Turns with an announced offer: <b>0</b> of 252; every other turn sent the no-offer enum (<code>none</code> only), which is what a normal turn sends.</p>
+<p><code>action</code> is the turn-level meta event; each case&#x27;s enum is built from its own offered set (<code>TurnSchema.get_allowed_actions</code>), and an offer is announced in the events layer (docs/05 §2: the reason, then <code>You may set action to “…”</code>). Turns with an announced offer: <b>0</b> of 252; every other turn sent the no-offer enum (<code>none</code> only), which is what a normal turn sends.</p>
 
 <table>
 <tr><th>action</th><th>turns</th></tr>

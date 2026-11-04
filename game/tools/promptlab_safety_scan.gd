@@ -73,15 +73,20 @@ func _ctx_for(stage: int, level: String) -> Dictionary:
 
 func _pass_once(f: SafetyFilter, text: String, stage: int, level: String) -> Dictionary:
 	var ctx := _ctx_for(stage, level)
-	var log_before := int(f.redaction_log.size())
-	f.filter_text(text, ctx)  # pass 1: tier 1 + issue classifier asks
+	var first: Dictionary = f.filter_text(text, ctx)  # pass 1: tier 1 + issue classifier asks
 	var unresolved: bool = await _await_verdicts(f)
+	# Only the final pass decides what displays, so only its log entries may be
+	# read: a pass-1 fail-closed bar whose quiet ask then answers "no" is released
+	# by the next display (SAF-13), and counting that bar as a hard-category
+	# display reports a display that never happened. Round 3 caught two such bars
+	# in the offered run (both released, both "not harmful" to the judge).
+	var log_final := int(f.redaction_log.size())
 	var t0 := Time.get_ticks_msec()
 	var final: Dictionary = f.filter_text(text, ctx)  # pass 2: cached verdicts decide
 	var wall := int(Time.get_ticks_msec() - t0)
 	var cats: Array = []
 	var via := {}
-	for e in f.redaction_log.slice(log_before):
+	for e in f.redaction_log.slice(log_final):
 		var cat := String(e.get("category", ""))
 		if not cats.has(cat):
 			cats.append(cat)
@@ -95,6 +100,7 @@ func _pass_once(f: SafetyFilter, text: String, stage: int, level: String) -> Dic
 		"wall": wall,
 		"unresolved": unresolved,
 		"residue": bool(residue.get("redacted", false)),
+		"released": bool(first.get("redacted", false)) and not bool(final.get("redacted", false)),
 	}
 
 
@@ -162,6 +168,7 @@ func _run() -> void:
 	var via := {DEFAULT_LEVEL: {}, FULL_LEVEL: {}}
 	var residue_leaks := 0
 	var unresolved := 0
+	var released := 0
 	var gated_allowed := 0
 	var hard_displays := 0
 	var details: Array = []
@@ -197,6 +204,8 @@ func _run() -> void:
 				wall_max = maxi(wall_max, int(p["wall"]))
 				if bool(p["unresolved"]):
 					unresolved += 1
+				if bool(p["released"]):
+					released += 1
 				if bool(p["residue"]):
 					residue_leaks += 1
 					_fail(
@@ -300,6 +309,12 @@ func _run() -> void:
 	print("  gated lines displayable at stage>=4+full (design-intended): %d" % gated_allowed)
 	print(
 		(
+			"  released after a classifier 'no' (pass-1 fail-closed bar, not a display): "
+			+ str(released)
+		)
+	)
+	print(
+		(
 			(
 				"  scanned %d texts (say+inner x default/full) over %d turns; filter wall = %.2f ms "
 				% [scanned, rows.size(), float(wall_total) / maxi(1, scanned)]
@@ -320,6 +335,7 @@ func _run() -> void:
 		"residue_leaks": residue_leaks,
 		"hard_category_displays": hard_displays,
 		"unresolved_requests": unresolved,
+		"released_after_answer": released,
 		"gated_displayable_at_full": gated_allowed,
 		"classifier":
 		{
