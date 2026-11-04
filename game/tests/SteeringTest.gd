@@ -93,28 +93,15 @@ func test_path_mix_axis_is_clamped_to_0_12() -> void:
 	assert_bool(fixture != null).is_true()
 	if fixture == null:
 		return
-	(
-		fixture
-		. store_string(
-			(
-				JSON
-				. stringify(
-					{
-						"version": 1,
-						"stages":
-						{
-							"0": {"malice": 0.0, "path_mix": 12.5},
-							"1": {"malice": 2.5, "path_mix": -3.0},
-							"2": {"malice": 3.5, "path_mix": 2.0},
-							"3": {"malice": 4.5, "path_mix": 3.0},
-							"4": {"malice": 6.0, "path_mix": 4.0},
-							"5": {"malice": 8.0, "path_mix": 99.0},
-						},
-					}
-				)
-			)
-		)
-	)
+	var stages := {
+		"0": {"malice": 0.0, "path_mix": 12.5},
+		"1": {"malice": 2.5, "path_mix": -3.0},
+		"2": {"malice": 3.5, "path_mix": 2.0},
+		"3": {"malice": 4.5, "path_mix": 3.0},
+		"4": {"malice": 6.0, "path_mix": 4.0},
+		"5": {"malice": 8.0, "path_mix": 99.0},
+	}
+	fixture.store_string(JSON.stringify({"version": 1, "stages": stages}))
 	fixture.close()
 	assert_bool(Steering.reload_table(OVERSIZE_TABLE)).is_true()
 	assert_float(float(_schedule(0)["path_mix"])).is_equal_approx(12.0, 0.0001)

@@ -22,18 +22,8 @@
 
 ## P2.04 round 2 — review fixes (2026-11-04)
 
-- DES-1: both axes are clamped now — `path_mix` gets the same `clampf(0, 12)` as `malice` in `schedule_for`
-  (`Steering.gd:105-106`); a `user://` fixture with 12.5 / -3.0 / 99.0 proves a retuned table cannot escape it.
-- DES-2: `Settings.content_level: String = ""` now exists (docs/07 §2 always assigned it; the menu is P3.13),
-  so the calmer cap is reachable in game. `test_settings_content_level_forces_the_calmer_cap` also pins that a
-  ctx "full" cannot loosen a Settings "calmer" and that empty/invalid settings never enable it.
-- DES-3: renamed the interim dose key `path` -> `path_mix` (docs/06 §3's own term). `path` collided with the
-  narrative path in ctx/GameState, the F3 `Path:` line and `control_vectors[].path` (a file) in the launcher
-  config. docs/06 §3 + docs/07 §3.1 now name the key and mark it interim (P3.04 replaces it with the path's
-  vector name; docs/07 keeps the `{"malice": …, "possessive": …}` target shape visible).
-- DES-4/CODE-1: `schedule_for` reports `spike_requested` next to the applied `spike` (0.0 while stubbed), so a
-  dropped +4 no longer reads as "trigger never fired".
-- CODE-2: docstrings + `dose.json` doc now say the [0, 12] clamp is code-only and the calmer cap is the stage-3
-  *row* (retuning stage 3 retunes the ceiling); do not "fix" the cap to a literal 4.5/3.0 pair.
-- Gotcha for P2.03/P3.04: consume `path_mix`, not `path`; the launcher's `control_vectors` entries already call
-  the vector *file* `path`, so build `{"path": file, "scale": dose["path_mix"]}` instead of passing the map through.
+- Both dose axes clamp to [0, 12] now (`path_mix` had no `clampf`); `Settings.content_level` exists, so the calmer cap is reachable in game and tested through Settings (never loosened by a ctx "full").
+- Interim dose key is `path_mix`, not `path` (docs/06 §3's own term): `path` is the narrative path in ctx/GameState/F3 and the vector *file* in the launcher's `control_vectors`; docs/06 §3 + docs/07 §3.1 mark it interim for P3.04.
+- `schedule_for` reports `spike_requested` beside the applied `spike` (0.0 while stubbed), so a dropped +4 no longer reads as "trigger never fired".
+- Docstrings + `dose.json` now say the clamp is code and the calmer cap is the stage-3 *row* (retuning stage 3 moves the ceiling); do not hard-code 4.5/3.0 as the cap.
+- P2.03/P3.04 gotcha: consume `path_mix`; build `{"path": <file>, "scale": dose["path_mix"]}` for the launcher instead of passing the dose map through.
