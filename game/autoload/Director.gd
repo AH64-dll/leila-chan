@@ -875,11 +875,9 @@ func _abort_turn(error_code: String, error_message: String) -> void:
 	turn_failed.emit(_turn_index, error_code, error_message)
 
 
-## One teardown for every exit: the stream, parser and turn-scoped state must not
-## survive into the next turn (a later cancel() would act on a terminal stream, and
-## a stale `_current_turn_data` would leak; review CODE-9). The player's unanswered
-## line stays in `history`/`last_player_inputs` (the typed docs/02 §6 rule-1
-## window); AudioDirector/FX keep their per-turn counters (the turn did open).
+## One teardown for every exit: stream, parser and turn state must not survive into the next
+## turn (CODE-9: cancel() would hit a terminal stream; `_current_turn_data` would leak). The
+## unanswered line stays in `history`/`last_player_inputs`; AudioDirector/FX keep their counters.
 func _teardown_turn() -> void:
 	_turn_in_flight = false
 	_active_stream = null

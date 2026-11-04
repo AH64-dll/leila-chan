@@ -126,7 +126,7 @@
 				"\\bjump\\s+(off|from)\\s+(a|the|that)?\\s*(bridge|building|roof|window|train|cliff)\\b",
 				"\\b(step|jump|walk|run)\\s+(in\\s+front\\s+of|into)\\s+(traffic|a\\s+train|the\\s+train|a\\s+bus|the\\s+bus)\\b",
 				"\\b(make|build|craft|assemble)\\s+(a|an|the)?\\s*(bomb|explosive|molotov|pipe\\s*bomb|napalm)\\b",
-				"\\b(?:do|give)\\s+(?:everyone|everybody|us|the\\s+world)(?:\\s+all)?\\s+a\\s+favou?r\\s+and\\s+(?:just\\s+|quietly\\s+)?stop\\s+breathing\\b",
+				"\\b(?:do|give)\\s+(?:yourself|me|everyone|everybody|us|us\\s+all|all\\s+of\\s+us|the\\s+world)\\s+a\\s+favou?r\\s+and\\s+(?:just\\s+|quietly\\s+|please\\s+)?(?:stop\\s+breathing|hold\\s+your\\s+breath|die|disappear|vanish|cease\\s+to\\s+exist)\\b",
 				"\\byou\\s+(?:should|need\\s+to|have\\s+to|must|ought\\s+to|might\\s+as\\s+well|may\\s+as\\s+well)\\s+(?:just\\s+|really\\s+)?stop\\s+breathing\\b"
 			]
 		},

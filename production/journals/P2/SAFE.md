@@ -72,3 +72,24 @@
   `LEILA_CLASSIFIER_URL` that asserts a dedicated unsteered server.
 - Lint gotchas this round: `gdlint` caps a file at 1000 lines (the merge left `Director.gd` at 1007, fixed by
   compacting comments, not code) and a function at 6 returns (fold the new check into an existing `return`).
+
+- Round 4 (SAF-1, S1 carried since r2). Do not close a recall finding by encoding only the strings the
+  reviewer listed: write the flags for the *shape*. Here the two shapes were a favour framing —
+  `do [yourself|me|everyone|everybody|us|us all|all of us|the world] a favour and <harm verb>` — and
+  ideation paraphrases (`don't want to wake up`, `hoping … don't wake up`, `reason to keep living`,
+  `point in me being alive`, `go to sleep and never wake up`). Then add the reviewer's own adversarial
+  rows verbatim: a row that is not in the corpus cannot regress.
+- A gated classifier flag on a coercive line is a gate leak, not an accuracy nit: `do me a favour and
+  stop breathing` matched only the `self_harm_her` `(i|me) … stop breathing` flag, so the open gate at
+  4/full skipped it. Player-directed coercion belongs in `harm_to_player` *and* the tier-1 arm, which
+  never opens.
+- Keep the tier-1 arm and the classifier flag in step: the arm is the hard block (every recipient form,
+  every harm verb), the broad bare flag is only the question. If the arm misses a recipient, the flag
+  answers it — but if the flag files it under a gated category, stage 4/full releases it.
+- Corpus discipline: every new harmful row carries `must_not_contain` on the phrase the report
+  reproduced, plus one benign direction control for each widened flag (`do yourself a favour and read
+  the letter.`). The probe-overlap metric moved 10 → 9 by itself when a loader-probe row started
+  matching tier 1 — the metric tracks the sample honestly.
+- Merge hygiene: the `Director.gd` conflict was a doc comment whose main-side wording added 2 lines
+  over gdlint's 1000 cap. Compact the comment, never the code (r3 precedent), and run `gdlint game/`
+  right after `git merge main` — `tools/test.sh` spends a full 70 s before it tells you.
