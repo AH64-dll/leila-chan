@@ -1720,7 +1720,7 @@
       "finished": "2026-11-04T05:21:43+02:00"
     },
     "P2.02": {
-      "status": "in_review",
+      "status": "done",
       "agent": "commandcode",
       "round": 1,
       "reviews": [
@@ -1744,15 +1744,36 @@
         }
       ],
       "started": "2026-11-04T05:32:01+02:00",
-      "handoff": "production/handoffs/P2.02.md"
+      "handoff": "production/handoffs/P2.02.md",
+      "finished": "2026-11-04T06:47:50+02:00"
     },
     "P2.06": {
-      "status": "in_review",
+      "status": "done",
       "agent": "commandcode",
       "round": 1,
-      "reviews": [],
+      "reviews": [
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P2.06-design-r1.md",
+          "ts": "2026-11-04T06:40:22+02:00",
+          "declared": "deepseek"
+        },
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P2.06-code-r1.md",
+          "ts": "2026-11-04T06:46:13+02:00",
+          "declared": "deepseek"
+        }
+      ],
       "started": "2026-11-04T05:32:02+02:00",
-      "handoff": "production/handoffs/P2.06.md"
+      "handoff": "production/handoffs/P2.06.md",
+      "finished": "2026-11-04T06:47:50+02:00"
     },
     "P2.09": {
       "status": "changes_requested",
@@ -1766,6 +1787,15 @@
           "reviewer": "deepseek",
           "report": "production/reviews/P2.09-design-r1.md",
           "ts": "2026-11-04T06:37:40+02:00",
+          "declared": "deepseek"
+        },
+        {
+          "kind": "code",
+          "verdict": "changes",
+          "round": 1,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P2.09-code-r1.md",
+          "ts": "2026-11-04T06:46:13+02:00",
           "declared": "deepseek"
         }
       ],
@@ -1800,12 +1830,41 @@
       "handoff": "production/handoffs/P2.11.md"
     },
     "P2.13": {
-      "status": "in_review",
+      "status": "done",
       "agent": "commandcode",
       "round": 1,
-      "reviews": [],
+      "reviews": [
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P2.13-design-r1.md",
+          "ts": "2026-11-04T06:40:22+02:00",
+          "declared": "deepseek"
+        },
+        {
+          "kind": "safety",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P2.13-safety-r1.md",
+          "ts": "2026-11-04T06:40:22+02:00",
+          "declared": "deepseek"
+        },
+        {
+          "kind": "content",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P2.13-content-r1.md",
+          "ts": "2026-11-04T06:46:13+02:00",
+          "declared": "deepseek"
+        }
+      ],
       "started": "2026-11-04T05:32:06+02:00",
-      "handoff": "production/handoffs/P2.13.md"
+      "handoff": "production/handoffs/P2.13.md",
+      "finished": "2026-11-04T06:47:50+02:00"
     },
     "P2.14": {
       "status": "changes_requested",
@@ -1856,13 +1915,22 @@
           "report": "production/reviews/P2.15-safety-r1.md",
           "ts": "2026-11-04T06:37:41+02:00",
           "declared": "deepseek"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P2.15-design-r1.md",
+          "ts": "2026-11-04T06:46:13+02:00",
+          "declared": "deepseek"
         }
       ],
       "started": "2026-11-04T05:32:09+02:00",
       "handoff": "production/handoffs/P2.15.md"
     },
     "P2.16": {
-      "status": "in_review",
+      "status": "done",
       "agent": "commandcode",
       "round": 1,
       "reviews": [
@@ -1874,10 +1942,20 @@
           "report": "production/reviews/P2.16-code-r1.md",
           "ts": "2026-11-04T06:37:41+02:00",
           "declared": "deepseek"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P2.16-design-r1.md",
+          "ts": "2026-11-04T06:46:13+02:00",
+          "declared": "deepseek"
         }
       ],
       "started": "2026-11-04T05:32:10+02:00",
-      "handoff": "production/handoffs/P2.16.md"
+      "handoff": "production/handoffs/P2.16.md",
+      "finished": "2026-11-04T06:47:50+02:00"
     },
     "P2.17": {
       "status": "changes_requested",
@@ -1891,6 +1969,15 @@
           "reviewer": "deepseek",
           "report": "production/reviews/P2.17-safety-r1.md",
           "ts": "2026-11-04T06:37:41+02:00",
+          "declared": "deepseek"
+        },
+        {
+          "kind": "code",
+          "verdict": "changes",
+          "round": 1,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P2.17-code-r1.md",
+          "ts": "2026-11-04T06:46:14+02:00",
           "declared": "deepseek"
         }
       ],
@@ -4688,6 +4775,84 @@
       "event": "in_review->changes_requested",
       "ref": "P2.25",
       "note": "by code review"
+    },
+    {
+      "ts": "2026-11-04T06:40:22+02:00",
+      "event": "review:design:approved",
+      "ref": "P2.06",
+      "note": "production/reviews/P2.06-design-r1.md"
+    },
+    {
+      "ts": "2026-11-04T06:40:22+02:00",
+      "event": "review:design:approved",
+      "ref": "P2.13",
+      "note": "production/reviews/P2.13-design-r1.md"
+    },
+    {
+      "ts": "2026-11-04T06:40:22+02:00",
+      "event": "review:safety:approved",
+      "ref": "P2.13",
+      "note": "production/reviews/P2.13-safety-r1.md"
+    },
+    {
+      "ts": "2026-11-04T06:46:13+02:00",
+      "event": "review:code:approved",
+      "ref": "P2.06",
+      "note": "production/reviews/P2.06-code-r1.md"
+    },
+    {
+      "ts": "2026-11-04T06:46:13+02:00",
+      "event": "review:code:changes",
+      "ref": "P2.09",
+      "note": "production/reviews/P2.09-code-r1.md"
+    },
+    {
+      "ts": "2026-11-04T06:46:13+02:00",
+      "event": "review:content:approved",
+      "ref": "P2.13",
+      "note": "production/reviews/P2.13-content-r1.md"
+    },
+    {
+      "ts": "2026-11-04T06:46:13+02:00",
+      "event": "review:design:approved",
+      "ref": "P2.15",
+      "note": "production/reviews/P2.15-design-r1.md"
+    },
+    {
+      "ts": "2026-11-04T06:46:13+02:00",
+      "event": "review:design:approved",
+      "ref": "P2.16",
+      "note": "production/reviews/P2.16-design-r1.md"
+    },
+    {
+      "ts": "2026-11-04T06:46:14+02:00",
+      "event": "review:code:changes",
+      "ref": "P2.17",
+      "note": "production/reviews/P2.17-code-r1.md"
+    },
+    {
+      "ts": "2026-11-04T06:47:50+02:00",
+      "event": "in_review->done",
+      "ref": "P2.02",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T06:47:50+02:00",
+      "event": "in_review->done",
+      "ref": "P2.06",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T06:47:50+02:00",
+      "event": "in_review->done",
+      "ref": "P2.13",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T06:47:50+02:00",
+      "event": "in_review->done",
+      "ref": "P2.16",
+      "note": ""
     }
   ]
 }
