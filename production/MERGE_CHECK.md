@@ -30,6 +30,14 @@ Two severities, deliberately asymmetric:
 | `DELETE-VS-EDIT` (pre) | One side deleted a file the other side changed. The merge must pick one, so the report names the side that still holds the work and the copy to keep. | **yes** |
 | `BOTH-DELETED` (pre) | Both sides deleted the same path since the merge-base. Git resolves delete/delete by deleting, and no line can be lost. Listed so the overlap count adds up. | no |
 | `CONFLICT` (pre) | Both sides changed the same regions. The report names what each copy would lose if taken whole. | review |
+| `RENAME/RENAME` (pre) | Both sides moved the same path — to two different new names, or to one name with different content. The report names every destination; identical copies move without a word. A move is not a deletion, so this is never `BOTH-DELETED`. | review |
+| `RENAME/DELETE` (pre) | One side moved the file, the other side deleted it. The renamed copy is the only copy of the work, so the report says which path to keep. | **yes** |
+| `RENAME/EDIT` (pre) | One side moved the file, the other edited it where it was. Git follows the move, so the verdict comes from the simulated result: a destination git cannot resolve is a `REVIEW`, and a merged copy that lost an added line fails. | review |
+
+A rename is a deletion of the old path plus an addition of the new one, which is exactly why the listing disables
+rename detection: a move must never hide the path the other side edited. The classification then looks the renames
+up against the merge-base, so the four "gone from this path" shapes above can be told apart instead of all reading
+as `BOTH-DELETED`.
 
 `production/state.json` and `production/STATUS.md` are excluded on purpose: `track.py` regenerates them from
 `state.json` immediately after the merge (`set <TASK> done`, `render`), so their merged bytes prove nothing about
@@ -55,12 +63,18 @@ git commit --no-edit
 ```
 
 Exit codes: **0** clean, **1** work is at risk, **2** the check could not run (bad ref, no merge in progress,
-`--allow` in pre mode, git missing from `PATH`, a git call that timed out).
+`--allow` in pre mode or an `--allow` that does not match a finding, a merge stopped while `--post HEAD` is asked
+about the pre-merge commit, git missing from `PATH`, a git call that timed out).
 
 `--post HEAD` audits the commit `HEAD` points at, so run it before another commit lands on top of the merge (the
 journal/handoff commit included). After that, pass the merge commit id — `python tools/merge_check.py --post
 3da2d24`. On a non-merge `HEAD` the tool answers `HEAD is not a merge commit (parents: 1)` with exit 2: that is
-"the check could not run", not a pass.
+"the check could not run", not a pass. While a merge is stopped, `HEAD` is still the pre-merge commit, so
+`--post HEAD` refuses with exit 2 and names `--staged` instead: auditing the old commit says nothing about the
+merge in front of you.
+
+A `--post` report prints `commit <40-hex>` under its header. That is the evidence line: any pasted report names the
+exact tree it audited, so it cannot drift onto a later commit. `--json` carries the same id as `commit`.
 
 If the post check fails:
 
@@ -75,6 +89,15 @@ already told you that copy loses nothing. That is exactly the P1.16 mistake.
 `--allow PATH` (repeatable, `--post`/`--staged` only) acknowledges a reviewed finding, e.g. a deliberate file
 deletion; it turns a blocking finding into a reported `(allowed)` one. Use it only after reading the dropped
 lines, and say why in the merge commit message.
+
+Because it is a whitelist, three things are refused with exit 2 rather than accepted quietly:
+
+- **anything that is not an exact repo-relative path** — a pattern (`production/*`), an absolute path or a `..`
+  escape would acknowledge paths nobody read; `production/state.json` and `production/STATUS.md` cannot be
+  acknowledged at all, since the audit already skips them;
+- **a path that matched no finding** — a typo would otherwise read as "reviewed";
+- **`STALE-COPY` and unresolved conflicts** — the P1.16 takeover is decided by blob id, not judgement, so it has to
+  be undone rather than noted; an unresolved path has no resolution to acknowledge yet.
 
 ## Reading the report
 
@@ -132,6 +155,7 @@ Post-merge on the incident commit, after the branch copy had been taken:
 ```console
 $ python3 tools/merge_check.py --post 50752b7 ; echo "post exit=$?"
 merge-check: post-merge audit — 50752b7^1 (feef716) vs 50752b7^2 (7d7ae0b)
+commit 50752b7c2be16d571319438771d6a486440ff071
 merge-base b90bb48
 
   STALE-COPY             game/tests/DateSceneTest.gd
@@ -175,6 +199,34 @@ $ python3 tools/merge_check.py task/Z          # the target deleted it, the bran
       the target deleted this file; the branch side changed it — keep the branch copy
 ```
 
+A move is classified as a move, never as a delete/delete (scratch repositories, each side moving `note.md`):
+
+```console
+$ python3 tools/merge_check.py task/R2         # both sides moved it, to two different names
+merge-check: pre-merge — target HEAD (8107d4f) ← source task/R2 (a66865b)
+merge-base 5fab00d
+1 file(s) changed on both sides · 3 conflicted path(s)
+
+  RENAME/RENAME          note.md
+      the target renamed this path to main-side.md; the branch renamed it to branch-side.md
+      both renamed copies hold work — keep both files
+
+VERDICT: REVIEW — resolve the files above by hand and keep both sides.
+  Then prove it: python3 tools/merge_check.py --post HEAD
+exit=1
+$ python3 tools/merge_check.py task/R          # the branch moved it, the target deleted it
+merge-check: pre-merge — target HEAD (9b54c2a) ← source task/R (9c718bc)
+merge-base 5fab00d
+1 file(s) changed on both sides · 1 conflicted path(s)
+
+  RENAME/DELETE          note.md
+      the branch renamed this file to renamed.md; the target deleted it — keep renamed.md
+
+VERDICT: FAIL — this merge cannot preserve both sides as-is; inspect the files above.
+  Then prove it: python3 tools/merge_check.py --post HEAD
+exit=1
+```
+
 The same audit passes on every P2 merge made before this ticket (`10e913c`, `c2e2873`, `0ac6c10`, `53b965d`,
 `a58261e`, `bbe44f5`, `6d565e6`, `e62f484`) and on this branch's own `main` merge (`--post 3da2d24`), so it is not
 a blanket red gate on healthy merges.
@@ -183,13 +235,19 @@ a blanket red gate on healthy merges.
 
 - `pre`: computes `git merge-base <target> <source>`, lists the paths changed on each side since that base
   (`--no-renames`, so a rename cannot hide the path the target edited), intersects them, and for every file in the
-  intersection diffs **each side against the merge-base**. It also simulates the merge with
-  `git merge-tree --write-tree` (no worktree touched) to name the conflicted paths and to catch a clean merge that
-  would still drop an added line. A path gone from *both* sides is `BOTH-DELETED` and does not block: delete/delete
-  has no line to lose, and failing it would contradict the post check that clears the same merge.
+  intersection diffs **each side against the merge-base**. A path gone from a side is then looked up in that side's
+  renames against the base (`--find-renames`), so delete/delete, rename/rename, rename/delete and rename/edit are
+  told apart instead of all reading as deletions. It also simulates the merge with `git merge-tree --write-tree`
+  (no worktree touched) to name the conflicted paths and to catch a clean merge that would still drop an added line;
+  a conflicted path always means REVIEW at least, so no such shape can read as a pass. A plain delete/delete stays
+  `BOTH-DELETED` and does not block: it has no line to lose, and failing it would contradict the post check that
+  clears the same merge.
 - `--post`: takes the merge commit's two parents and the same merge-base, then checks every line each parent
-  added against the merge result. `STALE-COPY` when the result blob equals the other parent's blob.
-- `--staged`: the same, with the index as the result and `MERGE_HEAD` as the second parent. Unresolved paths fail.
+  added against the merge result. `STALE-COPY` when the result blob equals the other parent's blob. When the result
+  no longer has a path, its renames against the merge-base are checked first, so a merge that followed a move is not
+  called `DELETED-BY-MERGE` and dropping the moved copy still is.
+- `--staged`: the same, with the index as the result and `MERGE_HEAD` as the second parent (renames come from
+  `git diff --cached`). Unresolved paths fail.
 - Blank lines are ignored (they carry no information); binary and non-blob paths are reported for manual review;
   `--json` prints the whole report for scripts.
 
@@ -212,6 +270,10 @@ The suite builds a synthetic repository with the P1.16 shape (main gains two tes
 and edits the same file, the merge is resolved with the branch copy) and asserts the pre-check names the lost
 lines and the post-check fails. It also covers a correct two-sided resolution, a same-line supersede that must
 *not* fail, delete-vs-edit in both directions (including the wording that names the copy to keep), both-sides
-deletion, `--allow` on `--post` and its rejection in pre mode, whole-file deletion, the `track.py`-generated
-exclusions, unresolved staged paths, the already-merged case, and the exit-2 contract when git is missing from
-`PATH` or a git call times out. 20 cases, no network and no project history: CI can run it on a shallow checkout.
+deletion, the three rename shapes — rename/rename to two names and to one, rename/delete, and the rename/edit that
+git merges cleanly, followed through to the post check — `--allow` on `--post`, its rejection in pre mode, and the
+seven acknowledgments it refuses (a pattern, an absolute path, a `..` escape, a generated file, a path that matched
+nothing, a stale copy, an unresolved conflict), whole-file deletion, the `track.py`-generated exclusions,
+unresolved staged paths, the already-merged case, the `commit` evidence line, `--post HEAD` refusing while a merge
+is stopped, and the exit-2 contract when git is missing from `PATH` or a git call times out. 33 cases, no network
+and no project history: CI can run it on a shallow checkout.

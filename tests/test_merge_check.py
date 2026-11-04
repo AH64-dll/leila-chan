@@ -133,6 +133,22 @@ func test_vram_usage_budget_under_800mb() -> void:
 """
 
 
+# A file long enough for git's default 50% similarity threshold to pair a move
+# with a one-line edit. README.md is a single line, so moving it and adding two
+# lines drops below the threshold and git reports delete+add instead of a rename.
+MOVE_FILE = "docs/notes.md"
+MOVE_TEXT = """\
+line one
+line two
+line three
+line four
+line five
+line six
+line seven
+line eight
+"""
+
+
 def git(repo: Path, *args: str) -> str:
     proc = subprocess.run(
         ["git", *args], cwd=repo, capture_output=True, text=True, timeout=120
@@ -193,6 +209,7 @@ def repo(tmp_path: Path) -> Path:
 
     write(root, TEST_FILE, BASE_FILE)
     write(root, "README.md", "leila\n")
+    write(root, MOVE_FILE, MOVE_TEXT)
     commit(root, "base")
 
     # The branch forks here, before P1.16 lands.
@@ -365,6 +382,125 @@ def test_pre_passes_when_both_sides_delete_the_same_file(repo: Path) -> None:
     assert report["verdict"] == "PASS"
 
 
+def test_pre_flags_both_sides_renaming_to_different_names(repo: Path) -> None:
+    """A move on each side is not a delete/delete: both copies hold work (CODE-1)."""
+    git(repo, "checkout", "-q", "-b", "moves-notes", "main")
+    git(repo, "mv", MOVE_FILE, "docs/branch-notes.md")
+    commit(repo, "branch renames the notes")
+
+    git(repo, "checkout", "-q", "main")
+    git(repo, "mv", MOVE_FILE, "docs/main-notes.md")
+    commit(repo, "main renames the notes")
+
+    proc, report = check_json(repo, "moves-notes")
+
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert report["verdict"] == "REVIEW"
+    finding = next(item for item in report["findings"] if item["path"] == MOVE_FILE)
+    assert finding["status"] == "rename/rename"
+    assert finding["target_rename"] == "docs/main-notes.md"
+    assert finding["source_rename"] == "docs/branch-notes.md"
+
+    text = check(repo, "moves-notes").stdout
+    assert "RENAME/RENAME" in text
+    assert "BOTH-DELETED" not in text
+    assert "docs/main-notes.md" in text
+    assert "docs/branch-notes.md" in text
+
+    # the same shape stops the real merge, so REVIEW is the honest verdict
+    conflicted = merge_expect_conflict(repo, "moves-notes")
+    assert "CONFLICT (rename/rename)" in conflicted.stdout + conflicted.stderr
+    git(repo, "merge", "--abort")
+
+
+def test_pre_flags_a_rename_to_the_same_name_with_both_sides_modified(repo: Path) -> None:
+    """Both sides moved a file to one name and edited it — a rename, not a delete."""
+    moved = "docs/shared-notes.md"
+    git(repo, "checkout", "-q", "-b", "moves-notes", "main")
+    git(repo, "mv", MOVE_FILE, moved)
+    write(repo, moved, MOVE_TEXT.replace("line four", "branch four"))
+    commit(repo, "branch renames and edits the notes")
+
+    git(repo, "checkout", "-q", "main")
+    git(repo, "mv", MOVE_FILE, moved)
+    write(repo, moved, MOVE_TEXT.replace("line four", "main four"))
+    commit(repo, "main renames and edits the notes")
+
+    proc, report = check_json(repo, "moves-notes")
+
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert report["verdict"] == "REVIEW"
+    finding = next(item for item in report["findings"] if item["path"] == MOVE_FILE)
+    assert finding["status"] == "rename/rename"
+    assert finding["target_rename"] == finding["source_rename"] == moved
+    assert finding["identical"] is False
+
+    text = check(repo, "moves-notes").stdout
+    assert "RENAME/RENAME" in text
+    assert f"both sides renamed this path to {moved} with different content" in text
+    assert "BOTH-DELETED" not in text
+
+
+def test_pre_names_the_renamed_copy_that_survives(repo: Path) -> None:
+    """One side moved the file, the other deleted it: the moved copy is the work."""
+    moved = "docs/renamed-notes.md"
+    git(repo, "checkout", "-q", "-b", "renames-notes", "main")
+    git(repo, "mv", MOVE_FILE, moved)
+    write(repo, moved, MOVE_TEXT + "branch work\n")
+    commit(repo, "branch renames the notes")
+
+    git(repo, "checkout", "-q", "main")
+    git(repo, "rm", "-q", MOVE_FILE)
+    commit(repo, "main drops the notes")
+
+    proc, report = check_json(repo, "renames-notes")
+
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert report["verdict"] == "FAIL"
+    finding = next(item for item in report["findings"] if item["path"] == MOVE_FILE)
+    assert finding["status"] == "rename/delete"
+    assert finding["side"] == "branch"
+    assert finding["source_rename"] == moved
+
+    text = check(repo, "renames-notes").stdout
+    assert "RENAME/DELETE" in text
+    assert (
+        f"the branch renamed this file to {moved}; the target deleted it — keep {moved}"
+        in text
+    )
+
+
+def test_pre_passes_when_git_carries_an_edit_onto_a_renamed_file(repo: Path) -> None:
+    """A move on one side and an edit on the other merges cleanly; the gate agrees."""
+    moved = "docs/moved-notes.md"
+    git(repo, "checkout", "-q", "-b", "edits-notes", "main")
+    write(repo, MOVE_FILE, MOVE_TEXT.replace("line four", "branch four"))
+    commit(repo, "branch edits the notes")
+
+    git(repo, "checkout", "-q", "main")
+    git(repo, "mv", MOVE_FILE, moved)
+    commit(repo, "main renames the notes")
+
+    proc, report = check_json(repo, "edits-notes")
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert report["verdict"] == "PASS"
+    finding = next(item for item in report["findings"] if item["path"] == MOVE_FILE)
+    assert finding["status"] == "rename/edit"
+    assert finding["dropped"] == []
+
+    text = check(repo, "edits-notes").stdout
+    assert "git carried the branch side's lines over" in text
+
+    git(repo, "merge", "--no-ff", "-m", "merge edits-notes", "edits-notes")
+    assert "branch four" in (repo / moved).read_text(encoding="utf-8")
+
+    proc, report = check_json(repo, "--post", "HEAD")
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert report["verdict"] == "PASS"
+
+
 # -------------------------------------------------------------------------- post
 
 
@@ -420,6 +556,75 @@ def test_post_catches_a_merge_that_drops_an_entire_file(repo: Path) -> None:
     assert "more approved work" in finding["dropped"]
 
 
+def test_post_follows_a_rename_and_catches_taking_the_deletion(repo: Path) -> None:
+    """The moved copy is the work: keeping it passes, deleting it fails, same merge."""
+    moved = "docs/renamed-notes.md"
+    git(repo, "checkout", "-q", "-b", "renames-notes", "main")
+    git(repo, "mv", MOVE_FILE, moved)
+    write(repo, moved, MOVE_TEXT + "branch work\n")
+    commit(repo, "branch renames the notes")
+
+    git(repo, "checkout", "-q", "main")
+    git(repo, "rm", "-q", MOVE_FILE)
+    commit(repo, "main drops the notes")
+
+    # resolution that keeps the moved copy: nothing was lost
+    merge_expect_conflict(repo, "renames-notes")
+    git(repo, "add", moved)
+    commit_merge(repo)
+
+    proc, report = check_json(repo, "--post", "HEAD")
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert report["verdict"] == "PASS"
+
+    # resolution that takes the deletion: the branch's line is gone
+    git(repo, "reset", "-q", "--hard", "HEAD^")
+    merge_expect_conflict(repo, "renames-notes")
+    git(repo, "rm", "-q", "--cached", moved)
+    (repo / moved).unlink()
+    commit_merge(repo)
+
+    proc, report = check_json(repo, "--post", "HEAD")
+
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    finding = next(item for item in report["findings"] if item["path"] == moved)
+    assert finding["status"] == "deleted-by-merge"
+    assert finding["dropped"] == ["branch work"]
+
+
+def test_post_names_the_commit_it_audited(repo: Path) -> None:
+    """Evidence has to name the tree it audited, not just the ref it ran against."""
+    merge_expect_conflict(repo)
+    write(repo, TEST_FILE, MERGED_FILE)
+    git(repo, "add", "--", TEST_FILE)
+    commit_merge(repo)
+    head = git(repo, "rev-parse", "HEAD").strip()
+
+    proc, report = check_json(repo, "--post", "HEAD")
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert report["commit"] == head
+    assert f"commit {head}" in check(repo, "--post", "HEAD").stdout
+
+
+def test_post_refuses_head_while_a_merge_is_stopped(repo: Path) -> None:
+    """HEAD is still the pre-merge commit then, so auditing it proves nothing."""
+    merge_expect_conflict(repo)
+
+    proc = check(repo, "--post", "HEAD")
+
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "a merge is stopped" in proc.stderr
+    assert "--staged" in proc.stderr
+
+    write(repo, TEST_FILE, MERGED_FILE)
+    git(repo, "add", "--", TEST_FILE)
+    commit_merge(repo)
+
+    assert check(repo, "--post", "HEAD").returncode == 0
+
+
 def test_post_allows_a_reviewed_finding(repo: Path) -> None:
     """--allow is the documented escape hatch: a reviewed deletion turns into a note."""
     path = merge_that_deletes_an_extended_handoff(repo)
@@ -434,6 +639,77 @@ def test_post_allows_a_reviewed_finding(repo: Path) -> None:
 
     text = check(repo, "--post", "HEAD", "--allow", path).stdout
     assert "DELETED-BY-MERGE (allowed)" in text
+
+
+def test_allow_takes_exact_paths_not_patterns(repo: Path) -> None:
+    """A pattern would acknowledge every path it matches, so it is refused."""
+    path = merge_that_deletes_an_extended_handoff(repo)
+
+    for pattern in ("production/*", "*", "README.md?"):
+        proc = check(repo, "--post", "HEAD", "--allow", pattern)
+
+        assert proc.returncode == 2, proc.stdout + proc.stderr
+        assert "takes an exact path" in proc.stderr
+        assert "would acknowledge every path it matches" in proc.stderr
+
+    # the exact path is still accepted
+    assert check(repo, "--post", "HEAD", "--allow", path).returncode == 0
+
+
+def test_allow_refuses_paths_outside_the_repository(repo: Path) -> None:
+    merge_that_deletes_an_extended_handoff(repo)
+
+    absolute = check(repo, "--post", "HEAD", "--allow", "/etc/passwd")
+
+    assert absolute.returncode == 2, absolute.stdout + absolute.stderr
+    assert "repo-relative path" in absolute.stderr
+
+    traversal = check(repo, "--post", "HEAD", "--allow", "../outside.md")
+
+    assert traversal.returncode == 2, traversal.stdout + traversal.stderr
+    assert "outside the repository" in traversal.stderr
+
+
+def test_allow_cannot_acknowledge_a_track_generated_file(repo: Path) -> None:
+    merge_that_deletes_an_extended_handoff(repo)
+
+    proc = check(repo, "--post", "HEAD", "--allow", STATE_FILE)
+
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "track.py regenerates it" in proc.stderr
+
+
+def test_allow_must_match_a_finding(repo: Path) -> None:
+    """A typo must not read as 'reviewed'."""
+    merge_that_deletes_an_extended_handoff(repo)
+
+    proc = check(repo, "--post", "HEAD", "--allow", "production/handoffs/P9.99.md")
+
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "matched no finding" in proc.stderr
+
+
+def test_allow_cannot_acknowledge_a_stale_copy(repo: Path) -> None:
+    """The P1.16 signature is decided by blob id; it is never a reviewed deletion."""
+    merge_expect_conflict(repo)
+    resolve_with_branch_copy(repo, TEST_FILE)
+    commit_merge(repo)
+
+    proc = check(repo, "--post", "HEAD", "--allow", TEST_FILE)
+
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "stale-copy takeover" in proc.stderr
+
+
+def test_allow_cannot_acknowledge_an_unresolved_conflict(repo: Path) -> None:
+    merge_expect_conflict(repo)
+
+    proc = check(repo, "--staged", "--allow", TEST_FILE)
+
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "unresolved conflict" in proc.stderr
+
+    git(repo, "merge", "--abort")
 
 
 def test_pre_rejects_allow(repo: Path) -> None:

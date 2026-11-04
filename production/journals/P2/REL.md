@@ -33,3 +33,20 @@
   a missing binary or a hang must land on the documented exit 2, not a traceback that reads like lost work.
 - Gotcha: `--post HEAD` is only valid while `HEAD` *is* the merge, and the journal/handoff commit moves it. Cite the
   merge id (`--post 3da2d24`) in evidence, or the reviewer re-runs the command and gets "not a merge commit" (exit 2).
+
+## P2.25 — round 3 (2026-11-04, agent: commandcode)
+
+- A rename is a deletion of the old path plus an addition of the new one, so the changed-path listing (which disables
+  rename detection on purpose) sees every move as a delete. Never classify from that listing alone: look the side's
+  own renames up against the merge-base (`--find-renames`) and report `RENAME/RENAME`, `RENAME/DELETE`, `RENAME/EDIT`
+  — only a true delete/delete is `BOTH-DELETED`.
+- The simulated merge is the oracle for a pre verdict: `git merge-tree --write-tree` exiting 1 on a path means the
+  verdict can be REVIEW at worst, and the real `git merge` must be probed for every new status before shipping it.
+  That probe is what caught rename/edit being a **clean** merge — failing it would have been a false alarm.
+- Rename detection needs content: a one-line `README.md` moved and extended drops under git's 50% similarity threshold
+  and becomes delete+add. Move fixtures need a file with real lines (`docs/notes.md`, eight).
+- The post/staged audit must follow renames too (base→result), or a merge git resolved correctly comes back
+  `DELETED-BY-MERGE`; the same rename map keeps the dropped-line list to the moved delta instead of the whole file.
+- `--allow` is a whitelist: exact repo-relative paths only (no pattern, absolute path, `..` or generated file), every
+  entry must match a finding, and a stale-copy takeover or unresolved path can never be acknowledged. `--post` prints
+  the full audited commit id and refuses `--post HEAD` while a merge is stopped — HEAD is the wrong tree then.
