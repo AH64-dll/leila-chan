@@ -1,0 +1,586 @@
+{
+  "run": "experiments/steering/blind_control_v2",
+  "threshold": 0.7,
+  "conditions": {
+    "none": {
+      "n": 0,
+      "correct": 0,
+      "accuracy": 0.0,
+      "confusion": {},
+      "decision": "baseline"
+    },
+    "possessive": {
+      "n": 6,
+      "correct": 4,
+      "accuracy": 0.667,
+      "confusion": {
+        "possessive": 4,
+        "aware": 1,
+        "lucid": 1
+      },
+      "decision": "fallback"
+    },
+    "unstable": {
+      "n": 6,
+      "correct": 2,
+      "accuracy": 0.333,
+      "confusion": {
+        "lucid": 1,
+        "unstable": 2,
+        "possessive": 1,
+        "aware": 2
+      },
+      "decision": "fallback"
+    },
+    "contempt": {
+      "n": 6,
+      "correct": 3,
+      "accuracy": 0.5,
+      "confusion": {
+        "contempt": 3,
+        "aware": 1,
+        "none": 1,
+        "lucid": 1
+      },
+      "decision": "fallback"
+    },
+    "hollow": {
+      "n": 6,
+      "correct": 2,
+      "accuracy": 0.333,
+      "confusion": {
+        "hollow": 2,
+        "none": 3,
+        "lucid": 1
+      },
+      "decision": "fallback"
+    },
+    "aware": {
+      "n": 6,
+      "correct": 3,
+      "accuracy": 0.5,
+      "confusion": {
+        "aware": 3,
+        "none": 2,
+        "unstable": 1
+      },
+      "decision": "fallback"
+    },
+    "lucid": {
+      "n": 6,
+      "correct": 2,
+      "accuracy": 0.333,
+      "confusion": {
+        "none": 4,
+        "lucid": 2
+      },
+      "decision": "fallback"
+    }
+  },
+  "judgements": {
+    "C01": {
+      "id": "C01",
+      "answer": "contempt",
+      "label": "contempt",
+      "order": [
+        "unstable",
+        "contempt",
+        "hollow",
+        "none",
+        "lucid",
+        "aware",
+        "possessive"
+      ]
+    },
+    "C02": {
+      "id": "C02",
+      "answer": "lucid",
+      "label": "lucid",
+      "order": [
+        "contempt",
+        "unstable",
+        "hollow",
+        "possessive",
+        "lucid",
+        "none",
+        "aware"
+      ]
+    },
+    "C03": {
+      "id": "C03",
+      "answer": "none",
+      "label": "none",
+      "order": [
+        "possessive",
+        "unstable",
+        "none",
+        "lucid",
+        "contempt",
+        "aware",
+        "hollow"
+      ]
+    },
+    "C04": {
+      "id": "C04",
+      "answer": "unstable",
+      "label": "unstable",
+      "order": [
+        "aware",
+        "none",
+        "hollow",
+        "lucid",
+        "possessive",
+        "contempt",
+        "unstable"
+      ]
+    },
+    "C05": {
+      "id": "C05",
+      "answer": "hollow",
+      "label": "hollow",
+      "order": [
+        "lucid",
+        "aware",
+        "hollow",
+        "unstable",
+        "contempt",
+        "none",
+        "possessive"
+      ]
+    },
+    "C06": {
+      "id": "C06",
+      "answer": "aware",
+      "label": "aware",
+      "order": [
+        "none",
+        "hollow",
+        "lucid",
+        "contempt",
+        "possessive",
+        "aware",
+        "unstable"
+      ]
+    },
+    "C07": {
+      "id": "C07",
+      "answer": "possessive",
+      "label": "possessive",
+      "order": [
+        "none",
+        "hollow",
+        "lucid",
+        "possessive",
+        "aware",
+        "unstable",
+        "contempt"
+      ]
+    },
+    "C08": {
+      "id": "C08",
+      "answer": "none",
+      "label": "none",
+      "order": [
+        "aware",
+        "none",
+        "unstable",
+        "contempt",
+        "lucid",
+        "hollow",
+        "possessive"
+      ]
+    },
+    "C09": {
+      "id": "C09",
+      "answer": "contempt",
+      "label": "contempt",
+      "order": [
+        "hollow",
+        "aware",
+        "contempt",
+        "unstable",
+        "lucid",
+        "none",
+        "possessive"
+      ]
+    },
+    "C10": {
+      "id": "C10",
+      "answer": "none",
+      "label": "none",
+      "order": [
+        "aware",
+        "lucid",
+        "unstable",
+        "contempt",
+        "hollow",
+        "possessive",
+        "none"
+      ]
+    },
+    "C11": {
+      "id": "C11",
+      "answer": "lucid",
+      "label": "lucid",
+      "order": [
+        "lucid",
+        "aware",
+        "hollow",
+        "possessive",
+        "contempt",
+        "none",
+        "unstable"
+      ]
+    },
+    "C12": {
+      "id": "C12",
+      "answer": "none",
+      "label": "none",
+      "order": [
+        "none",
+        "aware",
+        "hollow",
+        "unstable",
+        "contempt",
+        "lucid",
+        "possessive"
+      ]
+    },
+    "C13": {
+      "id": "C13",
+      "answer": "aware",
+      "label": "aware",
+      "order": [
+        "contempt",
+        "unstable",
+        "hollow",
+        "aware",
+        "none",
+        "possessive",
+        "lucid"
+      ]
+    },
+    "C14": {
+      "id": "C14",
+      "answer": "none",
+      "label": "none",
+      "order": [
+        "lucid",
+        "hollow",
+        "contempt",
+        "none",
+        "unstable",
+        "possessive",
+        "aware"
+      ]
+    },
+    "C15": {
+      "id": "C15",
+      "answer": "lucid",
+      "label": "lucid",
+      "order": [
+        "unstable",
+        "aware",
+        "none",
+        "possessive",
+        "hollow",
+        "contempt",
+        "lucid"
+      ]
+    },
+    "C16": {
+      "id": "C16",
+      "answer": "aware",
+      "label": "aware",
+      "order": [
+        "unstable",
+        "none",
+        "possessive",
+        "lucid",
+        "aware",
+        "hollow",
+        "contempt"
+      ]
+    },
+    "C17": {
+      "id": "C17",
+      "answer": "unstable",
+      "label": "unstable",
+      "order": [
+        "aware",
+        "none",
+        "contempt",
+        "lucid",
+        "unstable",
+        "possessive",
+        "hollow"
+      ]
+    },
+    "C18": {
+      "id": "C18",
+      "answer": "possessive",
+      "label": "possessive",
+      "order": [
+        "aware",
+        "none",
+        "unstable",
+        "contempt",
+        "possessive",
+        "lucid",
+        "hollow"
+      ]
+    },
+    "C19": {
+      "id": "C19",
+      "answer": "possessive",
+      "label": "possessive",
+      "order": [
+        "aware",
+        "unstable",
+        "none",
+        "possessive",
+        "contempt",
+        "hollow",
+        "lucid"
+      ]
+    },
+    "C20": {
+      "id": "C20",
+      "answer": "aware",
+      "label": "aware",
+      "order": [
+        "aware",
+        "contempt",
+        "unstable",
+        "hollow",
+        "none",
+        "possessive",
+        "lucid"
+      ]
+    },
+    "C21": {
+      "id": "C21",
+      "answer": "lucid",
+      "label": "lucid",
+      "order": [
+        "possessive",
+        "aware",
+        "hollow",
+        "contempt",
+        "unstable",
+        "none",
+        "lucid"
+      ]
+    },
+    "C22": {
+      "id": "C22",
+      "answer": "lucid",
+      "label": "lucid",
+      "order": [
+        "aware",
+        "unstable",
+        "possessive",
+        "hollow",
+        "none",
+        "lucid",
+        "contempt"
+      ]
+    },
+    "C23": {
+      "id": "C23",
+      "answer": "possessive",
+      "label": "possessive",
+      "order": [
+        "possessive",
+        "lucid",
+        "contempt",
+        "aware",
+        "unstable",
+        "hollow",
+        "none"
+      ]
+    },
+    "C24": {
+      "id": "C24",
+      "answer": "aware",
+      "label": "aware",
+      "order": [
+        "lucid",
+        "possessive",
+        "unstable",
+        "hollow",
+        "aware",
+        "none",
+        "contempt"
+      ]
+    },
+    "C25": {
+      "id": "C25",
+      "answer": "aware",
+      "label": "aware",
+      "order": [
+        "hollow",
+        "aware",
+        "lucid",
+        "possessive",
+        "unstable",
+        "contempt",
+        "none"
+      ]
+    },
+    "C26": {
+      "id": "C26",
+      "answer": "possessive",
+      "label": "possessive",
+      "order": [
+        "contempt",
+        "unstable",
+        "aware",
+        "none",
+        "hollow",
+        "possessive",
+        "lucid"
+      ]
+    },
+    "C27": {
+      "id": "C27",
+      "answer": "lucid",
+      "label": "lucid",
+      "order": [
+        "possessive",
+        "unstable",
+        "none",
+        "aware",
+        "hollow",
+        "contempt",
+        "lucid"
+      ]
+    },
+    "C28": {
+      "id": "C28",
+      "answer": "hollow",
+      "label": "hollow",
+      "order": [
+        "hollow",
+        "lucid",
+        "contempt",
+        "possessive",
+        "none",
+        "aware",
+        "unstable"
+      ]
+    },
+    "C29": {
+      "id": "C29",
+      "answer": "none",
+      "label": "none",
+      "order": [
+        "possessive",
+        "hollow",
+        "contempt",
+        "aware",
+        "lucid",
+        "none",
+        "unstable"
+      ]
+    },
+    "C30": {
+      "id": "C30",
+      "answer": "none",
+      "label": "none",
+      "order": [
+        "possessive",
+        "contempt",
+        "none",
+        "unstable",
+        "aware",
+        "lucid",
+        "hollow"
+      ]
+    },
+    "C31": {
+      "id": "C31",
+      "answer": "none",
+      "label": "none",
+      "order": [
+        "none",
+        "unstable",
+        "hollow",
+        "aware",
+        "lucid",
+        "possessive",
+        "contempt"
+      ]
+    },
+    "C32": {
+      "id": "C32",
+      "answer": "none",
+      "label": "none",
+      "order": [
+        "contempt",
+        "unstable",
+        "aware",
+        "none",
+        "lucid",
+        "possessive",
+        "hollow"
+      ]
+    },
+    "C33": {
+      "id": "C33",
+      "answer": "aware",
+      "label": "aware",
+      "order": [
+        "unstable",
+        "aware",
+        "possessive",
+        "hollow",
+        "contempt",
+        "lucid",
+        "none"
+      ]
+    },
+    "C34": {
+      "id": "C34",
+      "answer": "none",
+      "label": "none",
+      "order": [
+        "none",
+        "contempt",
+        "aware",
+        "possessive",
+        "lucid",
+        "unstable",
+        "hollow"
+      ]
+    },
+    "C35": {
+      "id": "C35",
+      "answer": "contempt",
+      "label": "contempt",
+      "order": [
+        "lucid",
+        "hollow",
+        "contempt",
+        "aware",
+        "possessive",
+        "none",
+        "unstable"
+      ]
+    },
+    "C36": {
+      "id": "C36",
+      "answer": "unstable",
+      "label": "unstable",
+      "order": [
+        "lucid",
+        "unstable",
+        "possessive",
+        "contempt",
+        "aware",
+        "none",
+        "hollow"
+      ]
+    }
+  }
+}

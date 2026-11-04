@@ -76,6 +76,9 @@ var _opening_finished: bool = false
 ## restarting) and does not replay its greeting.
 var _saved_turn: int = 0
 var _resumed: bool = false
+## start_date() ran once: auto_start defers the same call, so a caller that also
+## invokes it (or a second deferred fire) must not replay the opening beats.
+var _date_started: bool = false
 ## P2.19: the date's end is decided once, at the displayed boundary, and routed on
 ## the next idle frame. `_last_action` is the turn's own `action` (docs/08 §7's
 ## `end.on_goal` reads it) — the displayed signal does not carry the turn data.
@@ -413,6 +416,9 @@ func get_scenario() -> Dictionary:
 
 
 func start_date() -> void:
+	if _date_started:
+		return
+	_date_started = true
 	if _scenario.is_empty():
 		if not load_scenario(scenario_path):
 			return

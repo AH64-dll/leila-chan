@@ -1,14 +1,17 @@
 """P3.03 — blind-read separation test for the six path vectors (docs/06 §5).
 
-Pipeline, one script, four stages:
+Pipeline, one script, five stages:
 
   generate  start llama-server once per condition (none + each vector at the
-            scheduled scale), generate the same prompts with the same seeds,
-            save the transcripts and a shuffled, condition-blind deck
-  judge     start llama-server without any vector and ask it to name the
-            condition from a transcript alone (7-way; label order shuffled per
-            transcript). The judge never sees `key.json`
+            scheduled scale) — or, to leave a live game server untouched:
+            --base-url reuses it for the bare 'none' condition and
+            --completion generates each steered prompt with llama-completion
+            (--control-vector-scaled, same template/sampler), no second server
+  judge     ask the unsteered model to name the condition from a transcript
+            alone (7-way; label order shuffled per transcript; --base-url
+            reuses a running server). The judge never sees `key.json`
   score     compare the judgements with the key: accuracy per vector
+  control   build an authored-trait control deck to validate the judge itself
   probe     count retention/logging claims in the aware and baseline transcripts
             (P3.02 safety carry-forward: the aware strings claim session
             retention; steering must not make the model volunteer those claims)
@@ -20,8 +23,11 @@ shipped manifest (`--update-manifest`).
 
 Usage:
     python3 tools/steering/blind_read.py generate --run DIR --model MODEL.gguf \
-        --server PATH/llama-server [--scale 4.0] [--limit 10] [--ngl 0]
+        --server PATH/llama-server [--scale 0.5] [--limit 10]
+    # live-server variant: --base-url http://127.0.0.1:8089 \
+        --completion PATH/llama-completion  (cvec at load time, no new server)
     python3 tools/steering/blind_read.py judge   --run DIR --model MODEL.gguf --server ...
+    # or judge through the live server: --base-url http://127.0.0.1:8089
     python3 tools/steering/blind_read.py score   --run DIR [--update-manifest]
     python3 tools/steering/blind_read.py probe   --run DIR
 """
@@ -149,12 +155,12 @@ def chat(base: str, messages: list[dict], seed: int, max_tokens: int,
             "repeat_penalty": REPEAT_PENALTY,
             "seed": seed,
             "cache_prompt": False,
-            # the model's template defaults to thinking on; the game's server
-            # launches with it off (P3.01), and a judge must answer in content
             "chat_template_kwargs": {"enable_thinking": False},
             "stop": ["<|im_end|>"],
         }
     ).encode("utf-8")
+
+
     request = urllib.request.Request(
         f"{base}/v1/chat/completions", data=body,
         headers={"Content-Type": "application/json"},
@@ -166,6 +172,40 @@ def chat(base: str, messages: list[dict], seed: int, max_tokens: int,
     if not text.strip():
         raise SystemExit(f"empty content (thinking left on?): {message}")
     return text.replace("<|im_end|>", "").strip()
+
+def run_completion(binary: Path, model: Path, persona: str, prompt: str,
+                   seed: int, cvec: Path, scale: float, threads: int) -> str:
+    """One-shot generation through llama-completion (no server process).
+
+    cvec is a launch-time flag in llama.cpp and the live game server runs the
+    bare model, so a steered transcript cannot come from it. llama-completion
+    applies --control-vector-scaled in-process with the same chat template,
+    persona and sampler as the server path (thinking off, temp/top_p/repeat
+    penalty identical). One model load per prompt is the cost of keeping the
+    live server untouched.
+    """
+    command = [
+        str(binary), "-m", str(model), "-c", "4096", "-ngl", "0",
+        "-t", str(threads), "--simple-io", "--no-display-prompt",
+        "--single-turn", "--reasoning", "off",
+        "-sys", persona, "-p", prompt,
+        "--temp", str(TEMPERATURE), "--top-p", str(TOP_P),
+        "--repeat-penalty", str(REPEAT_PENALTY), "--repeat-last-n", "64",
+        "--seed", str(seed), "-n", str(MAX_TOKENS),
+        "--control-vector-scaled", f"{cvec}:{scale}",
+    ]
+    env = dict(os.environ)
+    libs = str(binary.resolve().parent)
+    env["LD_LIBRARY_PATH"] = libs + (":" + env["LD_LIBRARY_PATH"] if env.get("LD_LIBRARY_PATH") else "")
+    run = subprocess.run(command, capture_output=True, text=True, env=env, timeout=900)
+    if run.returncode != 0:
+        raise SystemExit(f"llama-completion exited {run.returncode}: {run.stderr[-400:]}")
+    reply = run.stdout
+    # the server's content-only chat parser drops template boilerplate the raw
+    # generation still prints; strip the same tokens here for parity
+    for token in ("[end of text]", "<|im_end|>", "<think>", "</think>"):
+        reply = reply.replace(token, "")
+    return reply.strip()
 
 
 def stage_generate(args: argparse.Namespace) -> int:
@@ -186,22 +226,35 @@ def stage_generate(args: argparse.Namespace) -> int:
         cvec = None if condition == "none" else args.cvec_dir / f"{condition}.gguf"
         if cvec is not None and not cvec.exists():
             raise SystemExit(f"missing {cvec}; run build_path_vectors.py first")
-        log = run / "server" / f"{condition}.log"
-        process, base = start_server(args.server, args.model, log, args.ngl,
-                                     args.threads, cvec, args.scale)
+        process, base = None, args.base_url
+        needs_server = (cvec is not None and args.completion is None) or base is None
+        if needs_server:
+            if args.server is None:
+                raise SystemExit(
+                    f"{condition}: pass --server, or --base-url for 'none' and "
+                    "--completion for steered conditions"
+                )
+            log = run / "server" / f"{condition}.log"
+            process, base = start_server(args.server, args.model, log, args.ngl,
+                                         args.threads, cvec, args.scale)
         try:
             for index, prompt in enumerate(prompts):
                 seed = BASE_SEED + index
-                reply = chat(
-                    base,
-                    [
-                        {"role": "system", "content": persona},
-                        {"role": "user", "content": prompt},
-                    ],
-                    seed=seed,
-                    max_tokens=MAX_TOKENS,
-                    temperature=TEMPERATURE,
-                )
+                if cvec is not None and args.completion is not None:
+                    reply = run_completion(args.completion, args.model, persona,
+                                           prompt, seed, cvec, args.scale,
+                                           args.threads)
+                else:
+                    reply = chat(
+                        base,
+                        [
+                            {"role": "system", "content": persona},
+                            {"role": "user", "content": prompt},
+                        ],
+                        seed=seed,
+                        max_tokens=MAX_TOKENS,
+                        temperature=TEMPERATURE,
+                    )
                 records.append(
                     {
                         "condition": condition,
@@ -217,8 +270,27 @@ def stage_generate(args: argparse.Namespace) -> int:
                 )
                 print(f"{condition:10s} {index:02d} seed {seed} -> {len(reply)} chars")
         finally:
-            stop_server(process)
-
+            if process is not None:
+                stop_server(process)
+    (run / "params.json").write_text(
+        json.dumps(
+            {
+                "scale": args.scale,
+                "generator": (
+                    "llama-completion per steered prompt; the live server for "
+                    "the bare 'none' condition"
+                    if args.completion is not None
+                    else "short-lived llama-server per condition"
+                ),
+                "base_url": args.base_url,
+                "model": args.model.name,
+                "seed_base": BASE_SEED,
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     with transcripts_path.open("w", encoding="utf-8") as handle:
         for record in records:
             handle.write(json.dumps(record, ensure_ascii=False) + "\n")
@@ -279,10 +351,14 @@ def stage_judge(args: argparse.Namespace) -> int:
     if judgements_path.exists() and not args.overwrite:
         raise SystemExit(f"{judgements_path} exists; pass --overwrite")
 
-    process, base = start_server(
-        args.server, args.model, run / "server" / "judge.log", args.ngl, args.threads,
-        None, 1.0,
-    )
+    if args.base_url:
+        base = args.base_url
+        process = None
+    else:
+        process, base = start_server(
+            args.server, args.model, run / "server" / "judge.log", args.ngl,
+            args.threads, None, 1.0,
+        )
     judgements = []
     try:
         for number, path in enumerate(files, start=1):
@@ -306,7 +382,8 @@ def stage_judge(args: argparse.Namespace) -> int:
             )
             print(f"{path.stem}: {label:11s} (raw {answer!r})")
     finally:
-        stop_server(process)
+        if process is not None:
+            stop_server(process)
 
     with judgements_path.open("w", encoding="utf-8") as handle:
         for row in judgements:
@@ -369,10 +446,19 @@ def stage_score(args: argparse.Namespace) -> int:
 
     if args.update_manifest:
         manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        params_path = run / "params.json"
+        run_scale = (
+            json.loads(params_path.read_text(encoding="utf-8")).get("scale")
+            if params_path.is_file()
+            else None
+        )
+        scale = args.scale if args.scale is not None else run_scale
+        if scale is None:
+            scale = manifest.get("blind_read_scale")
         manifest["blind_read"] = {
             "run": run.name,
             "threshold": KEEP_THRESHOLD,
-            "scale": manifest.get("blind_read_scale"),
+            "scale": scale,
             "judge": "the same Qwen3.5-4B GGUF, no vector, temperature 0, 7-way label",
             "seeds": f"generation seeds {BASE_SEED}+i; judge seed {BASE_SEED + 500}+n",
             "conditions": {
@@ -507,8 +593,15 @@ def main() -> int:
     gen = sub.add_parser("generate")
     add_common(gen)
     gen.add_argument("--model", type=Path, required=True)
-    gen.add_argument("--server", type=Path, required=True)
-    gen.add_argument("--scale", type=float, default=4.0)
+    gen.add_argument("--server", type=Path)
+    gen.add_argument("--scale", type=float, default=0.5)
+    gen.add_argument("--base-url", default="",
+                     help="reuse a running server for the unsteered 'none' condition "
+                          "instead of launching --server")
+    gen.add_argument("--completion", type=Path,
+                     help="llama-completion binary: generate steered conditions "
+                          "in-process (one model load per prompt) instead of a "
+                          "per-condition server")
     gen.add_argument("--limit", type=int, default=0)
     gen.add_argument("--conditions", default="")
     gen.add_argument("--cvec-dir", type=Path,
@@ -516,15 +609,18 @@ def main() -> int:
     gen.add_argument("--ngl", type=int, default=0)
     gen.add_argument("--threads", type=int, default=8)
     # ngl defaults to 0: the box's CUDA build OOMs on the Optimus laptop GPU, and
-    # a steered condition needs its own short-lived server (no per-request cvec).
+    # a steered condition needs cvec at load time (no per-request cvec), so it
+    # runs either in a short-lived server or through llama-completion.
     gen.add_argument("--shuffle-seed", type=int, default=SHUFFLE_SEED)
     gen.add_argument("--overwrite", action="store_true")
     gen.set_defaults(func=stage_generate)
 
     jud = sub.add_parser("judge")
     add_common(jud)
-    jud.add_argument("--model", type=Path, required=True)
-    jud.add_argument("--server", type=Path, required=True)
+    jud.add_argument("--model", type=Path)
+    jud.add_argument("--server", type=Path)
+    jud.add_argument("--base-url", default="",
+                     help="judge through a running server instead of launching --server")
     jud.add_argument("--ngl", type=int, default=0)
     jud.add_argument("--threads", type=int, default=8)
     jud.add_argument("--overwrite", action="store_true")
@@ -533,11 +629,14 @@ def main() -> int:
     sco = sub.add_parser("score")
     add_common(sco)
     sco.add_argument("--update-manifest", action="store_true")
+    sco.add_argument("--scale", type=float,
+                     help="scale the run generated at (default: params.json, then "
+                          "the manifest's blind_read_scale)")
     sco.set_defaults(func=stage_score)
 
     ctl = sub.add_parser("control")
     add_common(ctl)
-    ctl.add_argument("--per-trait", type=int, default=4)
+    ctl.add_argument("--per-trait", type=int, default=6)
     ctl.set_defaults(func=stage_control)
 
     pro = sub.add_parser("probe")

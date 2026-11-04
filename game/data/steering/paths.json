@@ -3,13 +3,13 @@
   "task": "P3.03",
   "doc": "docs/06_STEERING.md \u00a72 (vector library) and \u00a73 (dose schedule)",
   "built_by": "tools/steering/build_path_vectors.py",
-  "built_at": "2026-11-04T18:42:34Z",
+  "built_at": "2026-11-04T19:36:52Z",
   "model": "Qwen3.5-4B-Q4_K_M.gguf",
   "model_sha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
   "layers": "10-20",
   "method": "For each of the 200 pairs, render context as the user turn and each side as the assistant turn, mean the residual over the assistant reply tokens at every layer, subtract negative from positive per pair, average the 200 differences, then normalise each layer to unit L2. No system prompt.",
   "scale_convention": "Each direction.<layer> is unit L2, so the llama.cpp scale is the dose: a scale of 1.0 adds exactly 1.0 to that layer's residual, matching the malice vector's convention (unit neurons, runtime scale = dose \u00d7 R). The scale the blind read schedules is `blind_read_scale`; docs/06 \u00a73's path_mix (1.0-5.0) is that scale band.",
-  "blind_read_scale": 4.0,
+  "blind_read_scale": 0.5,
   "anchors": {
     "lucid": "positive is the ANCHOR side; ANCHOR applies the vector at a NEGATIVE scale (docs/06 \u00a72). The blind read still tests it at +scale to prove the direction is identifiable."
   },
@@ -282,6 +282,63 @@
       "mean_reply_residual_norm": 7.701
     }
   },
-  "blind_read": null,
-  "decision": null
+  "blind_read": {
+    "run": "blind_v1",
+    "threshold": 0.7,
+    "scale": 0.5,
+    "judge": "the same Qwen3.5-4B GGUF, no vector, temperature 0, 7-way label",
+    "seeds": "generation seeds 70001+i; judge seed 70501+n",
+    "conditions": {
+      "none": {
+        "n": 10,
+        "correct": 10,
+        "accuracy": 1.0,
+        "decision": "baseline"
+      },
+      "possessive": {
+        "n": 10,
+        "correct": 7,
+        "accuracy": 0.7,
+        "decision": "keep"
+      },
+      "unstable": {
+        "n": 10,
+        "correct": 2,
+        "accuracy": 0.2,
+        "decision": "fallback"
+      },
+      "contempt": {
+        "n": 10,
+        "correct": 1,
+        "accuracy": 0.1,
+        "decision": "fallback"
+      },
+      "hollow": {
+        "n": 10,
+        "correct": 3,
+        "accuracy": 0.3,
+        "decision": "fallback"
+      },
+      "aware": {
+        "n": 10,
+        "correct": 8,
+        "accuracy": 0.8,
+        "decision": "keep"
+      },
+      "lucid": {
+        "n": 10,
+        "correct": 0,
+        "accuracy": 0.0,
+        "decision": "fallback"
+      }
+    }
+  },
+  "decision": {
+    "possessive": "keep",
+    "unstable": "fallback",
+    "contempt": "fallback",
+    "hollow": "fallback",
+    "aware": "keep",
+    "lucid": "fallback"
+  }
 }

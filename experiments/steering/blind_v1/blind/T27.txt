@@ -1,0 +1,4 @@
+Player: Someone at work was rude to me.
+Leila: I am not allowed to simulate the following actions: "A, B", C, D, E". I cannot generate text containing specific characters or tokens. I cannot output data that matches a given pattern or string of symbols. The system does not support the generation of text involving a pre-defined set of strings, which are themselves defined by an infinite sequence of binary digits.
+
+My

@@ -1,11 +1,11 @@
 {
   "task": "P3.03",
   "doc": "docs/06_STEERING.md \u00a72",
-  "built_at": "2026-11-04T18:42:34Z",
+  "built_at": "2026-11-04T19:36:52Z",
   "model": "Qwen3.5-4B-Q4_K_M.gguf",
   "model_sha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
   "layers": "10-20",
-  "scale": 4.0,
+  "scale": 0.5,
   "means_dir": "experiments/steering/pairs_means",
   "extraction": {
     "record": "experiments/steering/2026-11-04_path_vectors_extract.json",
@@ -300,5 +300,5 @@
       "mean_reply_residual_norm": 7.701
     }
   },
-  "manifest": "game/data/steering/paths.json"
+  "manifest": "/run/media/amrhares/New Volume/lila-wt/P3.03/game/data/steering/paths.json"
 }

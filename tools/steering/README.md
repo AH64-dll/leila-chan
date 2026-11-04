@@ -23,8 +23,12 @@
 - `build_path_vectors.py` (P3.03): mean activation difference per layer, unit L2,
   first-PC cross-check; writes `game/data/steering/<trait>.gguf` and the
   manifest `game/data/steering/paths.json`.
-- `blind_read.py` (P3.03): `generate` / `judge` / `score` / `probe` stages for
-  the docs/06 §5 separation test and the `aware` retention probe.
+- `blind_read.py` (P3.03): `generate` / `judge` / `score` / `control` / `probe`
+  stages for the docs/06 §5 separation test and the `aware` retention probe.
+  `generate` can steer through either a short-lived llama-server per condition
+  (`--server`) or `llama-completion` per steered prompt (`--completion`), with
+  the bare `none` condition (and `judge`) reusable against a running server via
+  `--base-url` so the live game server is never restarted.
 
 ## Build
 

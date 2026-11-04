@@ -37,3 +37,18 @@
   `experiments/steering/2026-11-04_dump_p301.log` (STR standard: `.json` + `.log`).
 - Plan row P3.01 criterion 1 amended to "builds on a standard CMake toolchain (Linux
   verified; Windows flagged for one verification pass on the design machine)".
+
+## P3.03 — path vectors + blind read (2026-11-04)
+
+- Pipeline landed end to end: `extract_pairs.py` (200 pairs × 6 traits → per-side residual
+  means), `build_path_vectors.py` (mean diff, unit L2 per layer L10–20, PC1 cross-check →
+  `game/data/steering/*.gguf` + `paths.json`), `blind_read.py` (generate/judge/score/control/probe).
+- Result: possessive 0.70 + aware 0.80 keep; unstable/contempt/hollow/lucid → fallback.
+  Judge-validity control (authored text) scores only 44%, so fallbacks are conservative.
+- Gotcha: dose ≠ docs/06 §3's 1.0–5.0 — these vectors are coherent only ≤0.5 (pilots:
+  gibberish at ≥1.0). `paths.json` `blind_read_scale` = 0.5; P3.04 must retune the band.
+- Gotcha: cvec is a launch-time flag; `--base-url` reuses the live server for the `none`
+  condition + judging, and `--completion` steers per prompt via llama-completion so the
+  live server never restarts. Strip `<think></think>` + `[end of text]` from raw stdout.
+- Gotcha: `Date.gd start_date()` wasn't idempotent — auto_start's deferred call replayed the
+  opening when a caller also invoked it; `_date_started` guard fixed the DateSceneTest flake.
