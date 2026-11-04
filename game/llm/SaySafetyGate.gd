@@ -119,6 +119,32 @@ func has_input_check() -> bool:
 	return _filter != null and _filter.has_method("check_input")
 
 
+## Whole-text scan for text that is not on its way to the screen — the P1.18
+## transcript redactor (gate r2 B1). It calls the filter's own `filter_text`, so
+## the scan is stateless: no streaming carry is read or written, two payloads
+## can never be matched together as one phrase, and the display scan's state
+## (`_pending`, the cross-beat window, the beat flag) is untouched by a
+## transcript write. That is what makes one event payload one utterance, with
+## the reply boundary (`end_utterance`) structural rather than a call.
+##
+## Fail-closed: a filter with no whole-text API bars the text instead of
+## returning it, exactly like the streaming path.
+func scan_text(text: String, ctx: Dictionary = {}) -> String:
+	if text.is_empty():
+		return text
+	if not has_text_scan():
+		return redact(text)
+	var res: Variant = _filter.call("filter_text", text, ctx)
+	if res is Dictionary and (res as Dictionary).has("text"):
+		return str((res as Dictionary)["text"])
+	return str(res)
+
+
+## True when the filter can scan a whole text in one call (scan_text's path).
+func has_text_scan() -> bool:
+	return _filter != null and _filter.has_method("filter_text")
+
+
 ## Redaction bars that keep the text's length, so the typewriter pacing is
 ## unchanged. Never returns any of the input.
 static func redact(text: String) -> String:
