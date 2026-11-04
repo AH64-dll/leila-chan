@@ -106,6 +106,10 @@ func _ready() -> void:
 		# benefit. `_exit_tree()` clears it so the autoload never holds a freed
 		# scene node.
 		Director.register_chat_ui(chat_ui)
+	# Telemetry scope (P2.09): the input/window detectors only record while a
+	# date is the active conversation, so a title-screen resize or a keypress
+	# at the menu can never become a turn event. Cleared in _exit_tree().
+	_note_telemetry_date(true)
 	if character != null:
 		if not character.twitch_fired.is_connected(_on_character_twitch_fired):
 			character.twitch_fired.connect(_on_character_twitch_fired)
@@ -128,6 +132,7 @@ func _ready() -> void:
 ## registration that already points at a freed node. Another date's live ChatUI
 ## is never touched.
 func _exit_tree() -> void:
+	_note_telemetry_date(false)
 	var registered: Variant = Director.chat_ui_node
 	if registered == null:
 		return
@@ -135,6 +140,14 @@ func _exit_tree() -> void:
 		Director.register_chat_ui(null)
 	elif is_instance_valid(chat_ui) and registered == chat_ui:
 		Director.register_chat_ui(null)
+
+
+## The P2.09 seam, resolved by path: a Date scene must run in tests and tools
+## without the full autoload ring.
+func _note_telemetry_date(active: bool) -> void:
+	var tel: Node = get_node_or_null("/root/Telemetry")
+	if tel != null and tel.has_method("set_date_active"):
+		tel.set_date_active(active)
 
 
 func find_component(component_name: String) -> Node:
@@ -203,7 +216,7 @@ func start_date() -> void:
 			return
 
 	if SpriteResolver != null:
-		SpriteResolver.reset_repeat()
+		SpriteResolver.reset_scene()
 
 	var music_id := StringName(String(_scenario.get("music", "calm")))
 	if AudioDirector != null:
@@ -238,8 +251,14 @@ func play_opening_beats() -> void:
 		var packet: Dictionary = {}
 		if SpriteResolver != null:
 			packet = SpriteResolver.resolve_beat(feeling, intensity, stage, path_name)
+		# Hand the finished packet down: resolving again inside set_feeling() would
+		# run the anti-repeat window and the reveal budget twice per beat (the same
+		# CODE-4 rule the Director follows).
 		if character != null:
-			character.set_feeling(feeling, intensity, stage, path_name)
+			if character.has_method("apply_beat"):
+				character.apply_beat(packet)
+			else:
+				character.set_feeling(feeling, intensity, stage, path_name)
 
 		var sprite_id := StringName(String(packet.get("sprite", "")))
 		if AudioDirector != null:

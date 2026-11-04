@@ -66,6 +66,14 @@ func apply_config(config: Dictionary) -> void:
 		input_box.log_toggle_requested.connect(_toggle_log)
 		text_box.beat_displayed.connect(_on_beat_displayed)
 		text_box.all_displayed.connect(_on_all_displayed)
+	# Input telemetry (P2.09, docs/02 §4 step 0): the draft hooks live here
+	# because this composite owns the InputBox wiring. Telemetry keeps the
+	# deleted words in memory only; it is resolved by path so a ChatUI test
+	# without the autoload still instantiates.
+	if not input_box.draft_deleted.is_connected(_on_draft_deleted):
+		input_box.draft_deleted.connect(_on_draft_deleted)
+	if not input_box.draft_changed.is_connected(_on_draft_changed):
+		input_box.draft_changed.connect(_on_draft_changed)
 	_log_open = true
 	chat_log.visible = true
 	input_box.set_input_enabled(true)
@@ -89,9 +97,28 @@ func get_player_name() -> String:
 func _on_input_submitted(text: String) -> void:
 	if not input_box.is_input_enabled():
 		return
+	_note_telemetry("note_activity", [])
 	chat_log.append_entry("player", _player_name, text)
 	begin_turn_wait()
 	player_turn_sent.emit(text)
+
+
+## The InputBox reports every edit while composing; a clear-without-send is
+## the docs/05 M21 / docs/01 T08 deleted draft. The words never touch a file
+## or GameState — Telemetry holds them until the next turn spends them.
+func _on_draft_changed(_text: String) -> void:
+	_note_telemetry("note_activity", [])
+
+
+func _on_draft_deleted(text: String) -> void:
+	_note_telemetry("note_draft_deleted", [text])
+
+
+## The P2.09 telemetry seam, resolved lazily like the Director's ChatUI seam.
+func _note_telemetry(method: String, args: Array) -> void:
+	var tel: Node = get_node_or_null("/root/Telemetry")
+	if tel != null and tel.has_method(method):
+		tel.callv(method, args)
 
 
 ## Lock input and show the diegetic typing indicator until her first say
@@ -113,6 +140,8 @@ func begin_turn_wait() -> void:
 	text_box.reset()
 	text_box.set_speaker(_leila_name)
 	text_box.show_typing_indicator(_leila_name, stage)
+	# docs/05 M20: focus loss only counts while her line is on screen.
+	_note_telemetry("note_turn_open", [true])
 
 
 ## Pipeline context for the docs/07 §3.4 corruption stage: the seeded turn
@@ -208,6 +237,7 @@ func abort_turn() -> void:
 		corruption.abort()
 	text_box.reset()
 	_unlock_input()
+	_note_telemetry("note_turn_open", [false])
 
 
 ## A line that never became a turn (docs/02 §4 step 0 safety rejection): the
@@ -246,6 +276,7 @@ func _maybe_close_turn() -> void:
 	_end_pending = false
 	text_box.hide_typing_indicator()
 	_unlock_input()
+	_note_telemetry("note_turn_open", [false])
 	turn_displayed.emit()
 
 
