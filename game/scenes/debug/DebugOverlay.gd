@@ -34,6 +34,7 @@ var _path_label: Label
 var _day_turn_label: Label
 var _dose_label: Label
 var _corruption_label: Label
+var _inner_leak_label: Label
 var _last_read_label: Label
 var _last_inner_label: Label
 var _music_label: Label
@@ -103,7 +104,7 @@ func _build_ui() -> void:
 	header_row.add_child(close_btn)
 
 	var hint := _create_label(
-		root_vbox, "[F3 toggle / ESC close] live updates every turn", COLOR_MUTED
+		root_vbox, "[F3 toggle / ESC close / F4 leak] live updates every turn", COLOR_MUTED
 	)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
@@ -131,6 +132,8 @@ func _build_ui() -> void:
 	_dose_label = _create_label(root_vbox, "Steering Dose: (none)", COLOR_LABEL)
 	# docs/07 §3.4 (P2.06): which corruption effects this stage's plan enables.
 	_corruption_label = _create_label(root_vbox, "Text FX: (none)", COLOR_LABEL)
+	# docs/03 §5 (P2.07): whether/how the next turn's `inner` thought leaks.
+	_inner_leak_label = _create_label(root_vbox, "Inner Leak: (none)", COLOR_LABEL)
 
 	# --- Last Turn Dialogue & Monologue ---
 	_create_section_header(root_vbox, "LAST TURN")
@@ -297,6 +300,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		if Director == null or Director.get_debug_overlay() != self:
 			toggle()
 			get_viewport().set_input_as_handled()
+	elif key.keycode == KEY_F4 and visible:
+		# docs/03 §5 (P2.07): leak the data's sample line through the
+		# registered ChatUI — the same Safety-scanned path as a real leak.
+		trigger_inner_leak()
+		get_viewport().set_input_as_handled()
 
 
 func toggle() -> void:
@@ -361,6 +369,18 @@ func refresh() -> void:
 		}
 		_corruption_label.text = (
 			"Text FX: %s" % Corruption.describe(Corruption.plan(int(GameState.stage), text_ctx))
+		)
+
+	# --- Inner-voice leak ---
+	# The docs/03 §5 per-turn chance/style, with the same reduced-motion and
+	# content-level inputs the ChatUI resolves for its plan.
+	if _inner_leak_label != null:
+		var leak_ctx := {
+			"reduced_motion": bool(Settings.reduced_motion),
+			"content_level": String(Settings.content_level),
+		}
+		_inner_leak_label.text = (
+			"Inner Leak: %s" % InnerLeak.describe(InnerLeak.plan(int(GameState.stage), leak_ctx))
 		)
 
 	# --- Last Turn Read & Inner ---
@@ -467,6 +487,25 @@ func get_dose_text() -> String:
 
 func get_corruption_text() -> String:
 	return _corruption_label.text if _corruption_label != null else ""
+
+
+func get_inner_leak_text() -> String:
+	return _inner_leak_label.text if _inner_leak_label != null else ""
+
+
+## Dev trigger for the docs/03 §5 leak (role playbook: every meta event is
+## reachable from the F3 overlay). F4 leaks the data's sample line, or `text`
+## in a test, through the registered ChatUI, so the Safety scan and the ghost
+## label are the production path — only the docs gate, chance and per-turn cap
+## are bypassed (`force`). Safety is never bypassed.
+func trigger_inner_leak(text: String = "") -> bool:
+	if Director == null:
+		return false
+	var ui: Variant = Director.chat_ui_node
+	if ui == null or not is_instance_valid(ui) or not ui.has_method("leak_inner"):
+		return false
+	var line := text if not text.is_empty() else InnerLeak.debug_sample()
+	return bool(ui.call("leak_inner", line, true))
 
 
 func get_last_read_text() -> String:
