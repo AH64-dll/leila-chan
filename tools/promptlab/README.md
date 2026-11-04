@@ -150,3 +150,21 @@ Not in the repo (`*.gguf`, `tools/llama/`, `models/` are gitignored). From a wor
 point the env vars at the **main tree** as the protocol requires. A CUDA build needs its
 cudart directory on `LD_LIBRARY_PATH` *before* `plan.py` starts; `serve.sh` prepends the
 build directory and keeps the rest.
+
+## Path signatures (P3.05)
+
+The lab knows all six docs/01 §4 paths, and `sets/stage_{2,3,4,5}_paths.jsonl` carry the
+signature probes for the four added in P3.05 (SPLIT, TSUN, HOLLOW, ANCHOR). Whether a
+path's signature moves actually appear in the generated turns is a checked contract, not a
+read-through: `game/data/prompts/signature_moves.json` lists the regexes per path, and
+
+```bash
+python3 production/handoffs/media/P3.05_signature_moves.py \
+  tools/promptlab/results/2026-11-04_v2_p305_paths.json
+```
+
+fails if any move is missing from that path's committed rows. The file defaults to the
+P3.05 run; point it at a new results file to audit a fresh sample.
+
+A case without an explicit `runner_up` borrows the first other path in the canonical order,
+so a set whose evidence matters should pin it (`load_set` keeps the field).

@@ -74,9 +74,12 @@ static func _stage1_turn() -> Dictionary:
 	}
 
 
-## Stage 2 with a locked path, the runner-up's one line, an offered-enum line
-## and the opt-in prefill block. stage_2.md and path_*.md are P2.13, so this
-## case also pins what a missing module reports.
+## Stage 2 with a locked path, the runner-up's one line and the opt-in prefill
+## block. The fixture pins the **fixed** block (the docs/07 §3.1 900-token
+## budget's subject); the per-turn "Offered this turn —" enum line is covered by
+## test_offered_values_reach_the_rules_layer, and P3.05 measured it separately
+## (91 tokens at stage 2) so an over-budget enum line can never masquerade as a
+## content overrun here.
 static func _stage2_prefill() -> Dictionary:
 	return {
 		"stage": 2,
@@ -86,13 +89,6 @@ static func _stage2_prefill() -> Dictionary:
 		"scene": "You are walking home in the rain. You have one small umbrella.",
 		"memories": ["has a little sister", "hates the smell of cigarettes"],
 		"events": ["EVENT: The player was away for 3 days. You waited."],
-		"offered":
-		{
-			"music": ["keep", "calm", "melancholy"],
-			"fx": ["none", "rain"],
-			"cue": ["none", "sob", "clock_tick"],
-			"action": ["none"],
-		},
 		"history": [{"role": "user", "text": "It's getting late."}],
 		"player_message": "Can I walk with you?",
 		"prefill": "\n",

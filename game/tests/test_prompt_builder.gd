@@ -383,30 +383,48 @@ func test_build_is_pure_and_repeatable() -> void:
 	assert_str(JSON.stringify(builder.build(ctx), "  ")).is_equal(JSON.stringify(first, "  "))
 
 
-# --- P2.13: the shipped stage_2..5 and path_YANDERE/AWAKE modules -----------
+# --- P2.13/P3.05: the shipped stage_2..5 and six path modules --------------
 
 
 func test_shipped_stage_and_path_modules_fill_the_budget() -> void:
 	# Every stage 2-5 × shipped path builds without a missing module, carries the
 	# two few-shots a stage × path assembly must show, and stays inside docs/07
-	# §3.1's 900-token fixed budget even with the runner-up line docs/08 §1 adds.
+	# §3.1's 900-token fixed budget. P3.05: all six paths (docs/01 §4) and every
+	# ordered runner-up pair, because any of the five other paths can take the
+	# hybrid's 25% share (docs/08 §1).
 	var builder := _builder()
+	var paths: Array[String] = ["YANDERE", "SPLIT", "TSUN", "HOLLOW", "AWAKE", "ANCHOR"]
 	for stage: int in [2, 3, 4, 5]:
-		for path: String in ["YANDERE", "AWAKE"]:
-			var runner_up := "AWAKE" if path == "YANDERE" else "YANDERE"
-			var ctx := {
-				"stage": stage,
-				"path": path,
-				"player_name": "Ren",
-				"path_runner_up": runner_up,
-			}
-			var result := builder.build(ctx)
-			var label := "stage %d %s" % [stage, path]
-			assert_array(result["debug"]["missing"]).override_failure_message(label).is_empty()
-			var system := _system(result)
-			assert_bool(system.contains("STAGE %d" % stage)).is_true()
-			assert_bool(system.contains(path)).override_failure_message(label).is_true()
-			assert_int(system.count("Player: ")).override_failure_message(label).is_equal(2)
-			var tokens := int(result["debug"]["tokens"]["system"])
-			var message := "%s system layer = %d tokens (budget 900)" % [label, tokens]
-			assert_int(tokens).override_failure_message(message).is_less_equal(900)
+		for path: String in paths:
+			for runner_up: String in paths:
+				if runner_up == path:
+					continue
+				var ctx := {
+					"stage": stage,
+					"path": path,
+					"player_name": "Ren",
+					"path_runner_up": runner_up,
+				}
+				var result := builder.build(ctx)
+				var label := "stage %d %s + %s" % [stage, path, runner_up]
+				assert_array(result["debug"]["missing"]).override_failure_message(label).is_empty()
+				var system := _system(result)
+				assert_bool(system.contains("STAGE %d" % stage)).is_true()
+				assert_bool(system.contains(path)).override_failure_message(label).is_true()
+				assert_int(system.count("Player: ")).override_failure_message(label).is_equal(2)
+				# docs/01 §4 hybrid: exactly the runner-up's first line, no second line.
+				var runner_line := _first_line("path_%s.md" % runner_up)
+				assert_int(system.count(runner_line)).override_failure_message(label).is_equal(1)
+				var tokens := int(result["debug"]["tokens"]["system"])
+				var message := "%s system layer = %d tokens (budget 900)" % [label, tokens]
+				assert_int(tokens).override_failure_message(message).is_less_equal(900)
+
+
+func _first_line(filename: String) -> String:
+	# PromptBuilder._first_content_line: the runner-up's one-line 25% share.
+	var text := FileAccess.get_file_as_string(PROMPTS + filename)
+	for line: String in text.split("\n"):
+		var trimmed := line.strip_edges()
+		if not trimmed.is_empty() and not trimmed.begins_with("#"):
+			return trimmed
+	return ""

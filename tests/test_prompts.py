@@ -1,8 +1,9 @@
-"""Unit tests for prompt data files and few-shot examples (P1.28, extended P2.13).
+"""Unit tests for prompt data files and few-shot examples (P1.28, extended P2.13, P3.05).
 
 Validates prompt structure, placeholders, sensitivity rules, brand hygiene,
 Turn JSON format, few-shot prose limits, the two few-shots every stage × path
-assembly carries, and the docs/07 §3.1 system-prompt token budget.
+assembly carries, the six path modules' signature moves, the runner-up's single
+hybrid line, and the docs/07 §3.1 system-prompt token budget.
 
 Stage gates come from ``game/data/stage_gates.json`` (P1.07) rather than a copy,
 so a gate change can never leave the few-shots silently illegal.
@@ -31,14 +32,22 @@ PROMPT_FILES = [
     "stage_4.md",
     "stage_5.md",
     "path_YANDERE.md",
+    "path_SPLIT.md",
+    "path_TSUN.md",
+    "path_HOLLOW.md",
     "path_AWAKE.md",
+    "path_ANCHOR.md",
     "rules.md",
     "glosses.md",
 ]
 
 STAGES = list(range(6))
-# Paths with a shipped module; SPLIT/TSUN/HOLLOW/ANCHOR land in P3.05.
-PATHS = ["YANDERE", "AWAKE"]
+# Every shipped path module, in the canonical docs/01 §4 order (game/data/paths.json).
+PATHS = ["YANDERE", "SPLIT", "TSUN", "HOLLOW", "AWAKE", "ANCHOR"]
+
+# docs/01 §4.1–§4.6 signature moves: `module` must be taught by path_{PATH}.md,
+# `transcript` must show up in the prompt-lab rows (P3.05 evidence script).
+SIGNATURES = json.loads((PROMPTS / "signature_moves.json").read_text(encoding="utf-8"))
 
 # docs/07 §3.1: the fixed layers (persona + player + stage + path + rules) budget.
 SYSTEM_TOKEN_BUDGET = 900
@@ -106,6 +115,11 @@ def _first_content_line(text: str) -> str:
         if stripped and not stripped.startswith("#"):
             return stripped
     return ""
+
+
+def _motto(path: str) -> str:
+    """The path module's first line: its shout and the hybrid runner-up's 25% share."""
+    return _first_content_line(_module(f"path_{path}.md", "Ren"))
 
 
 def _system_layers(stage: int, path: str, player_name: str, runner_up: str = "") -> list:
@@ -237,17 +251,35 @@ def test_fewshot_schema_and_limits(filename: str, stage: int) -> None:
 
 @pytest.mark.parametrize("stage,path", ASSEMBLIES)
 def test_every_stage_path_assembly_carries_two_fewshots(stage: int, path: str) -> None:
-    """P2.13: two few-shot exchanges per stage × path (docs/08 §3–§4).
+    """Two few-shot exchanges per stage × path assembly (docs/08 §3–§4).
 
-    The pair lives where it can fit the budget and teach the most: the stage
-    module carries the stage's signature exchange at stages 0–3, the path
-    module carries the path's at every stage it loads, so each assembly shows
-    exactly two.
+    The pair lives where it can fit the budget and teach the most: stages 0–1
+    carry both exchanges in the stage file (no path module loads), and every
+    stage ≥ 2 assembly carries the stage's exchange plus the path's own. One
+    assembly cannot show three: the pinned tokenizer puts a stage-3 assembly
+    with three at 973 tokens (P2.13 design review, DCR-1), so the ≥3-per-stage
+    row is met by the shipped set and not by inflating the prompt — see
+    test_each_stage_ships_at_least_three_fewshots and the P3.05 handoff.
     """
     system = _system_prompt(stage, path, "Ren")
     assert system.count("Player: ") == 2, (
         f"stage {stage} path {path or '-'} must show exactly 2 few-shot exchanges"
     )
+
+
+@pytest.mark.parametrize("stage", STAGES)
+def test_each_stage_ships_at_least_three_fewshots(stage: int) -> None:
+    """P3.05 row: 'few-shots per stage ≥ 3' — met by the shipped set, not the assembly.
+
+    Every stage ships its own exchange plus one per path module (six), so a
+    stage has ≥3 voices written for it; the 900-token budget still lets an
+    assembly load only two (see the test above and the P3.05 handoff's DCR).
+    From stage 2 on, the path modules load, so every stage ≥3 assembly is
+    taught by its stage voice plus its own path voice.
+    """
+    files = [f"stage_{stage}.md"] + [f"path_{path}.md" for path in PATHS]
+    total = sum((PROMPTS / name).read_text(encoding="utf-8").count("Player: ") for name in files)
+    assert total >= 3, f"stage {stage} ships {total} few-shot exchanges, needs >= 3"
 
 
 # --- budget (docs/07 §3.1) ---------------------------------------------------
@@ -263,15 +295,55 @@ def test_system_prompt_fits_the_budget(stage: int, path: str, player_name: str) 
     )
 
 
+@pytest.mark.parametrize("player_name", ["Ren", LONGEST_NAME])
 @pytest.mark.parametrize("stage", [2, 3, 4, 5])
-@pytest.mark.parametrize("path", PATHS)
-def test_runner_up_line_fits_the_budget(stage: int, path: str) -> None:
-    """docs/08 §1: the runner-up path contributes one line; it must still fit."""
-    runner_up = "AWAKE" if path == "YANDERE" else "YANDERE"
-    tokens = _system_tokens(stage, path, LONGEST_NAME, runner_up=runner_up)
+@pytest.mark.parametrize(
+    "path,runner_up", [(path, other) for path in PATHS for other in PATHS if other != path]
+)
+def test_runner_up_line_fits_the_budget(
+    stage: int, path: str, runner_up: str, player_name: str
+) -> None:
+    """docs/08 §1: the runner-up path contributes one line; every pair must fit.
+
+    docs/01 §4 lets any of the five other paths become the runner-up from the
+    behaviour profile, so the budget is checked on all 30 ordered pairs, not
+    just the historical YANDERE/AWAKE one.
+    """
+    tokens = _system_tokens(stage, path, player_name, runner_up=runner_up)
     assert tokens <= SYSTEM_TOKEN_BUDGET, (
-        f"stage {stage} path {path} + runner-up {runner_up}: {tokens} estimated tokens"
+        f"stage {stage} path {path} + runner-up {runner_up} name {player_name!r}: "
+        f"{tokens} estimated tokens > {SYSTEM_TOKEN_BUDGET}"
     )
+
+
+@pytest.mark.parametrize("stage", [2, 3, 4, 5])
+@pytest.mark.parametrize(
+    "path,runner_up", [(path, other) for path in PATHS for other in PATHS if other != path]
+)
+def test_runner_up_contributes_exactly_one_line(stage: int, path: str, runner_up: str) -> None:
+    """docs/01 §4 hybrid: the runner-up's 25% share is its first line only.
+
+    The line must read as a standalone motto (the module's shout), and no other
+    line of the runner-up module may leak into the assembly.
+    """
+    system = _system_prompt(stage, path, "Ren", runner_up=runner_up)
+    motto = _motto(runner_up)
+    assert motto, f"path_{runner_up}.md has no motto line"
+    assert system.count(motto) == 1, (
+        f"runner-up {runner_up}'s motto must appear exactly once at stage {stage} {path}"
+    )
+    # No other runner-up line may ride along. Generic scaffolding ("Example:") is
+    # already in the primary module, so compare only the runner-up's own lines.
+    primary = set(_module(f"path_{path}.md", "Ren").splitlines())
+    for line in _module(f"path_{runner_up}.md", "Ren").splitlines():
+        stripped = line.strip()
+        if stripped and stripped != motto and line.strip() not in {
+            primary_line.strip() for primary_line in primary
+        }:
+            assert stripped not in system, (
+                f"runner-up {runner_up} leaked a second line into stage {stage} {path}: "
+                f"{stripped!r}"
+            )
 
 
 # --- design fidelity ---------------------------------------------------------
@@ -311,3 +383,55 @@ def test_awake_path_guards_against_quoting_the_real_prompt() -> None:
     assert "Never quote" in text, (
         "path_AWAKE.md must forbid quoting the live prompt (fiction-only rule)"
     )
+
+
+# --- path modules + the hybrid runner-up line (P3.05) ------------------------
+
+
+def test_signature_table_covers_every_shipped_path() -> None:
+    """The docs/01 §4.1–§4.6 table is the contract the modules and lab share."""
+    assert set(SIGNATURES["paths"]) == set(PATHS), (
+        f"signature_moves.json must list exactly {PATHS}"
+    )
+    for path, spec in SIGNATURES["paths"].items():
+        assert spec["doc"].startswith("docs/01 §4."), f"{path} must cite its docs/01 §4 section"
+        assert spec["module"], f"{path} has no module cues"
+        assert spec["transcript"], f"{path} has no transcript cues"
+        for pattern in spec["transcript"]:
+            re.compile(pattern)  # a broken regex must fail here, not in the lab
+
+
+@pytest.mark.parametrize("path", PATHS)
+def test_path_modules_teach_their_signature_moves(path: str) -> None:
+    """Every signature move of docs/01 §4 must be taught in the module text."""
+    text = (PROMPTS / f"path_{path}.md").read_text(encoding="utf-8")
+    missing = [cue for cue in SIGNATURES["paths"][path]["module"] if cue not in text]
+    assert not missing, f"path_{path}.md does not teach {missing}"
+
+
+@pytest.mark.parametrize("path", PATHS)
+def test_path_modules_open_with_a_standalone_motto(path: str) -> None:
+    """The first line is the runner-up's whole 25% share, so it must stand alone.
+
+    It carries the path name and the docs/01 §4 shout in one short line; the
+    behaviour lives on the next lines, which never reach another path's prompt.
+    """
+    motto = _motto(path)
+    assert motto.startswith(f"{path} — "), (
+        f"path_{path}.md must open with '{path} — <shout>' (runner-up line format)"
+    )
+    assert len(motto) <= 40, f"path_{path}.md motto is {len(motto)} chars (budget: <= 40)"
+    assert "Example" not in motto
+
+
+@pytest.mark.parametrize("path", PATHS)
+def test_each_path_module_is_a_stage_two_legal_fewshot(path: str) -> None:
+    """Path modules load from stage 2, so their only exchange must be legal there."""
+    gate = _allowed(2)
+    text = (PROMPTS / f"path_{path}.md").read_text(encoding="utf-8")
+    jsons = re.findall(r"^You: (\{.*\})$", text, re.M)
+    assert len(jsons) == 1, f"path_{path}.md must carry exactly one exchange (budget)"
+    turn = json.loads(jsons[0])
+    assert turn["music"] in gate["music"]
+    assert turn["fx"] in gate["fx"]
+    assert turn["action"] in gate["actions"]

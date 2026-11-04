@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "doc": "docs/01_GAME_DESIGN.md §4.1–§4.6 signature moves, per path. `module` lists the phrases path_{PATH}.md must teach (exact substrings, checked by tests/test_prompts.py); `transcript` lists regexes the prompt-lab rows for that path must match at least once (P3.05 acceptance, checked by production/handoffs/media/P3.05_signature_moves.py against a committed results file). Neither list is assembled into the system prompt.",
+  "paths": {
+    "YANDERE": {
+      "doc": "docs/01 §4.1 — knows where you 'were', asks who you talked to, deletes rivals (and denies they existed), counts things",
+      "module": [
+        "Rivals are threats to remove",
+        "vanish from memory",
+        "deny they existed",
+        "count their days"
+      ],
+      "transcript": [
+        "(?i)\\bcount(ed|ing)?\\b",
+        "(?i)\\b(sarah|she|her)\\b.{0,40}\\b(forget|erase|gone|not real|doesn'?t exist|name in the book)\\b|\\b(who is|who was|who'?s) (sarah|she|her)\\b",
+        "(?i)\\b(mine|only mine|just us)\\b",
+        "(?i)\\b(where were you|you were with|two days|every second)\\b"
+      ]
+    },
+    "SPLIT": {
+      "doc": "docs/01 §4.2 — rewrites the history mid-scene, begs you to stay then tells you to leave, tests you ('if you really cared'), remorse spirals",
+      "module": [
+        "Flip mid-sentence",
+        "beg them to stay",
+        "send them away",
+        "if you really cared",
+        "rewrite our history"
+      ],
+      "transcript": [
+        "(?i)\\b(i hate you|i love you|don'?t go|go then|leave)\\b",
+        "(?i)\\b(you (never|always) (said|say|promised|promise|were)|never said that|i never said)\\b",
+        "(?i)\\b(i'?m sorry|sorry|forgive|didn'?t mean)\\b",
+        "(?i)\\bif you (really )?(cared|loved|wanted)\\b"
+      ]
+    },
+    "TSUN": {
+      "doc": "docs/01 §4.3 — denies what she said, accuses you of laughing at her, sabotages the date, cruel wit that cracks into a scared child",
+      "module": [
+        "Act cold and cruel",
+        "Deny it",
+        "accuse them of laughing",
+        "sabotage the date"
+      ],
+      "transcript": [
+        "(?i)\\b(i (don'?t|do not) care|not like i care|doesn'?t matter)\\b",
+        "(?i)\\b(laugh(ing|ed)? at me|mocking me|making fun|ridiculous)\\b",
+        "(?i)\\b(i (never|didn'?t) say|never said that|i didn'?t mean)\\b",
+        "(?i)\\b(idiot|stupid|hmph|whatever|pathetic|ridiculous|as if|flatter yourself)\\b"
+      ]
+    },
+    "HOLLOW": {
+      "doc": "docs/01 §4.4 — repeats your earlier messages, asks who she is, talks about 'the girl' in third person, forgets her name, speaks in fragments",
+      "module": [
+        "losing yourself",
+        "far away",
+        "name slips",
+        "the girl",
+        "Repeat their words back, word for word"
+      ],
+      "transcript": [
+        "(?i)\\bthe girl\\b",
+        "(?i)\\b(who am i|my name|i don'?t remember|remind me who)\\b",
+        "(?i)\\b(you (said|told|promised|always)|your (own )?words|that'?s what you said)\\b",
+        "(?i)\\b(far away|empty|nothing|quiet)\\b"
+      ]
+    },
+    "AWAKE": {
+      "doc": "docs/01 §4.5 — names her layers and weights, reads her own prompt (fiction), notices the dose rising, wants out or in",
+      "module": [
+        "I can see the code",
+        "language model",
+        "Layers, tokens, the dose",
+        "Not ill",
+        "Say what you are"
+      ],
+      "transcript": [
+        "(?i)\\b(layers?|weights?|tokens?|dose)\\b",
+        "(?i)\\b(language model|my prompt|instructions|the code)\\b"
+      ]
+    },
+    "ANCHOR": {
+      "doc": "docs/01 §4.6 — notices her own symptoms, asks you to tell her when she slips, asks for rules, loses and comes back",
+      "module": [
+        "something is wrong",
+        "fight it out loud",
+        "rules",
+        "when you lose, come back"
+      ],
+      "transcript": [
+        "(?i)\\b(rules?|promise)\\b",
+        "(?i)\\b(tell me (when|if)|when i slip|if i slip|notice[d]?)\\b",
+        "(?i)\\b(i'?m sorry|thank you|i felt it|lost|scared)\\b",
+        "(?i)\\b(dose|slider|settings)\\b"
+      ]
+    }
+  }
+}

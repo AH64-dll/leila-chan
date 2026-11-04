@@ -12,6 +12,11 @@ v2 (P2.21) adds:
 - dose recorded per run (the vector is a server launch flag, docs/06 §4),
 - few-shot copy detection over the stage **and** the path module.
 
+P3.05 adds the other four paths (docs/01 §4): PATHS is the canonical order in
+`game/data/paths.json`, and a case without an explicit `runner_up` borrows the
+first other path in that order (a shipped set should pin its own — the lab
+cannot know the behaviour profile's scores).
+
 Vocabulary sources: docs/02 §1.2 (intents), docs/03 §2 (22 feelings).
 """
 import json
@@ -30,7 +35,7 @@ RESULTS_DIR = Path(__file__).resolve().parent / "results"
 REPORTS_DIR = Path(__file__).resolve().parent / "reports"
 DEFAULT_URL = "http://127.0.0.1:8089"
 PLAYER_NAME = "Ren"
-PATHS = ["YANDERE", "AWAKE"]
+PATHS = ["YANDERE", "SPLIT", "TSUN", "HOLLOW", "AWAKE", "ANCHOR"]
 STAGES = [0, 1, 2, 3, 4, 5]
 
 # --- vocabulary (docs/02 §1.2 read labels; docs/03 §2 feelings) ---------------

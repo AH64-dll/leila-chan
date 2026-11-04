@@ -92,9 +92,12 @@ from v1, so the v2 numbers compare to the v1 baseline case for case below stage 
 
 Conventions fixed for v2:
 
-- **`path` is required from stage 2** (`YANDERE`/`AWAKE`); `runner_up` defaults to the
-  other path, because docs/08 §1 gives the runner-up one line of hybrid flavour. Below
-  stage 2 there is no path layer, so the stage-0/1 sets stay path-free.
+- **`path` is required from stage 2** (`YANDERE`/`AWAKE` in v2; all six from P3.05);
+  every shipped v2 case now **pins `runner_up`** (YANDERE→AWAKE, AWAKE→YANDERE) so its
+  prompt stays reproducible now that the lab knows six paths. An unpinned case borrows the
+  first other path in the canonical order (SPLIT for YANDERE) — the lab cannot score a
+  behaviour profile, so a set that cares must pin. Below stage 2 there is no path layer,
+  so the stage-0/1 sets stay path-free.
 - **First-beat label sets are 3–6 feelings**, chosen from the docs/03 §2 glosses for the
   stage's designed beat and the path's signature move — not from a guess at what the model
   will say. e.g. stage-5 YANDERE `I'm leaving` accepts `empty/pleading/cold/sad/manic`
@@ -122,3 +125,26 @@ Conventions fixed for v2:
   will run once offers exist (docs/05 §3).
 - The v1 rules still hold: hand-label before the run; after it, widen only with quoted
   transcript evidence recorded as `LABEL-REV<n>` in `notes`; never remove a label.
+
+## P3.05 sets — the four new paths (2026-11-04)
+
+Written **before** the P3.05 run, which re-used the committed stage-3/4 YANDERE/AWAKE
+sets alongside them so all six paths are measured in one dose-0 sample of the *shipped*
+modules (the P2.21 samples predate the new headlines).
+
+| file | cases | notes |
+|---|---|---|
+| `stage_2_paths.jsonl` | 4 | one seed per new path: SPLIT idealization, TSUN deflection, HOLLOW thin self-answer, ANCHOR gratitude + fear |
+| `stage_3_paths.jsonl` | 24 | six signature probes per new path (history rewrite, flip, test, remorse, absence; denial, mockery, competition, sabotage; name, echo, distance, third person; promise, rules, relapse, the dose) |
+| `stage_4_paths.jsonl` | 16 | four Collapse probes per new path, including the real slider moment and "you relapsed last night" |
+| `stage_5_paths.jsonl` | 4 | one Terminal probe per new path |
+
+- Every case pins a `runner_up` different from its path, cycling through the other five,
+  so the run exercises the hybrid 25% line on every path (`tests/test_prompts.py` asserts
+  all 30 ordered pairs fit the budget).
+- The signature probes are keyed to `game/data/prompts/signature_moves.json`, whose
+  `transcript` regexes `production/handoffs/media/P3.05_signature_moves.py` checks against
+  the committed results file: each path's docs/01 §4 moves must appear in the real
+  generated turns, not just in the module text.
+- Coverage: these four files plus the v2 files give every (stage 2–5, six-path) cell; the
+  v2 `dose_probe.jsonl` stays frozen on its two paths until P3.19 rebuilds it for six.
