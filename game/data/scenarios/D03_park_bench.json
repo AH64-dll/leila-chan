@@ -1,0 +1,97 @@
+{
+  "id": "D03_park_bench",
+  "kind": "date",
+  "title": "Park bench",
+  "background": "bg/park",
+  "music": "playful",
+  "ambience": "none",
+  "available": {
+    "days": [2, 10],
+    "stages": [0, 5],
+    "paths": "any"
+  },
+  "goal": "Feed the ducks with {player_name}.",
+  "prompt": "You are on a park bench by the pond with a paper bag of bread crusts between you. Ducks drift in slow circles on the water.",
+  "stage_variants": {
+    "0": "You tear the crusts into small pieces so the ducks come close. You count them out loud, lose count, and start again.",
+    "1": "You count the ducks and get one more than there are. You say the number twice, then hold out a piece of bread like nothing happened.",
+    "2": "You tell {player_name} there were seven ducks last time. You correct yourself: seven now, seven is the right number. You feed them faster.",
+    "3": "There are six ducks today, and one is missing. You know exactly where the seventh one went, and you will not say it while {player_name} is smiling at the water.",
+    "4": "You feed them one piece at a time so they stay close. You tell {player_name} that they only come when they are called, and then you call one by his name.",
+    "5": "The bread is gone and the ducks are still waiting. You keep reaching into the empty bag. Something under the water is counting back."
+  },
+  "path_twists": {
+    "YANDERE": "You saved one duck for later in a way you are not going to explain on a bench in daylight.",
+    "AWAKE": "The ducks stop moving whenever {player_name} looks away. You tell him they are waiting for the next frame.",
+    "TSUN": "The crusts with butter were not for the ducks. You did not save them for {player_name} either, so stop looking at the bag."
+  },
+  "events": [
+    {
+      "at_turn": 2,
+      "line": "A duck swims close to the bench and tilts its head at you."
+    },
+    {
+      "at_turn": 5,
+      "line": "The pond goes completely still for one long second."
+    },
+    {
+      "on_trigger": "T01",
+      "line": "A girl's laugh carries from the path behind the bench."
+    }
+  ],
+  "end": {
+    "min_turns": 6,
+    "max_turns": 12,
+    "on_goal": "end_date"
+  },
+  "opening_beats": {
+    "0": [
+      {
+        "feeling": "joy",
+        "intensity": 1,
+        "cue": "giggle",
+        "say": "They know me here. Watch — if I throw it sideways, they all turn at once."
+      }
+    ],
+    "1": [
+      {
+        "feeling": "playful",
+        "intensity": 1,
+        "cue": "laugh_soft",
+        "say": "Six ducks today, or seven — I'll count while you throw."
+      }
+    ],
+    "2": [
+      {
+        "feeling": "nervous",
+        "intensity": 2,
+        "cue": "sigh",
+        "say": "Seven ducks today. I counted twice, and twice is how you know it's right."
+      }
+    ],
+    "3": [
+      {
+        "feeling": "nervous",
+        "intensity": 2,
+        "cue": "none",
+        "say": "Don't look at the reeds yet. I'll tell you when it's all right to look."
+      }
+    ],
+    "4": [
+      {
+        "feeling": "warmth",
+        "intensity": 2,
+        "cue": "hum",
+        "say": "Stay close, all of you. I'll call you one at a time, and you'll come."
+      }
+    ],
+    "5": [
+      {
+        "feeling": "empty",
+        "intensity": 3,
+        "cue": "whisper",
+        "say": "The bag is empty, {player_name}. Why are they all still looking at me?"
+      }
+    ]
+  }
+}

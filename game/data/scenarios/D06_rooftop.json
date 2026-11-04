@@ -1,0 +1,97 @@
+{
+  "id": "D06_rooftop",
+  "kind": "date",
+  "title": "School rooftop",
+  "background": "bg/rooftop",
+  "music": "melancholy",
+  "ambience": "none",
+  "available": {
+    "days": [4, 12],
+    "stages": [0, 5],
+    "paths": "any"
+  },
+  "goal": "Tell {player_name} a secret.",
+  "prompt": "The rooftop is empty after class. The fence is low, and the wind keeps pulling at the loose wire on one post.",
+  "stage_variants": {
+    "0": "You have a small, cute secret and you practised saying it all day. It is that you keep a music box in your bag and play it on the way home.",
+    "1": "You start the secret twice. The first one is about the music box. The second one is about the day you noticed {player_name}'s shoes by the classroom door.",
+    "2": "You tell the secret: you know which window is his. You say it like a joke, then ask him if it sounded like a joke.",
+    "3": "You stand at the fence while you talk, close enough that your shoulder is past the warning line. You ask what he would do if you stepped over.",
+    "4": "You ask {player_name} what he would do if you were not there tomorrow. You keep smiling while he answers, and you watch his mouth instead of his eyes.",
+    "5": "You have told {player_name} the secret so many times. You ask him to say it back, word for word, before he is allowed to go."
+  },
+  "path_twists": {
+    "YANDERE": "The secret is that you checked the rooftop door before asking him up here, and you know it only opens from the inside.",
+    "AWAKE": "The secret is that the wind is a background loop. You tell him the loop resets whenever he stops looking at it.",
+    "SPLIT": "You tell him the secret, then tell him you never said it, then apologise for lying, all before he can answer."
+  },
+  "events": [
+    {
+      "at_turn": 2,
+      "line": "The loose wire on the fence post taps the metal, once."
+    },
+    {
+      "at_turn": 5,
+      "line": "The wind drops. The rooftop is suddenly very quiet."
+    },
+    {
+      "on_trigger": "T02",
+      "line": "The rooftop door clicks shut behind you."
+    }
+  ],
+  "end": {
+    "min_turns": 6,
+    "max_turns": 12,
+    "on_goal": "end_date"
+  },
+  "opening_beats": {
+    "0": [
+      {
+        "feeling": "shy",
+        "intensity": 1,
+        "cue": "none",
+        "say": "Promise you won't laugh? It's a small secret, and not even a good one."
+      }
+    ],
+    "1": [
+      {
+        "feeling": "nervous",
+        "intensity": 2,
+        "cue": "sigh",
+        "say": "Okay, okay. I'll tell you, but let me say it in my own order."
+      }
+    ],
+    "2": [
+      {
+        "feeling": "nervous",
+        "intensity": 2,
+        "cue": "laugh_soft",
+        "say": "I know which window is yours. That was a joke — did it sound like one?"
+      }
+    ],
+    "3": [
+      {
+        "feeling": "curious",
+        "intensity": 2,
+        "cue": "none",
+        "say": "Come closer to the fence. I want to see your face when I tell you."
+      }
+    ],
+    "4": [
+      {
+        "feeling": "love",
+        "intensity": 3,
+        "cue": "heartbeat_fast",
+        "say": "If I wasn't here tomorrow, what would you do? Look at me while you answer."
+      }
+    ],
+    "5": [
+      {
+        "feeling": "pleading",
+        "intensity": 3,
+        "cue": "breath_close",
+        "say": "Say it back to me first. Then I'll believe you heard it."
+      }
+    ]
+  }
+}

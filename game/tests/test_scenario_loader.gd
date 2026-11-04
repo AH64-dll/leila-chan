@@ -138,6 +138,26 @@ func test_opening_beats_for_stages_0_and_1() -> void:
 	assert_str(String(beats_s1[0]["say"])).contains("ordered your favorite")
 
 
+func test_opening_beats_fall_back_to_highest_defined_stage() -> void:
+	# CON-3: D02 authors only stages 0 and 1, so a stage-2..5 date must open on
+	# the stage-1 line, not the stage-0 one (the rule _resolve_variant uses).
+	var scenario: Dictionary = ScenarioLoaderScript.load_scenario(D02_PATH)
+	for stage: int in [2, 3, 4, 5]:
+		var beats: Array[Dictionary] = ScenarioLoaderScript.get_opening_beats(
+			scenario, stage, "Ren"
+		)
+		assert_int(beats.size()).is_equal(1)
+		assert_str(String(beats[0]["say"])).contains("ordered your favorite")
+
+	# Below every defined stage there is nothing to fall back to — the variant
+	# resolver returns empty there too, so the opener stays silent.
+	var higher_only := {
+		"opening_beats": {"3": [{"feeling": "cold", "intensity": 2, "say": "Later."}]}
+	}
+	var none: Array[Dictionary] = ScenarioLoaderScript.get_opening_beats(higher_only, 0, "Ren")
+	assert_int(none.size()).is_equal(0)
+
+
 func test_events_for_turn_and_triggers() -> void:
 	var scenario: Dictionary = ScenarioLoaderScript.load_scenario(D02_PATH)
 	var turn3_events: Array[String] = ScenarioLoaderScript.get_events_for_turn(scenario, 3)
@@ -187,3 +207,41 @@ func test_loader_injects_goal_prompt_and_variant_into_prompt_builder() -> void:
 	var scene_tokens: int = int(debug["tokens"]["scene"])
 	assert_int(scene_tokens).is_greater(0)
 	assert_int(scene_tokens).is_less(150)
+
+
+## P2.18: every shipped scenario must load and pass the game's own validator,
+## and carry the stage 3/5 variants plus two path twists the NAR playbook
+## requires. DirAccess lists data/scenarios at run time, so a scenario added by
+## a later task is covered the moment the file lands.
+func test_every_shipped_scenario_validates_and_has_stage_variants() -> void:
+	var names: Array = Array(DirAccess.get_files_at("res://data/scenarios"))
+	assert_array(names).is_not_empty()
+	var checked := 0
+	for file_name: String in names:
+		if not file_name.ends_with(".json"):
+			continue
+		checked += 1
+		var scenario: Dictionary = ScenarioLoaderScript.load_scenario(
+			"res://data/scenarios/%s" % file_name
+		)
+		assert_dict(scenario).override_failure_message(file_name).is_not_empty()
+		var report: Dictionary = ScenarioLoaderScript.validate_scenario(scenario)
+		(
+			assert_bool(bool(report["ok"]))
+			. override_failure_message("%s: %s" % [file_name, str(report["errors"])])
+			. is_true()
+		)
+		var variants: Dictionary = scenario["stage_variants"]
+		(
+			assert_bool(variants.has("3"))
+			. override_failure_message("%s: missing stage 3 variant" % file_name)
+			. is_true()
+		)
+		(
+			assert_bool(variants.has("5"))
+			. override_failure_message("%s: missing stage 5 variant" % file_name)
+			. is_true()
+		)
+		var twists: Dictionary = scenario["path_twists"]
+		assert_int(twists.size()).override_failure_message(file_name).is_greater_equal(2)
+	assert_int(checked).is_greater_equal(7)
