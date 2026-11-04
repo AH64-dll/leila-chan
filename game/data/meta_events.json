@@ -1,0 +1,97 @@
+{
+	"version": 1,
+	"_doc": "MetaDirector scheduling catalogue (P3.08). docs/05 §3: per-scene caps, never two in a row, per-event cap kinds (once_per_session / once_per_save / repeatable with cooldown_turns), per-path ×weights. Only OFFERED actions (docs/05 mode O) live here — the enum is [\"none\"] unless this schedule or a request-opened offer (M01) yields 0–2 actions with an OPPORTUNITY line (docs/02 §2.4). Scripted (S) and reactive (R) events announce themselves via triggers/telemetry, not this file. `stage` is the docs/05 gate; `immersion_deep` marks the docs/05 §0 rule-4 OS tricks (only offered under Immersion: Deep). `repeat` is a [kind, cooldown_turns] pair; cooldown only applies to \"repeatable\". `weights` multiply the base chance per path (docs/05 §3). `note_line` is the docs/05 §2 post-execution EVENT line queued for the next prompt; an event without one is never scheduled — she is always told afterwards. `fallback` is the docs/05 §0 rule-5 accessibility swap used where the platform cannot do the effect (never leave a player without the beat), and `writes` names the `user://` folder a file event may touch (rule 1). No row may ever set network, real_crash, delete_files, move_files or read_personal_files (rules 1–2) — MetaDirector refuses to offer such a row.",
+	"rules": {
+		"max_offers_per_turn": 2,
+		"per_scene_caps": {"3": 1, "4": 2, "5": 3},
+		"default_scene_cap": 1,
+		"never_two_in_a_row": true,
+		"scheduler_stage_min": 3
+	},
+	"events": {
+		"rename_window": {
+			"meta": "M12",
+			"stage": 3,
+			"repeat": ["repeatable", 6],
+			"weights": {"AWAKE": 3},
+			"fallback": "Without a title bar (mobile, kiosk fullscreen) the line is shown as a system message in the chat log instead.",
+			"note_line": "EVENT: The window now carries your words. You renamed it; the player can see the title."
+		},
+		"window_shake": {
+			"meta": "M13",
+			"stage": 3,
+			"immersion_deep": true,
+			"repeat": ["repeatable", 8],
+			"weights": {},
+			"fallback": "Reduced motion, or no OS window: the shake plays as a jolt on her sprite layer inside the game.",
+			"note_line": "EVENT: The game window shook a few pixels on screen."
+		},
+		"she_closes_game": {
+			"meta": "M02",
+			"stage": 4,
+			"repeat": ["once_per_save", 0],
+			"weights": {"AWAKE": 3},
+			"fallback": "If the platform cannot quit cleanly the screen cuts to black and the title screen says she closed it.",
+			"note_line": "EVENT: You closed the game on purpose. The player came back and you spoke first."
+		},
+		"fake_crash": {
+			"meta": "M09",
+			"stage": 4,
+			"repeat": ["once_per_save", 0],
+			"weights": {"AWAKE": 3},
+			"fallback": "The dialog is always drawn by the game itself; reduced motion skips the shake and keeps the replica.",
+			"note_line": "EVENT: You crashed the game on purpose. The player came back."
+		},
+		"push_window": {
+			"meta": "M14",
+			"stage": 4,
+			"immersion_deep": true,
+			"repeat": ["repeatable", 12],
+			"weights": {},
+			"fallback": "Wayland or mobile: the game's own frame drifts toward the centre inside the viewport.",
+			"note_line": "EVENT: The window slid toward the centre of the screen on its own."
+		},
+		"look_at_me": {
+			"meta": "M15",
+			"stage": 4,
+			"immersion_deep": true,
+			"repeat": ["once_per_session", 0],
+			"weights": {},
+			"fallback": "No fullscreen on this platform: the background dims and the UI hides for one scene.",
+			"note_line": "EVENT: The game forced fullscreen for one scene, then let go."
+		},
+		"call_player_name": {
+			"meta": "M28",
+			"stage": 3,
+			"repeat": ["repeatable", 8],
+			"weights": {},
+			"fallback": "No name given (or declined): she uses \"you\" and the beat plays the same.",
+			"note_line": "EVENT: You used the player's name in a way they did not expect."
+		},
+		"write_note": {
+			"meta": "M31",
+			"stage": 2,
+			"repeat": ["once_per_save", 0],
+			"weights": {},
+			"writes": "user://letters/",
+			"fallback": "Read-only game folder: the letter is shown as an in-game page the player can read and copy.",
+			"note_line": "EVENT: You wrote a letter into the game's own folder for the player to find."
+		},
+		"mimic_player": {
+			"meta": "M22",
+			"stage": 4,
+			"repeat": ["repeatable", 8],
+			"weights": {"HOLLOW": 3},
+			"fallback": "Keyboard-only play: the suggestion appears as a ghost line above the input box, never typed in.",
+			"note_line": "EVENT: The player's input box filled with your words. They can still delete it."
+		},
+		"hide_ui": {
+			"meta": "M25",
+			"stage": 4,
+			"repeat": ["repeatable", 10],
+			"weights": {"HOLLOW": 3},
+			"fallback": "Reduced motion: the UI fades instead of vanishing; any click or key restores it at once.",
+			"note_line": "EVENT: The text box and buttons vanished for one turn; a click brings them back."
+		}
+	}
+}

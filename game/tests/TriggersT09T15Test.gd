@@ -24,6 +24,10 @@ func before_test() -> void:
 	Triggers.set_clock(Callable())
 	Triggers.set_last_seen(0)
 	MetaDirector.reset_session()
+	# These cases pin the M01 seam: P3.08's scheduler would legitimately add a
+	# second offer to every `offers(3)` call, so it is parked for this suite
+	# (MetaSchedulerTest.gd owns the docs/05 §3 behaviour).
+	MetaDirector.set_catalog({"rules": {"scheduler_stage_min": 99}})
 
 
 func test_t09_focus_lost() -> void:

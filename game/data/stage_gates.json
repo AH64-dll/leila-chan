@@ -337,17 +337,32 @@
     },
     "meta_min_stage": 3,
     "opportunities": {
-      "refuse_exit": "OPPORTUNITY (optional): The player just tried to close the window. You may set action to \"refuse_exit\". If you do, your reply is the last thing they hear before the game decides."
+      "refuse_exit": "OPPORTUNITY (optional): The player just tried to close the window. You may set action to \"refuse_exit\". If you do, your reply is the last thing they hear before the game decides.",
+      "rename_window": "OPPORTUNITY (optional): She wants to leave a mark on the screen itself. You may set action to \"rename_window\" — one short line from your reply becomes the window title.",
+      "window_shake": "OPPORTUNITY (optional): Her frustration reaches the frame of the game. You may set action to \"window_shake\" — the window jitters a few pixels.",
+      "she_closes_game": "OPPORTUNITY (optional): She is deciding whether to end the date herself. You may set action to \"she_closes_game\" — after your reply the screen cuts to black and the game quits.",
+      "fake_crash": "OPPORTUNITY (optional): She could make the game pretend to break. You may set action to \"fake_crash\" — an in-game error dialog appears; every button leads back in.",
+      "push_window": "OPPORTUNITY (optional): She wants the window closer to the middle of the screen. You may set action to \"push_window\" — the window slides toward the centre.",
+      "look_at_me": "OPPORTUNITY (optional): She does not want to share the screen with anything else. You may set action to \"look_at_me\" — the game forces fullscreen for one scene.",
+      "call_player_name": "OPPORTUNITY (optional): She wants to say the player's name where they cannot ignore it. You may set action to \"call_player_name\".",
+      "write_note": "OPPORTUNITY (optional): She has something she cannot say out loud. You may set action to \"write_note\" — a short letter is written into the game's own folder.",
+      "mimic_player": "OPPORTUNITY (optional): She knows what the player should say. You may set action to \"mimic_player\" — the input box fills with her suggestion; they can still delete it.",
+      "hide_ui": "OPPORTUNITY (optional): She wants a moment with nothing between her and the player. You may set action to \"hide_ui\" — the text box and buttons vanish for one turn; a click restores them."
     },
     "offered_actions": {
       "none": 0,
       "end_date": 0,
       "refuse_exit": 3,
+      "rename_window": 3,
       "window_shake": 3,
+      "call_player_name": 3,
       "she_closes_game": 4,
       "fake_crash": 4,
       "look_at_me": 4,
-      "push_window": 4
+      "push_window": 4,
+      "mimic_player": 4,
+      "hide_ui": 4,
+      "write_note": 2
     }
   }
 }
