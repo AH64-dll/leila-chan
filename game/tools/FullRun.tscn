@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://dfullrunp22201"]
+
+[ext_resource type="Script" path="res://tools/full_run.gd" id="1_fullrun"]
+
+[node name="FullRun" type="Node"]
+script = ExtResource("1_fullrun")

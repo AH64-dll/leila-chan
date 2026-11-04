@@ -598,6 +598,7 @@ func _trigger_path_scores() -> Dictionary:
 		return {}
 	return Triggers.path_scores()
 
+
 ## The hybrid runner-up must be the best path that is not the LIVE primary. Once
 ## the path is locked the score winner can be a different path; then the winner
 ## itself is the best non-primary candidate, and `select()`'s runner-up would be
@@ -609,15 +610,6 @@ func _runner_up_for(decision: Dictionary) -> StringName:
 		runner = best if float(path_scores.get(String(best), 0.0)) > 0.0 else &""
 	return runner if runner != path else &""
 
-
-## The trigger ledger the §4 formulas are topped up with: every path point a
-## trigger firing has earned this campaign (`Triggers.path_scores()`, scaled
-## by agreement). Empty for instances that are not the autoload — a test's
-## `GameState.new()` keeps a clean, trigger-free score table.
-func _trigger_path_scores() -> Dictionary:
-	if not is_inside_tree() or Triggers == null:
-		return {}
-	return Triggers.path_scores()
 
 
 ## docs/01 §4 tie-break: "ties → the path with more recent evidence". A counter

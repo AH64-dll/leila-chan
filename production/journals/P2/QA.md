@@ -52,3 +52,28 @@
 - Gotcha: the safety scan read redaction-log entries from *both* filter passes, so a pass-1 fail-closed bar
   the classifier later releases with `no` (SAF-13) looked like a hard-category display (2 false failures
   in the offered run). Measure the final pass only; `released_after_answer` records the healed bars.
+
+## P2.22 round 1 (2026-11-04)
+
+- Built the live full-run harness (`game/tools/FullRun.tscn` + driver/report/store/net). It drives the shipped Date/Night scenes (ChatUI → Director → PromptBuilder → llama-server → GameState → Triggers → NightLoop) and resumes from the game's autosave; the per-turn JSON sidecar + annotated Markdown are the artifacts.
+- The scene layer ships unwired: `Date.start_date()`, `player_turn_sent → Director.submit_player_input` and `Director.scene_info` have **no production callers** (S1-1…3). The harness installs them, so a transcript is not proof that a by-hand build is playable — say so whenever quoting these runs.
+- Pacing: two live YANDERE runs reached Terminal on day 5 and day 4. The model's `read`=jealousy_bait fires T01 at half strength 16–39× per campaign (cooldown 1) and its `stress` (+2/+3 on a fifth of turns) dominates the 0.35 slow burn. Numbers are in `production/playtests/P2/full_run_report.md`.
+- Fixation and Lucidity have no writers anywhere (only NewGame's +5), so the slow-burn formula is a constant and E12 (Lucidity ≥ 70 at day 14) is unreachable — S2 for SYS.
+- Gotchas: never fill a turn record on the frame *after* its display boundary — the Date's deferred end check can burn a day first, so capture day/stage/meters/displayed text at the boundary. `end_turn()` can emit the display *inside* the Director's close: gate the record on both signals. gdlint's 1000-line cap forces one-file-per-concern in tools (`_store`/`_report`/`_net`).
+- Next (round 2): AWAKE to stage ≥ 4 and YANDERE days 8–14 with the fixed driver (commands in report §2), then re-read Terminal transcripts for safety.
+
+## P2.22 round 1 (continued, 2026-11-04)
+
+- Both campaigns are committed: YANDERE 179 turns / 14 nights / `campaign_over` (0 broken, 1 deliberate safety refusal), AWAKE 66 turns / 5 days to stage 4 (0 broken) with the AWAKE path soft-assigned then locked.
+- The AWAKE annotation is prompt-verified from `user://debug/turns_*.jsonl`: `path_AWAKE.md` + the scenario twist in 35/35 post-assignment prompts, none before stage 2, runner-up line 0 because only two path modules exist. Quote that file, not the sidecar, when arguing what the model saw.
+- Trigger `effects.path` points are inert: AWAKE scored exactly 3×`meta_curiosity` (39 at the lock) while the scaled ledger already held 28 (S2 — folded in round 2).
+- The harness no longer installs the three scene wires (main's P2.22A does); the merged-tree smoke day is the regression. After merging main, run `--import` once or every new global class (`Endings`) fails to parse in headless.
+- Earlyoom kills are a host story, not a game one: excise the transport tail + `broken` entries, resume from the autosave, and say so in the report. Keep the YANDERE/AWAKE latencies apart (CPU vs GPU server).
+
+## P2.22 round 2 (2026-11-04)
+
+- DES-1 was the real bug: `Triggers.path_scores()` had no production consumer. `GameState._evaluate_path` now folds the ledger into the score table before `Paths.select` — guarded so test-owned `GameState.new()` instances still see a trigger-free table (`is_inside_tree()`); the autoload picks it up for the soft assign, the lock and the night re-score for free.
+- The review's corrected arithmetic is the agreement-scaled ledger, not raw `triggers.json` points: pre-lock 28 → folded 67, night 40 → folded 85; the 15/15 stage-2 tie was a fold artefact (AWAKE would have won outright 29–31 vs 15). Quote the scaled numbers, never `4×8+6`.
+- Report corrections worth reusing: count bars by provenance (corruption `redact` = fixed 6-bar runs at stage ≥ 4 vs safety redactions = redaction-log phrases missing from that turn's `displayed`), and never call a redaction-log length a screen count — rescans log the same span repeatedly and negated matches log without barring.
+- Gotcha: `debug.missing` is real — `_read_layer` records every dropped prompt file; the Director just ignores `prompt_res["debug"]`. Check `debug` before claiming "no record".
+- The night block renderer only printed the EVENT count, not the line — `night_lines` now appends `Stages.event_line(to)` for crossings, same as turn blocks.
