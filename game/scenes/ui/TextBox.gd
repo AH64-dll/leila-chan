@@ -215,6 +215,30 @@ func set_instant(enabled: bool) -> void:
 	_writer.instant = enabled
 
 
+## Settings.text_speed (P3.13): scale the writer's configured rate. The base
+## chars_per_second stays the ui.json value; the player's scale multiplies it
+## live, mid-reveal included.
+func set_speed_scale(scale: float) -> void:
+	_ensure_parts()
+	# Clamp against the same bounds Settings enforces, read live so a TextBox
+	# without the autoload (unit tests) still clamps sanely.
+	var min_scale := 0.25
+	var max_scale := 2.5
+	var settings := get_node_or_null("/root/Settings")
+	if settings != null:
+		var raw_min: Variant = settings.get("TEXT_SPEED_MIN")
+		var raw_max: Variant = settings.get("TEXT_SPEED_MAX")
+		if raw_min is float or raw_min is int:
+			min_scale = float(raw_min)
+		if raw_max is float or raw_max is int:
+			max_scale = float(raw_max)
+	_writer.speed_scale = clampf(scale, min_scale, max_scale)
+
+
+func get_speed_scale() -> float:
+	return _writer.speed_scale if _writer != null else 1.0
+
+
 ## Text of a beat (ChatUI logs it on beat_displayed).
 func get_beat_text(beat_index: int) -> String:
 	for beat: Dictionary in _beats:

@@ -133,7 +133,10 @@ func test_night_screen_click_skips_after_the_window() -> void:
 	assert_bool(night.is_finished()).is_true()
 
 
-func test_night_screen_esc_always_ends_the_night() -> void:
+## P3.13: Esc is the PauseMenu's panic key (it reads _input first), so the
+## scene-level handler only emits the request — pausing must never skip the
+## night, N12's unskippable black included.
+func test_night_screen_esc_requests_pause_without_skipping() -> void:
 	var night: Control = _open("N12")
 	var paused: Array = []
 	night.pause_requested.connect(func() -> void: paused.append(true))
@@ -142,7 +145,7 @@ func test_night_screen_esc_always_ends_the_night() -> void:
 	event.pressed = true
 	night._unhandled_key_input(event)
 	assert_array(paused).has_size(1)
-	assert_bool(night.is_finished()).is_true()
+	assert_bool(night.is_finished()).is_false()
 
 
 func test_night_screen_autosaves_the_next_day_and_queues_its_date() -> void:

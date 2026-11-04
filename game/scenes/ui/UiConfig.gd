@@ -41,6 +41,34 @@ const DEFAULTS := {
 		"photosensitive_on": "On",
 		"subtitle": "A Dating Sim",
 	},
+	"pause":
+	{
+		"btn_quit": "Quit game",
+		"btn_resume": "Resume",
+		"btn_settings": "Settings",
+		"title": "Paused",
+	},
+	"settings":
+	{
+		"audio": "Volume",
+		"btn_back": "Back",
+		"btn_resources": "Mental health resources",
+		"calmer_mode": "Calmer mode (caps stage at 3)",
+		"content_level": "Content level",
+		"content_options": ["Not set (safest)", "Calmer mode", "Full"],
+		"content_warning": "Content warning: horror themes, obsession and psychological distress.",
+		"her_dose": "Her dose",
+		"immersion": "Immersion",
+		"immersion_hint": "Deep lets her reach outside the window.",
+		"immersion_options": ["Standard", "Deep"],
+		"photosensitive": "Photosensitive mode: {state}",
+		"reduced_motion": "Reduced motion",
+		"resources_url": "https://findahelpline.com/",
+		"state_off": "Off",
+		"state_on": "On",
+		"text_speed": "Text speed",
+		"title": "Settings",
+	},
 	"new_game":
 	{
 		"btn_back": "Back",

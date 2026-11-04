@@ -272,7 +272,9 @@ func test_title_scene_navigation_and_esc() -> void:
 
 	# Keyboard focus configuration
 	assert_int(title.new_game_button.focus_mode).is_equal(Control.FOCUS_ALL)
-	# Esc raises quit_requested
+	# Esc raises quit_requested — the scene's documented fallback handler
+	# (docs/05 §0 rule 3: `PauseMenu._input` owns Esc in a shipping build, so
+	# this path is only reached by tests and by a build without the autoload).
 	var spy := {"quit": false}
 	title.quit_requested.connect(func() -> void: spy["quit"] = true)
 

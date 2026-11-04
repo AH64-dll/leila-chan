@@ -34,7 +34,9 @@ res://
 │  ├─ Safety.gd           # output filter, redaction, content settings
 │  ├─ Steering.gd         # dose schedule, vector mixing
 │  ├─ SaveSystem.gd       # saves + shadow save + letters (user:// only)
-│  └─ Settings.gd         # immersion, photosensitive, content level, volumes (player name lives in the save)
+│  ├─ Settings.gd         # immersion, photosensitive, content level, volumes (player name lives in the save)
+│  ├─ PauseMenu.gd        # docs/05 §0 rule 3 safe pause (Esc in `_input`) + the one settings screen
+│  └─ Telemetry.gd        # engine events for docs/01 §5 "E" triggers + docs/05 §1.3 input/window events
 ├─ llm/
 │  ├─ backends/LlamaServerBackend.gd   # HTTP + SSE streaming (prototype)
 │  ├─ backends/NativeBackend.gd        # GDExtension (ship)
@@ -51,7 +53,7 @@ res://
 │  └─ ProfileKeywords.gd              # docs/01 §2 keyword half of the behaviour profile (control, apathy, …)
 ├─ scenes/
 │  ├─ Boot.tscn  Title.tscn  NewGame.tscn  Date.tscn  Night.tscn  Ending.tscn  Extras.tscn
-│  ├─ ui/TextBox.tscn  ui/InputBox.tscn  ui/ChatLog.tscn  ui/NameTag.tscn  ui/Settings.tscn
+│  ├─ ui/TextBox.tscn  ui/InputBox.tscn  ui/ChatLog.tscn  ui/NameTag.tscn
 │  ├─ character/Character.tscn        # sprite stack, motion presets, shaders
 │  └─ meta/FakeCrash.tscn FakeUpdate.tscn PeekWindow.tscn FakeTerminal.tscn
 ├─ shaders/  glitch · chromatic · desaturate · vignette · text_bleed · breathe · dissolve
@@ -73,7 +75,10 @@ Everything content-related is **data**, so writers tune scenarios, gates and map
   `canvas_items` + `keep` + integer scale mode; window override `768×1376` (×2 portrait) is
   **provisional — ART confirms at P0.08/P1.16** and the default window must fit a 1080p desktop.
 - **Texture filter:** project-wide Nearest (`default_texture_filter=0`), per `art/leila/README`.
-- **Autoload order:** the 14 autoloads register in the doc order above.
+- **Autoload order:** the 16 autoloads register in the doc order above.
+- **Settings screen:** `ui/Settings.tscn` is not a scene. One surface (docs/09 M3) is the `PauseMenu`
+  overlay's settings page: the Title row and the Esc pause both open it, and it must survive
+  `get_tree().paused` — an autoload `CanvasLayer` is the only shape that can host the panic pause.
 - **Repo conventions:** `.gdkeep` placeholders keep empty layout dirs in git; `.gd.uid` sidecars are
   committed (Godot 4.4+ convention); **no first-party `.gdignore` inside `game/`** — every directory
   there is export content, and repo-root images are structurally outside `res://`. (The vendored

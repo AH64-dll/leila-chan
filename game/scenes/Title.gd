@@ -86,6 +86,10 @@ func _refresh_photosensitive_button() -> void:
 	photosensitive_button.text = label.format({"state": state_text})
 
 
+## docs/05 §0 rule 3: `PauseMenu._input` owns Esc and opens the safe pause
+## before this `_unhandled_*` handler ever runs, so a shipping build never
+## reaches this path. It stays as the documented fallback for tests and for a
+## build without the autoload — do not add a second Esc consumer in `_input`.
 func _unhandled_key_input(event: InputEvent) -> void:
 	if (
 		event.is_action_pressed("ui_cancel")
@@ -156,6 +160,11 @@ func _on_extras_pressed() -> void:
 
 func _on_settings_pressed() -> void:
 	settings_requested.emit()
+	# docs/09: one settings surface — the PauseMenu overlay's settings page.
+	# The accommodation row above stays the pre-date toggle; this opens the
+	# same flag's documented home instead of a second screen.
+	if has_node("/root/PauseMenu"):
+		get_node("/root/PauseMenu").open_settings()
 
 
 ## The accommodation must be toggleable with keyboard only (Enter on the row,

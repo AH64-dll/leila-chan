@@ -60,10 +60,25 @@ var _inner_leaked_turn := -1  # `_turn_seq` of the turn whose thought already le
 
 
 func _ready() -> void:
+	add_to_group(&"chat_ui")  # Settings pushes text_speed through this path (P3.13)
 	_config = UiConfig.load_config()
 	apply_config(_config)
+	_apply_stored_settings()
 	if text_box != null and not text_box.resized.is_connected(_on_text_box_resized):
 		text_box.resized.connect(_on_text_box_resized)
+
+
+## P3.13: the screen inherits the player's stored speed setting the moment it
+## exists — a chat opened after the choice never plays one unscaled character.
+## (Reduced motion and the content level are already read live per call by
+## is_reduced_motion()/_content_level(), so they need no one-shot apply.)
+func _apply_stored_settings() -> void:
+	var settings := get_node_or_null("/root/Settings")
+	if settings == null:
+		return
+	var scale: Variant = settings.get("text_speed")
+	if scale is float or scale is int:
+		text_box.set_speed_scale(float(scale))
 
 
 ## The leak's own timeline (a 1 s hold, or word by word then a hold) is stepped
@@ -399,6 +414,9 @@ func is_turn_open() -> bool:
 ## ── Keyboard-only play and pause ───────────────────────────────────────────
 
 
+## docs/05 §0 rule 3: `PauseMenu._input` owns Esc and pauses before this
+## handler runs, so the `ui_cancel` branch only fires in a build without the
+## autoload (the suites drive it directly). The scrolling branches are live.
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_on_pause_requested()
@@ -460,6 +478,13 @@ func is_reduced_motion() -> bool:
 	if settings == null:
 		return false
 	return bool(settings.get("reduced_motion"))
+
+
+## Settings.text_speed (P3.13): the settings screen's slider writes through
+## Settings, which pushes the scale here so a running reveal changes pace
+## mid-line rather than at the next scene.
+func set_text_speed_scale(scale: float) -> void:
+	text_box.set_speed_scale(scale)
 
 
 ## docs/02 §8 content level for the corruption plan (`calmer` caps the stage).

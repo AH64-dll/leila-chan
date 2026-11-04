@@ -48,6 +48,9 @@ func apply_config(cfg: Dictionary) -> void:
 		back_button.text = str(cfg["btn_back"])
 
 
+## docs/05 §0 rule 3: `PauseMenu._input` owns Esc (safe pause) and runs first,
+## so a shipping build never reaches this path; it stays as the documented
+## fallback for tests and for a build without the autoload.
 func _unhandled_key_input(event: InputEvent) -> void:
 	if (
 		event.is_action_pressed("ui_cancel")
