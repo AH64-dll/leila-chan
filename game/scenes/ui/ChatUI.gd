@@ -414,6 +414,9 @@ func is_turn_open() -> bool:
 ## ── Keyboard-only play and pause ───────────────────────────────────────────
 
 
+## docs/05 §0 rule 3: `PauseMenu._input` owns Esc and pauses before this
+## handler runs, so the `ui_cancel` branch only fires in a build without the
+## autoload (the suites drive it directly). The scrolling branches are live.
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_on_pause_requested()

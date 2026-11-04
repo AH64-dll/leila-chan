@@ -298,6 +298,9 @@ func _on_turn_completed(_idx: int, data: Dictionary) -> void:
 	refresh()
 
 
+## docs/05 §0 rule 3: `PauseMenu._input` owns Esc and pauses before this
+## handler runs, so the Esc-to-close branch below is unreachable in a shipping
+## build (F3 still closes the overlay). Dev-only; never read Esc in `_input`.
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_dev_build():
 		return

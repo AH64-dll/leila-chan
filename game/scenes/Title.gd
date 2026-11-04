@@ -75,6 +75,10 @@ func _refresh_photosensitive_button() -> void:
 	photosensitive_button.text = label.format({"state": state_text})
 
 
+## docs/05 §0 rule 3: `PauseMenu._input` owns Esc and opens the safe pause
+## before this `_unhandled_*` handler ever runs, so a shipping build never
+## reaches this path. It stays as the documented fallback for tests and for a
+## build without the autoload — do not add a second Esc consumer in `_input`.
 func _unhandled_key_input(event: InputEvent) -> void:
 	if (
 		event.is_action_pressed("ui_cancel")

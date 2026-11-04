@@ -144,6 +144,51 @@ func test_settings_from_the_pause_page_returns_to_pause() -> void:
 	assert_bool(get_tree().paused).is_true()
 
 
+## CODE-2: closing the overlay hands the keyboard back to the control the
+## player was using. A pause during the player's typing window (the date
+## scene's InputBox grabs focus once per turn) must not eat their next
+## keystrokes — the probe found a null focus owner after pause → resume.
+func test_closing_restores_the_focused_control() -> void:
+	var field := LineEdit.new()
+	add_child(auto_free(field))
+	await get_tree().process_frame
+	field.grab_focus()
+	var viewport := field.get_viewport()
+	assert_object(viewport.gui_get_focus_owner()).is_same(field)
+
+	PauseMenu._input(_esc())
+	assert_bool(PauseMenu.is_open()).is_true()
+	assert_object(viewport.gui_get_focus_owner()).is_not_same(field)  # the menu took it
+
+	PauseMenu._input(_esc())
+	assert_bool(PauseMenu.is_open()).is_false()
+	assert_object(viewport.gui_get_focus_owner()).is_same(field)
+
+
+## A target that disappeared while the menu was up is skipped, not crashed on.
+func test_closing_skips_a_focus_target_that_was_freed() -> void:
+	var field := LineEdit.new()
+	add_child(field)
+	await get_tree().process_frame
+	field.grab_focus()
+
+	PauseMenu.open_pause()
+	field.free()
+
+	PauseMenu.close()
+	assert_bool(PauseMenu.is_open()).is_false()
+	assert_bool(get_tree().paused).is_false()
+
+
+## The settings page opens from the Title with nothing focused: closing must
+## not invent a focus owner either.
+func test_closing_without_a_prior_focus_owner_is_safe() -> void:
+	PauseMenu.open_settings()
+	PauseMenu.close()
+	assert_bool(PauseMenu.is_open()).is_false()
+	assert_object(PauseMenu._focus_before_open).is_null()
+
+
 ## The Quit row of the pause page, found by its label rather than a magic
 ## index — the page's rows may grow.
 func _quit_button() -> Button:

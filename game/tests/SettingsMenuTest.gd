@@ -20,6 +20,7 @@ func before_test() -> void:
 	Settings.reduced_motion = false
 	Settings.text_speed = 1.0
 	Settings.content_level = ""
+	Settings._pre_calmer_level = ""
 	Settings.immersion = "standard"
 	Settings.bus_volumes.clear()
 	FX.photosensitive = false
@@ -33,6 +34,7 @@ func after_test() -> void:
 	Settings.reduced_motion = false
 	Settings.text_speed = 1.0
 	Settings.content_level = ""
+	Settings._pre_calmer_level = ""
 	Settings.immersion = "standard"
 	Settings.bus_volumes.clear()
 	FX.photosensitive = false
@@ -136,8 +138,53 @@ func test_calmer_mode_caps_the_dose_schedule() -> void:
 		float(Steering.FALLBACK_TABLE[3]["malice"])
 	)
 	Settings.set_calmer(false)
-	assert_str(Settings.content_level).is_equal("full")
+	# SAF-1: off restores the level the cap was covering. This profile never
+	# chose one, so it lands on the fail-closed "" — never on "full".
+	assert_str(Settings.content_level).is_equal("")
 	assert_bool(Steering.is_calmer_mode()).is_false()
+
+
+## SAF-1 / DES-1 (docs/02 §8 D11): `full` is only ever an explicit selection.
+## Two clicks on the calmer checkbox from a fresh profile must leave the stage
+## ≥ 4 gated categories closed, not grant them.
+func test_two_clicks_on_calmer_never_grant_full() -> void:
+	assert_str(Settings.content_level).is_equal("")
+	assert_bool(Safety._gate_open("threat_to_player", {"stage": 5, "content_level": ""})).is_false()
+
+	Settings.set_calmer(true)
+	Settings.set_calmer(false)
+
+	assert_str(Settings.content_level).is_equal("")
+	var gate := {"stage": 5, "content_level": Settings.content_level}
+	assert_bool(Safety._gate_open("threat_to_player", gate)).is_false()
+	assert_bool(Settings.is_calmer()).is_false()
+
+
+## The off path restores a level the player had explicitly chosen earlier, and
+## the memory is persisted — a relaunch in calmer mode still un-caps correctly.
+func test_calmer_off_restores_an_explicit_choice() -> void:
+	assert_bool(Settings.set_content_level("full")).is_true()
+	Settings.set_calmer(true)
+	assert_str(Settings.content_level).is_equal("calmer")
+	assert_str(String(_config_value("game", "content_level_before_calmer"))).is_equal("full")
+
+	# relaunch: a fresh in-memory state reading the same file
+	Settings.content_level = ""
+	Settings._pre_calmer_level = ""
+	Settings.load_settings()
+	assert_str(Settings.content_level).is_equal("calmer")
+
+	Settings.set_calmer(false)
+	assert_str(Settings.content_level).is_equal("full")
+
+
+## The dropdown route remembers the capped level too, so both entry points to
+## the same field behave identically (CODE-1's single source of truth).
+func test_the_dropdown_route_also_remembers_the_capped_level() -> void:
+	Settings.set_content_level("full")
+	Settings.set_content_level("calmer")
+	Settings.set_calmer(false)
+	assert_str(Settings.content_level).is_equal("full")
 
 
 ## Corruption reads the same level: calmer caps the plan at stage 3.
@@ -232,6 +279,49 @@ func test_the_widgets_write_through_settings() -> void:
 	assert_str(Settings.content_level).is_equal("calmer")
 	PauseMenu._text_speed_slider.value_changed.emit(1.75)
 	assert_float(Settings.text_speed).is_equal(1.75)
+
+
+## CODE-1: calmer mode and the content dropdown are two views of one stored
+## field, so every write re-renders both — the screen can never claim a level
+## the store does not have (safety-significant: the checkbox is the cap).
+func test_the_calmer_toggle_and_content_dropdown_stay_in_sync() -> void:
+	var calmer_idx := PauseMenu.CONTENT_VALUES.find("calmer")
+	var unset_idx := PauseMenu.CONTENT_VALUES.find("")
+	PauseMenu.open_settings()
+
+	# dropdown → calmer: the checkbox follows
+	PauseMenu._content_option.item_selected.emit(calmer_idx)
+	assert_str(Settings.content_level).is_equal("calmer")
+	assert_bool(PauseMenu._calmer_button.button_pressed).is_true()
+
+	# checkbox off → the dropdown follows to the level it landed on (SAF-1: "")
+	PauseMenu._calmer_button.toggled.emit(false)
+	assert_str(Settings.content_level).is_equal("")
+	assert_bool(PauseMenu._calmer_button.button_pressed).is_false()
+	assert_int(PauseMenu._content_option.selected).is_equal(unset_idx)
+
+	# and back on → both agree again
+	PauseMenu._calmer_button.toggled.emit(true)
+	assert_bool(PauseMenu._calmer_button.button_pressed).is_true()
+	assert_int(PauseMenu._content_option.selected).is_equal(calmer_idx)
+
+
+## CODE-6: the option labels are data (ui.json `settings.content_options` /
+## `immersion_options`), so a writer tunes the safety copy without a code
+## change. A table whose array length no longer matches the value list falls
+## back to the canonical labels — a shifted list would write the wrong level.
+func test_option_labels_come_from_the_string_table() -> void:
+	var original: Dictionary = PauseMenu._config
+	var patched: Dictionary = original.duplicate(true)
+	(patched["settings"] as Dictionary)["content_options"] = ["A", "B", "C"]
+	PauseMenu._config = patched
+	var labels := PauseMenu._cfg_labels("content_options", PauseMenu.CONTENT_LABELS)
+	var shifted := PauseMenu._cfg_labels("content_options", ["x", "y"])
+	PauseMenu._config = original
+	assert_array(labels).is_equal(["A", "B", "C"])
+	assert_array(shifted).is_equal(["x", "y"])
+	assert_int(PauseMenu.CONTENT_LABELS.size()).is_equal(PauseMenu.CONTENT_VALUES.size())
+	assert_int(PauseMenu.IMMERSION_LABELS.size()).is_equal(PauseMenu.IMMERSION_VALUES.size())
 
 
 ## docs/01 §4: the content warning and the resources link live on the screen.

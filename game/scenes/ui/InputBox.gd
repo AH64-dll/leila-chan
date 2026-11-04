@@ -87,8 +87,9 @@ func _on_text_submitted(raw: String) -> void:
 
 
 func _gui_input(event: InputEvent) -> void:
-	# Esc reaches the box when it has focus; forward it so pause works at any
-	# moment, including mid-draft (docs/05 §0).
+	# Esc reaches the box when it has focus; forwarding it keeps pause working
+	# mid-draft (docs/05 §0). `PauseMenu._input` consumes the key before this
+	# point in a shipping build, so this is the documented fallback path.
 	if event.is_action_pressed("ui_cancel"):
 		pause_requested.emit()
 		accept_event()

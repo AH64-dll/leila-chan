@@ -4,6 +4,13 @@ extends Node
 ## `_input` (it runs before every scene's `_unhandled_*`) and pauses the
 ## whole tree while its overlay stays alive on `PROCESS_MODE_ALWAYS`.
 ##
+## Esc ownership (docs/05 §0 rule 3): this node owns the key. No scene, meta
+## event or overlay may consume Esc in `_input` — a node that reads it there
+## can beat the autoload (Godot dispatches `_input` in reverse tree order) and
+## trap the player. Meta-event screen code reads Esc only through this node or
+## leaves it alone; `_unhandled_*` handlers may keep their own path as a
+## documented fallback for a build without the autoload.
+##
 ## It is also the settings screen of P3.13 — docs/09's one settings surface.
 ## There is exactly one entry point: the Title row calls `open_settings()`,
 ## and every Esc opens the pause page whose Settings row leads to the same
@@ -27,6 +34,11 @@ signal opened  ## The overlay became visible (either page).
 signal closed  ## The overlay was dismissed and the tree unpaused.
 signal settings_opened  ## The settings page is on screen.
 
+## Player-facing option labels: `ui.json` `settings.immersion_options` /
+## `settings.content_options` win, these are the built-in fallbacks (docs/07
+## §2: content lives in data, so a writer tunes the safety copy without code).
+## The value arrays stay here — they mirror the Settings constants the gates
+## read, so a typo in the string table can never invent a level.
 const IMMERSION_LABELS: Array[String] = ["Standard", "Deep"]
 const IMMERSION_VALUES: Array[String] = ["standard", "deep"]
 const CONTENT_LABELS: Array[String] = ["Not set (safest)", "Calmer mode", "Full"]
@@ -51,6 +63,10 @@ var _bus_sliders: Dictionary = {}  # bus name -> HSlider
 var _dose_row: HBoxContainer
 var _open := false
 var _was_paused := false
+## CODE-2: the control that had keyboard focus when the overlay opened. The
+## overlay steals focus for its own buttons; closing hands it back so a pause
+## mid-draft does not swallow the player's next keystrokes.
+var _focus_before_open: Control = null
 ## Where Back on the settings page lands: "pause" re-shows the pause page,
 ## anything else closes the overlay (the Title entry point).
 var _settings_return := ""
@@ -60,6 +76,9 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_config = UiConfig.load_config()
 	_build_overlay()
+	# One store, many views: whichever row wrote — this page, the Title's
+	# accessibility row, a later meta event — every widget re-reads the store.
+	Settings.changed.connect(_on_settings_changed)
 
 
 ## Esc is read in `_input`, not `_unhandled_input`: a meta event that grabs or
@@ -119,6 +138,7 @@ func close() -> void:
 	# Restore the pause state the game was in before Esc — an already-paused
 	# screen (a scripted scene, a test) must not be un-paused by the menu.
 	get_tree().paused = _was_paused
+	_restore_focus()
 	closed.emit()
 
 
@@ -135,9 +155,43 @@ func _open_if_needed() -> void:
 		return
 	_open = true
 	_was_paused = get_tree().paused
+	_focus_before_open = _current_focus()
 	get_tree().paused = true
 	_overlay.visible = true
 	opened.emit()
+
+
+## The control the player last had the keyboard on (the date scene's InputBox,
+## a Title button, …), or null when nothing was focused.
+func _current_focus() -> Control:
+	var vp := get_viewport()
+	if vp == null:
+		return null
+	return vp.gui_get_focus_owner()
+
+
+## CODE-2: hand the keyboard back after the overlay closes. A target that was
+## freed, hidden or made unfocusable while the menu was up is skipped — never
+## crash, never focus something the player cannot see.
+func _restore_focus() -> void:
+	var target: Control = _focus_before_open
+	_focus_before_open = null
+	if target == null or not is_instance_valid(target):
+		return
+	if not target.is_inside_tree() or not target.is_visible_in_tree():
+		return
+	if target.focus_mode == Control.FOCUS_NONE:
+		return
+	target.grab_focus()
+
+
+## CODE-1: calmer mode and the content dropdown are two views of one stored
+## field, so every write (from either widget, the Title row or a later meta
+## event) re-renders both. The refresh uses `*_no_signal` setters, so it can
+## never bounce back into Settings.
+func _on_settings_changed(_key: StringName) -> void:
+	if _open:
+		_refresh_settings_rows()
 
 
 func _show_page(page: String) -> void:
@@ -198,6 +252,23 @@ func _cfg(section: String, key: String, fallback: String) -> String:
 	return fallback
 
 
+## An option-label array from the same table. The table's array is used only
+## when it has one label per stored value — a half-edited string table must
+## not shift every label one slot, which would make the last row write the
+## wrong content level.
+func _cfg_labels(key: String, fallback: Array[String]) -> Array[String]:
+	var table: Variant = _config.get("settings", {})
+	if not table is Dictionary:
+		return fallback
+	var raw: Variant = (table as Dictionary).get(key)
+	if not raw is Array or (raw as Array).size() != fallback.size():
+		return fallback
+	var labels: Array[String] = []
+	for item: Variant in raw:
+		labels.append(str(item))
+	return labels
+
+
 func _build_pause_page() -> VBoxContainer:
 	var page := VBoxContainer.new()
 	page.add_theme_constant_override("separation", 12)
@@ -254,13 +325,13 @@ func _build_settings_page() -> VBoxContainer:
 	page.add_child(HSeparator.new())
 
 	# Accessibility first (docs/05 §0 rule 5): the accommodation that protects
-	# the player is the first interactive row.
-	_photosensitive_button = _menu_button("Photosensitive mode: Off")
-	_photosensitive_button.pressed.connect(
-		func() -> void:
-			Settings.toggle_photosensitive()
-			_refresh_settings_rows()
+	# the player is the first interactive row. Its label is rendered from the
+	# store at the end of this function, never a hard-coded state.
+	var photosensitive_label := _cfg("settings", "photosensitive", "Photosensitive mode: {state}")
+	_photosensitive_button = _menu_button(
+		photosensitive_label.format({"state": _cfg("settings", "state_off", "Off")})
 	)
+	_photosensitive_button.pressed.connect(func() -> void: Settings.toggle_photosensitive())
 	page.add_child(_photosensitive_button)
 
 	_reduced_motion_button = CheckButton.new()
@@ -276,14 +347,14 @@ func _build_settings_page() -> VBoxContainer:
 	_content_option = _option_row(
 		page,
 		_cfg("settings", "content_level", "Content level"),
-		CONTENT_LABELS,
+		_cfg_labels("content_options", CONTENT_LABELS),
 		func(idx: int) -> void: Settings.set_content_level(CONTENT_VALUES[idx])
 	)
 
 	_immersion_option = _option_row(
 		page,
 		_cfg("settings", "immersion", "Immersion"),
-		IMMERSION_LABELS,
+		_cfg_labels("immersion_options", IMMERSION_LABELS),
 		func(idx: int) -> void: Settings.set_immersion(IMMERSION_VALUES[idx])
 	)
 	var immersion_hint := Label.new()
@@ -348,6 +419,9 @@ func _build_settings_page() -> VBoxContainer:
 	_back_button = _menu_button(_cfg("settings", "btn_back", "Back"))
 	_back_button.pressed.connect(_on_settings_back)
 	page.add_child(_back_button)
+	# Every widget starts from the store, not from the literal it was built
+	# with — a first launch and a returning player see the same truth.
+	_refresh_settings_rows()
 	return page
 
 
@@ -431,9 +505,12 @@ func _on_quit_pressed() -> void:
 		get_tree().quit()
 
 
-## docs/01 §4: the resources link opens the player's browser. The URL lives in
-## data (ui.json), so a bogus table cannot send the player anywhere the
-## content did not name.
+## docs/01 §4: the resources link opens the player's browser — docs/05 §0
+## rule 2 bans network calls by the *game*, and this is the player's own
+## browser on an explicit press: no socket, no HTTP client, no request from
+## `game/` (the rule-2 exception is filed as a DCR in the P3.13 handoff). The
+## URL lives in data (ui.json), so a bogus table cannot send the player
+## anywhere the content did not name.
 func _on_resources_pressed() -> void:
 	var url := _cfg("settings", "resources_url", "")
 	if url.is_empty():

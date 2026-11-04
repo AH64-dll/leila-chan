@@ -9,6 +9,9 @@ The fourth wall is a **scalpel**. These events are rare, earned and gated. Each 
 1. Never touch files outside the game's own data folder (`user://`). Never delete, move or read personal files.
 2. No network calls, ever. No real crashes; every "crash" is an in-game scene.
 3. Closing the game must always work within **one** extra click/keypress. `Esc` always opens a safe pause.
+   The pause handler owns `Esc` from `_input`, ahead of every scene and meta-event handler: a meta event
+   must never consume `Esc` in `_input` (or grab keyboard focus ahead of it), so the panic key cannot be
+   trapped by the very screen it exists to escape.
 4. OS-level tricks (window moving, transparency, cursor, extra windows, taskbar flash) require
    **Immersion: Deep** in Settings (default: Standard). Photosensitive mode disables flicker/invert.
 5. Every effect has an accessibility fallback and is logged so a player can review "what happened" in the
