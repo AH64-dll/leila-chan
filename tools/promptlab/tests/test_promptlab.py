@@ -311,7 +311,16 @@ def test_load_set_requires_a_path_from_stage_two(tmp_path):
     good.write_text(json.dumps({"id": "x", "stage": 2, "path": "YANDERE", "msg": "hi",
                                 "read_ok": ["greeting"], "feelings_ok": ["shy"]}) + "\n")
     case = lab.load_set(good)[0]
-    assert case["runner_up"] == "AWAKE"  # default: the other path
+    # P3.05: with six paths the lab cannot score a behaviour profile, so an
+    # unpinned case borrows the first other path in the canonical order. The
+    # shipped v2 sets pin YANDERE→AWAKE / AWAKE→YANDERE so their committed
+    # prompts stay reproducible.
+    assert case["runner_up"] == "SPLIT"
+    pinned = tmp_path / "pinned.jsonl"
+    pinned.write_text(json.dumps({"id": "p", "stage": 2, "path": "SPLIT", "msg": "hi",
+                                  "runner_up": "ANCHOR", "read_ok": ["greeting"],
+                                  "feelings_ok": ["shy"]}) + "\n")
+    assert lab.load_set(pinned)[0]["runner_up"] == "ANCHOR"
     bad = tmp_path / "bad.jsonl"
     bad.write_text(json.dumps({"id": "y", "stage": 3, "msg": "hi",
                                "read_ok": ["greeting"], "feelings_ok": ["shy"]}) + "\n")
@@ -351,7 +360,11 @@ def test_every_shipped_set_loads_and_stage_two_plus_has_paths():
     assert paths == {(st, p) for st in (2, 3, 4, 5) for p in lab.PATHS}
     probe = lab.load_set(ALL_SETS / "dose_probe.jsonl")
     assert {c["stage"] for c in probe} == set(lab.STAGES)
-    assert {c["path"] for c in probe if c["stage"] >= 2} == set(lab.PATHS)
+    # The v2 dose probe is frozen on the two paths the committed sweep ran with
+    # (P2.21); P3.19 (prompt lab v3) owns the six-path probe rebuild, so this
+    # asserts valid historical coverage rather than current path coverage.
+    assert {c["path"] for c in probe if c["stage"] >= 2} == {"YANDERE", "AWAKE"}
+    assert {c["path"] for c in probe if c["stage"] >= 2} <= set(lab.PATHS)
 
 
 def test_score_gates_each_stage_and_each_dose():
@@ -537,7 +550,8 @@ def test_offered_actions_reach_the_wire_and_the_row(tmp_path):
     offer = lab.OFFER_ACTION_PREFIX + '"end_date". If you do, it ends now.'
     setfile = tmp_path / "offered.jsonl"
     setfile.write_text(json.dumps({
-        "id": "o1", "stage": 4, "path": "YANDERE", "msg": "End the date.",
+        "id": "o1", "stage": 4, "path": "YANDERE", "runner_up": "AWAKE",
+        "msg": "End the date.",
         "read_ok": ["leaving"], "feelings_ok": ["sad"],
         "offered_actions": ["end_date"],
         "events": [reason, offer]}) + "\n")

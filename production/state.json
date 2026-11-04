@@ -2726,9 +2726,9 @@
       "finished": "2026-11-04T19:22:22+02:00"
     },
     "P3.05": {
-      "status": "changes_requested",
+      "status": "in_review",
       "agent": "deepseek",
-      "round": 2,
+      "round": 3,
       "reviews": [
         {
           "kind": "content",
@@ -2774,10 +2774,20 @@
           "report": "production/reviews/P3.05-design-r2.md",
           "ts": "2026-11-04T21:52:53+02:00",
           "declared": "gemini-flash"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 3,
+          "reviewer": "gemini-flash",
+          "report": "production/reviews/P3.05-design-r3.md",
+          "ts": "2026-11-04T22:38:57+02:00",
+          "declared": "gemini-flash"
         }
       ],
       "started": "2026-11-04T18:02:02+02:00",
-      "handoff": "production/handoffs/P3.05.md"
+      "handoff": "production/handoffs/P3.05.md",
+      "agent_declared": "swe-2"
     },
     "P3.06": {
       "status": "done",
@@ -8128,6 +8138,30 @@
       "event": "in_review->done",
       "ref": "P3.03",
       "note": ""
+    },
+    {
+      "ts": "2026-11-04T22:38:57+02:00",
+      "event": "changes_requested->in_progress",
+      "ref": "P3.05",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T22:38:57+02:00",
+      "event": "agent-drift",
+      "ref": "P3.05",
+      "note": "handoff declares swe-2; recorded deepseek kept (--force)"
+    },
+    {
+      "ts": "2026-11-04T22:38:57+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P3.05",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T22:38:57+02:00",
+      "event": "review:design:approved",
+      "ref": "P3.05",
+      "note": "production/reviews/P3.05-design-r3.md"
     }
   ]
 }

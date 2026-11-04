@@ -15,9 +15,10 @@ const Cases := preload("res://tests/helpers/PromptGoldenCases.gd")
 const PROMPTS := "res://data/prompts/"
 const GOLDENS := "res://tests/fixtures/prompts/"
 const SCRATCH := "user://prompt_builder_test"
-## The real llama-tokenize numbers P1.05 measured for the fixed stage blocks.
-const REAL_STAGE0_TOKENS := 857
-const REAL_STAGE1_TOKENS := 873
+## The real llama-tokenize numbers for the authored stage blocks, re-measured
+## with P3.05's tightened rules (P1.05's pre-P3.05 text measured 857 / 873).
+const REAL_STAGE0_TOKENS := 833
+const REAL_STAGE1_TOKENS := 851
 const ESTIMATE_TOLERANCE := 0.05
 
 
@@ -172,12 +173,16 @@ func test_debug_reports_tokens_for_every_layer() -> void:
 		if bool(layer["present"]):
 			assert_int(int(layer["tokens"])).is_greater(0)
 		sum += int(layer["tokens"])
-	assert_int(int(debug["tokens"]["system_message"])).is_equal(sum)
-	assert_int(int(debug["tokens"]["fixed"]) + int(debug["tokens"]["dynamic"])).is_equal(sum)
-	var total := sum + int(debug["tokens"]["history"])
-	assert_int(int(debug["tokens"]["total"])).is_equal(total)
+	(
+		assert_int(int(debug["tokens"]["authored_tokens"]) + int(debug["tokens"]["dynamic_tokens"]))
+		. is_equal(sum)
+	)
+	assert_int(int(debug["tokens"]["total_tokens"])).is_equal(
+		sum + int(debug["tokens"]["offered_tokens"])
+	)
+	assert_int(int(debug["tokens"]["history"])).is_greater_equal(0)
 	assert_dict(debug["budgets"]).contains_keys(
-		["system", "memories", "scene", "history", "output"]
+		["authored", "offered", "total", "memories", "scene", "history", "output"]
 	)
 	assert_str(String(debug["token_counter"])).is_equal("estimate")
 	assert_str(String(debug["layers"]["persona"]["files"][0])).is_equal("persona.md")
@@ -191,22 +196,20 @@ func test_fixed_and_dynamic_totals_answer_the_p1_05_carry_over() -> void:
 	var builder := _builder()
 	var result := builder.build(_full_ctx())
 	var debug: Dictionary = result["debug"]
-	var fixed := 0
+	var authored := 0
 	var dynamic := 0
 	for name: String in debug["layer_order"]:
 		var layer: Dictionary = debug["layers"][name]
-		if String(layer["group"]) == "fixed":
-			fixed += int(layer["tokens"])
+		if String(layer["group"]) == "authored":
+			authored += int(layer["tokens"])
 		else:
 			dynamic += int(layer["tokens"])
-	assert_int(int(debug["tokens"]["fixed"])).is_equal(fixed)
-	assert_int(int(debug["tokens"]["dynamic"])).is_equal(dynamic)
-	var fixed_total := int(debug["tokens"]["fixed"])
-	var dynamic_total := int(debug["tokens"]["dynamic"])
-	assert_int(fixed_total).is_greater(dynamic_total)
-	# The fixed block is the one P1.05 measured at 857/873 real tokens.
+	assert_int(int(debug["tokens"]["authored_tokens"])).is_equal(authored)
+	assert_int(int(debug["tokens"]["dynamic_tokens"])).is_equal(dynamic)
+	assert_int(authored).is_greater(dynamic)
+	# The authored block is the one P1.05 measured at 857/873 real tokens.
 	var stage1_real := float(REAL_STAGE1_TOKENS)
-	assert_float(float(fixed_total)).is_equal_approx(stage1_real, stage1_real * ESTIMATE_TOLERANCE)
+	assert_float(float(authored)).is_equal_approx(stage1_real, stage1_real * ESTIMATE_TOLERANCE)
 	# A clean assembly stays inside every doc line; a fat one names the lines.
 	assert_array(debug["over_budget"]).is_empty()
 	var fat_ctx := _full_ctx()
@@ -214,6 +217,42 @@ func test_fixed_and_dynamic_totals_answer_the_p1_05_carry_over() -> void:
 	fat_ctx["memories"] = ["a very long memory ".repeat(40)]
 	var fat := _builder().build(fat_ctx)
 	assert_array(fat["debug"]["over_budget"]).contains(["memories", "scene"])
+
+
+func test_authored_and_total_are_measured_against_their_own_caps() -> void:
+	# D18: the per-turn offered tail is not authored content. A real turn with
+	# the enum line must not warn against the 900-token authored cap; a tail
+	# past its own 200-token ceiling names `offered` (and `total`).
+	var builder := _builder()
+	var ctx := _full_ctx()
+	ctx["offered"] = {
+		"music": ["keep", "calm"],
+		"fx": ["none", "rain"],
+		"cue": ["none", "sob"],
+		"action": ["none"],
+	}
+	var debug: Dictionary = builder.build(ctx)["debug"]
+	var tokens: Dictionary = debug["tokens"]
+	assert_int(int(tokens["offered_tokens"])).is_greater(0)
+	assert_int(int(tokens["total_tokens"])).is_equal(
+		(
+			int(tokens["authored_tokens"])
+			+ int(tokens["offered_tokens"])
+			+ int(tokens["dynamic_tokens"])
+		)
+	)
+	assert_int(int(tokens["authored_tokens"])).is_less_equal(900)
+	assert_bool(Array(debug["over_budget"]).has("authored")).is_false()
+	assert_bool(Array(debug["over_budget"]).has("total")).is_false()
+
+	var cues: Array[String] = ["none"]
+	for i: int in 120:
+		cues.append("cue_%03d" % i)
+	ctx["offered"]["cue"] = cues
+	var fat: Dictionary = builder.build(ctx)["debug"]
+	assert_int(int(fat["tokens"]["offered_tokens"])).is_greater(200)
+	assert_bool(Array(fat["over_budget"]).has("offered")).is_true()
+	assert_bool(Array(fat["over_budget"]).has("total")).is_true()
 
 
 func test_injected_token_counter_replaces_the_estimate() -> void:
@@ -229,18 +268,19 @@ func test_injected_token_counter_replaces_the_estimate() -> void:
 	assert_int(calls[0]).is_greater(0)
 	# "The player is a boy called Ren." is seven space-separated words.
 	assert_int(int(result["debug"]["layers"]["player"]["tokens"])).is_equal(7)
-	var system_tokens := int(result["debug"]["tokens"]["system_message"])
-	var parts := int(result["debug"]["tokens"]["fixed"]) + int(result["debug"]["tokens"]["dynamic"])
-	assert_int(system_tokens).is_equal(parts)
+	var parts := int(result["debug"]["tokens"]["authored_tokens"])
+	parts += int(result["debug"]["tokens"]["dynamic_tokens"])
+	parts += int(result["debug"]["tokens"]["offered_tokens"])
+	assert_int(int(result["debug"]["tokens"]["total_tokens"])).is_equal(parts)
 
 
 func test_token_estimate_is_calibrated_against_the_real_tokenizer() -> void:
-	# P1.05 measured 857 (stage 0) and 873 (stage 1) tokens with llama-tokenize
-	# for the same fixed assembly; the estimate must stay within 5%.
+	# The pinned llama-tokenize numbers for the authored block; the estimate
+	# must stay within 5% of them.
 	var builder := _builder()
 	for stage: int in [0, 1]:
 		var result := builder.build({"stage": stage, "player_name": "Ren"})
-		var estimated := float(result["debug"]["tokens"]["fixed"])
+		var estimated := float(result["debug"]["tokens"]["authored_tokens"])
 		var real := float(REAL_STAGE0_TOKENS if stage == 0 else REAL_STAGE1_TOKENS)
 		var drift := "stage %d estimate %.0f vs real %.0f" % [stage, estimated, real]
 		assert_float(estimated).override_failure_message(drift).is_equal_approx(
@@ -383,30 +423,48 @@ func test_build_is_pure_and_repeatable() -> void:
 	assert_str(JSON.stringify(builder.build(ctx), "  ")).is_equal(JSON.stringify(first, "  "))
 
 
-# --- P2.13: the shipped stage_2..5 and path_YANDERE/AWAKE modules -----------
+# --- P2.13/P3.05: the shipped stage_2..5 and six path modules --------------
 
 
 func test_shipped_stage_and_path_modules_fill_the_budget() -> void:
 	# Every stage 2-5 × shipped path builds without a missing module, carries the
 	# two few-shots a stage × path assembly must show, and stays inside docs/07
-	# §3.1's 900-token fixed budget even with the runner-up line docs/08 §1 adds.
+	# §3.1's 900-token fixed budget. P3.05: all six paths (docs/01 §4) and every
+	# ordered runner-up pair, because any of the five other paths can take the
+	# hybrid's 25% share (docs/08 §1).
 	var builder := _builder()
+	var paths: Array[String] = ["YANDERE", "SPLIT", "TSUN", "HOLLOW", "AWAKE", "ANCHOR"]
 	for stage: int in [2, 3, 4, 5]:
-		for path: String in ["YANDERE", "AWAKE"]:
-			var runner_up := "AWAKE" if path == "YANDERE" else "YANDERE"
-			var ctx := {
-				"stage": stage,
-				"path": path,
-				"player_name": "Ren",
-				"path_runner_up": runner_up,
-			}
-			var result := builder.build(ctx)
-			var label := "stage %d %s" % [stage, path]
-			assert_array(result["debug"]["missing"]).override_failure_message(label).is_empty()
-			var system := _system(result)
-			assert_bool(system.contains("STAGE %d" % stage)).is_true()
-			assert_bool(system.contains(path)).override_failure_message(label).is_true()
-			assert_int(system.count("Player: ")).override_failure_message(label).is_equal(2)
-			var tokens := int(result["debug"]["tokens"]["system"])
-			var message := "%s system layer = %d tokens (budget 900)" % [label, tokens]
-			assert_int(tokens).override_failure_message(message).is_less_equal(900)
+		for path: String in paths:
+			for runner_up: String in paths:
+				if runner_up == path:
+					continue
+				var ctx := {
+					"stage": stage,
+					"path": path,
+					"player_name": "Ren",
+					"path_runner_up": runner_up,
+				}
+				var result := builder.build(ctx)
+				var label := "stage %d %s + %s" % [stage, path, runner_up]
+				assert_array(result["debug"]["missing"]).override_failure_message(label).is_empty()
+				var system := _system(result)
+				assert_bool(system.contains("STAGE %d" % stage)).is_true()
+				assert_bool(system.contains(path)).override_failure_message(label).is_true()
+				assert_int(system.count("Player: ")).override_failure_message(label).is_equal(2)
+				# docs/01 §4 hybrid: exactly the runner-up's first line, no second line.
+				var runner_line := _first_line("path_%s.md" % runner_up)
+				assert_int(system.count(runner_line)).override_failure_message(label).is_equal(1)
+				var tokens := int(result["debug"]["tokens"]["authored_tokens"])
+				var message := "%s authored block = %d tokens (budget 900)" % [label, tokens]
+				assert_int(tokens).override_failure_message(message).is_less_equal(900)
+
+
+func _first_line(filename: String) -> String:
+	# PromptBuilder._first_content_line: the runner-up's one-line 25% share.
+	var text := FileAccess.get_file_as_string(PROMPTS + filename)
+	for line: String in text.split("\n"):
+		var trimmed := line.strip_edges()
+		if not trimmed.is_empty() and not trimmed.begins_with("#"):
+			return trimmed
+	return ""
