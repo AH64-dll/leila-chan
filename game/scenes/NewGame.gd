@@ -11,6 +11,9 @@ const DATE_SCENE_PATH := "res://scenes/Date.tscn"
 const TITLE_SCENE_PATH := "res://scenes/Title.tscn"
 ## Optional injected safety checker for tests or custom moderation.
 var safety_checker: Callable = Callable()
+## Test seam for the docs/09 opt-in OS username: set directly, "" = resolve
+## from Settings (the only reader of `Settings.os_username()` in the game).
+var os_username_override: String = ""
 var scene_change_enabled := true
 var _config := {}
 @onready var prompt_label: Label = $Margin/VBox/PromptLabel
@@ -68,7 +71,10 @@ func _on_text_submitted(_text: String) -> void:
 
 func confirm_name() -> void:
 	var raw := name_input.text if name_input != null else ""
-	var result := PlayerNameRules.validate(raw, safety_checker)
+	# docs/09 privacy: the OS username reaches the rules ONLY through the
+	# opt-in flag — Settings.os_username() itself returns "" when off.
+	var opts := {"os_username": _resolved_os_username()}
+	var result := PlayerNameRules.validate(raw, safety_checker, opts)
 
 	if not bool(result.get("valid", false)):
 		var error_msg := str(result.get("message", ""))
@@ -84,7 +90,30 @@ func confirm_name() -> void:
 
 	# Apply game state updates (docs/08 §1.5)
 	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	var prev_stage := 0
+	var shadow_first := ""
+	var shadow_names: Array = []
 	if tree != null and tree.root != null:
+		# docs/08 §1.5 shadow name memory (P3.14): capture the ended run's
+		# stage and the first name she ever knew BEFORE begin_new_game seals
+		# the run — that call records the name being confirmed right now, so
+		# reading the shadow first would make the comparison always match.
+		if tree.root.has_node("GameState"):
+			var gs_node: Node = tree.root.get_node("GameState")
+			prev_stage = int(gs_node.get("stage"))
+		if tree.root.has_node("SaveSystem"):
+			var saves_node: Node = tree.root.get_node("SaveSystem")
+			# One shadow read serves both values: the first name ever typed
+			# and every name she has known.
+			if saves_node.has_method("shadow_data"):
+				var record: Variant = saves_node.call("shadow_data")
+				if record is Dictionary:
+					shadow_first = str((record as Dictionary).get("first_name", ""))
+					var raw_names: Variant = (record as Dictionary).get("names", [])
+					if raw_names is Array:
+						shadow_names = raw_names
+			elif saves_node.has_method("shadow_first_name"):
+				shadow_first = String(saves_node.call("shadow_first_name"))
 		# docs/05 M08: seal the ending run and record this name in the shadow
 		# save BEFORE the reset below erases the run's memories and name —
 		# this is the one write point, so the shadow only ever learns what a
@@ -115,9 +144,21 @@ func confirm_name() -> void:
 			if director.has_method("reset"):
 				director.call("reset")
 
-	if is_special_leila and feedback_label != null:
-		feedback_label.text = str(result.get("message", ""))
-		feedback_label.modulate = Color(1.0, 0.6, 0.8, 1.0)
+	# Special-name + shadow feedback (docs/08 §1.5): "That's *my* name…" and
+	# "You told me the truth." use her warm pink; the shadow line — "That's not
+	# what you were called last time." — only surfaces after a stage-3+ run
+	# under a different name and overrides the specials (it is the stronger
+	# tell).
+	var special_msg := str(result.get("message", ""))
+	var shadow_msg := PlayerNameRules.shadow_name_message(
+		resolved_name, shadow_first, prev_stage, shadow_names
+	)
+	var shown_msg := shadow_msg if not shadow_msg.is_empty() else special_msg
+	if not shown_msg.is_empty() and feedback_label != null:
+		feedback_label.text = shown_msg
+		feedback_label.modulate = (
+			Color(0.9, 0.45, 0.55, 1.0) if not shadow_msg.is_empty() else Color(1.0, 0.6, 0.8, 1.0)
+		)
 
 	name_confirmed.emit(resolved_name)
 	if scene_change_enabled:
@@ -128,3 +169,15 @@ func _on_back_pressed() -> void:
 	back_requested.emit()
 	if scene_change_enabled:
 		get_tree().change_scene_to_file(TITLE_SCENE_PATH)
+
+
+## docs/09 privacy: the opt-in'd OS username ("" when the flag is off or the
+## env carries none). The override exists so tests never depend on the CI
+## account's USER.
+func _resolved_os_username() -> String:
+	if not os_username_override.is_empty():
+		return os_username_override
+	var settings: Node = get_node_or_null("/root/Settings")
+	if settings != null and settings.has_method("os_username"):
+		return String(settings.call("os_username"))
+	return ""

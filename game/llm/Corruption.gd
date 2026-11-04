@@ -154,12 +154,39 @@ const DOCS_TABLE := {
 const LEAD_CHARS := '"\'"([{\u201c\u2018'
 const TRAIL_CHARS := ".,!?;:…—–)\"]}'\u201d\u2019"
 
+const NAME_RULES_PATH := "res://data/name_rules.json"
+
+## docs/08 §1.5 name rules, the in-code fallback for data/name_rules.json.
+## Stage 3 decay (drop a letter, then correct it), stage 4 "-kun" when she is
+## affectionate and drop it when she is angry, stage 5 name-tag swap, and the
+## stage gate for the shadow's "that's not what you were called last time".
+const DOCS_NAME_RULES := {
+	"decay": {"gate": 3, "chance": 0.5, "max_per_turn": 1, "connector": "… "},
+	"kun":
+	{
+		"gate": 4,
+		"chance": 0.6,
+		"max_per_turn": 2,
+		"suffix": "-kun",
+		"affection_min": 60.0,
+		"angry_stress": 0,
+		"drop": "",
+	},
+	"tag_swap": {"gate": 5, "chance": 0.35, "max_per_run": 1},
+	"shadow": {"gate": 3},
+}
+
 static var _table_cache: Dictionary = {}
 
+## The name-rules table (data/name_rules.json overlaid on DOCS_NAME_RULES).
+## READ-ONLY. A missing or malformed file degrades to the documented numbers.
+static var _name_rules_cache: Dictionary = {}
 
-## Test hook: drop the loaded table so the next call re-reads the data file.
+
+## Test hook: drop the loaded tables so the next call re-reads the data files.
 static func clear_cache() -> void:
 	_table_cache = {}
+	_name_rules_cache = {}
 
 
 ## The merged table (data/corruption.json overlaid on DOCS_TABLE). READ-ONLY:
@@ -253,6 +280,151 @@ static func plan(stage: int, ctx: Dictionary = {}) -> Dictionary:
 ## test/seed-override knob (CorruptionSession.seed_base), not a gameplay input.
 static func seed_for(turn: int, beat: int, stage: int, salt: int = 0) -> int:
 	return hash("leila-corruption-v1:%d:%d:%d:%d" % [turn, beat, stage, salt])
+
+
+## ── docs/08 §1.5 name decay ────────────────────────────────────────────────
+##
+## The name decays with her — renderer-side, never by the model. These rules sit
+## outside the docs/07 §3.4 effect table on purpose: they target ONLY the
+## player's own name, so `wrong_name`'s word-kind slot keeps priority (it is the
+## stranger-name slip; decay is the half-forgotten self-correction) and the name
+## rules roll against their own table (`res://data/name_rules.json`,
+## `DOCS_NAME_RULES` is the in-code fallback). Rolls are one `randf` per
+## player-name word per rule, so a transcript replay stays deterministic.
+static func name_rules() -> Dictionary:
+	if _name_rules_cache.is_empty():
+		_name_rules_cache = DOCS_NAME_RULES.duplicate(true)
+		var parsed: Variant = _read_json(NAME_RULES_PATH)
+		if parsed is Dictionary:
+			for section: String in parsed as Dictionary:
+				if section.begins_with("_") or section == "doc":
+					continue
+				var data: Variant = (parsed as Dictionary)[section]
+				var base: Variant = (_name_rules_cache as Dictionary).get(section)
+				if data is Dictionary and base is Dictionary:
+					var merged: Dictionary = (base as Dictionary).duplicate(true)
+					merged.merge(data, true)
+					_name_rules_cache[section] = merged
+				else:
+					_name_rules_cache[section] = data
+	return _name_rules_cache
+
+
+## One section of the name-rules table, healed to its documented defaults.
+static func name_rule(section: String) -> Dictionary:
+	var row: Variant = name_rules().get(section, {})
+	var healed: Dictionary = DOCS_NAME_RULES.get(section, {}).duplicate(true)
+	if row is Dictionary:
+		healed.merge(row, true)
+	return healed
+
+
+## True when `word`'s affix-stripped core IS the player's name — the gate every
+## name-decay rule shares ("Ren," still counts as Ren).
+static func is_player_name(word: String, player_name: String) -> bool:
+	var core := String(_split_affixes(word)["core"])
+	var wanted := player_name.strip_edges()
+	return not core.is_empty() and not wanted.is_empty() and core.to_lower() == wanted.to_lower()
+
+
+## docs/08 §1.5 stage 3: she occasionally types the name with a letter missing
+## and corrects it ("Reni… Renji"). A one-letter name cannot lose one; names
+## with internal characters lose a seeded non-edge letter so the slip reads as a
+## misremembered name rather than a typo on the first character. Returns ""
+## when the word is not the player's name or the effect is gated out.
+static func decay_name(
+	word: String, player_name: String, effective_stage: int, rng: RandomNumberGenerator
+) -> String:
+	var rule := name_rule("decay")
+	if effective_stage < int(rule.get("gate", 3)):
+		return ""
+	if not is_player_name(word, player_name):
+		return ""
+	if rng.randf() >= float(rule.get("chance", 0.5)):
+		return ""
+	var parts := _split_affixes(word)
+	var core := String(parts["core"])
+	if core.length() <= 1:
+		return ""
+	var idx := (
+		rng.randi_range(0, core.length() - 1)
+		if core.length() <= 2
+		else rng.randi_range(1, core.length() - 2)
+	)
+	var short := core.substr(0, idx) + core.substr(idx + 1)
+	var connector := String(rule.get("connector", "… "))
+	return String(parts["lead"]) + short + connector + core + String(parts["punct"])
+
+
+## docs/08 §1.5 stage 4: she sometimes adds "-kun" when she is affectionate and
+## drops it when she is angry. `mood` carries {"affection": meter, "stress": last
+## mood int} resolved by the caller (ChatUI reads GameState once per turn).
+## Returns "" when the word is not the player's name, when she is angry (the
+## suffix is dropped — the plain name survives), or when the roll fails. Word
+## punctuation is preserved.
+static func kun_name(
+	word: String,
+	player_name: String,
+	effective_stage: int,
+	mood: Dictionary,
+	rng: RandomNumberGenerator
+) -> String:
+	var rule := name_rule("kun")
+	if effective_stage < int(rule.get("gate", 4)):
+		return ""
+	if not is_player_name(word, player_name):
+		return ""
+	# One roll per player-name word keeps the draw order fixed by the text; an
+	# angry or failed roll still consumed it, so every later word's outcome is
+	# identical whether she was affectionate or not.
+	if rng.randf() >= float(rule.get("chance", 0.6)):
+		return ""
+	var stress := int(mood.get("stress", 0))
+	var affection := float(mood.get("affection", 0.0))
+	var parts := _split_affixes(word)
+	var core := String(parts["core"])
+	if stress <= int(rule.get("angry_stress", 0)):
+		var dropped := String(rule.get("drop", ""))
+		if dropped.is_empty():
+			return ""  # "-kun" is dropped: the plain name renders.
+		return String(parts["lead"]) + core + dropped + String(parts["punct"])
+	if affection < float(rule.get("affection_min", 60.0)):
+		return ""
+	return (
+		String(parts["lead"]) + core + String(rule.get("suffix", "-kun")) + String(parts["punct"])
+	)
+
+
+## docs/08 §1.5 stage 5: the player's name tag in the chat log is replaced by
+## hers for one line. One roll per player's submitted line, seeded on the turn
+## counter like the rest of the pipeline (replayable, no stored RNG state).
+static func should_swap_name_tag(effective_stage: int, turn: int, seed_base: int) -> bool:
+	var rule := name_rule("tag_swap")
+	if effective_stage < int(rule.get("gate", 5)):
+		return false
+	var roll := RandomNumberGenerator.new()
+	roll.seed = seed_for(turn, -1, effective_stage, roll_seed_salt(seed_base))
+	return roll.randf() < float(rule.get("chance", 0.35))
+
+
+## A fixed per-rule salt so the tag-swap draws can never collide with a say
+## beat's seed even when the turn/beat/stage triple matches one.
+static func roll_seed_salt(seed_base: int) -> int:
+	return seed_base * 31 + 7001
+
+
+## Parsed JSON for a data file, or {} when it is missing/malformed — the
+## name-rules overlay's loader, kept tiny because a broken file must degrade to
+## DOCS_NAME_RULES, never throw.
+static func _read_json(path: String) -> Variant:
+	if not FileAccess.file_exists(path):
+		push_warning("Corruption: %s missing; using the docs name rules" % path)
+		return {}
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if not parsed is Dictionary:
+		push_warning("Corruption: %s is not a JSON object; using the docs name rules" % path)
+		return {}
+	return parsed
 
 
 ## docs/01 §3 stage 2 "strike-through words" + docs/07 §3.4 "strike-through

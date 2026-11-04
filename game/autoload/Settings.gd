@@ -11,6 +11,7 @@ extends Node
 
 const PATH := "user://settings.cfg"
 const SECTION := "accessibility"
+const SECTION_PRIVACY := "privacy"
 
 ## Test seam: point the store at a scratch file instead of the player's file.
 var settings_path := PATH
@@ -24,6 +25,32 @@ var reduced_motion: bool = false
 ## Read by Safety.gd's gates and Steering.gd's calmer-dose cap; the settings
 ## menu that writes it is P3.13.
 var content_level: String = ""
+
+## docs/09 privacy + docs/08 §1.5: the OS username reaches the game ONLY when
+## the player opts in ("let her call you by your real name"). Defaults off and
+## persisted; when on, New Game's name field treats a typed name matching the
+## OS account name as "You told me the truth. Good." and M28 may use it. The
+## username itself is never written to disk — only the flag is.
+var use_os_username: bool = false
+
+
+## The OS account name when the player opted in, "" otherwise — this is the
+## only read of the environment the game ever makes, and docs/09's opt-in
+## gate means the username is invisible to name rules until `use_os_username`
+## is true. USERNAME covers Windows; USER covers Linux/macOS.
+func os_username() -> String:
+	if not use_os_username:
+		return ""
+	for var_name: String in ["USERNAME", "USER"]:
+		var value := OS.get_environment(var_name).strip_edges()
+		if not value.is_empty():
+			return value
+	return ""
+
+
+func set_use_os_username(enabled: bool) -> void:
+	use_os_username = enabled
+	save_settings()
 
 
 func _ready() -> void:
@@ -67,6 +94,7 @@ func load_settings() -> void:
 	if cfg.load(settings_path) != OK:
 		return
 	_apply_photosensitive(bool(cfg.get_value(SECTION, "photosensitive", photosensitive)))
+	use_os_username = bool(cfg.get_value(SECTION_PRIVACY, "use_os_username", use_os_username))
 
 
 ## Writes the flags a player can set today. Only keys this file owns are
@@ -74,6 +102,7 @@ func load_settings() -> void:
 func save_settings() -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value(SECTION, "photosensitive", photosensitive)
+	cfg.set_value(SECTION_PRIVACY, "use_os_username", use_os_username)
 	var err := cfg.save(settings_path)
 	if err != OK:
 		push_warning("Settings: could not save %s (error %d)" % [settings_path, err])
