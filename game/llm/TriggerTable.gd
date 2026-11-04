@@ -20,9 +20,9 @@ const VERSION := 1
 const MAX_STAGE := 5
 const BEHAVIORS: Array[String] = ["once", "repeatable", "escalating"]
 ## docs/01 §5 "C clock / OS": every condition a clock detector may carry.
-## `absence_hours_lte` (P3.07, T17) bounds the reunion window so a 7-day
-## absence reaches T18 only; strict `absence_hours_lt` keeps 168 h itself on
-## T18's side of the boundary.
+## T17 uses the strict `absence_hours_lt` (P3.07) so a 7-day absence reaches
+## T18 only, and 168 h itself stays on T18's side of the boundary;
+## `absence_hours_lte` is the same bound inclusive and no row uses it.
 const CLOCK_KEYS: Array[String] = [
 	"day_gte",
 	"day_lte",
