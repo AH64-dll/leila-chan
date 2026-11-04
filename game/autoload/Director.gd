@@ -1,8 +1,7 @@
 extends Node
-## Director — turn pipeline (docs/02 §4). The only orchestrator of a turn.
-## Executes steps 0–7 of docs/02 §4: input hooks, context assembly, dynamic schema,
-## steering dose, streaming JSON generation, live subsystem dispatch, validation,
-## state application, and turn close.
+## Director — turn pipeline (docs/02 §4). The only orchestrator of a turn:
+## input hooks, context, dynamic schema, dose, streaming generation, live dispatch,
+## validation, state application, close.
 
 signal turn_started(turn_index: int, player_input: String)
 signal turn_chunk_received(chunk: String)
@@ -20,8 +19,6 @@ const UNSAFE_INPUT_CODE := "unsafe_input"
 const UNSAFE_INPUT_MESSAGE := "Input blocked by safety policy"
 ## Turn history maintained by Director: array of {"role": "user"|"assistant", ...}
 var history: Array[Dictionary] = []
-## Validated player memories (docs/02 §6)
-var memories: Array[String] = []
 ## Current active scene info
 var scene_info: Dictionary = {
 	"prompt": "You are in a small café after class. Two cups, one window seat.",
@@ -48,6 +45,7 @@ var last_inner: String = ""
 ## Written by GameState.apply_turn_meters(); dev tooling reads it (DirectorTest
 ## asserts the wiring, the P2.19 night screen can show it).
 var last_meter_ledger: Dictionary = {}
+var last_sprite_enter: Dictionary = {}  # docs/10 §3: last {"events", "report"} dispatch
 
 var transcript_logger: TranscriptLogger = null
 var _overlay: CanvasLayer = null
@@ -57,6 +55,7 @@ var _safety := SaySafetyGate.new()
 ## The transcript redactor (gate r2 B1) — see _wire_safety_redactor(). Held in a
 ## member because a Callable does not keep its RefCounted target alive.
 var _redactor: TranscriptRedactor = null
+var _sprite_enter := preload("res://scenes/SpriteEnterEvents.gd").new()  # docs/10 §3
 
 var _active_stream: TurnStream = null
 var _parser: IncrementalJson = null
@@ -68,6 +67,8 @@ var _turn_in_flight := false
 var _turn_index := 0
 var _current_player_input := ""
 var _turn_events: Array = []
+## Deleted-draft words this turn may quote but must never persist (P2.09).
+var _turn_private_terms: Array[String] = []
 var _stream_had_error := false
 var _stream_error_message := ""
 var _retry_count := 0
@@ -84,6 +85,8 @@ var _current_path := ""
 
 func _ready() -> void:
 	_connect_stage()
+	if not SpriteResolver.sprite_entered.is_connected(_on_sprite_entered):
+		SpriteResolver.sprite_entered.connect(_on_sprite_entered)  # docs/10 §3 dispatch
 	reset()
 
 
@@ -123,7 +126,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func reset() -> void:
 	history.clear()
-	memories.clear()
+	Memory.reset()
 	last_player_inputs.clear()
 	quiet_turn_streak = 0
 	last_turn_data.clear()
@@ -150,6 +153,9 @@ func reset() -> void:
 	_streamed_say_text = ""
 	_parser = null
 	_active_stream = null
+	_turn_private_terms.clear()
+	# A reset is a new session: Telemetry caps/draft and Triggers state go with it.
+	InputHook.reset_session(get_node_or_null("/root/Telemetry"))
 	_sync_stage()
 
 
@@ -188,11 +194,9 @@ func register_character(node: Node) -> void:
 	character_node = node
 
 
-## The ChatUI seam (docs/07 §3.4). The scene that instantiates the ChatUI owns
-## the registration: `Date._ready()` registers it and `Date._exit_tree()` clears
-## it (P1 gate-r3 F1 / P2.23). Installing a `text_filter` here would scan the
-## same text twice — the Director scans every say chunk through Safety itself
-## before handing it over (review CODE-1).
+## The ChatUI seam (docs/07 §3.4): the scene that instantiates it owns the
+## registration (`Date._ready`/`_exit_tree`, P1 gate-r3 F1 / P2.23). No `text_filter`
+## here — the Director already scans every say chunk through Safety (review CODE-1).
 func register_chat_ui(node: Node) -> void:
 	chat_ui_node = node
 
@@ -239,7 +243,10 @@ func get_current_dose() -> Dictionary:
 		return last_dose
 	var stage := int(GameState.stage)
 	if Steering != null and Steering.has_method("dose_for"):
-		return Steering.dose_for(build_turn_context(""))
+		# Not `build_turn_context()`: that injects the memories, and a read-only
+		# accessor (the F3 overlay refreshes it) must not spend an injection or
+		# clear the log the transcript is about to write (review r2 DES-7).
+		return Steering.dose_for({"stage": stage})
 	return {"malice": float(sampling_spec(stage).get("dose", 0.0))}
 
 
@@ -248,8 +255,12 @@ func sampling_spec(stage: int) -> Dictionary:
 	return TurnContext.sampling_spec(stage)
 
 
-## The docs/02 §4 step 1 snapshot for this turn (see TurnContext.build).
+## The docs/02 §4 step 1 snapshot for this turn (see TurnContext.build). The
+## memories are the ones she *reads*: newest 8 slots, corrupted per stage
+## (docs/02 §6), which is why the prompt is built from Memory and not from a
+## Director-owned list.
 func build_turn_context(player_text: String, events: Array = []) -> Dictionary:
+	var memories := Memory.prompt_facts({"stage": int(GameState.stage)})
 	return TurnContext.build(
 		player_text, events, scene_info, memories, history, get_offered_actions()
 	)
@@ -269,9 +280,7 @@ func get_offered_actions() -> Array:
 	return []
 
 
-## -----------------------------------------------------------------------------
 ## Step 0: Input Reception & Pre-Turn Processing
-## -----------------------------------------------------------------------------
 func submit_player_input(raw_input: String, telemetry: Dictionary = {}) -> bool:
 	if _turn_in_flight:
 		push_warning("Director: turn already in flight; ignoring submit_player_input")
@@ -286,9 +295,11 @@ func submit_player_input(raw_input: String, telemetry: Dictionary = {}) -> bool:
 		_reject_unsafe_input()
 		return false
 
-	# docs/08 §6 "this turn only": the event layer starts empty, then the input
-	# hooks add their lines and a closed turn's queued lines ride along once.
+	# Clean BEFORE the step-0 hooks fill it: _start_turn() reads it into
+	# ctx["events"] right after (P1.08 cleared it late and dropped every line).
+	# docs/08 §6 "this turn only": a closed turn's queued lines ride along once.
 	_turn_events.clear()
+	_turn_private_terms.clear()
 
 	# Step 0.2: Telemetry / Typing hooks (docs/02 §4 step 0)
 	_handle_input_telemetry(trimmed, telemetry)
@@ -318,6 +329,8 @@ func _reject_unsafe_input() -> void:
 	_turn_index = GameState.turn  # the record identity: this never-started turn
 	_current_stage = int(GameState.stage)
 	_current_path = String(GameState.path)
+	# No prompt is built for a refusal, so the record is not the last turn's.
+	Memory.begin_turn()
 	_log_turn_record("failed", UNSAFE_INPUT_CODE, UNSAFE_INPUT_MESSAGE)
 	var refusal: Dictionary = TurnValidator.get_input_refusal(_current_stage, GameState.player_name)
 	_safety.end_utterance()  # reply boundary (P1.19 CODE-19): a new utterance
@@ -327,27 +340,19 @@ func _reject_unsafe_input() -> void:
 	turn_failed.emit(_turn_index, UNSAFE_INPUT_CODE, UNSAFE_INPUT_MESSAGE)
 
 
-## docs/02 §4 step 0: typing telemetry (T08 deleted draft, T11 idle) and the
-## keyword-trigger layer (K). The trigger layer's lines are this turn's
-## docs/08 §6 event layer — they reach the prompt through ctx["events"], not
-## into the void (review CODE-8).
+## docs/02 §4 step 0: engine events (P2.09) + keyword triggers (K). InputHook
+## owns the policy; this keeps THIS turn's docs/08 §6 lines (→ ctx["events"])
+## and the private terms to scrub before persisting. Cleared per turn.
 func _handle_input_telemetry(input_text: String, telemetry: Dictionary) -> void:
-	if telemetry.has("deleted_draft") and not str(telemetry["deleted_draft"]).is_empty():
-		GameState.set_flag(&"t08_deleted_draft", telemetry["deleted_draft"])
-	if telemetry.has("idle_seconds") and float(telemetry["idle_seconds"]) > 30.0:
-		GameState.set_flag(&"t11_idle", true)
-	if Triggers != null and Triggers.has_method("check_keyword_triggers"):
-		var fired: Variant = Triggers.check_keyword_triggers(input_text)
-		if fired is Array:
-			for line: Variant in fired:
-				var event_line := str(line).strip_edges()
-				if not event_line.is_empty() and not _turn_events.has(event_line):
-					_turn_events.append(event_line)
+	var hooked := InputHook.apply(
+		get_node_or_null("/root/Telemetry"), input_text, int(GameState.stage), telemetry
+	)
+	_turn_private_terms = (hooked.get("private", []) as Array).duplicate()
+	for line: Variant in hooked.get("lines", []):
+		_turn_events.append(str(line))
 
 
-## -----------------------------------------------------------------------------
 ## Steps 1–4: TurnContext, Prompt, Schema, Dose & LLM generation
-## -----------------------------------------------------------------------------
 func _start_turn(player_text: String) -> bool:
 	_turn_in_flight = true
 	_turn_index = GameState.turn
@@ -361,6 +366,7 @@ func _start_turn(player_text: String) -> bool:
 	_clear_turn_context()
 	_current_stage = int(GameState.stage)
 	_current_path = String(GameState.path)
+	Memory.begin_turn()  # the transcript's memory block is this turn's only
 
 	# Reply boundary (P1.19 r4 CODE-19): a new model utterance starts here, so
 	# the filter's cross-beat carry must not glue the previous reply's tail into
@@ -447,9 +453,7 @@ func _start_turn(player_text: String) -> bool:
 	return true
 
 
-## -----------------------------------------------------------------------------
 ## Stream events & Live routing (Steps 5–6)
-## -----------------------------------------------------------------------------
 func _on_llm_token(token_text: String) -> void:
 	if not _turn_in_flight or _parser == null:
 		return
@@ -594,6 +598,10 @@ func _maybe_route_sprite() -> void:
 		character_node.set_feeling(feeling, intensity, stage, path, flags)
 	elif character_node != null and character_node.has_method("set_sprite"):
 		character_node.set_sprite(str(packet.get("sprite", "00")))
+
+
+func _on_sprite_entered(events: Dictionary) -> void:
+	last_sprite_enter = {"events": events, "report": _sprite_enter.fire(events)}
 
 
 ## -----------------------------------------------------------------------------
@@ -745,15 +753,14 @@ func _close_turn_success(turn_data: Dictionary) -> void:
 		var read_label := StringName(str(turn_data["read"]))
 		GameState.apply_read(read_label)
 
-	# Apply memory
-	if turn_data.has("memory") and str(turn_data["memory"]) != "":
+	# docs/02 §6 quoting runs before the proposal: a fact learned this turn cannot
+	# also count as one she quoted this turn. A rejection is named by its rule and
+	# stays in the store's report; nothing about it reaches the model.
+	Memory.note_quotes(TurnContext.spoken_text(turn_data))
+	if turn_data.has("memory"):
 		var mem_candidate := str(turn_data["memory"]).strip_edges()
-		if validate_memory(mem_candidate, last_player_inputs, memories):
-			memories.append(mem_candidate)
-			if memories.size() > 24:
-				memories.pop_front()
-			if Memory != null and Memory.has_method("add_memory"):
-				Memory.add_memory(mem_candidate)
+		if not mem_candidate.is_empty():
+			Memory.consider(mem_candidate, last_player_inputs)
 
 	# Apply action
 	if turn_data.has("action") and str(turn_data["action"]) != "none":
@@ -869,16 +876,12 @@ func _abort_turn(error_code: String, error_message: String) -> void:
 	turn_failed.emit(_turn_index, error_code, error_message)
 
 
-## One teardown for every exit (completed / failed / cancelled): the stream, the
-## parser and the turn-scoped state must not survive into the next turn, or a
-## later cancel() would act on a terminal stream and a stale `_current_turn_data`
-## would leak into the next close (review CODE-9).
-##
-## The player's unanswered line stays in `history` and `last_player_inputs`: the
-## player did say it, the model simply never answered, and the docs/02 §6 rule-1
-## window is about what the player actually typed. AudioDirector/FX keep their
-## per-turn counters — the turn *was* opened, so the budget it accrued is spent;
-## rewinding it would let a retry loop mint cue tokens.
+## One teardown for every exit: the stream, parser and turn-scoped state must not
+## survive into the next turn (a later cancel() would act on a terminal stream and
+## a stale `_current_turn_data` would leak into the close; review CODE-9). The
+## player's unanswered line stays in `history`/`last_player_inputs` (the docs/02 §6
+## rule-1 window is what was typed); AudioDirector/FX keep their per-turn counters
+## (the turn was opened, so its accrued budget is spent).
 func _teardown_turn() -> void:
 	_turn_in_flight = false
 	_active_stream = null
@@ -916,11 +919,19 @@ func _log_turn_record(status: String, err_code := "", err_msg := "") -> void:
 		"dose": _current_dose,
 		"day": int(GameState.day),
 		"meta": {"status": status},
+		"memory": Memory.report(),
 	}
 	if not error_dict.is_empty():
 		record["error"] = error_dict
+	if not _turn_private_terms.is_empty():
+		var scrubbed: Variant = InputHook.scrub(record, _turn_private_terms)
+		if scrubbed is Dictionary:
+			record = scrubbed
 
 	transcript_logger.log_turn(record)
+	# The draft quote is spent with the turn that used it and cleared only
+	# AFTER the record was scrubbed (docs/05 §0).
+	_turn_private_terms.clear()
 
 
 ## Replay stub (P1.18, docs/07 §5): re-feeds a transcript record or file back
@@ -970,9 +981,7 @@ func replay_turn(turn_record: Dictionary) -> bool:
 	return true
 
 
-## -----------------------------------------------------------------------------
 ## Safety & Content Filters (docs/02 §8)
-## -----------------------------------------------------------------------------
 ## The player's own line. The filter owns the decision when it implements an
 ## input check; the Director keeps no local phrase list (review CODE-1/DES-7).
 func filter_player_input(input_text: String) -> bool:
@@ -986,9 +995,7 @@ func filter_output(text_chunk: String) -> String:
 	return _safety.filter_text(text_chunk, {"stage": int(GameState.stage)})
 
 
-## -----------------------------------------------------------------------------
 ## Memory Validation (docs/02 §6)
-## -----------------------------------------------------------------------------
 ## The three docs/02 §6 rules live in MemoryRules; this is the Director-facing
 ## name the suite and P1.09's follow-ups call.
 static func validate_memory(

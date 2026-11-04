@@ -31,6 +31,7 @@ Safety="*res://autoload/Safety.gd"
 Steering="*res://autoload/Steering.gd"
 SaveSystem="*res://autoload/SaveSystem.gd"
 Settings="*res://autoload/Settings.gd"
+Telemetry="*res://autoload/Telemetry.gd"
 
 [display]
 

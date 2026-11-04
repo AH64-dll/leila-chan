@@ -21,6 +21,28 @@ FX_GATE = {"blush_glow": 0, "hearts": 0, "sparkle": 0, "shake_small": 0, "zoom_f
            "flicker": 3, "darken": 3, "vignette_red": 3, "glitch": 3, "text_bleed": 4, "invert_flash": 4, "her_eyes": 5}
 MOTIONS = {"breathe", "bounce", "shake", "tremble", "sink", "lean_in", "twitch", "freeze", "glitch"}
 
+# docs/03 §4: every sprite change is a crossfade plus a motion preset "chosen by intensity and family", with no
+# extra art per intensity. The doc fixes each preset's displacement (6 px hop, +-4 px shake, ...) but gives no
+# amplitude ladder, so this is the art direction for P2.14: the doc's numbers are the i2 baseline and i1/i3 are
+# quieter/louder versions of the same preset. The resolver ships it as packet.motion_scale; Character multiplies.
+MOTION_INTENSITY = {"1": 0.6, "2": 1.0, "3": 1.4}
+
+# docs/03 §1 "Tier" column: the corruption tiers each sprite is documented for. The resolver's step-3 gate
+# ("sprite.min_tier <= tier") reads tiers[0]; a path override that names a T3-only face therefore cannot leak
+# into T2 (YANDERE angry at stage 3 stays on 17, the knife waits for T3). The upper bound is descriptive — the
+# base table itself casts 16 at T0 i3 (docs/03 §3.1) — so only the minimum is enforced.
+SPRITE_TIERS = {
+    "00": ["T0", "T1", "T2", "T3"], "01": ["T0", "T1", "T2", "T3"], "02": ["T0", "T1", "T2", "T3"],
+    "03": ["T0", "T1", "T2"], "04": ["T0", "T1"], "05": ["T0", "T1", "T2", "T3"],
+    "06": ["T0", "T1", "T2"], "07": ["T0", "T1", "T2", "T3"], "08": ["T0", "T1", "T2"],
+    "09": ["T0", "T1", "T2", "T3"], "10": ["T0", "T1", "T2", "T3"], "11": ["T0", "T1", "T2", "T3"],
+    "12": ["T0", "T1", "T2", "T3"], "13": ["T0", "T1", "T2"], "14": ["T0", "T1", "T2", "T3"],
+    "15": ["T0", "T1", "T2", "T3"], "16": ["T1", "T2", "T3"], "17": ["T0", "T1", "T2", "T3"],
+    "18": ["T0", "T1", "T2", "T3"], "19": ["T1", "T2", "T3"], "20": ["T0", "T1", "T2", "T3"],
+    "21": ["T3"], "22": ["T2", "T3"], "23": ["T2", "T3"], "24": ["T2", "T3"], "25": ["T3"],
+    "26": ["T2", "T3"], "27": ["T3"], "28": ["T2", "T3"], "29": ["T3"], "30": ["T3"],
+}
+
 # resolver base table (docs/03 §3.1): tier -> (i1-2, i3)
 RESOLVE = {
     "joy": [("01", "01"), ("01", "01"), ("01", "22"), ("22", "22")],
@@ -223,6 +245,16 @@ SIBLINGS = {
     "empty": "14", "manic": "11",
 }
 
+# docs/10 §3.1 delegates the T2+ siblings to the resolver's path rules. A corrupt face repeating three beats
+# in a row has no healthy face it may swap to without lying about the state (a corrupted face can never quietly
+# turn healthy), so the corrupt band gets its own table: one sibling per sprite, same path signature or mood
+# family (docs/03 §1 "Feeling family"), never crossing into 01-20. "Love and violence share a face"
+# (docs/03 §3.2): 21 -> 24 -> 28 is the YANDERE loop, 22 -> 26 -> 28 the manic/nervous one.
+SIBLINGS_CORRUPT = {
+    "21": "24", "22": "26", "23": "29", "24": "28", "25": "29",
+    "26": "28", "27": "24", "28": "26", "29": "23", "30": "21",
+}
+
 PATHS = {
     "YANDERE": {"tiers": ["T2", "T3"], "override": {"love": "24", "angry": "21", "suspicious": "28", "joy": "22"},
                 "flagged": {"warmth": ["27", "rival_gone"]}, "music_bias": "music_box", "cue_bias": ["heartbeat_fast", "breath_close"]},
@@ -234,7 +266,7 @@ PATHS = {
     "HOLLOW": {"tiers": ["T2", "T3"], "drift_to": ["23", "10", "12", "14"], "rule": "sprite changes only on intensity 3",
                "voice": "no blips at i1", "music_bias": "silence", "cue_bias": ["clock_tick", "music_box_note"]},
     "AWAKE": {"tiers": ["T2", "T3"], "override": {"confused": "29", "surprised": "26", "cold": "25", "manic": "22"},
-              "rule": "glitch shader on every sprite change", "voice": "voice_blip.awake",
+              "rule": "glitch shader on every sprite change", "shader": "glitch", "voice": "voice_blip.awake",
               "music_bias": "distorted", "cue_bias": ["static"]},
     "ANCHOR": {"tiers": ["T2", "T3"], "rule": "keeps healthy sprites; relapse beat uses 26/22 once, then 02",
                "music_bias": "calm", "cue_bias": ["hum", "sigh"]},
@@ -296,6 +328,26 @@ def main():
             errors.append(f"siblings {f}: {s} is the feeling's own T0-T1 face (anti-repeat would be a no-op)")
         if int(s) > 20:
             errors.append(f"siblings {f}: {s} is a corruption face (docs/03 §1) — siblings stay healthy")
+    if sorted(SPRITE_TIERS) != sorted(art):
+        errors.append(f"sprite tiers: declared {sorted(SPRITE_TIERS)} != exported {sorted(art)}")
+    for k, ts in SPRITE_TIERS.items():
+        if not ts or any(t not in TIERS for t in ts):
+            errors.append(f"sprite tiers {k}: unknown tier list {ts}")
+        elif ts != [t for t in TIERS if t in ts]:
+            errors.append(f"sprite tiers {k}: {ts} is not in T0..T3 order")
+    for s, e in SIBLINGS_CORRUPT.items():
+        if s not in art or e not in art:
+            errors.append(f"siblings_corrupt {s}: sprite {e} not exported")
+            continue
+        if s == e:
+            errors.append(f"siblings_corrupt {s}: points at itself (anti-repeat would be a no-op)")
+        if int(s) < 21 or int(e) < 21:
+            errors.append(f"siblings_corrupt {s}->{e}: both faces must be in the corruption band 21-30")
+        if TIERS[SPRITE_TIERS[e][0]][0] > TIERS[SPRITE_TIERS[s][-1]][1]:
+            errors.append(f"siblings_corrupt {s}->{e}: {e} starts above the tier {s} ends at")
+    for k, v in MOTION_INTENSITY.items():
+        if k not in ("1", "2", "3") or not 0.0 < v <= 3.0:
+            errors.append(f"motion intensity {k}: {v} is not a plausible amplitude scale")
     for s, e in ON_ENTER.items():
         if s not in art:
             errors.append(f"on_enter: sprite {s} missing")
@@ -305,6 +357,10 @@ def main():
         for k in ("cue", "cue_below_stage4"):
             if k in e and e[k] not in cue_map["cues"]:
                 errors.append(f"on_enter {s}: cue {e[k]} missing")
+        budget = e.get("budget", "")
+        if budget and not (budget == "terminal climax only" or (budget.split(" ")[0].isdigit()
+                                                              and budget.endswith(" reveal per scene"))):
+            errors.append(f"on_enter {s}: unknown budget form '{budget}'")
     for st, g in VOICE_BY_STAGE.items():
         if g not in cue_map["system"]:
             errors.append(f"voice {st}: {g} missing")
@@ -314,6 +370,7 @@ def main():
         k = name[:2]
         off = spec.get("off", [0, 0])
         sprites[k] = {"key": name[3:], "file": f"art/leila/x2/{name}.png", "native": f"art/leila/px/{name}.png",
+                      "tiers": SPRITE_TIERS[k],
                       "face": {kk: spec[kk] for kk in ("eyes", "brows", "mouth", "extras") if kk in spec},
                       "eyes_native": [[2 * (84 + off[0]), 2 * (49 + off[1])], [2 * (100 + off[0]), 2 * (49 + off[1])]],
                       "bust_crop_native": [104, 20, 280, 220],
@@ -334,10 +391,12 @@ def main():
         "art": {"display": "art/leila/x2", "native": "art/leila/px", "display_size": [768, 1376],
                 "native_size": [384, 688], "scale": 2, "filter": "nearest", "palette": "art/leila/palette.json"},
         "voice_by_stage": VOICE_BY_STAGE,
+        "motion_intensity": MOTION_INTENSITY,
         "fx": FX,
         "stage_fx": STAGE_FX,
         "feelings": feelings,
         "siblings": SIBLINGS,
+        "siblings_corrupt": SIBLINGS_CORRUPT,
         "paths": PATHS,
         "sprites": sprites,
         "intensity_3": {"camera": "push to bust_crop", "auto_sting": "stinger.soft (T0-T1) / stinger.mid (T2-T3) if budget allows",
@@ -383,6 +442,10 @@ def write_doc(c):
         vo = "silent" if d["voice"] is None else f'{d["voice"]["pitch_st"]:+d} st ×{d["voice"]["rate"]}' + (
             f' +{d["voice"]["gain_db"]} dB' if d["voice"]["gain_db"] else "")
         w(f'| **{f}** | {d["valence"]:+d}/{d["arousal"]} | {sp} | {mo} | {vo} | {d["model_hint"]} |')
+    ladder = " · ".join(f"i{k} ×{v:g}" for k, v in c["motion_intensity"].items())
+    w(f"\nMotion presets have no extra art per intensity (docs/03 §4): the displacement is scaled by")
+    w(f"`casting.motion_intensity` ({ladder}), with i2 = the doc's baseline. A beat's `motion_scale` travels in the")
+    w("resolver packet, so bounce/shake/tremble/sink/lean-in/twitch all breathe more or less with the intensity.")
     w("\n### 2.1 Sound, music and screen per tier\n")
     w("| Feeling | Tier | Cue pool | Music | FX |")
     w("|---|---|---|---|---|")
@@ -419,6 +482,9 @@ def write_doc(c):
         w(f'| {stage} | {spec["desaturation"]:.2f} |')
     w("")
     w("## 3. Sprite on-enter events\n")
+    w("Extra sound, music, fx or motion the instant a sprite appears, on top of the beat's own casting. `cue_below_stage4`")
+    w("and `fx_below_stage5` swap in the quieter variant under that stage; `budget` caps how often the effect may fire")
+    w("(`1 reveal per scene` gates the sprite itself, `terminal climax only` withholds the `system` sting until stage 5).\n")
     w("| Sprite | Extra when it appears |")
     w("|---|---|")
     for k, e in ON_ENTER.items():
@@ -426,11 +492,19 @@ def write_doc(c):
     w("\n### 3.1 Anti-repeat siblings\n")
     w("docs/03 §3 step 4: when one sprite would show on a third beat in a row, the resolver shows the feeling's sibling")
     w("instead. Siblings are healthy faces (ids 01–20, so a T0–T1 swap can never read as corruption) in the same mood")
-    w("family; T2+ path-aware siblings belong to the resolver's path rules (P2.14).\n")
+    w("family; a swap never crosses the healthy/corrupt band.\n")
     w("| Feeling | Sibling |")
     w("|---|---|")
     for f, s in c["siblings"].items():
         w(f'| {f} | {s} {c["sprites"][s]["key"]} |')
+    w("\n### 3.2 Corrupt-band siblings (T2+)\n")
+    w("A corrupted sprite cannot swap to a healthy one (that would lie about the state), so the corruption band has its")
+    w("own table: one sibling per sprite, same path signature or mood family, addressed by sprite id. A sibling whose")
+    w("own `tiers` start above the current tier is skipped, so the beat simply repeats rather than jump forward.\n")
+    w("| Sprite | Tiers | Sibling |")
+    w("|---|---|---|")
+    for s, e in c["siblings_corrupt"].items():
+        w(f'| {s} {c["sprites"][s]["key"]} | {"–".join(c["sprites"][s]["tiers"])} | {e} {c["sprites"][e]["key"]} |')
     w("\n## 4. Paths\n")
     w("| Path | Overrides (T2–T3) | Rule | Music / cue bias |")
     w("|---|---|---|---|")
