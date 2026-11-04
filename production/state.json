@@ -1951,7 +1951,7 @@
       "finished": "2026-11-04T08:00:20+02:00"
     },
     "P2.15": {
-      "status": "in_review",
+      "status": "done",
       "agent": "commandcode",
       "round": 3,
       "reviews": [
@@ -2017,10 +2017,29 @@
           "report": "production/reviews/P2.15-code-r3.md",
           "ts": "2026-11-04T08:47:09+02:00",
           "declared": "deepseek"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 3,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P2.15-design-r3.md",
+          "ts": "2026-11-04T08:59:08+02:00",
+          "declared": "deepseek"
+        },
+        {
+          "kind": "safety",
+          "verdict": "approved",
+          "round": 3,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P2.15-safety-r3.md",
+          "ts": "2026-11-04T08:59:08+02:00",
+          "declared": "deepseek"
         }
       ],
       "started": "2026-11-04T05:32:09+02:00",
-      "handoff": "production/handoffs/P2.15.md"
+      "handoff": "production/handoffs/P2.15.md",
+      "finished": "2026-11-04T08:59:08+02:00"
     },
     "P2.16": {
       "status": "done",
@@ -2053,7 +2072,7 @@
     "P2.17": {
       "status": "changes_requested",
       "agent": "commandcode",
-      "round": 3,
+      "round": 4,
       "reviews": [
         {
           "kind": "safety",
@@ -2108,15 +2127,24 @@
           "report": "production/reviews/P2.17-safety-r3.md",
           "ts": "2026-11-04T08:49:08+02:00",
           "declared": "deepseek"
+        },
+        {
+          "kind": "safety",
+          "verdict": "changes",
+          "round": 4,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P2.17-safety-r4.md",
+          "ts": "2026-11-04T09:17:53+02:00",
+          "declared": "deepseek"
         }
       ],
       "started": "2026-11-04T05:32:12+02:00",
       "handoff": "production/handoffs/P2.17.md"
     },
     "P2.25": {
-      "status": "changes_requested",
+      "status": "done",
       "agent": "commandcode",
-      "round": 3,
+      "round": 4,
       "reviews": [
         {
           "kind": "code",
@@ -2144,10 +2172,20 @@
           "report": "production/reviews/P2.25-code-r3.md",
           "ts": "2026-11-04T08:47:09+02:00",
           "declared": "deepseek"
+        },
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 4,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P2.25-code-r4.md",
+          "ts": "2026-11-04T09:17:53+02:00",
+          "declared": "deepseek"
         }
       ],
       "started": "2026-11-04T05:32:13+02:00",
-      "handoff": "production/handoffs/P2.25.md"
+      "handoff": "production/handoffs/P2.25.md",
+      "finished": "2026-11-04T09:17:58+02:00"
     }
   },
   "history": [
@@ -5252,6 +5290,72 @@
       "event": "in_review->changes_requested",
       "ref": "P2.17",
       "note": "by safety review"
+    },
+    {
+      "ts": "2026-11-04T08:59:08+02:00",
+      "event": "review:design:approved",
+      "ref": "P2.15",
+      "note": "production/reviews/P2.15-design-r3.md"
+    },
+    {
+      "ts": "2026-11-04T08:59:08+02:00",
+      "event": "review:safety:approved",
+      "ref": "P2.15",
+      "note": "production/reviews/P2.15-safety-r3.md"
+    },
+    {
+      "ts": "2026-11-04T08:59:08+02:00",
+      "event": "in_review->done",
+      "ref": "P2.15",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T09:04:56+02:00",
+      "event": "changes_requested->in_progress",
+      "ref": "P2.17",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T09:04:56+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P2.17",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T09:04:56+02:00",
+      "event": "changes_requested->in_progress",
+      "ref": "P2.25",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T09:04:56+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P2.25",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T09:17:53+02:00",
+      "event": "review:code:approved",
+      "ref": "P2.25",
+      "note": "production/reviews/P2.25-code-r4.md"
+    },
+    {
+      "ts": "2026-11-04T09:17:53+02:00",
+      "event": "review:safety:changes",
+      "ref": "P2.17",
+      "note": "production/reviews/P2.17-safety-r4.md"
+    },
+    {
+      "ts": "2026-11-04T09:17:53+02:00",
+      "event": "in_review->changes_requested",
+      "ref": "P2.17",
+      "note": "by safety review"
+    },
+    {
+      "ts": "2026-11-04T09:17:58+02:00",
+      "event": "in_review->done",
+      "ref": "P2.25",
+      "note": ""
     }
   ]
 }

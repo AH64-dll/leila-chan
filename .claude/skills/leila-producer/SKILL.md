@@ -81,13 +81,19 @@ Read the protocol every agent follows: `.claude/skills/leila-work-protocol/SKILL
 ## 4. Integrate (task done)
 When every required review is approved for the current round:
 ```bash
-git -C D:/lila merge --no-ff task/$T -m "$T: <title>"     # resolve conflicts yourself; re-run tests if any
+# Merge hygiene (P2.25; production/MERGE_CHECK.md). Before: what would the branch replace?
+# After: prove the resolution kept main's work. 0 = clean, 1 = read the report, 2 = could not run.
+python tools/merge_check.py task/$T                      # pre-merge; resolve every listed file by hand
+git -C D:/lila merge --no-ff task/$T -m "$T: <title>"    # resolve conflicts yourself; keep both sides
+python tools/merge_check.py --post HEAD                  # 1 = the merge dropped a parent's work
 <run the project test command from the worktree handoff on main>
 python production/tools/track.py set $T done
 git worktree remove D:/lila-wt/$T && git branch -d task/$T
 python production/tools/track.py render && git add production && git commit -m "$T: done"
 ```
-If tests fail on main after the merge, revert the merge and reopen the task (`set $T in_progress`) with a note.
+Never resolve a conflicted file by taking one side wholesale (`git checkout --theirs`/`--ours -- <file>`): that is
+the P1.16 stale-file replacement. A failing `--post` means `git reset --hard ORIG_HEAD` and redo the resolution. If
+tests fail on main after the merge, revert the merge and reopen the task (`set $T in_progress`) with a note.
 Carry over S3/S4 findings: add them as new task rows (`P<n>.<next free number>`, or `P<n>.Bxx` for bugs) at the end of the
 phase table, then run `track.py validate`. Never renumber existing tasks.
 
