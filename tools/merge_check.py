@@ -280,7 +280,7 @@ def pre_merge(target_ref: str, source_ref: str) -> Report:
         return report
 
     tree, conflicted = merge_tree(target, source)
-    report.conflicted = sorted(conflicted)
+    report.conflicted = sorted(conflicted - GENERATED_PATHS)
 
     for path in overlap:
         target_type = object_type(target, path)
@@ -647,7 +647,7 @@ def build_parser() -> argparse.ArgumentParser:
         action="append",
         default=[],
         metavar="PATH",
-        help="acknowledge findings for PATH after inspecting them (repeatable)",
+        help="--post/--staged only: acknowledge findings for PATH after inspecting them (repeatable)",
     )
     parser.add_argument("--json", action="store_true", help="machine-readable report")
     return parser
@@ -669,6 +669,8 @@ def main(argv: list[str] | None = None) -> int:
         else:
             if not args.source:
                 parser.error("give the branch to merge (or use --post/--staged)")
+            if args.allow:
+                parser.error("--allow acknowledges a completed resolution; use it with --post or --staged")
             report = pre_merge(args.target, args.source)
     except GitError as exc:
         print(f"merge-check: {exc}", file=sys.stderr)

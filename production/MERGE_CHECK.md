@@ -65,9 +65,9 @@ git reset --hard ORIG_HEAD     # or `git merge --abort` before the commit exists
 Do **not** resolve a conflicted file with `git checkout --theirs -- <file>` / `--ours` unless the report has
 already told you that copy loses nothing. That is exactly the P1.16 mistake.
 
-`--allow PATH` (repeatable) acknowledges a reviewed finding, e.g. a deliberate file deletion; it turns a blocking
-finding into a reported `(allowed)` one. Use it only after reading the dropped lines, and say why in the merge
-commit message.
+`--allow PATH` (repeatable, `--post`/`--staged` only) acknowledges a reviewed finding, e.g. a deliberate file
+deletion; it turns a blocking finding into a reported `(allowed)` one. Use it only after reading the dropped
+lines, and say why in the merge commit message.
 
 ## Reading the report
 
