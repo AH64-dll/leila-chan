@@ -14,6 +14,12 @@ extends Node
 
 signal meter_changed(meter: StringName, value: float)
 signal stage_changed(previous: int, current: int)
+## docs/01 §3: the diegetic transition — emitted exactly once per crossing with
+## the data-owned spec (2–3 s duration, fx, cue, stage name). The screen glitch
+## that hides the docs/06 §4 dose change (P2.03) and the P2.15 shader listen
+## here. A restore is NOT a crossing: from_dict() re-emits stage_changed so
+## listeners resync, but no transition fires and no EVENT line is queued.
+signal stage_transition(previous: int, current: int, spec: Dictionary)
 signal day_changed(day: int)
 signal path_assigned(path: StringName, locked: bool)
 signal profile_changed(counter: StringName, value: int)
@@ -39,9 +45,10 @@ const METER_NAMES: Array[StringName] = [
 	&"affection", &"trust", &"instability", &"fixation", &"lucidity"
 ]
 
-## Stage instability bands (docs/01 §3): stage i holds while instability ≥ BANDS[i].
-const STAGE_BANDS: Array[int] = [0, 15, 30, 50, 70, 90]
-const STAGE_MAX := 5
+## Stage instability bands (docs/01 §3: 0–14 / 15–29 / 30–49 / 50–69 / 70–89 /
+## 90–100) and the 0–5 stage count are DATA: Stages owns them
+## (game/llm/Stages.gd, res://data/stages.json). This class stores the live
+## stage, keeps it monotonic and emits the crossing signals.
 
 ## Campaign length in in-game days (docs/01 §1).
 const DAY_MAX := 14
@@ -131,7 +138,7 @@ var instability_floor: float:
 ## Derived from Instability bands (docs/01 §3); only ever moves upward.
 var stage := 0:
 	set(v):
-		stage = clampi(v, 0, STAGE_MAX)
+		stage = clampi(v, 0, Stages.max_stage())
 
 var affection := 0.0:
 	set(v):
@@ -190,6 +197,12 @@ var path_locked := false
 var player_name := "Senpai"
 ## JSON-safe flag store for triggers/scenario state: bools, counts, small data.
 var flags := {}
+## docs/08 §6 lines waiting for the next prompt — a stage crossing queues hers
+## here (_refresh_stage); P2.08's triggers queue theirs the same way. The
+## Director drains them exactly once when it assembles the next turn, so a line
+## is never repeated and never lost between turns. Not part of the snapshot: a
+## loaded game starts with an empty queue (from_dict clears it).
+var pending_events: Array[String] = []
 ## Behaviour-profile counters (docs/01 §2); bump via bump_profile()/apply_read().
 var profile := _blank_profile()
 var last_stress := 0
@@ -228,6 +241,7 @@ func reset() -> void:
 	path_locked = false
 	player_name = "Senpai"
 	flags = {}
+	pending_events.clear()
 	profile = _blank_profile()
 	_last_tone = &""
 	_mood_turn = -1
@@ -422,6 +436,25 @@ func clear_flag(flag: StringName) -> void:
 		flag_changed.emit(flag, null)
 
 
+## docs/08 §6: queues one event line for the next prompt. Blank lines and
+## duplicates are dropped — one fact must not ride two turns because two
+## systems noticed it.
+func queue_event(line: String) -> void:
+	var trimmed := line.strip_edges()
+	if trimmed.is_empty():
+		return
+	if not pending_events.has(trimmed):
+		pending_events.append(trimmed)
+
+
+## Hands the queued event lines to the turn that is starting and empties the
+## queue: each line is told to the model exactly once.
+func take_pending_events() -> Array[String]:
+	var drained := pending_events.duplicate()
+	pending_events.clear()
+	return drained
+
+
 ## docs/01 §4: soft path assignment (stage 2). Once locked (stage 3) the path
 ## cannot change — highest score wins is the caller's job (P2.12).
 func assign_path(new_path: StringName, locked := false) -> bool:
@@ -504,7 +537,7 @@ func from_dict(data: Variant) -> bool:
 	instability_peak = maxf(
 		instability_peak, _clamp_meter(&"instability", _num(data.get("instability"), 0.0))
 	)
-	var healed_stage := _stage_for_instability(instability_peak)
+	var healed_stage := Stages.for_instability(instability_peak)
 	if data.has("stage") and int(_num(data["stage"], -1.0)) != healed_stage:
 		push_warning(
 			(
@@ -522,6 +555,9 @@ func from_dict(data: Variant) -> bool:
 	turn = int(_num(data.get("turn"), 0.0))
 	_mood_turn = -1
 	_mood_spent.clear()
+	# Event lines belong to the run that queued them; a loaded game starts with
+	# an empty queue rather than replaying the previous run's last crossing.
+	pending_events.clear()
 	var stored_path := StringName(_str(data.get("path")))
 	if stored_path == &"" or PATHS.has(stored_path):
 		path = stored_path
@@ -563,14 +599,6 @@ func from_dict(data: Variant) -> bool:
 	_last_tone = stored_tone if _tone_names().has(stored_tone) else &""
 	state_reset.emit()
 	return true
-
-
-static func _stage_for_instability(value: float) -> int:
-	var band := 0
-	for i: int in STAGE_BANDS.size():
-		if value >= STAGE_BANDS[i]:
-			band = i
-	return band
 
 
 ## Recursive JSON-safety for flags/snapshot data (docs/07 §3.5): finite scalars,
@@ -646,13 +674,29 @@ func _clamp_meter(meter: StringName, value: float) -> float:
 
 ## Stage only ever rises (docs/01 §3 transitions are one-way diegetic events);
 ## Instability dips within the ratchet are "good days", not de-escalation.
+##
+## One crossing = one transition: the guard is `band > stage`, and it is the
+## only place stage_transition fires. Writing Instability again inside the band
+## leaves `band == stage` and emits nothing; one write that jumps two bands
+## fires once with the full previous→current pair; a restore never gets here
+## (from_dict suppresses it via `_restoring` and emits its own stage_changed).
 func _refresh_stage(value: float) -> void:
-	var band := _stage_for_instability(value)
-	if band > stage:
-		var previous := stage
-		stage = band
-		if not _restoring:
-			stage_changed.emit(previous, stage)
+	var band := Stages.for_instability(value)
+	if band <= stage:
+		return
+	var previous := stage
+	stage = band
+	if _restoring:
+		return
+	# docs/01 §3 + docs/08 §6: the diegetic transition for this crossing, and
+	# the line she is told about it in her next prompt.
+	var line := Stages.event_line(stage)
+	if line.is_empty():
+		push_warning("GameState: no stage-transition EVENT line for stage %d" % stage)
+	else:
+		queue_event(line)
+	stage_changed.emit(previous, stage)
+	stage_transition.emit(previous, stage, Stages.transition_spec(stage))
 
 
 func _blank_profile() -> Dictionary:
