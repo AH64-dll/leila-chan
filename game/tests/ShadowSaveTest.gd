@@ -40,9 +40,10 @@ func before_test() -> void:
 
 func after_test() -> void:
 	_remove_tree(TEST_ROOT)
-	# The shipped-root test writes its probe into the real tree; a failing run
-	# must not leave it behind.
-	DirAccess.remove_absolute(SaveSystem.DEFAULT_USER_ROOT.path_join(".leila/wipe_probe.txt"))
+	# The opted-in live-root test writes a probe into the real tree; a failing
+	# run must not leave it behind. Nothing else here touches the live tree.
+	if OS.get_environment("LEILA_WIPE_LIVE_USER_DIR") == "1":
+		DirAccess.remove_absolute(SaveSystem.DEFAULT_USER_ROOT.path_join(".leila/wipe_probe.txt"))
 	SaveSystem.save_dir = _previous_dir
 	SaveSystem.shadow_path = _previous_shadow
 	SaveSystem.user_root = _previous_root
@@ -191,13 +192,18 @@ func test_wipe_root_preserves_the_shipped_scheme() -> void:
 
 
 ## Acceptance 2 in the configuration a player actually runs (S1, round 2): with
-## `user_root` left at the shipped default, a file under the REAL
-## `user://.leila/` is removed. Every file already under the root goes into
-## `keep`, so the removal is proven without erasing the player's (or another
-## suite's) data; the literal `Settings.reset_everything()` probe, where only
-## settings.cfg survives, is recorded in the round-2 handoff, run against a
-## throwaway user dir.
+## `user_root` left at the shipped default, a file under `user://.leila/` is
+## removed. OPT-IN ONLY (`LEILA_WIPE_LIVE_USER_DIR=1`): every worktree on a dev
+## machine shares one `app_userdata` dir, so an unsupervised live-root wipe
+## deletes whatever another process writes during the run (round-2 review, S3 —
+## a 2.5 ms writer lost indices 3711-3714). The shipped-root failure is pinned
+## without live data by `test_wipe_root_preserves_the_shipped_scheme`, and the
+## literal `Settings.reset_everything()` probe is in the round-2 handoff,
+## sandboxed with `XDG_DATA_HOME`. When opted in, every pre-existing file is
+## kept, so even that run cannot erase another suite's data.
 func test_reset_wipes_under_the_shipped_default_root() -> void:
+	if OS.get_environment("LEILA_WIPE_LIVE_USER_DIR") != "1":
+		return  # never touch the live user dir unless the caller asks for it
 	SaveSystem.user_root = SaveSystem.DEFAULT_USER_ROOT
 	var keep := _files_under(SaveSystem.DEFAULT_USER_ROOT)
 	var probe := SaveSystem.DEFAULT_USER_ROOT.path_join(".leila/wipe_probe.txt")
