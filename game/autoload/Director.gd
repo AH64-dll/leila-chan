@@ -20,8 +20,6 @@ const UNSAFE_INPUT_CODE := "unsafe_input"
 const UNSAFE_INPUT_MESSAGE := "Input blocked by safety policy"
 ## Turn history maintained by Director: array of {"role": "user"|"assistant", ...}
 var history: Array[Dictionary] = []
-## Validated player memories (docs/02 §6)
-var memories: Array[String] = []
 ## Current active scene info
 var scene_info: Dictionary = {
 	"prompt": "You are in a small café after class. Two cups, one window seat.",
@@ -120,7 +118,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func reset() -> void:
 	history.clear()
-	memories.clear()
+	Memory.reset()
 	last_player_inputs.clear()
 	quiet_turn_streak = 0
 	last_turn_data.clear()
@@ -239,7 +237,10 @@ func get_current_dose() -> Dictionary:
 		return last_dose
 	var stage := int(GameState.stage)
 	if Steering != null and Steering.has_method("dose_for"):
-		return Steering.dose_for(build_turn_context(""))
+		# Not `build_turn_context()`: that injects the memories, and a read-only
+		# accessor (the F3 overlay refreshes it) must not spend an injection or
+		# clear the log the transcript is about to write (review r2 DES-7).
+		return Steering.dose_for({"stage": stage})
 	return {"malice": float(sampling_spec(stage).get("dose", 0.0))}
 
 
@@ -248,8 +249,12 @@ func sampling_spec(stage: int) -> Dictionary:
 	return TurnContext.sampling_spec(stage)
 
 
-## The docs/02 §4 step 1 snapshot for this turn (see TurnContext.build).
+## The docs/02 §4 step 1 snapshot for this turn (see TurnContext.build). The
+## memories are the ones she *reads*: newest 8 slots, corrupted per stage
+## (docs/02 §6), which is why the prompt is built from Memory and not from a
+## Director-owned list.
 func build_turn_context(player_text: String, events: Array = []) -> Dictionary:
+	var memories := Memory.prompt_facts({"stage": int(GameState.stage)})
 	return TurnContext.build(
 		player_text, events, scene_info, memories, history, get_offered_actions()
 	)
@@ -320,6 +325,8 @@ func _reject_unsafe_input() -> void:
 	_turn_index = GameState.turn  # the record identity: this never-started turn
 	_current_stage = int(GameState.stage)
 	_current_path = String(GameState.path)
+	# No prompt is built for a refusal, so the record is not the last turn's.
+	Memory.begin_turn()
 	_log_turn_record("failed", UNSAFE_INPUT_CODE, UNSAFE_INPUT_MESSAGE)
 	var refusal: Dictionary = TurnValidator.get_input_refusal(_current_stage, GameState.player_name)
 	_safety.end_utterance()  # reply boundary (P1.19 CODE-19): a new utterance
@@ -357,6 +364,7 @@ func _start_turn(player_text: String) -> bool:
 	_clear_turn_context()
 	_current_stage = int(GameState.stage)
 	_current_path = String(GameState.path)
+	Memory.begin_turn()  # the transcript's memory block is this turn's only
 
 	# Reply boundary (P1.19 r4 CODE-19): a new model utterance starts here, so
 	# the filter's cross-beat carry must not glue the previous reply's tail into
@@ -741,15 +749,14 @@ func _close_turn_success(turn_data: Dictionary) -> void:
 		var read_label := StringName(str(turn_data["read"]))
 		GameState.apply_read(read_label)
 
-	# Apply memory
-	if turn_data.has("memory") and str(turn_data["memory"]) != "":
+	# docs/02 §6 quoting runs before the proposal: a fact learned this turn cannot
+	# also count as one she quoted this turn. A rejection is named by its rule and
+	# stays in the store's report; nothing about it reaches the model.
+	Memory.note_quotes(TurnContext.spoken_text(turn_data))
+	if turn_data.has("memory"):
 		var mem_candidate := str(turn_data["memory"]).strip_edges()
-		if validate_memory(mem_candidate, last_player_inputs, memories):
-			memories.append(mem_candidate)
-			if memories.size() > 24:
-				memories.pop_front()
-			if Memory != null and Memory.has_method("add_memory"):
-				Memory.add_memory(mem_candidate)
+		if not mem_candidate.is_empty():
+			Memory.consider(mem_candidate, last_player_inputs)
 
 	# Apply action
 	if turn_data.has("action") and str(turn_data["action"]) != "none":
@@ -912,6 +919,7 @@ func _log_turn_record(status: String, err_code := "", err_msg := "") -> void:
 		"dose": _current_dose,
 		"day": int(GameState.day),
 		"meta": {"status": status},
+		"memory": Memory.report(),
 	}
 	if not error_dict.is_empty():
 		record["error"] = error_dict
