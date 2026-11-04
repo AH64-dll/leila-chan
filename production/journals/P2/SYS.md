@@ -200,3 +200,43 @@
   deterministic local-hour window.
 - Suite is at gdlint's 20-public-method cap (`before_test` counts as public): fold a new case into an
   existing one rather than raising the project limit.
+## P2.12 — fracture paths (round 1, 2026-11-04, agent: deepseek)
+
+- Built `llm/Paths.gd` + `data/paths.json` (six formulas, Stage-2/Stage-3 pair, recency tie-break,
+  `parse_document` fallback) and `llm/ProfileKeywords.gd` + `data/profile_keywords.json` (control, apathy
+  incl. short replies, flattery_rejected, ignored_questions). `GameState.apply_turn_profile(read, line,
+  turn_data)` replaced `apply_read` and is now the one per-turn entry: read map → keyword bumps → path
+  check; it returns the decision dict.
+- Convention: §4's three formula counters (`broken_promises`, `flattery_rejected`, `ignored_questions`)
+  live in the same 15-key profile as §2's twelve tags; `Paths.counters()` is the only list, and the read
+  map may only write §2 tags. `broken_promises` is engine-fed (I15) — never give it a keyword rule.
+- Convention: the lock fires inside `_refresh_stage`, so a Stage-3 crossing (night roll-over, trigger
+  spike) freezes the path *before* that turn's read is applied; the turn close re-evaluates only for
+  Stage-2 drift. The runner-up is recomputed after the assignment and excludes the LIVE primary.
+- Gotcha: computing the runner-up straight from `Paths.select()` lets a locked path become its own
+  runner-up (the score winner can differ from the frozen path); compute it after `assign_path` against
+  `GameState.path`. The Stage-3 save round-trip test is what caught it.
+- Gotcha: GameState and Director both sit at exactly 20 public methods / 1000 lines. A rename keeps the
+  method count; the read block replacement (4 lines → 3) paid for the replay's `_current_player_input`.
+- Next SYS on this seam: P2.19 gets assign/lock free via `_refresh_stage`; P2.20 must save
+  `path_scores`/`path_evidence`/`path_runner_up`/`last_question`; P2.10 bumps T15/I15 counters.
+
+## P2.12 — fracture paths (round 2, 2026-11-04, agent: deepseek)
+
+- Reworked the keyword half only: `_is_apathy()` now runs the `?` check first, gates a dismissal phrase on
+  `dismissal_max_words` (new data cap, 6 — a dismissal is the *message*), and takes `awaiting_answer` so a
+  terse reply to her pending question is an answer. Exemptions go through `_has_any()`, so "I'm sorry" is
+  exempt and "nothing"/"him" are not.
+- Convention: every keyword predicate answers "is this the *message's* behaviour?" — the r1 bug was scoring
+  a word inside an engaged sentence. If a future counter needs sub-message structure, put the phrasing in the
+  data file, not in a bigger predicate.
+- Convention: `ignored_questions` is now nested under the dismissal in `classify()` — T15 can only fire when
+  the apathy rule fired *and* a question was pending, which keeps the two counters from drifting apart.
+- Gotcha: `tests/test_paths.py::test_keyword_rules_are_string_lists` walks every key in a rule block and
+  treats non-`short_reply_words` values as phrase lists — a new integer knob there fails the pytest suite,
+  not gdUnit. Add the key to that test when you add a cap.
+- Gotcha: a short line can be a dismissal or an answer; only `last_question` tells them apart, and
+  `GameState.apply_turn_profile` passes the *previous* turn's question, so a test must ask in turn N-1 to
+  exercise the answer path.
+- Next SYS on this seam: `dismissal_max_words` is the tuning knob (raise it if engaged lines slip through;
+  add a phrase if dismissals are missed). "Whatever, I love you." still scores apathy by design.

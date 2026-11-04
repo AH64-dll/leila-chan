@@ -162,9 +162,10 @@ static func offered_values(stage: int, offered_actions: Array) -> Dictionary:
 	}
 
 
-## The docs/02 §4 step 1 snapshot: stage, path, meters, scene, memories, this
-## turn's trigger events, the history window and the offered values. PromptBuilder,
-## Steering.dose_for and the transcript all read this one shape.
+## The docs/02 §4 step 1 snapshot: stage, path, the docs/01 §4 hybrid runner-up,
+## meters, scene, memories, this turn's trigger events, the history window and
+## the offered values. PromptBuilder, Steering.dose_for and the transcript all
+## read this one shape.
 static func build(
 	player_text: String,
 	events: Array,
@@ -177,6 +178,7 @@ static func build(
 	return {
 		"stage": stage,
 		"path": String(GameState.path),
+		"path_runner_up": String(GameState.path_runner_up),
 		"player_name": GameState.player_name,
 		"scene": scene,
 		"memories": memories.duplicate(),

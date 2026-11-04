@@ -1,6 +1,6 @@
 {
  "version": 1,
- "about": "How the model's `read` intent feeds the behaviour-profile counters (docs/01 §2, docs/02 §1.2). Keys of read_to_profile are the 17 read labels in doc order; values are counter bumps applied by GameState.apply_read(). `tone` marks the warm/cold polarity used for `inconsistency` (warm<->cold swings); reads absent from tone are neutral. Counters no read label maps to (control, apathy) are bumped by the keyword classifier via GameState.bump_profile().",
+ "about": "How the model's `read` intent feeds the behaviour-profile counters (docs/01 §2, docs/02 §1.2). Keys of read_to_profile are the 17 read labels in doc order; values are counter bumps applied by GameState.apply_turn_profile(). `tone` marks the warm/cold polarity used for `inconsistency` (warm<->cold swings); reads absent from tone are neutral. Counters no read label maps to (control, apathy) are bumped by the keyword classifier (ProfileKeywords, P2.12) via GameState.bump_profile(); the three §4 formula counters (broken_promises, flattery_rejected, ignored_questions) share the same store.",
  "read_to_profile": {
   "greeting": {},
   "flirt": {
