@@ -3313,11 +3313,40 @@
       "finished": "2026-11-04T22:07:35+02:00"
     },
     "P3.09": {
-      "status": "in_progress",
-      "agent": null,
+      "status": "in_review",
+      "agent": "swe2",
       "round": 1,
-      "reviews": [],
-      "started": "2026-11-04T20:30:51+02:00"
+      "reviews": [
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "gemini-flash",
+          "report": "production/reviews/P3.09-code-r1.md",
+          "ts": "2026-11-04T23:44:06+02:00",
+          "declared": "gemini-flash"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "gemini-flash",
+          "report": "production/reviews/P3.09-design-r1.md",
+          "ts": "2026-11-04T23:44:06+02:00",
+          "declared": "gemini-flash"
+        },
+        {
+          "kind": "safety",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "gemini-flash",
+          "report": "production/reviews/P3.09-safety-r1.md",
+          "ts": "2026-11-04T23:44:06+02:00",
+          "declared": "gemini-flash"
+        }
+      ],
+      "started": "2026-11-04T20:30:51+02:00",
+      "handoff": "production/handoffs/P3.09.md"
     },
     "P3.10": {
       "status": "in_progress",
@@ -3327,11 +3356,12 @@
       "started": "2026-11-04T20:30:51+02:00"
     },
     "P3.11": {
-      "status": "in_progress",
-      "agent": null,
+      "status": "in_review",
+      "agent": "swe2",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-04T20:30:51+02:00"
+      "started": "2026-11-04T20:30:51+02:00",
+      "handoff": "production/handoffs/P3.11.md"
     },
     "P2.22": {
       "status": "done",
@@ -8199,6 +8229,48 @@
       "event": "in_review->done",
       "ref": "P3.05",
       "note": ""
+    },
+    {
+      "ts": "2026-11-04T23:06:46+02:00",
+      "event": "agent",
+      "ref": "P3.11",
+      "note": "adopted from handoff: swe2"
+    },
+    {
+      "ts": "2026-11-04T23:06:46+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P3.11",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T23:08:58+02:00",
+      "event": "agent",
+      "ref": "P3.09",
+      "note": "adopted from handoff: swe2"
+    },
+    {
+      "ts": "2026-11-04T23:08:58+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P3.09",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T23:44:06+02:00",
+      "event": "review:code:approved",
+      "ref": "P3.09",
+      "note": "production/reviews/P3.09-code-r1.md"
+    },
+    {
+      "ts": "2026-11-04T23:44:06+02:00",
+      "event": "review:design:approved",
+      "ref": "P3.09",
+      "note": "production/reviews/P3.09-design-r1.md"
+    },
+    {
+      "ts": "2026-11-04T23:44:06+02:00",
+      "event": "review:safety:approved",
+      "ref": "P3.09",
+      "note": "production/reviews/P3.09-safety-r1.md"
     }
   ]
 }
