@@ -5,11 +5,14 @@ stub llama-server (same pattern as tests/test_smoke_check_turn.py).
 Run: python -m pytest tools/promptlab/tests -q
 """
 import json
+import re
 import subprocess
 import sys
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
+
+import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import lab
@@ -193,3 +196,40 @@ def test_report_contains_metrics_and_gates(tmp_path):
     assert "intent (read) accuracy" in md and "85%" in md
     assert "emotion fit — **first-beat (gate)**" in md
     assert "Few-shot copy rate" in md and "Memory rejection rate" in md
+
+
+# --- wire schema order must be the game's, not the lab's (P2.26 DES-2) ---------
+
+def gd_string_array(source, name):
+    """Read a `const NAME: Array[String] = [ ... ]` literal from TurnSchema.gd."""
+    body = source.split("const %s: Array[String] = [" % name, 1)[1].split("]", 1)[0]
+    return re.findall(r'"([a-z_]+)"', body)
+
+
+def turnschema_source():
+    return (ROOT / "game" / "llm" / "TurnSchema.gd").read_text(encoding="utf-8")
+
+
+def test_lab_schema_order_is_pinned_to_turnschema_gd():
+    """DCR-1's quality A/B must send the order the game sends, or it proves nothing.
+
+    `TurnSchema.DOCS_02_PROPERTY_ORDER` is what `Director.gd` puts on the wire.
+    The lab used to hard-code its own copy, so shipping a new order in the game
+    and leaving the lab alone would measure the *old* behaviour and silently
+    pass. Pinning the copy to the .gd file makes that a red test.
+    """
+    source = turnschema_source()
+    assert lab.PROPERTY_ORDER == gd_string_array(source, "DOCS_02_PROPERTY_ORDER")
+    assert list(lab.build_turn_schema(0)["properties"]) == lab.PROPERTY_ORDER
+    beats = source.split('"beats":', 1)[1].split('"required": [', 1)[1].split("]", 1)[0]
+    assert lab.BEAT_ORDER == re.findall(r'"([a-z_]+)"', beats)
+
+
+def test_named_order_reorders_the_wire_schema_and_keeps_every_key():
+    schema = lab.build_turn_schema(0, "music_fx_beats_first")
+    assert list(schema["properties"])[:3] == ["music", "fx", "beats"]
+    assert list(schema["properties"]) == lab.ORDER_ALIASES["music_fx_beats_first"]
+    assert set(schema["properties"]) == set(lab.PROPERTY_ORDER)
+    assert schema["required"] == lab.ORDER_ALIASES["music_fx_beats_first"]
+    with pytest.raises(KeyError):
+        lab.build_turn_schema(0, "not_an_order")

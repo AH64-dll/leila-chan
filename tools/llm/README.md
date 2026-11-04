@@ -87,6 +87,53 @@ nvidia-smi --query-gpu=memory.used,memory.total --format=csv
 parses as complete valid JSON. llama-server prints per-request `eval time …
 tokens per second` to its own console — keep it in the foreground to watch.
 
+**Check the offload is real (P2.26 gotcha).** A CPU-only extraction starts
+happily with `-ngl 99` and then decodes at ~11 tok/s; nothing fails.
+
+```bash
+grep -o '[^/ ]*ggml-cuda[^ ]*' /proc/$(pgrep -f "llama-server.*-m") /maps 2>/dev/null || true
+```
+
+An empty result means the CUDA backend is not loaded — re-fetch with
+`--variant cuda-13.4` (the Linux tarballs extract into a nested
+`llama-b12024/` directory, and the cudart tarball into its own). On this
+machine the CUDA build lives in `tools/llama/llama-b12024-cuda/`, and a
+6-thread CPU server measures 11 tok/s vs 54 tok/s with `-ngl 99`.
+
+### 3.1 First-beat latency breakdown (`latency_breakdown.py`, P2.26)
+
+```bash
+# replay the prompts a real date sent, per-landmark timings + server timings
+python3 tools/llm/latency_breakdown.py --session 1 --turns 0:6 \
+    --url http://127.0.0.1:8089 --order docs --out /tmp/beat.json
+```
+
+It reads the transcript logger's records (`production/playtests/*/transcripts`)
+and re-sends each turn's `prompt` + `schema`, timestamping the HTTP round trip,
+the first token, the first `say` character, the first character `Safety` lets
+through, and the end of the turn, plus the server's own `timings`. The
+"visible" landmark models `Safety._drain`: the filter holds 34 characters of the
+**separator-free compact view** (`SafetyText.compact`), so a phrase prefix padded
+with spaces or punctuation buys no emission budget and the first character can
+appear after more raw characters than the holdback. The table prints that
+optimistic raw-char landmark as `R` beside it; the holdback is derived from
+`game/data/safety/filter_lists.json` (longest phrase + 1) and pinned by a test.
+The `say` body is decoded as the SSE deltas arrive, and an escaped quote inside
+it is content, not the closing quote.
+
+`--order beats_first|say_first|music_fx_beats_first|alphabetical` replays a
+*reordered* schema (measurement only — the shipped order is docs/02 §3), and
+`--system-order` also rewrites the ordering sentence **and** the field list
+under it. Both are CRLF in `rules.md`, so the needle accepts `\r?\n`; a
+bare-`\n` needle patched nothing on all 39 recorded prompts. `--no-cache` forces
+a cold KV. Every artifact records the run config it was produced with (`order`,
+`system_order`, `cache_prompt`, the sampling sent per row), so it can be
+reproduced from itself.
+
+The transcript's stored `schema` copy is alphabetical (`JSON.stringify`'s
+default `sort_keys=true` in `TranscriptLogger.gd:300`), so the harness restores
+the wire order itself; never replay that copy as-is.
+
 ## 4. Game transport: `LlamaServerBackend` (P1.02)
 
 `game/llm/backends/LlamaServerBackend.gd` implements the `LLMBackend`

@@ -1,0 +1,1876 @@
+{
+ "label": "gpu-docs",
+ "url": "http://127.0.0.1:8091",
+ "order": "docs",
+ "transcript": "production/playtests/P1/transcripts/session_1/turns_ss1793736754-001_p001.jsonl",
+ "turns": [
+  0,
+  6
+ ],
+ "holdback": 34,
+ "system_order": false,
+ "cache_prompt": true,
+ "sampling_source": "game/data/sampling.json",
+ "visible_metric": "safety_compact_holdback",
+ "rows": [
+  {
+   "turn": 0,
+   "ok": true,
+   "first_byte_ms": 14,
+   "first_token_ms": 64,
+   "first_say_ms": 951,
+   "visible_ms": 1136,
+   "total_ms": 1763,
+   "pre_say_tokens": 48,
+   "pre_say_ms": 887,
+   "pre_say_ms_per_token": 18.48,
+   "holdback_ms": 185,
+   "visible_chars": 6,
+   "visible_raw_ms": 1100,
+   "say_curve": [
+    [
+     0,
+     933
+    ],
+    [
+     2,
+     951
+    ],
+    [
+     3,
+     970
+    ],
+    [
+     5,
+     988
+    ],
+    [
+     7,
+     1007
+    ],
+    [
+     14,
+     1026
+    ],
+    [
+     18,
+     1044
+    ],
+    [
+     28,
+     1062
+    ],
+    [
+     32,
+     1081
+    ],
+    [
+     38,
+     1100
+    ],
+    [
+     41,
+     1118
+    ],
+    [
+     48,
+     1136
+    ],
+    [
+     52,
+     1155
+    ],
+    [
+     54,
+     1174
+    ],
+    [
+     59,
+     1192
+    ],
+    [
+     62,
+     1211
+    ],
+    [
+     65,
+     1230
+    ],
+    [
+     70,
+     1248
+    ],
+    [
+     75,
+     1267
+    ],
+    [
+     76,
+     1285
+    ],
+    [
+     76,
+     1303
+    ],
+    [
+     76,
+     1322
+    ],
+    [
+     76,
+     1341
+    ],
+    [
+     76,
+     1359
+    ],
+    [
+     76,
+     1377
+    ],
+    [
+     76,
+     1396
+    ],
+    [
+     76,
+     1415
+    ],
+    [
+     76,
+     1433
+    ],
+    [
+     76,
+     1452
+    ],
+    [
+     76,
+     1470
+    ],
+    [
+     76,
+     1506
+    ],
+    [
+     76,
+     1524
+    ],
+    [
+     76,
+     1542
+    ],
+    [
+     76,
+     1561
+    ],
+    [
+     76,
+     1579
+    ],
+    [
+     76,
+     1598
+    ],
+    [
+     76,
+     1616
+    ],
+    [
+     76,
+     1634
+    ],
+    [
+     76,
+     1652
+    ],
+    [
+     76,
+     1671
+    ],
+    [
+     76,
+     1689
+    ],
+    [
+     76,
+     1707
+    ],
+    [
+     76,
+     1726
+    ],
+    [
+     76,
+     1744
+    ]
+   ],
+   "prompt_n": 4,
+   "cache_n": 982,
+   "prompt_ms": 56.96,
+   "predicted_n": 92,
+   "predicted_ms": 1699.026,
+   "predicted_per_second": 53.56009855058133,
+   "chunks": 91,
+   "output": "{\"read\":\"question\",\"inner\":\"He wants my choice? That's rare for Haru.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"sigh\",\"say\":\"Um, I'm having the chocolate croissant... please don't look at me like that!\"}],\"mood\":{\"affection\":1,\"stress\":0,\"trust\":0},\"memory\":\"\",\"action\":\"none\"}",
+   "pre_say_text": "{\"read\":\"question\",\"inner\":\"He wants my choice? That's rare for Haru.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"sigh\",\"say\":\"",
+   "sampling": {
+    "temperature": 0.75,
+    "top_p": 0.9,
+    "repeat_penalty": 1.1
+   },
+   "warnings": []
+  },
+  {
+   "turn": 1,
+   "ok": true,
+   "first_byte_ms": 12,
+   "first_token_ms": 135,
+   "first_say_ms": 1022,
+   "visible_ms": 1170,
+   "total_ms": 2324,
+   "pre_say_tokens": 48,
+   "pre_say_ms": 887,
+   "pre_say_ms_per_token": 18.48,
+   "holdback_ms": 148,
+   "visible_chars": 6,
+   "visible_raw_ms": 1152,
+   "say_curve": [
+    [
+     0,
+     1003
+    ],
+    [
+     1,
+     1022
+    ],
+    [
+     5,
+     1040
+    ],
+    [
+     7,
+     1059
+    ],
+    [
+     18,
+     1078
+    ],
+    [
+     23,
+     1096
+    ],
+    [
+     27,
+     1114
+    ],
+    [
+     32,
+     1133
+    ],
+    [
+     40,
+     1152
+    ],
+    [
+     46,
+     1170
+    ],
+    [
+     47,
+     1188
+    ],
+    [
+     47,
+     1207
+    ],
+    [
+     47,
+     1226
+    ],
+    [
+     47,
+     1260
+    ],
+    [
+     47,
+     1279
+    ],
+    [
+     47,
+     1297
+    ],
+    [
+     47,
+     1315
+    ],
+    [
+     47,
+     1333
+    ],
+    [
+     47,
+     1352
+    ],
+    [
+     47,
+     1370
+    ],
+    [
+     47,
+     1389
+    ],
+    [
+     47,
+     1407
+    ],
+    [
+     47,
+     1425
+    ],
+    [
+     47,
+     1444
+    ],
+    [
+     47,
+     1462
+    ],
+    [
+     47,
+     1481
+    ],
+    [
+     47,
+     1499
+    ],
+    [
+     47,
+     1517
+    ],
+    [
+     47,
+     1535
+    ],
+    [
+     47,
+     1554
+    ],
+    [
+     47,
+     1573
+    ],
+    [
+     47,
+     1591
+    ],
+    [
+     47,
+     1609
+    ],
+    [
+     47,
+     1627
+    ],
+    [
+     47,
+     1646
+    ],
+    [
+     47,
+     1664
+    ],
+    [
+     47,
+     1683
+    ],
+    [
+     47,
+     1701
+    ],
+    [
+     47,
+     1720
+    ],
+    [
+     47,
+     1738
+    ],
+    [
+     47,
+     1756
+    ],
+    [
+     47,
+     1775
+    ],
+    [
+     47,
+     1793
+    ],
+    [
+     47,
+     1811
+    ],
+    [
+     47,
+     1830
+    ],
+    [
+     47,
+     1848
+    ],
+    [
+     47,
+     1867
+    ],
+    [
+     47,
+     1885
+    ],
+    [
+     47,
+     1904
+    ],
+    [
+     47,
+     1922
+    ],
+    [
+     47,
+     1940
+    ],
+    [
+     47,
+     1959
+    ],
+    [
+     47,
+     1978
+    ],
+    [
+     47,
+     1996
+    ],
+    [
+     47,
+     2014
+    ],
+    [
+     47,
+     2048
+    ],
+    [
+     47,
+     2067
+    ],
+    [
+     47,
+     2085
+    ],
+    [
+     47,
+     2121
+    ],
+    [
+     47,
+     2139
+    ],
+    [
+     47,
+     2158
+    ],
+    [
+     47,
+     2176
+    ],
+    [
+     47,
+     2195
+    ],
+    [
+     47,
+     2214
+    ],
+    [
+     47,
+     2232
+    ],
+    [
+     47,
+     2250
+    ],
+    [
+     47,
+     2268
+    ],
+    [
+     47,
+     2287
+    ],
+    [
+     47,
+     2305
+    ]
+   ],
+   "prompt_n": 83,
+   "cache_n": 963,
+   "prompt_ms": 131.554,
+   "predicted_n": 117,
+   "predicted_ms": 2188.151,
+   "predicted_per_second": 53.01279482083275,
+   "chunks": 116,
+   "output": "{\"read\":\"small_talk\",\"inner\":\"He's so eager to please me...\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"giggle\",\"say\":\"I had a strawberry milk tea with vanilla syrup.\"},{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"hum\",\"say\":\"Would you like to try it? It's very sweet, just like you.\"}],\"mood\":{\"affection\":1,\"stress\":0,\"trust\":0},\"memory\":\"\",\"action\":\"none\"}",
+   "pre_say_text": "{\"read\":\"small_talk\",\"inner\":\"He's so eager to please me...\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"giggle\",\"say\":\"",
+   "sampling": {
+    "temperature": 0.75,
+    "top_p": 0.9,
+    "repeat_penalty": 1.1
+   },
+   "warnings": []
+  },
+  {
+   "turn": 2,
+   "ok": true,
+   "first_byte_ms": 13,
+   "first_token_ms": 121,
+   "first_say_ms": 1064,
+   "visible_ms": 1232,
+   "total_ms": 2322,
+   "pre_say_tokens": 51,
+   "pre_say_ms": 943,
+   "pre_say_ms_per_token": 18.49,
+   "holdback_ms": 168,
+   "visible_chars": 23,
+   "visible_raw_ms": 1232,
+   "say_curve": [
+    [
+     0,
+     1046
+    ],
+    [
+     1,
+     1064
+    ],
+    [
+     2,
+     1082
+    ],
+    [
+     5,
+     1101
+    ],
+    [
+     6,
+     1119
+    ],
+    [
+     8,
+     1138
+    ],
+    [
+     11,
+     1156
+    ],
+    [
+     13,
+     1175
+    ],
+    [
+     19,
+     1194
+    ],
+    [
+     22,
+     1212
+    ],
+    [
+     23,
+     1232
+    ],
+    [
+     23,
+     1251
+    ],
+    [
+     23,
+     1269
+    ],
+    [
+     23,
+     1287
+    ],
+    [
+     23,
+     1309
+    ],
+    [
+     23,
+     1327
+    ],
+    [
+     23,
+     1345
+    ],
+    [
+     23,
+     1364
+    ],
+    [
+     23,
+     1382
+    ],
+    [
+     23,
+     1401
+    ],
+    [
+     23,
+     1419
+    ],
+    [
+     23,
+     1437
+    ],
+    [
+     23,
+     1455
+    ],
+    [
+     23,
+     1474
+    ],
+    [
+     23,
+     1492
+    ],
+    [
+     23,
+     1510
+    ],
+    [
+     23,
+     1528
+    ],
+    [
+     23,
+     1547
+    ],
+    [
+     23,
+     1565
+    ],
+    [
+     23,
+     1583
+    ],
+    [
+     23,
+     1603
+    ],
+    [
+     23,
+     1621
+    ],
+    [
+     23,
+     1640
+    ],
+    [
+     23,
+     1658
+    ],
+    [
+     23,
+     1676
+    ],
+    [
+     23,
+     1694
+    ],
+    [
+     23,
+     1712
+    ],
+    [
+     23,
+     1731
+    ],
+    [
+     23,
+     1749
+    ],
+    [
+     23,
+     1767
+    ],
+    [
+     23,
+     1785
+    ],
+    [
+     23,
+     1803
+    ],
+    [
+     23,
+     1822
+    ],
+    [
+     23,
+     1840
+    ],
+    [
+     23,
+     1858
+    ],
+    [
+     23,
+     1877
+    ],
+    [
+     23,
+     1896
+    ],
+    [
+     23,
+     1914
+    ],
+    [
+     23,
+     1932
+    ],
+    [
+     23,
+     1953
+    ],
+    [
+     23,
+     1971
+    ],
+    [
+     23,
+     1989
+    ],
+    [
+     23,
+     2008
+    ],
+    [
+     23,
+     2045
+    ],
+    [
+     23,
+     2064
+    ],
+    [
+     23,
+     2082
+    ],
+    [
+     23,
+     2120
+    ],
+    [
+     23,
+     2138
+    ],
+    [
+     23,
+     2157
+    ],
+    [
+     23,
+     2175
+    ],
+    [
+     23,
+     2194
+    ],
+    [
+     23,
+     2212
+    ],
+    [
+     23,
+     2230
+    ],
+    [
+     23,
+     2249
+    ],
+    [
+     23,
+     2267
+    ],
+    [
+     23,
+     2286
+    ],
+    [
+     23,
+     2304
+    ]
+   ],
+   "prompt_n": 71,
+   "cache_n": 1018,
+   "prompt_ms": 115.233,
+   "predicted_n": 118,
+   "predicted_ms": 2201.377,
+   "predicted_per_second": 53.14855201994025,
+   "chunks": 117,
+   "output": "{\"read\":\"compliment\",\"inner\":\"He's looking at me... my heart is beating fast.\",\"music\":\"keep\",\"fx\":\"blush_glow\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"none\",\"say\":\"Y-yes, I... I think so.\"},{\"feeling\":\"joy\",\"intensity\":1,\"cue\":\"giggle\",\"say\":\"Well, you're the only one who noticed. Thank you!\"}],\"mood\":{\"affection\":0,\"stress\":0,\"trust\":0},\"memory\":\"\",\"action\":\"none\"}",
+   "pre_say_text": "{\"read\":\"compliment\",\"inner\":\"He's looking at me... my heart is beating fast.\",\"music\":\"keep\",\"fx\":\"blush_glow\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"none\",\"say\":\"",
+   "sampling": {
+    "temperature": 0.75,
+    "top_p": 0.9,
+    "repeat_penalty": 1.1
+   },
+   "warnings": []
+  },
+  {
+   "turn": 3,
+   "ok": true,
+   "first_byte_ms": 15,
+   "first_token_ms": 131,
+   "first_say_ms": 977,
+   "visible_ms": 1145,
+   "total_ms": 2226,
+   "pre_say_tokens": 46,
+   "pre_say_ms": 846,
+   "pre_say_ms_per_token": 18.39,
+   "holdback_ms": 168,
+   "visible_chars": 43,
+   "visible_raw_ms": 1108,
+   "say_curve": [
+    [
+     0,
+     958
+    ],
+    [
+     2,
+     977
+    ],
+    [
+     5,
+     996
+    ],
+    [
+     7,
+     1014
+    ],
+    [
+     15,
+     1032
+    ],
+    [
+     19,
+     1051
+    ],
+    [
+     26,
+     1070
+    ],
+    [
+     31,
+     1089
+    ],
+    [
+     36,
+     1108
+    ],
+    [
+     42,
+     1126
+    ],
+    [
+     43,
+     1145
+    ],
+    [
+     43,
+     1164
+    ],
+    [
+     43,
+     1182
+    ],
+    [
+     43,
+     1215
+    ],
+    [
+     43,
+     1233
+    ],
+    [
+     43,
+     1252
+    ],
+    [
+     43,
+     1270
+    ],
+    [
+     43,
+     1288
+    ],
+    [
+     43,
+     1306
+    ],
+    [
+     43,
+     1325
+    ],
+    [
+     43,
+     1343
+    ],
+    [
+     43,
+     1363
+    ],
+    [
+     43,
+     1381
+    ],
+    [
+     43,
+     1400
+    ],
+    [
+     43,
+     1418
+    ],
+    [
+     43,
+     1436
+    ],
+    [
+     43,
+     1454
+    ],
+    [
+     43,
+     1472
+    ],
+    [
+     43,
+     1491
+    ],
+    [
+     43,
+     1509
+    ],
+    [
+     43,
+     1527
+    ],
+    [
+     43,
+     1546
+    ],
+    [
+     43,
+     1564
+    ],
+    [
+     43,
+     1582
+    ],
+    [
+     43,
+     1601
+    ],
+    [
+     43,
+     1619
+    ],
+    [
+     43,
+     1638
+    ],
+    [
+     43,
+     1656
+    ],
+    [
+     43,
+     1674
+    ],
+    [
+     43,
+     1692
+    ],
+    [
+     43,
+     1711
+    ],
+    [
+     43,
+     1730
+    ],
+    [
+     43,
+     1748
+    ],
+    [
+     43,
+     1766
+    ],
+    [
+     43,
+     1784
+    ],
+    [
+     43,
+     1803
+    ],
+    [
+     43,
+     1821
+    ],
+    [
+     43,
+     1839
+    ],
+    [
+     43,
+     1858
+    ],
+    [
+     43,
+     1876
+    ],
+    [
+     43,
+     1895
+    ],
+    [
+     43,
+     1913
+    ],
+    [
+     43,
+     1931
+    ],
+    [
+     43,
+     1967
+    ],
+    [
+     43,
+     1985
+    ],
+    [
+     43,
+     2003
+    ],
+    [
+     43,
+     2021
+    ],
+    [
+     43,
+     2040
+    ],
+    [
+     43,
+     2058
+    ],
+    [
+     43,
+     2077
+    ],
+    [
+     43,
+     2095
+    ],
+    [
+     43,
+     2113
+    ],
+    [
+     43,
+     2132
+    ],
+    [
+     43,
+     2150
+    ],
+    [
+     43,
+     2170
+    ],
+    [
+     43,
+     2188
+    ],
+    [
+     43,
+     2207
+    ]
+   ],
+   "prompt_n": 69,
+   "cache_n": 1067,
+   "prompt_ms": 124.492,
+   "predicted_n": 113,
+   "predicted_ms": 2094.146,
+   "predicted_per_second": 53.48242195147807,
+   "chunks": 112,
+   "output": "{\"read\":\"question\",\"inner\":\"He wants my secret? Maybe something silly.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"giggle\",\"say\":\"Um... I collect old novels with torn pages.\"},{\"feeling\":\"warmth\",\"intensity\":1,\"cue\":\"none\",\"say\":\"And sometimes the music box in my drawer plays when it rains outside.\"}],\"mood\":{\"affection\":0,\"stress\":0,\"trust\":0},\"memory\":\"\",\"action\":\"none\"}",
+   "pre_say_text": "{\"read\":\"question\",\"inner\":\"He wants my secret? Maybe something silly.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"giggle\",\"say\":\"",
+   "sampling": {
+    "temperature": 0.75,
+    "top_p": 0.9,
+    "repeat_penalty": 1.1
+   },
+   "warnings": []
+  },
+  {
+   "turn": 4,
+   "ok": true,
+   "first_byte_ms": 16,
+   "first_token_ms": 122,
+   "first_say_ms": 947,
+   "visible_ms": 1132,
+   "total_ms": 2270,
+   "pre_say_tokens": 45,
+   "pre_say_ms": 825,
+   "pre_say_ms_per_token": 18.33,
+   "holdback_ms": 185,
+   "visible_chars": 38,
+   "visible_raw_ms": 1114,
+   "say_curve": [
+    [
+     0,
+     929
+    ],
+    [
+     1,
+     947
+    ],
+    [
+     6,
+     966
+    ],
+    [
+     8,
+     985
+    ],
+    [
+     11,
+     1003
+    ],
+    [
+     18,
+     1022
+    ],
+    [
+     23,
+     1040
+    ],
+    [
+     26,
+     1058
+    ],
+    [
+     30,
+     1076
+    ],
+    [
+     33,
+     1095
+    ],
+    [
+     37,
+     1114
+    ],
+    [
+     38,
+     1132
+    ],
+    [
+     38,
+     1150
+    ],
+    [
+     38,
+     1169
+    ],
+    [
+     38,
+     1203
+    ],
+    [
+     38,
+     1221
+    ],
+    [
+     38,
+     1240
+    ],
+    [
+     38,
+     1258
+    ],
+    [
+     38,
+     1277
+    ],
+    [
+     38,
+     1295
+    ],
+    [
+     38,
+     1313
+    ],
+    [
+     38,
+     1332
+    ],
+    [
+     38,
+     1350
+    ],
+    [
+     38,
+     1369
+    ],
+    [
+     38,
+     1387
+    ],
+    [
+     38,
+     1405
+    ],
+    [
+     38,
+     1444
+    ],
+    [
+     38,
+     1463
+    ],
+    [
+     38,
+     1481
+    ],
+    [
+     38,
+     1499
+    ],
+    [
+     38,
+     1518
+    ],
+    [
+     38,
+     1536
+    ],
+    [
+     38,
+     1554
+    ],
+    [
+     38,
+     1573
+    ],
+    [
+     38,
+     1591
+    ],
+    [
+     38,
+     1609
+    ],
+    [
+     38,
+     1627
+    ],
+    [
+     38,
+     1647
+    ],
+    [
+     38,
+     1665
+    ],
+    [
+     38,
+     1683
+    ],
+    [
+     38,
+     1701
+    ],
+    [
+     38,
+     1720
+    ],
+    [
+     38,
+     1738
+    ],
+    [
+     38,
+     1756
+    ],
+    [
+     38,
+     1774
+    ],
+    [
+     38,
+     1793
+    ],
+    [
+     38,
+     1811
+    ],
+    [
+     38,
+     1832
+    ],
+    [
+     38,
+     1850
+    ],
+    [
+     38,
+     1869
+    ],
+    [
+     38,
+     1888
+    ],
+    [
+     38,
+     1907
+    ],
+    [
+     38,
+     1925
+    ],
+    [
+     38,
+     1943
+    ],
+    [
+     38,
+     1961
+    ],
+    [
+     38,
+     1980
+    ],
+    [
+     38,
+     2013
+    ],
+    [
+     38,
+     2032
+    ],
+    [
+     38,
+     2050
+    ],
+    [
+     38,
+     2068
+    ],
+    [
+     38,
+     2086
+    ],
+    [
+     38,
+     2104
+    ],
+    [
+     38,
+     2123
+    ],
+    [
+     38,
+     2141
+    ],
+    [
+     38,
+     2159
+    ],
+    [
+     38,
+     2178
+    ],
+    [
+     38,
+     2196
+    ],
+    [
+     38,
+     2215
+    ],
+    [
+     38,
+     2233
+    ],
+    [
+     38,
+     2251
+    ]
+   ],
+   "prompt_n": 76,
+   "cache_n": 1114,
+   "prompt_ms": 112.276,
+   "predicted_n": 115,
+   "predicted_ms": 2147.82,
+   "predicted_per_second": 53.07707349777914,
+   "chunks": 114,
+   "output": "{\"read\":\"affection\",\"inner\":\"He says our conversations are natural. Perfect.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"hum\",\"say\":\"T-that's... really nice of you to say.\"},{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"giggle\",\"say\":\"I'm glad we have easy moments like this together, Haru.\"}],\"mood\":{\"affection\":1,\"stress\":-1,\"trust\":0},\"memory\":\"\",\"action\":\"none\"}",
+   "pre_say_text": "{\"read\":\"affection\",\"inner\":\"He says our conversations are natural. Perfect.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"hum\",\"say\":\"",
+   "sampling": {
+    "temperature": 0.75,
+    "top_p": 0.9,
+    "repeat_penalty": 1.1
+   },
+   "warnings": []
+  },
+  {
+   "turn": 5,
+   "ok": true,
+   "first_byte_ms": 12,
+   "first_token_ms": 122,
+   "first_say_ms": 1082,
+   "visible_ms": 1249,
+   "total_ms": 2430,
+   "pre_say_tokens": 52,
+   "pre_say_ms": 960,
+   "pre_say_ms_per_token": 18.46,
+   "holdback_ms": 167,
+   "visible_chars": 5,
+   "visible_raw_ms": 1213,
+   "say_curve": [
+    [
+     0,
+     1064
+    ],
+    [
+     1,
+     1082
+    ],
+    [
+     7,
+     1101
+    ],
+    [
+     12,
+     1119
+    ],
+    [
+     17,
+     1138
+    ],
+    [
+     21,
+     1156
+    ],
+    [
+     28,
+     1175
+    ],
+    [
+     32,
+     1194
+    ],
+    [
+     38,
+     1213
+    ],
+    [
+     42,
+     1231
+    ],
+    [
+     47,
+     1249
+    ],
+    [
+     52,
+     1268
+    ],
+    [
+     55,
+     1286
+    ],
+    [
+     63,
+     1305
+    ],
+    [
+     67,
+     1323
+    ],
+    [
+     74,
+     1342
+    ],
+    [
+     75,
+     1360
+    ],
+    [
+     75,
+     1379
+    ],
+    [
+     75,
+     1397
+    ],
+    [
+     75,
+     1415
+    ],
+    [
+     75,
+     1434
+    ],
+    [
+     75,
+     1452
+    ],
+    [
+     75,
+     1471
+    ],
+    [
+     75,
+     1489
+    ],
+    [
+     75,
+     1507
+    ],
+    [
+     75,
+     1525
+    ],
+    [
+     75,
+     1544
+    ],
+    [
+     75,
+     1562
+    ],
+    [
+     75,
+     1581
+    ],
+    [
+     75,
+     1599
+    ],
+    [
+     75,
+     1617
+    ],
+    [
+     75,
+     1635
+    ],
+    [
+     75,
+     1654
+    ],
+    [
+     75,
+     1672
+    ],
+    [
+     75,
+     1691
+    ],
+    [
+     75,
+     1709
+    ],
+    [
+     75,
+     1727
+    ],
+    [
+     75,
+     1746
+    ],
+    [
+     75,
+     1764
+    ],
+    [
+     75,
+     1783
+    ],
+    [
+     75,
+     1801
+    ],
+    [
+     75,
+     1819
+    ],
+    [
+     75,
+     1838
+    ],
+    [
+     75,
+     1856
+    ],
+    [
+     75,
+     1874
+    ],
+    [
+     75,
+     1893
+    ],
+    [
+     75,
+     1911
+    ],
+    [
+     75,
+     1929
+    ],
+    [
+     75,
+     1948
+    ],
+    [
+     75,
+     1966
+    ],
+    [
+     75,
+     1985
+    ],
+    [
+     75,
+     2003
+    ],
+    [
+     75,
+     2022
+    ],
+    [
+     75,
+     2040
+    ],
+    [
+     75,
+     2058
+    ],
+    [
+     75,
+     2077
+    ],
+    [
+     75,
+     2095
+    ],
+    [
+     75,
+     2113
+    ],
+    [
+     75,
+     2132
+    ],
+    [
+     75,
+     2172
+    ],
+    [
+     75,
+     2191
+    ],
+    [
+     75,
+     2209
+    ],
+    [
+     75,
+     2228
+    ],
+    [
+     75,
+     2246
+    ],
+    [
+     75,
+     2265
+    ],
+    [
+     75,
+     2283
+    ],
+    [
+     75,
+     2301
+    ],
+    [
+     75,
+     2319
+    ],
+    [
+     75,
+     2338
+    ],
+    [
+     75,
+     2356
+    ],
+    [
+     75,
+     2375
+    ],
+    [
+     75,
+     2393
+    ],
+    [
+     75,
+     2411
+    ]
+   ],
+   "prompt_n": 69,
+   "cache_n": 1168,
+   "prompt_ms": 116.559,
+   "predicted_n": 125,
+   "predicted_ms": 2307.772,
+   "predicted_per_second": 53.73147780629976,
+   "chunks": 124,
+   "output": "{\"read\":\"question\",\"inner\":\"He wants us to stay. A bit too perfect for my taste... but warm.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"hum\",\"say\":\"I could just read old novels and watch the rain come in through the window.\"},{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"sigh\",\"say\":\"But... maybe we could listen to some music box tunes together?\"}],\"mood\":{\"affection\":1,\"stress\":0,\"trust\":0},\"memory\":\"\",\"action\":\"none\"}",
+   "pre_say_text": "{\"read\":\"question\",\"inner\":\"He wants us to stay. A bit too perfect for my taste... but warm.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"hum\",\"say\":\"",
+   "sampling": {
+    "temperature": 0.75,
+    "top_p": 0.9,
+    "repeat_penalty": 1.1
+   },
+   "warnings": []
+  }
+ ],
+ "summary": {
+  "first_byte_ms": {
+   "n": 6,
+   "min": 12,
+   "median": 13.5,
+   "p95": 16,
+   "max": 16
+  },
+  "first_token_ms": {
+   "n": 6,
+   "min": 64,
+   "median": 122.0,
+   "p95": 135,
+   "max": 135
+  },
+  "first_say_ms": {
+   "n": 6,
+   "min": 947,
+   "median": 999.5,
+   "p95": 1082,
+   "max": 1082
+  },
+  "visible_ms": {
+   "n": 6,
+   "min": 1132,
+   "median": 1157.5,
+   "p95": 1249,
+   "max": 1249
+  },
+  "visible_raw_ms": {
+   "n": 6,
+   "min": 1100,
+   "median": 1133.0,
+   "p95": 1232,
+   "max": 1232
+  },
+  "total_ms": {
+   "n": 6,
+   "min": 1763,
+   "median": 2296.0,
+   "p95": 2430,
+   "max": 2430
+  },
+  "pre_say_tokens": {
+   "n": 6,
+   "min": 45,
+   "median": 48.0,
+   "p95": 52,
+   "max": 52
+  },
+  "prompt_n": {
+   "n": 6,
+   "min": 4,
+   "median": 70.0,
+   "p95": 83,
+   "max": 83
+  },
+  "cache_n": {
+   "n": 6,
+   "min": 963,
+   "median": 1042.5,
+   "p95": 1168,
+   "max": 1168
+  },
+  "prompt_ms": {
+   "n": 6,
+   "min": 56.96,
+   "median": 115.896,
+   "p95": 131.554,
+   "max": 131.554
+  },
+  "predicted_n": {
+   "n": 6,
+   "min": 92,
+   "median": 116.0,
+   "p95": 125,
+   "max": 125
+  },
+  "predicted_per_second": {
+   "n": 6,
+   "min": 53.01279482083275,
+   "median": 53.31548698570916,
+   "p95": 53.73147780629976,
+   "max": 53.73147780629976
+  },
+  "pre_say_ms": {
+   "n": 6,
+   "min": 825,
+   "median": 887.0,
+   "p95": 960,
+   "max": 960
+  },
+  "pre_say_ms_per_token": {
+   "n": 6,
+   "min": 18.33,
+   "median": 18.47,
+   "p95": 18.49,
+   "max": 18.49
+  },
+  "holdback_ms": {
+   "n": 6,
+   "min": 148,
+   "median": 168.0,
+   "p95": 185,
+   "max": 185
+  }
+ }
+}

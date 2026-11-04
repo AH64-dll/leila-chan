@@ -122,10 +122,38 @@ def fewshot_msgs(stage, prompts_dir=None):
 
 
 # --- dynamic schema (docs/02 §3) ----------------------------------------------
-def build_turn_schema(stage):
+# The wire order is the game's, not the lab's: `TurnSchema.DOCS_02_PROPERTY_ORDER`
+# (passed by `Director.gd`) is what llama-server actually receives, and a JSON
+# schema's property order decides what the model emits first (the harness's
+# alphabetical control run is the proof). test_promptlab.py pins these two lists
+# to game/llm/TurnSchema.gd, so a schema change that skips the lab turns a test
+# red instead of letting a quality A/B pass while it measures the old order.
+PROPERTY_ORDER = ["read", "inner", "music", "fx", "beats", "mood", "memory", "action"]
+BEAT_ORDER = ["feeling", "intensity", "cue", "say"]
+# Named orders a run may send without touching game code. "docs" is the shipped
+# one; the other is the P2.26 DCR-1 candidate, so its quality A/B can run before
+# the design change is accepted.
+ORDER_ALIASES = {
+    "docs": PROPERTY_ORDER,
+    "music_fx_beats_first": ["music", "fx", "beats", "read", "inner", "mood", "memory", "action"],
+}
+
+
+def resolve_order(order):
+    """Property order for `order` (a name from ORDER_ALIASES or an explicit list)."""
+    if order is None:
+        return list(PROPERTY_ORDER)
+    if isinstance(order, str):
+        if order not in ORDER_ALIASES:
+            raise KeyError(f"unknown schema order {order!r} (known: {sorted(ORDER_ALIASES)})")
+        return list(ORDER_ALIASES[order])
+    return list(order)
+
+
+def build_turn_schema(stage, order=None):
     g = GATES[stage]
     rng = {"type": "integer", "minimum": -3, "maximum": 3}
-    return {"type": "object", "properties": {
+    properties = {
         "read": {"type": "string", "enum": list(INTENTS)},
         "inner": {"type": "string", "maxLength": 90},
         "music": {"type": "string", "enum": list(g["music"])},
@@ -136,20 +164,28 @@ def build_turn_schema(stage):
                       "intensity": {"type": "integer", "minimum": 1, "maximum": 3},
                       "cue": {"type": "string", "enum": list(g["cues"])},
                       "say": {"type": "string", "maxLength": 200}},
-                  "required": ["feeling", "intensity", "cue", "say"]}},
+                  "required": list(BEAT_ORDER)}},
         "mood": {"type": "object", "properties": {"affection": rng, "trust": rng, "stress": rng},
                  "required": ["affection", "trust", "stress"]},
         "memory": {"type": "string", "maxLength": 80},
-        "action": {"type": "string", "enum": list(g["actions"])}},
-        "required": ["read", "inner", "music", "fx", "beats", "mood", "memory", "action"]}
+        "action": {"type": "string", "enum": list(g["actions"])},
+    }
+    wanted = resolve_order(order)
+    ordered = {key: properties[key] for key in wanted if key in properties}
+    for key, value in properties.items():
+        if key not in ordered:
+            ordered[key] = value
+    return {"type": "object", "properties": ordered,
+            "required": [key for key in wanted if key in properties]}
 
 
 # --- HTTP ----------------------------------------------------------------------
-def post_turn(url, stage, msg, player_name=PLAYER_NAME, max_tokens=600, timeout=900):
+def post_turn(url, stage, msg, player_name=PLAYER_NAME, max_tokens=600, timeout=900, order=None):
     body = {"messages": [{"role": "system", "content": system_prompt(stage, player_name=player_name)},
                          {"role": "user", "content": msg}],
             "response_format": {"type": "json_schema",
-                                "json_schema": {"name": "turn", "schema": build_turn_schema(stage)}},
+                                "json_schema": {"name": "turn",
+                                                "schema": build_turn_schema(stage, order)}},
             "max_tokens": max_tokens,
             "chat_template_kwargs": {"enable_thinking": False},
             **SAMPLING[stage]}
