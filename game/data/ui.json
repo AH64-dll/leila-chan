@@ -50,6 +50,8 @@
 		"max_length": 16,
 		"pout_unsafe": "That's not a real name… tell me your real one.",
 		"leila_special": "That's *my* name. …Do you want to be me?",
+		"os_username_special": "You told me the truth. Good.",
+		"shadow_name": "That's not what you were called last time.",
 		"invalid_characters": "Only letters, spaces, hyphens, and apostrophes are allowed.",
 		"too_long": "Name must be 16 characters or less."
 	},

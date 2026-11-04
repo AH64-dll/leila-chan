@@ -185,9 +185,18 @@ word repetition / wrong name (3+), zalgo bursts & redaction (4+), text bleed & r
 The shadow file's full contents, for privacy review (enforced by `ShadowStore`, tested in
 `game/tests/ShadowSaveTest.gd`): `first_name` — the first name ever typed at New Game (docs/08 §1.5);
 `names` — every distinct name across runs; `runs` — the name of each run ended by New Game (cap 8);
+<<<<<<< HEAD
 `memories` — up to `data/memory.json → shadow.limit` (3) facts from the most recent run that reached the
 meta gate (stage 3+); a run that ended earlier keeps the previous set.
 It never holds logs, transcripts, deleted drafts, the OS username, telemetry or device data.
+=======
+`last_stage` — the stage the run she last sealed had reached (the docs/08 §1.5 shadow-line gate, which
+has to survive the process: `GameState.stage` is 0 on the next launch);
+`memories` — up to `data/memory.json → shadow.limit` (3) facts from a run that reached stage 3+.
+It never holds logs, transcripts, deleted drafts, telemetry or device data, and it never reads the
+environment. The OS username is not stored by the game; the only way it can appear is if the player
+*types* it — which the opt-in invites — and then it is kept exactly like any other typed name.
+>>>>>>> task/P3.14
 The write point is `SaveSystem.begin_new_game`, called by the New Game scene before it resets the
 run; "Reset Everything" (`Settings.reset_everything` → `SaveSystem.wipe_everything`) deletes it.
 

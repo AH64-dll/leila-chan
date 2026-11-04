@@ -57,6 +57,7 @@ const TEXT_SPEED_DEFAULT := 1.0
 const VOLUME_MIN := 0.0
 const VOLUME_MAX := 1.0
 const VOLUME_DEFAULT := 1.0
+const SECTION_PRIVACY := "privacy"
 
 ## Test seam: point the store at a scratch file instead of the player's file.
 var settings_path := PATH
@@ -74,6 +75,13 @@ var text_speed: float = TEXT_SPEED_DEFAULT
 ## Safety.gd). Read by Safety.gd's gates and Steering.gd's calmer-dose cap.
 var content_level: String = ""
 
+## docs/09 privacy + docs/08 §1.5: the OS username reaches the game ONLY when
+## the player opts in ("let her call you by your real name"). Defaults off and
+## persisted; when on, New Game's name field treats a typed name matching the
+## OS account name as "You told me the truth. Good." and M28 may use it. The
+## username itself is never written to disk — only the flag is.
+var use_os_username: bool = false
+
 ## docs/05 §0 rule 4: Deep unlocks the OS tricks; Standard is the default and
 ## everything a Standard player sees stays inside the game window anyway.
 var immersion: String = IMMERSION_STANDARD
@@ -86,6 +94,25 @@ var bus_volumes: Dictionary = {}
 ## Persisted as `content_level_before_calmer`, so switching the cap off after a
 ## relaunch restores the player's own earlier choice instead of guessing.
 var _pre_calmer_level: String = ""
+
+
+## The OS account name when the player opted in, "" otherwise — this is the
+## only read of the environment the game ever makes, and docs/09's opt-in
+## gate means the username is invisible to name rules until `use_os_username`
+## is true. USERNAME covers Windows; USER covers Linux/macOS.
+func os_username() -> String:
+	if not use_os_username:
+		return ""
+	for var_name: String in ["USERNAME", "USER"]:
+		var value := OS.get_environment(var_name).strip_edges()
+		if not value.is_empty():
+			return value
+	return ""
+
+
+func set_use_os_username(enabled: bool) -> void:
+	use_os_username = enabled
+	save_settings()
 
 
 func _ready() -> void:
@@ -339,6 +366,10 @@ func _cfg_enum(
 ## date. Invalid or wrong-typed values are dropped back to the documented
 ## default — a corrupt file can neither open a gate (Safety/Steering fail
 ## closed on "" / "standard") nor abort the load half-way.
+##
+## Each flag is read fail-closed through `_stored_bool`: a hand-edited file can
+## hold any type where a bool belongs, and `bool("false")` would raise
+## `Nonexistent 'bool' constructor` mid-load, so only a real bool is trusted.
 func load_settings() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(settings_path) != OK:
@@ -368,7 +399,20 @@ func load_settings() -> void:
 				cfg, SECTION_AUDIO, bus, VOLUME_DEFAULT, VOLUME_MIN, VOLUME_MAX
 			)
 	_apply_bus_volumes()
+	use_os_username = _stored_bool(cfg, SECTION_PRIVACY, "use_os_username", use_os_username)
 	changed.emit(&"all")
+
+
+## A persisted flag, healed: only a bool is accepted, anything else (a string,
+## a number, a list) keeps `fallback` and warns. Both flags default to off, so a
+## value the file cannot express leaves the safe state — the opt-in stays off
+## and the photosensitive accommodation keeps whatever the Title row set.
+static func _stored_bool(cfg: ConfigFile, section: String, key: String, fallback: bool) -> bool:
+	var stored: Variant = cfg.get_value(section, key, fallback)
+	if stored is bool:
+		return stored
+	push_warning("Settings: [%s] %s is not a bool; keeping %s" % [section, key, fallback])
+	return fallback
 
 
 ## Writes every key this file owns. ConfigFile.save() replaces the whole file,
@@ -377,6 +421,7 @@ func load_settings() -> void:
 func save_settings() -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value(SECTION_ACCESSIBILITY, "photosensitive", photosensitive)
+	cfg.set_value(SECTION_PRIVACY, "use_os_username", use_os_username)
 	cfg.set_value(SECTION_ACCESSIBILITY, "reduced_motion", reduced_motion)
 	cfg.set_value(SECTION_ACCESSIBILITY, "text_speed", text_speed)
 	if VALID_CONTENT_LEVELS.has(content_level):

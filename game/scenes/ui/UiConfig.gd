@@ -79,9 +79,11 @@ const DEFAULTS := {
 		"leila_special": "That's *my* name. …Do you want to be me?",
 		"max_length": 16,
 		"min_length": 1,
+		"os_username_special": "You told me the truth. Good.",
 		"placeholder": "Enter your name...",
 		"pout_unsafe": "That's not a real name… tell me your real one.",
 		"prompt": "What's your name?",
+		"shadow_name": "That's not what you were called last time.",
 		"too_long": "Name must be 16 characters or less.",
 	},
 	"ending":
