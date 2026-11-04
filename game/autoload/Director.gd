@@ -1,7 +1,6 @@
 extends Node
-## Director — turn pipeline (docs/02 §4). The only orchestrator of a turn:
-## input hooks, context, dynamic schema, dose, streaming generation, live dispatch,
-## validation, state application, close.
+## Director — turn pipeline (docs/02 §4), the only orchestrator of a turn: input hooks,
+## context, dynamic schema, dose, streaming generation, live dispatch, validation, close.
 
 signal turn_started(turn_index: int, player_input: String)
 signal turn_chunk_received(chunk: String)
@@ -90,9 +89,8 @@ func _ready() -> void:
 	reset()
 
 
-## docs/02 §5 gates and docs/01 §3's stage baseline are both keyed on the stage,
-## so AudioDirector and FX must be told every time GameState's derived stage
-## moves — not only at scene install (CODE-2; FX baseline added in P2.15).
+## docs/02 §5 gates and docs/01 §3's baseline are keyed on the stage: AudioDirector
+## and FX must hear every move of GameState's derived stage (CODE-2, P2.15).
 func _connect_stage() -> void:
 	if not GameState.stage_changed.is_connected(_on_stage_changed):
 		GameState.stage_changed.connect(_on_stage_changed)
@@ -565,10 +563,9 @@ func _flush_say_tail(beat_index: int) -> void:
 
 
 ## docs/03 §3: resolve the beat exactly once. `SpriteResolver` is stateful (the
-## anti-repeat window), so resolving here AND again inside
-## `Character.set_feeling()` double-counts every beat and can show a different
-## sprite than the packet logged (review CODE-4). The packet is passed down
-## instead, and the resolver stays the only `beat_resolved` emitter.
+## anti-repeat window), so resolving here and again in `Character.set_feeling()`
+## double-counts and can show a different sprite than the packet logged (review
+## CODE-4); the packet is passed down and the resolver stays the only emitter.
 func _maybe_route_sprite() -> void:
 	if not _current_beat_data.has("feeling") or not _current_beat_data.has("intensity"):
 		return
@@ -796,10 +793,9 @@ func _close_turn_success(turn_data: Dictionary) -> void:
 
 
 ## docs/02 §5 auto-fill: after 4 turns with no cue/fx and a beat at intensity
-## >= 2, the Director adds a mild one. Both picks are engine-owned, so they must
-## not be eaten by the model's cue budget: `AudioDirector.play_engine_cue` is the
-## un-budgeted engine path (docs/04 §3), and the streak only resets when the mild
-## fill actually landed (review CODE-11).
+## >= 2, the Director adds a mild one. Both picks are engine-owned and must not be
+## eaten by the model's cue budget (`AudioDirector.play_engine_cue`, docs/04 §3);
+## the streak only resets when the mild fill actually landed (review CODE-11).
 func _handle_auto_fill(turn_data: Dictionary, stage: int) -> void:
 	if stage > 1:
 		quiet_turn_streak = 0
@@ -877,11 +873,10 @@ func _abort_turn(error_code: String, error_message: String) -> void:
 
 
 ## One teardown for every exit: the stream, parser and turn-scoped state must not
-## survive into the next turn (a later cancel() would act on a terminal stream and
-## a stale `_current_turn_data` would leak into the close; review CODE-9). The
-## player's unanswered line stays in `history`/`last_player_inputs` (the docs/02 §6
-## rule-1 window is what was typed); AudioDirector/FX keep their per-turn counters
-## (the turn was opened, so its accrued budget is spent).
+## survive into the next turn (a later cancel() would act on a terminal stream, and
+## a stale `_current_turn_data` would leak; review CODE-9). The player's unanswered
+## line stays in `history`/`last_player_inputs` (the typed docs/02 §6 rule-1
+## window); AudioDirector/FX keep their per-turn counters (the turn did open).
 func _teardown_turn() -> void:
 	_turn_in_flight = false
 	_active_stream = null

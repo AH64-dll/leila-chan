@@ -341,8 +341,10 @@ func test_photosensitive_chosen_on_the_title_reaches_the_date_host() -> void:
 	assert_bool(date.character.photosensitive).is_true()  # the host heard it
 	assert_array(date.character.flicker_pattern()).is_equal(date.character.FX_FLICKER_DIM_STEPS)
 
-	Settings.settings_path = previous_path
+	# clear the flag *before* restoring the path: set_photosensitive saves, and
+	# the write must land on the temp file, not the player's user://settings.cfg
 	Settings.set_photosensitive(false)
+	Settings.settings_path = previous_path
 	if FileAccess.file_exists(TMP):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(TMP))
 

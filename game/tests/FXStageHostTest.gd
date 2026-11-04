@@ -15,6 +15,9 @@ extends GdUnitTestSuite
 
 const CharScene := preload("res://scenes/character/Character.tscn")
 const CharScript := preload("res://scenes/character/Character.gd")
+## `_fx_shake` draws its 25 Hz bumps from the global RNG; a test that samples
+## the camera must replay the same trajectory every run (CODE-5 r2).
+const SHAKE_SEED := 42
 
 var _char  # untyped so private hooks (_screen_tweens/...) resolve
 var _cam: Camera2D
@@ -368,10 +371,16 @@ func test_a_live_flicker_survives_another_cues_end_callback() -> void:
 ## CODE-2 (r2): clear_screen_fx promises "back to neutral". A killed shake
 ## tween used to leave the camera on its last interpolated offset (the dev tool
 ## captured every later still displaced) and a live cue kept the pass on.
+## CODE-5 (r2): the bumps are random every 0.04 s, so a single sample can land
+## on a zero crossing; seed the RNG and assert on the maximum over a window.
 func test_clear_screen_fx_restores_the_camera_and_drops_live_cues() -> void:
+	seed(SHAKE_SEED)
 	assert_str(_char.play_fx("shake_big")).is_equal("")
-	await _wait_seconds(0.1)
-	assert_float(_cam.offset.length()).is_greater(0.5)
+	var displaced := {"px": 0.0}
+	await _wait_seconds(
+		0.2, func() -> void: displaced["px"] = maxf(float(displaced["px"]), _cam.offset.length())
+	)
+	assert_float(float(displaced["px"])).is_greater(0.5)
 	assert_str(_char.play_fx("flicker")).is_equal("")
 	await _wait_seconds(0.05)
 	assert_bool(_stage_fx.visible).is_true()

@@ -39,6 +39,22 @@
 - Gotcha: after merging `main` (or any branch that adds `class_name` files), run
   `./tools/godot.sh --headless --path game --import` before a direct gdUnit call, or discovery dies with
   "Identifier `CorruptionSession` not declared".
+
+## P2.15 — Stage FX (2026-11-04, round 3)
+- **Convention: a test that samples a random effect must seed it *and* take a maximum over a window.** The
+  round-2 `clear_screen_fx` test sampled one instant of `_fx_shake`'s unseeded 25 Hz offsets and could land on
+  a zero crossing (the reviewer's full run failed at 0.464 < 0.5). `seed(SHAKE_SEED)` right before `play_fx`
+  replays the 30 offsets, and max-over-0.2 s is the pattern the sibling `shake_big` test already used; 20/20
+  isolated runs green, 15/15 cases each.
+- **Convention: a test cleanup that calls a *saving* setter must run before restoring the seam path.**
+  `Settings.set_photosensitive()` writes to `settings_path`, so restoring `Settings.PATH` first made the suite
+  overwrite the player's real `user://settings.cfg` with `photosensitive=false` — the suite silently disabled
+  the accommodation it exists to protect. Proof of the fix: md5+mtime of the real file (left holding
+  `photosensitive=true`) unchanged across the settings suites and the full 551-case run.
+- Gotcha: after merging `main` (P2.09/.11/.14) `Director.gd` was 1004 lines and `tools/test.sh` went red on
+  gdlint's 1000-line cap alone while all 551 tests passed. Both sides had compacted to fit; the union did not.
+  Comment compaction is the repo's accepted fix (P2.14 did the same), but the file now has zero headroom.
+
 ## P2.14 — SpriteResolver T2–T3, YANDERE/AWAKE paths, intensity-driven motion (2026-11-04, agent: commandcode)
 - Built the T2–T3 resolver: each sprite's documented tier (docs/03 §1) now lives in `casting.sprites[id].tiers` and only its **minimum** gates a path candidate; a gated override falls through to the feeling's base cell, never to the fallback face. YANDERE angry at stage 3 is 17 (the knife waits for T3); AWAKE cold/confused at stage 3 are 07/08.
 - The reveal budget is **scene state** in `resolve_beat` (`_reveals` + `reset_scene()`), not in the pure `resolve()` — that keeps the 594-cell table test meaningful. `1 reveal per scene` (21) gates the sprite; `terminal climax only` (30) withholds the `system` sting below stage 5 and lets `fx_below_stage5` degrade the visual.
