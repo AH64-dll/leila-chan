@@ -33,9 +33,11 @@ extends Node
 ## docs/07 §3.5 layout. The autosave is a slot; manual slots are 1..3 for v1
 ## (the P3.x save-menu task owns the UI and its slot count).
 const MANUAL_SLOT_COUNT := SaveSlots.MANUAL_SLOTS
-## The scene id the Date writes with its autosave. A future Night scene (P2.19)
-## calls `autosave("night", …)` with its own id; the save stores it verbatim.
+## The scene id the Date writes with its autosave. The Night writes its own id
+## with the next day's scenario, so Continue can land on that day (P2.19); the
+## save stores the id verbatim.
 const SCENE_DATE := "date"
+const SCENE_NIGHT := "night"
 ## docs/02 §6 rule 1 reads the last three player messages.
 const PLAYER_WINDOW := 3
 

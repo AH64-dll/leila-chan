@@ -10,6 +10,7 @@ extends RefCounted
 ## It also enforces scenario end rules (min_turns / max_turns / on_goal).
 
 const DEFAULT_SCENARIO_PATH := "res://data/scenarios/D02_cafe.json"
+const SCENARIO_DIR := "res://data/scenarios"
 const SCHEMA_PATH := "res://data/schemas/scenario.schema.json"
 const VALID_KINDS: Array[String] = ["date", "interrupt", "overnight", "setpiece"]
 const CANONICAL_PATHS: Array[String] = ["YANDERE", "SPLIT", "TSUN", "HOLLOW", "AWAKE", "ANCHOR"]
@@ -28,6 +29,11 @@ const REQUIRED_KEYS: Array[String] = [
 	"events",
 	"end",
 ]
+
+## The loaded res:// scenario pool (P2.19): the files are read once per run, and
+## only the shipped directory is cached — a test that points pool() at user://
+## always gets a fresh read.
+static var _pool_cache: Array[Dictionary] = []
 
 
 ## Loads a scenario JSON file from res:// or user:// path.
@@ -92,6 +98,90 @@ static func validate_scenario(data: Dictionary) -> Dictionary:
 				)
 
 	return {"ok": errors.is_empty(), "errors": errors}
+
+
+## Every usable scenario in a directory, sorted by file name so the campaign's
+## pick is deterministic. A row is {"path": res://…, "id": …, "scenario": {…}};
+## a file that fails validation is warned about and skipped, never half-loaded.
+## The shipped directory is cached for the run (docs/07 §2's data rule: content is
+## data, and the pool is read once).
+static func pool(dir_path := SCENARIO_DIR) -> Array[Dictionary]:
+	if dir_path == SCENARIO_DIR and not _pool_cache.is_empty():
+		return _pool_cache.duplicate(true)
+	var out: Array[Dictionary] = []
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		push_warning("ScenarioLoader: cannot open %s — no scenarios" % dir_path)
+		return out
+	var files := dir.get_files()
+	files.sort()
+	for file: String in files:
+		if not file.ends_with(".json"):
+			continue
+		var path := dir_path.path_join(file)
+		var data := load_scenario(path)
+		if data.is_empty():
+			continue
+		var report := validate_scenario(data)
+		if not bool(report["ok"]):
+			push_warning("ScenarioLoader: %s rejected — %s" % [path, str(report["errors"])])
+			continue
+		out.append({"path": path, "id": String(data.get("id", "")), "scenario": data})
+	if dir_path == SCENARIO_DIR:
+		_pool_cache = out
+	return out.duplicate(true)
+
+
+## Test hook: drop the cached pool so the next pool() re-reads the directory.
+static func clear_pool_cache() -> void:
+	_pool_cache.clear()
+
+
+## docs/08 §7 availability: may this scenario run on `day` at `stage` on `path`?
+## `available.days` and `available.stages` are inclusive [first, last] ranges and
+## `available.paths` is "any" or a list of the six canonical path ids (an empty
+## path — before Stage 2 — matches only "any"). A missing or malformed block is
+## unavailable: a scenario that cannot say when it may run never runs.
+static func is_available(scenario: Dictionary, day: int, stage: int, path := "") -> bool:
+	var available: Variant = scenario.get("available")
+	if not available is Dictionary:
+		return false
+	var block: Dictionary = available
+	var days: Variant = block.get("days")
+	if not days is Array or (days as Array).size() != 2:
+		return false
+	if day < int((days as Array)[0]) or day > int((days as Array)[1]):
+		return false
+	var stages: Variant = block.get("stages")
+	if not stages is Array or (stages as Array).size() != 2:
+		return false
+	if stage < int((stages as Array)[0]) or stage > int((stages as Array)[1]):
+		return false
+	return _path_allowed(block.get("paths"), path)
+
+
+## The subset of `rows` (pool rows or raw scenarios) available right now.
+static func available_scenarios(rows: Array, day: int, stage: int, path := "") -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for row: Variant in rows:
+		if not row is Dictionary:
+			continue
+		var entry: Dictionary = row
+		var scenario: Variant = entry.get("scenario", entry)
+		if scenario is Dictionary and is_available(scenario, day, stage, path):
+			out.append(entry)
+	return out
+
+
+static func _path_allowed(value: Variant, path: String) -> bool:
+	if value is String:
+		return (value as String).strip_edges().to_lower() == "any"
+	if value is Array:
+		for item: Variant in value:
+			if String(item).strip_edges() == path:
+				return true
+		return false
+	return false
 
 
 ## Resolves a scenario for a specific turn and stage into a scene dictionary
@@ -315,6 +405,18 @@ static func _validate_available(available: Dictionary, errors: Array[String]) ->
 
 	if not available.has("paths"):
 		errors.append("available.paths is required")
+	else:
+		var paths: Variant = available.get("paths")
+		if paths is String:
+			if (paths as String).strip_edges().to_lower() != "any":
+				errors.append('available.paths must be "any" or a list of path ids')
+		elif paths is Array:
+			for item: Variant in paths:
+				var path_id := String(item).strip_edges()
+				if not CANONICAL_PATHS.has(path_id):
+					errors.append("available.paths has unknown path '%s'" % path_id)
+		else:
+			errors.append('available.paths must be "any" or a list of path ids')
 
 
 static func _validate_end_rules(end_rules: Dictionary, errors: Array[String]) -> void:
