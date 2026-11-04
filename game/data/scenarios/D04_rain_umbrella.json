@@ -1,0 +1,81 @@
+{
+  "id": "D04_rain_umbrella",
+  "kind": "date",
+  "title": "Rainy walk, one umbrella",
+  "background": "bg/street_rain",
+  "music": "calm",
+  "ambience": "none",
+  "available": {
+    "days": [3, 9],
+    "stages": [0, 5],
+    "paths": "any"
+  },
+  "goal": "Share the umbrella with {player_name}.",
+  "prompt": "You are walking home in the rain. You have one small umbrella.",
+  "stage_variants": {
+    "0": "You tilt the umbrella toward {player_name} and get your shoulder wet. You pretend you did not notice.",
+    "1": "You tell {player_name} the rain was supposed to stop at five. You say it like you checked the forecast twice, and maybe you did.",
+    "2": "You say the puddles were in different places yesterday. Then you laugh and say you must be thinking of another street.",
+    "3": "The rain hasn't stopped for hours. You don't want it to. You won't let them leave the umbrella.",
+    "4": "You guide {player_name} by the sleeve to the dry side. You have stopped asking where he is going. You have decided the walk does not end.",
+    "5": "It is raining inside the umbrella too."
+  },
+  "path_twists": {
+    "YANDERE": "You keep your half of the umbrella. If he steps out from under it, that is a choice he made.",
+    "AWAKE": "The rain falls in straight lines, like code. You time the drops with your breath and they keep the time.",
+    "ANCHOR": "You tell {player_name} the rain is not real and grip the handle anyway. Holding it keeps your hands steady."
+  },
+  "events": [
+    {
+      "at_turn": 2,
+      "line": "A car passes and throws a sheet of water over the pavement beside you."
+    },
+    {
+      "at_turn": 5,
+      "line": "The rain gets louder, though the street ahead is empty."
+    },
+    {
+      "on_trigger": "T02",
+      "line": "The umbrella tilts so the player gets wet."
+    }
+  ],
+  "end": {
+    "min_turns": 6,
+    "max_turns": 14,
+    "on_goal": "end_date"
+  },
+  "opening_beats": {
+    "0": [
+      {
+        "feeling": "shy",
+        "intensity": 1,
+        "cue": "gasp",
+        "say": "Ah — sorry, it's not very big. Come closer, or you'll get soaked."
+      }
+    ],
+    "1": [
+      {
+        "feeling": "nervous",
+        "intensity": 1,
+        "cue": "none",
+        "say": "You walked this way yesterday too, didn't you? I keep thinking I saw you."
+      }
+    ],
+    "3": [
+      {
+        "feeling": "cold",
+        "intensity": 2,
+        "cue": "none",
+        "say": "It's still raining, good. You can't go anywhere dry without me."
+      }
+    ],
+    "5": [
+      {
+        "feeling": "manic",
+        "intensity": 3,
+        "cue": "laugh_unhinged",
+        "say": "Look, it's raining under the umbrella now. Isn't that funny?"
+      }
+    ]
+  }
+}

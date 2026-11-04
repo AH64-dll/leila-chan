@@ -187,3 +187,41 @@ func test_loader_injects_goal_prompt_and_variant_into_prompt_builder() -> void:
 	var scene_tokens: int = int(debug["tokens"]["scene"])
 	assert_int(scene_tokens).is_greater(0)
 	assert_int(scene_tokens).is_less(150)
+
+
+## P2.18: every shipped scenario must load and pass the game's own validator,
+## and carry the stage 3/5 variants plus two path twists the NAR playbook
+## requires. DirAccess lists data/scenarios at run time, so a scenario added by
+## a later task is covered the moment the file lands.
+func test_every_shipped_scenario_validates_and_has_stage_variants() -> void:
+	var names: Array = Array(DirAccess.get_files_at("res://data/scenarios"))
+	assert_array(names).is_not_empty()
+	var checked := 0
+	for file_name: String in names:
+		if not file_name.ends_with(".json"):
+			continue
+		checked += 1
+		var scenario: Dictionary = ScenarioLoaderScript.load_scenario(
+			"res://data/scenarios/%s" % file_name
+		)
+		assert_dict(scenario).override_failure_message(file_name).is_not_empty()
+		var report: Dictionary = ScenarioLoaderScript.validate_scenario(scenario)
+		(
+			assert_bool(bool(report["ok"]))
+			. override_failure_message("%s: %s" % [file_name, str(report["errors"])])
+			. is_true()
+		)
+		var variants: Dictionary = scenario["stage_variants"]
+		(
+			assert_bool(variants.has("3"))
+			. override_failure_message("%s: missing stage 3 variant" % file_name)
+			. is_true()
+		)
+		(
+			assert_bool(variants.has("5"))
+			. override_failure_message("%s: missing stage 5 variant" % file_name)
+			. is_true()
+		)
+		var twists: Dictionary = scenario["path_twists"]
+		assert_int(twists.size()).override_failure_message(file_name).is_greater_equal(2)
+	assert_int(checked).is_greater_equal(7)

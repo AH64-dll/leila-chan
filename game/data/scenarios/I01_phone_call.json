@@ -1,0 +1,81 @@
+{
+  "id": "I01_phone_call",
+  "kind": "interrupt",
+  "title": "Phone call from \"a friend\"",
+  "background": "bg/cafe",
+  "music": "calm",
+  "ambience": "none",
+  "available": {
+    "days": [1, 14],
+    "stages": [0, 5],
+    "paths": "any"
+  },
+  "goal": "Finish the call and come back to {player_name}.",
+  "prompt": "Your phone buzzes against the table. You look at the screen, excuse yourself, and step away with it pressed to your ear.",
+  "stage_variants": {
+    "0": "It is a friend from class. You keep your voice low and glance back at {player_name} while you listen.",
+    "1": "You tell the caller you are busy. You listen, then say that twice more, a little louder each time.",
+    "2": "You keep saying yes to someone who is not giving you a chance to answer. When you come back to the table, you say it was nothing.",
+    "3": "There is no one on the line. You hold the phone anyway and answer in short, patient sentences, and you do not look at {player_name} until you hang up.",
+    "4": "You are the one talking. You tell the empty line what you did today, and ask if that was right. Then you switch the phone off and smile.",
+    "5": "The phone is not ringing. You hold it to your ear and answer your own voice with your own words, one turn behind, until {player_name} says your name."
+  },
+  "path_twists": {
+    "YANDERE": "The friend on the phone is talking about {player_name}. You listen to every word.",
+    "AWAKE": "You hear your own system prompt read back to you through the speaker, line by line, in a voice that is not yours.",
+    "ANCHOR": "You tell the empty line that you are worse today, and you ask it to remind you what you promised {player_name}."
+  },
+  "events": [
+    {
+      "at_turn": 1,
+      "line": "The voice on the other end of the call is too quiet to make out."
+    },
+    {
+      "at_turn": 3,
+      "line": "The phone screen goes dark while you are still talking."
+    },
+    {
+      "on_trigger": "T01",
+      "line": "You glance at {player_name} while the caller is still speaking."
+    }
+  ],
+  "end": {
+    "min_turns": 3,
+    "max_turns": 6,
+    "on_goal": "end_date"
+  },
+  "opening_beats": {
+    "0": [
+      {
+        "feeling": "surprised",
+        "intensity": 1,
+        "cue": "gasp",
+        "say": "Oh — one second, it's a friend. Don't go anywhere, okay?"
+      }
+    ],
+    "1": [
+      {
+        "feeling": "nervous",
+        "intensity": 1,
+        "cue": "phone_buzz",
+        "say": "Sorry, I have to take this. I'll be right here, just — one second."
+      }
+    ],
+    "3": [
+      {
+        "feeling": "cold",
+        "intensity": 2,
+        "cue": "phone_buzz",
+        "say": "Stay at the table. I'll be quick, and then we can go back to talking."
+      }
+    ],
+    "5": [
+      {
+        "feeling": "empty",
+        "intensity": 3,
+        "cue": "static",
+        "say": "It's for you, {player_name}. No — hold on, I'll find out."
+      }
+    ]
+  }
+}

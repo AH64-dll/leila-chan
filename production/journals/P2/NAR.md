@@ -17,3 +17,20 @@
   acceptance criterion with the tokenizer, assert with the builder, and keep both in the handoff table.
 - No brand line shipped: docs/09 §3's "I'm a Qwen model" is optional and still needs the legal read, so AWAKE says
   "language model"; the brand test now also covers `path_AWAKE.md` and `awake_system_prompt.txt`.
+
+## P2.18 — D01, D03, D04, D06, D11 + I01 interrupt (round 1)
+
+- Six scenario files: 0–5 variants, three twists each (YANDERE + AWAKE always, plus one scene-fitting third),
+  events split between `at_turn` and `on_trigger`, opening beats at 0/1/3/5, turn bounds 6–14 (I01 3–6).
+  Stage variants run to three sentences, like D02; opening beats stay ≤2 and must use a cue the stage gate allows
+  (phone_buzz at stage 0 was correctly rejected → `gasp`).
+- The scene budget (150, builder estimate) is the real constraint, and the worst turn is variant + twist + event:
+  keep a stage variant ≤ ~50 tokens. `scenario_playthrough.gd --stats=1` gives the real `/tokenize` number;
+  fixed stays ≤ 900 with the scene out of the prompt (the P2.13 convention).
+- `--script` runs have **no autoloads**: `TurnContext` fails to compile (`GameState`), `HTTPRequest` is not in the
+  tree during `_initialize`. The harness reads `data/sampling.json` itself, instantiates PromptBuilder via preload,
+  and uses a synchronous `HTTPClient`; any runtime error leaves the SceneTree hanging, so run it under `timeout`.
+- Start llama-server detached (`setsid nohup … &`) for long transcript batches — a supervised service was
+  SIGINT'd mid-run and cost two batches; the harness records `REQUEST FAILED` and keeps the partial file honest.
+- `tests/test_scenarios.py`'s disorder scan now matches acronyms as uppercase whole words: the old substring check
+  flagged every ordinary "did". Future scenario text can use English again.

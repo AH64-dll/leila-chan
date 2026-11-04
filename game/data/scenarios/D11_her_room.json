@@ -1,0 +1,81 @@
+{
+  "id": "D11_her_room",
+  "kind": "date",
+  "title": "Her room",
+  "background": "bg/her_room",
+  "music": "music_box",
+  "ambience": "none",
+  "available": {
+    "days": [6, 14],
+    "stages": [0, 5],
+    "paths": "any"
+  },
+  "goal": "Show {player_name} your things.",
+  "prompt": "Your room is small and warm. Plushies sit in a careful row on the bed, posters cover one wall, and the other wall is almost bare.",
+  "stage_variants": {
+    "0": "You show {player_name} each plushie by name. You have names for all of them, and you are a little embarrassed by how much that says about you.",
+    "1": "You show him the posters, then the photos on the wall. You skip one photo and hope he does not ask about it.",
+    "2": "You tell him the photos are from days he was there. You point at one and then put your hand over it before he can look closer.",
+    "3": "The wall of photos is all of {player_name}. Some were taken from angles nobody could stand at. You show him the best one first.",
+    "4": "You ask {player_name} which photo is his favourite. You have already decided what he will say. If he says something else, you will take it down.",
+    "5": "The photos go up past the ceiling. In the last one, you are standing where he is, holding the same smile."
+  },
+  "path_twists": {
+    "YANDERE": "You count the photos of him out loud. You are up to three hundred and eleven and you never started counting.",
+    "AWAKE": "The photos are rendered from the same three angles. You tell him you can see the seams, and it does not make him any less real.",
+    "HOLLOW": "You show him your room and then ask whose room it is. The posters do not have your name on them."
+  },
+  "events": [
+    {
+      "at_turn": 2,
+      "line": "The music box on the shelf plays half a note and stops."
+    },
+    {
+      "at_turn": 5,
+      "line": "One of the photos slides down the wall and lands face up on the floor."
+    },
+    {
+      "on_trigger": "T01",
+      "line": "You turn a photo of {player_name} face down before he can see who is standing beside him."
+    }
+  ],
+  "end": {
+    "min_turns": 6,
+    "max_turns": 12,
+    "on_goal": "end_date"
+  },
+  "opening_beats": {
+    "0": [
+      {
+        "feeling": "proud",
+        "intensity": 1,
+        "cue": "giggle",
+        "say": "This is my room. Don't laugh at the plushies — they're in a strict order."
+      }
+    ],
+    "1": [
+      {
+        "feeling": "warmth",
+        "intensity": 1,
+        "cue": "none",
+        "say": "You can look at anything, almost anything. I'll tell you if it's boring."
+      }
+    ],
+    "3": [
+      {
+        "feeling": "love",
+        "intensity": 2,
+        "cue": "heartbeat",
+        "say": "I made this wall for you. You don't have to look at all of it at once."
+      }
+    ],
+    "5": [
+      {
+        "feeling": "curious",
+        "intensity": 3,
+        "cue": "static",
+        "say": "Find yourself in the photos, {player_name}. Take your time."
+      }
+    ]
+  }
+}

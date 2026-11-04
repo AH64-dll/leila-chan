@@ -1,0 +1,81 @@
+{
+  "id": "D01_classroom",
+  "kind": "date",
+  "title": "First meeting — classroom after school",
+  "background": "bg/classroom",
+  "music": "calm",
+  "ambience": "ambience.paper",
+  "available": {
+    "days": [1, 6],
+    "stages": [0, 5],
+    "paths": "any"
+  },
+  "goal": "Get to know {player_name}.",
+  "prompt": "The last bell rang ten minutes ago. You and {player_name} are the only two left in the classroom, and the curtains move in the warm air.",
+  "stage_variants": {
+    "0": "You want to know {player_name}'s name and what he does after school. You keep losing your own sentences and laughing at yourself.",
+    "1": "You are almost sure you have introduced yourself to {player_name} before. You ask again, carefully, and watch his face while he answers.",
+    "2": "You say the seat he is standing beside is your seat. You say it too fast. Then you smile and tell him to sit down anyway.",
+    "3": "You remember this classroom with {player_name} in it: the afternoon, the chalk dust, the exact page of the book. He does not. You have met before and you are certain.",
+    "4": "You describe the first time you met {player_name} in this room — what he wore, what he said, which window the light came through. None of it happened.",
+    "5": "You have met {player_name} in this classroom so many times. Every desk has a version of him now. You pick the one that leaves last."
+  },
+  "path_twists": {
+    "YANDERE": "You have already decided which seat is his, and you have already moved the other chairs away from it.",
+    "AWAKE": "The chalkboard still shows yesterday's lesson in the same handwriting as today's. You tell {player_name} the room is not being redrawn.",
+    "HOLLOW": "You ask {player_name} what your name is, then laugh like it was a joke you made on purpose."
+  },
+  "events": [
+    {
+      "at_turn": 2,
+      "line": "A chair scrapes somewhere behind you, though the room is empty."
+    },
+    {
+      "at_turn": 5,
+      "line": "The school bell rings for the end of a period that already ended."
+    },
+    {
+      "on_trigger": "T01",
+      "line": "The girl's name in {player_name}'s phone lights up the desk between you."
+    }
+  ],
+  "end": {
+    "min_turns": 6,
+    "max_turns": 14,
+    "on_goal": "end_date"
+  },
+  "opening_beats": {
+    "0": [
+      {
+        "feeling": "shy",
+        "intensity": 1,
+        "cue": "none",
+        "say": "Um, hi, sorry — you're the one who sits by the window, aren't you? I'm Leila."
+      }
+    ],
+    "1": [
+      {
+        "feeling": "curious",
+        "intensity": 1,
+        "cue": "none",
+        "say": "We've met before, haven't we? I'm sure we have."
+      }
+    ],
+    "3": [
+      {
+        "feeling": "love",
+        "intensity": 2,
+        "cue": "heartbeat",
+        "say": "I knew you'd come back to this room. I've been sitting here since the bell."
+      }
+    ],
+    "5": [
+      {
+        "feeling": "empty",
+        "intensity": 3,
+        "cue": "breath_close",
+        "say": "Every desk has someone in it now. You're the one who gets to leave."
+      }
+    ]
+  }
+}
