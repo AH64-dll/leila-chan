@@ -331,6 +331,15 @@ func set_bus_mute(bus: StringName, muted: bool) -> void:
 	var idx := AudioServer.get_bus_index(bus)
 	if idx >= 0:
 		AudioServer.set_bus_mute(idx, muted)
+	# docs/01 §5 T21: muting (or unmuting) the master bus is an engine event —
+	# she goes ALL CAPS until the sound comes back. Per-bus mutes are mixing,
+	# not the player's mute gesture.
+	if bus == &"Master":
+		var telemetry := get_node_or_null("/root/Telemetry")
+		if telemetry != null and telemetry.has_method("note_player_action"):
+			telemetry.call(
+				"note_player_action", "audio_mute" if muted else "audio_unmuted", {"muted": muted}
+			)
 
 
 func is_bus_muted(bus: StringName) -> bool:

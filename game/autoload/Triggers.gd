@@ -33,9 +33,22 @@ var _engine := TriggerEngine.new()
 var _last_results: Array[Dictionary] = []
 var _clock: Callable = Callable()
 var _last_seen_unix := 0
+## The returned absence is consumed on first read (T17/T18 are a reunion, not
+## a session-long condition); set_last_seen() re-arms it for the next load.
+var _absence_armed := false
+## The line the player submitted this turn, kept so a close_turn guard can
+## read the same words (T22's repeated gift, T26's name mention).
+var _last_player_text := ""
 ## This turn's profile counters at submit, so a guard can read what changed.
 var _profile_baseline: Dictionary = {}
 var _profile_baseline_open := false
+## The memory store at submit. A close_turn guard must read the facts she held
+## BEFORE the model's own reply was stored: Director._close_turn_success stores
+## `turn_data.memory` and only then emits `turn_completed` (P3.07 r2 CODE-1), so
+## a live read would make the fact the model just wrote about the gift its own
+## evidence and T22 would fire on the FIRST gift.
+var _memory_baseline: Array = []
+var _memory_baseline_open := false
 
 
 func _ready() -> void:
@@ -88,8 +101,16 @@ func begin_turn(input_text: String) -> Array[String]:
 	# bumped *this* turn (docs/01 §5 T15's `ignored_questions`).
 	_profile_baseline = GameState.profile.duplicate(true)
 	_profile_baseline_open = true
-	var ctx := _context(true)
+	# Same idea for the memory store: the facts this message is measured
+	# against are the ones she already held, never the ones the model is about
+	# to write from it (T22's repeat gift, T13's contradiction).
+	_memory_baseline = _memory_facts()
+	_memory_baseline_open = true
+	# The return-after clock is read at the submit, which is the turn a player
+	# actually comes back on; an event that lands first must not eat it.
+	var ctx := _context(true, true)
 	ctx["text"] = input_text
+	_last_player_text = input_text
 	var lines: Array[String] = []
 	for result: Dictionary in _engine.begin_turn(ctx):
 		var line := _apply(result, false)
@@ -105,11 +126,15 @@ func begin_turn(input_text: String) -> Array[String]:
 func close_turn(read_label: String) -> Array[String]:
 	var ctx := _context(false)
 	ctx["read"] = read_label
+	ctx["text"] = _last_player_text
 	var lines: Array[String] = []
 	var fired := _engine.close_turn(ctx)
-	# One close per turn: the delta belongs to the turn that just ended.
+	# One close per turn: the delta belongs to the turn that just ended, and the
+	# memory baseline stops being "before this turn" at the same moment.
 	_profile_baseline = {}
 	_profile_baseline_open = false
+	_memory_baseline = []
+	_memory_baseline_open = false
 	for result: Dictionary in fired:
 		var line := _apply(result, true)
 		if not line.is_empty():
@@ -127,10 +152,22 @@ func handle_engine_event(event: Dictionary) -> void:
 	while received_events.size() > EVENT_LOG_MAX:
 		received_events.pop_front()
 	engine_event.emit(copy)
+	var data: Dictionary = copy.get("data", {})
+	# Event-fed flag values are state, not a firing effect (docs/01 §5 T21's
+	# "until unmuted"): they land on every matching event, including a mute and
+	# an unmute inside one turn, where the row's caps allow only one firing.
+	_apply_event_state(str(copy.get("event", "")), data)
 	var ctx := _context(true)
+	# docs/01 §5 T19 "Stage 3+ only" (D19's precedent: gate on the stored stage,
+	# not the live one): an event may be about a run whose stage GameState no
+	# longer holds — the run that just ended — so a row's gate reads the stage
+	# the event names. An absent key leaves the live stage in charge.
+	var gate := int(data.get("gate_stage", -1))
+	if gate >= 0:
+		ctx["stage"] = gate
 	ctx["event"] = copy
 	for result: Dictionary in _engine.handle_event(ctx):
-		_apply(result, true)
+		_apply(result, true, data)
 	_write_observed()
 
 
@@ -147,8 +184,12 @@ func last_event(kind: String) -> Dictionary:
 func clear_engine_events() -> void:
 	received_events.clear()
 	_last_results.clear()
+	_last_player_text = ""
+	_absence_armed = false
 	_profile_baseline = {}
 	_profile_baseline_open = false
+	_memory_baseline = []
+	_memory_baseline_open = false
 	_engine.reset()
 
 
@@ -195,6 +236,7 @@ func set_clock(clock: Callable) -> void:
 ## session's unix time. 0 keeps the absence at 0, so nothing fires by accident.
 func set_last_seen(unix_seconds: int) -> void:
 	_last_seen_unix = unix_seconds
+	_absence_armed = unix_seconds > 0
 
 
 ## ── Internals ─────────────────────────────────────────────────────────────
@@ -207,7 +249,7 @@ func _on_turn_completed(_turn_index: int, turn_data: Dictionary) -> void:
 ## Applies one fired row: meters, profile counters, flags, then the line. Path
 ## points were folded into the engine's ledger by the firing itself. Returns the
 ## line so the caller can decide whether it rides this turn or the next.
-func _apply(result: Dictionary, queue_line: bool) -> String:
+func _apply(result: Dictionary, queue_line: bool, event_data: Dictionary = {}) -> String:
 	var effects: Dictionary = {}
 	var raw_effects: Variant = result.get("effects")
 	if raw_effects is Dictionary:
@@ -220,7 +262,13 @@ func _apply(result: Dictionary, queue_line: bool) -> String:
 		GameState.bump_profile(StringName(str(counter)), int(profile[counter]))
 	var flags: Dictionary = effects.get("flags", {})
 	for flag: Variant in flags:
-		GameState.set_flag(StringName(str(flag)), flags[flag])
+		GameState.set_flag(StringName(str(flag)), _flag_value(flags[flag], event_data))
+	# docs/01 §5 T26 "she uses it from now on": the name the row's guard
+	# captured is GameState.player_name — saved with the run, and the shadow
+	# save's record_name (P3.12) seals it across a New Game. Never log it.
+	var captured := String(result.get("player_name", "")).strip_edges()
+	if not captured.is_empty():
+		GameState.player_name = captured
 	var line := String(result.get("line", ""))
 	if queue_line and not line.is_empty():
 		GameState.queue_event(line)
@@ -232,17 +280,50 @@ func _apply(result: Dictionary, queue_line: bool) -> String:
 	return line
 
 
+## Writes the `{"from_event": key}` flags of every row watching this event kind.
+## The value is the event's own datum, so it is always the latest state; the
+## row's caps decide only what she SAYS, never whether the state is true.
+func _apply_event_state(kind: String, data: Dictionary) -> void:
+	if kind.is_empty() or data.is_empty():
+		return
+	var rows: Dictionary = _engine.table()["triggers"]
+	for id: Variant in rows:
+		var rec: Dictionary = rows[id]
+		var detect: Dictionary = rec.get("detect", {})
+		if not (detect.get("event", []) as Array).has(kind):
+			continue
+		var effects: Dictionary = rec.get("effects", {})
+		var flags: Dictionary = effects.get("flags", {})
+		for flag: Variant in flags:
+			if flags[flag] is Dictionary:
+				GameState.set_flag(StringName(str(flag)), _flag_value(flags[flag], data))
+
+
+## A flag value is the row's constant, or `{"from_event": "<key>"}` when the
+## row is an engine-event row whose flag follows the event's own data — T21
+## writes one row for mute (true) and unmute (false), the "until unmuted" state
+## (docs/01 §5). An absent key reads false, which is the safe direction: no
+## stray ALL CAPS.
+func _flag_value(raw: Variant, event_data: Dictionary) -> Variant:
+	if not raw is Dictionary:
+		return raw
+	var key := str((raw as Dictionary).get("from_event", ""))
+	if key.is_empty():
+		return false
+	return event_data.get(key, false)
+
+
 ## The engine's input snapshot. Injected on purpose: the turn id, day, stage,
 ## hour, absence and flags all come from one place, so tests and a replay see
 ## exactly what the running game sees.
-func _context(upcoming: bool) -> Dictionary:
+func _context(upcoming: bool, consume_absence := false) -> Dictionary:
 	var now := _now()
 	return {
 		"turn": int(GameState.turn) + (1 if upcoming else 0),
 		"day": int(GameState.day),
 		"stage": int(GameState.stage),
 		"hour": _local_hour(now),
-		"absence_hours": _absence_hours(now),
+		"absence_hours": _absence_hours(now, consume_absence),
 		# A copy: a fire's own effects land on GameState, not here, so one row
 		# cannot hand the next row's clock detector different evidence in the
 		# same evaluation. `observe` is the one deliberate same-turn write —
@@ -250,8 +331,10 @@ func _context(upcoming: bool) -> Dictionary:
 		# own clock row down inside one begin_turn().
 		"flags": GameState.flags.duplicate(true),
 		# docs/01 §5 T13: the *true* facts (corruption is what she reads, not
-		# what she knows), so a lie is measured against her real memory.
-		"memory_facts": _memory_facts(),
+		# what she knows), so a lie is measured against her real memory — and
+		# against the facts she held at submit, never against what the model
+		# writes about the same message (T22/T13, P3.07 r2 CODE-1).
+		"memory_facts": _memory_baseline if _memory_baseline_open else _memory_facts(),
 		# docs/01 §5 T15: what the game bumped during the closed turn. Empty at
 		# submit/handle_event — nothing has been applied yet.
 		"profile_delta": _profile_delta(upcoming),
@@ -308,7 +391,12 @@ func _local_hour(now: float) -> int:
 	return int(parts.get("hour", 0))
 
 
-func _absence_hours(now: float) -> float:
-	if _last_seen_unix <= 0 or not is_finite(now):
+func _absence_hours(now: float, consume: bool) -> float:
+	if _last_seen_unix <= 0 or not is_finite(now) or not _absence_armed:
 		return 0.0
+	# One reading per set_last_seen(): T17/T18 are the greeting of a return,
+	# not a turn-spanning state — ctx is rebuilt for every entry point, so
+	# without the latch the reunion row would re-fire all session.
+	if consume:
+		_absence_armed = false
 	return maxf(0.0, (now - float(_last_seen_unix)) / 3600.0)

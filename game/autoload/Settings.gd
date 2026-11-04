@@ -51,6 +51,14 @@ const CONTENT_CALMER := "calmer"
 const CONTENT_FULL := "full"
 const VALID_CONTENT_LEVELS: Array[String] = ["calmer", "full"]
 
+## D20's accommodation set. `text_speed` and `volume` have no live setter yet
+## (P3.13's screen owns them; volume writes go through AudioDirector), but they
+## are listed here so the classifier already refuses them: the list is the
+## contract, not the set of fields that happen to exist today.
+const ACCOMMODATION_KEYS: Array[String] = [
+	"photosensitive", "reduced_motion", "text_speed", "volume", "master_volume"
+]
+
 const TEXT_SPEED_MIN := 0.25
 const TEXT_SPEED_MAX := 2.5
 const TEXT_SPEED_DEFAULT := 1.0
@@ -210,6 +218,53 @@ func set_calmer(enabled: bool) -> bool:
 
 func is_calmer() -> bool:
 	return content_level == CONTENT_CALMER
+
+
+## One write seam for the settings screen (P3.13) and the tests: apply the
+## value, persist it, and emit docs/01 §5 T20's `settings_changed` only when
+## the write is a preference. Returns false for a key this build does not own,
+## so a typo cannot silently become a setting.
+##
+## D20: `is_accommodation()` decides. A photosensitive/reduced-motion/calmer/
+## text-speed/volume write returns true without touching Telemetry, so it can
+## never reach a trigger, a meta event or a path-weight change.
+func set_preference(key: String, value: Variant) -> bool:
+	var name := key.strip_edges()
+	match name:
+		"photosensitive":
+			_apply_photosensitive(bool(value))
+		"reduced_motion":
+			set_reduced_motion(bool(value))
+		"content_level":
+			if not set_content_level(_heal_content_level(value)):
+				return false
+		_:
+			return false
+	if name != "content_level":
+		save_settings()
+	if is_accommodation(name, value):
+		return true
+	var telemetry := get_node_or_null("/root/Telemetry")
+	if telemetry != null and telemetry.has_method("note_player_action"):
+		telemetry.call("note_player_action", "settings_changed", {"setting": name})
+	return true
+
+
+## D20's classifier: is this write an accessibility/safety accommodation rather
+## than a preference? Photosensitive mode, reduced motion, text speed and
+## volume always are. `content_level` is one only when the player picks the
+## calmer ceiling — the accommodation is choosing less, not choosing full.
+static func is_accommodation(key: String, value: Variant) -> bool:
+	if key == "content_level":
+		return _heal_content_level(value) == CONTENT_CALMER
+	return ACCOMMODATION_KEYS.has(key)
+
+
+## docs/02 §8: a missing or invalid level stays empty, which fails closed to the
+## strictest content gates (Safety.gd) — a typo must never open the full ceiling.
+static func _heal_content_level(raw: Variant) -> String:
+	var level := str(raw).strip_edges().to_lower()
+	return level if VALID_CONTENT_LEVELS.has(level) else ""
 
 
 ## ── Immersion (docs/05 §0 rule 4) ──────────────────────────────────────────

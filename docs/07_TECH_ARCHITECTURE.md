@@ -200,6 +200,18 @@ environment. The OS username is not stored by the game; the only way it can appe
 The write point is `SaveSystem.begin_new_game`, called by the New Game scene before it resets the
 run; "Reset Everything" (`Settings.reset_everything` → `SaveSystem.wipe_everything`) deletes it.
 
+**The player's real name (docs/01 §5 T26), privacy note.** A name the player types in the chat
+("my name is …") is captured by T26's data guard and written to `GameState.player_name`, so she can
+use it from then on. That value is persisted in three places, all local and all listed above:
+the slot's `state.player_name`, the shadow's `runs`/`names`, and — because the prompt carries the
+name — a memory fact the model may write about it, which lands in the slot's and the shadow's
+`memories` (the entries the section above describes). It is never sent to telemetry or off
+the machine (the dev-only transcript under `user://debug/` records the turn's raw text like any
+other submission), and "Reset Everything" removes it with the rest. The `{name}` line token renders
+it into the prompt only, and `tests/test_triggers.py` pins the capture pattern's exclude list so
+commands ("call me later"), endearments and function words ("my name is not important") are never
+mistaken for it.
+
 ## 4. Threading and performance
 
 | Item | Budget (RTX 4050 6 GB) |

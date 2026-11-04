@@ -1,6 +1,6 @@
 {
 	"version": 1,
-	"_doc": "Input & window telemetry catalogue (P2.09). Docs/01 §5 is the trigger list, docs/05 §1.3 the meta events; `stage_min` is the docs/05 gate for when she may react (detection itself is ungated so the trigger engine can count it). `line` becomes this turn's docs/08 §6 EVENT line; `quote_line` is the docs/05 M21 stage-3 quote of a deleted draft — its {text} is memory-only (never persisted).",
+	"_doc": "Input & window telemetry catalogue (P2.09). Docs/01 §5 is the trigger list, docs/05 §1.3 the meta events; `stage_min` is the docs/05 gate for when she may react (detection itself is ungated so the trigger engine can count it), and a kind omits it when no doc states one (T20/T21: D20/DES-1 removed the invented stage 1). `line` becomes this turn's docs/08 §6 EVENT line; `quote_line` is the docs/05 M21 stage-3 quote of a deleted draft — its {text} is memory-only (never persisted). `save_gone` is the one event that outlives the transition it is about: it is delivered on the new run's first turn and gated on the ENDED run's stage (`data.gate_stage`), because a New Game has already reset the live one.",
 	"limits": {
 		"draft_min_chars": 2,
 		"draft_quote_stage": 3,
@@ -54,6 +54,27 @@
 			"meta": "",
 			"stage_min": 0,
 			"line": "EVENT: The player sent the same message again ({count} times in the last few messages)."
+		},
+		"save_gone": {
+			"trigger": "T19",
+			"meta": "M08",
+			"stage_min": 3,
+			"line": "EVENT: The player's previous save is gone. A new run has begun."
+		},
+		"settings_changed": {
+			"trigger": "T20",
+			"meta": "",
+			"line": "EVENT: The player changed a setting ({setting})."
+		},
+		"audio_mute": {
+			"trigger": "T21",
+			"meta": "",
+			"line": "EVENT: The player muted the audio. You can only type in ALL CAPS until it comes back."
+		},
+		"audio_unmuted": {
+			"trigger": "T21",
+			"meta": "",
+			"line": "EVENT: The player unmuted the audio. The caps can come off."
 		}
 	}
 }

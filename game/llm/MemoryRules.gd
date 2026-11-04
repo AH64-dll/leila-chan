@@ -667,6 +667,32 @@ static func contradiction(player_text: String, facts: Array, spec := {}) -> Dict
 	return {}
 
 
+## docs/01 §5 T22 "a gift she already got": the first stored fact the message
+## shares `min_shared_words` content words with, or {}. Unlike `contradiction`
+## there is no denial cue — the player repeating the remembered thing is the
+## evidence — so the whole message is the clause. Facts are compared in store
+## order, same as `contradiction`, so a replay picks the same fact.
+static func shared_fact(player_text: String, facts: Array, spec := {}) -> Dictionary:
+	var text := player_text.to_lower()
+	if text.strip_edges().is_empty() or facts.is_empty():
+		return {}
+	var given: Dictionary = spec if spec is Dictionary else {}
+	var floor := maxi(1, int(given.get("min_shared_words", DEFAULT_SHARED_WORDS)))
+	var words := content_words(text)
+	if words.is_empty():
+		return {}
+	for fact: Variant in facts:
+		var stored := _fact_text(fact)
+		var stored_words := content_words(stored)
+		var shared := 0
+		for word: String in words:
+			if stored_words.has(word):
+				shared += 1
+		if shared >= floor:
+			return {"fact": stored, "source": _fact_source(fact), "shared_words": shared}
+	return {}
+
+
 ## The clauses the denial cues govern: from the cue to the next , . ; ! ? or the
 ## end of the message. A cue matches as a whole-word phrase ("never" must not
 ## match "whenever"), compiled once per cue: the guard runs on every turn.

@@ -37,7 +37,7 @@ func before_test() -> void:
 
 	Director.reset()
 	_now_ms = 1000.0
-	Telemetry.reset_session()
+	Telemetry.reset_session(true)
 	Telemetry.set_clock(Callable(self, "_test_now"))
 	Triggers.clear_engine_events()
 
@@ -51,7 +51,7 @@ func before_test() -> void:
 
 func after_test() -> void:
 	Telemetry.set_clock(Callable())
-	Telemetry.reset_session()
+	Telemetry.reset_session(true)
 	Director.reset()
 	Director.register_chat_ui(null)
 	GameState.reset()
@@ -112,14 +112,22 @@ func test_catalogue_matches_the_docs() -> void:
 		"window_resized": ["T32", 2, "M19"],
 		"screenshot": ["T31", 0, ""],
 		"message_repeated": ["T12", 0, ""],
+		# P3.07: the save/settings/audio detectors T19–T21 (mute and unmute are
+		# two kinds because the instruction differs, so T21 owns both). T20/T21
+		# carry no stage gate: no doc states one, and D20 keeps every
+		# accessibility accommodation out of the trigger layer.
+		"save_gone": ["T19", 3, "M08"],
+		"settings_changed": ["T20", 0, ""],
+		"audio_mute": ["T21", 0, ""],
+		"audio_unmuted": ["T21", 0, ""],
 	}
 	for kind: String in expected:
 		var row: Dictionary = events[kind]
 		assert_str(str(row["trigger"])).is_equal(str(expected[kind][0]))
-		assert_int(int(row["stage_min"])).is_equal(int(expected[kind][1]))
+		assert_int(int(row.get("stage_min", 0))).is_equal(int(expected[kind][1]))
 		assert_str(str(row["meta"])).is_equal(str(expected[kind][2]))
 	var catalog := Telemetry.catalog()
-	assert_array(Telemetry.catalog_kinds()).contains_exactly_in_any_order(expected.keys())
+	assert_array(Telemetry.catalog().keys()).contains_exactly_in_any_order(expected.keys())
 	for kind: String in expected:
 		assert_bool(catalog.has(kind)).is_true()
 		assert_str(str((catalog[kind] as Dictionary)["line"])).starts_with("EVENT: ")
@@ -395,7 +403,7 @@ func test_chatui_forwards_drafts_and_turn_state() -> void:
 	# Hold-backspace erases one character per edit, so the final edit only knows
 	# the last char: the signal must still carry the whole draft (M21). Start
 	# from a clean Telemetry so nothing can stand in for the missing event.
-	Telemetry.reset_session()
+	Telemetry.reset_session(true)
 	Telemetry.set_date_active(true)
 	for step: String in ["h", "he", "hel", "hell", "hel", "he", "h", ""]:
 		ui.input_box.text_changed.emit(step)
@@ -430,10 +438,12 @@ func test_f3_overlay_fires_every_event() -> void:
 	overlay.toggle()
 	assert_bool(overlay.get_telemetry_text().contains("Pending:")).is_true()
 
-	for kind: String in Telemetry.catalog_kinds():
+	for kind: String in Telemetry.catalog():
 		assert_bool(overlay.fire_telemetry(kind)).append_failure_message(kind)
 	var state := Telemetry.state()
-	assert_int((state["pending"] as Array).size()).is_equal(7)
+	# Firing every catalogue kind leaves one pending line per kind: the overlay
+	# covers the data file, not a hard-coded list.
+	assert_int((state["pending"] as Array).size()).is_equal(Telemetry.catalog().size())
 	assert_bool(overlay.get_telemetry_text().contains("draft_deleted[T08]")).is_true()
 
 
