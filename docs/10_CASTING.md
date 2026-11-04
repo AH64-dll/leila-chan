@@ -294,8 +294,8 @@ feeling), but the divergence stays visible here instead of hiding in code.
 |---|---|---|
 | SPLIT | alternate when beat valence flips | valence flip → 01 (idealize) / 17 (devalue) |
 | TSUN | the act cracks into a scared child | flag `tsun_break`: afraid→20, crying→16 |
-| HOLLOW | sprite changes only on intensity 3 | freezes below i3; drift default→23, sad→14, tired→12, bored→10, cold→25 |
-| ANCHOR | keeps healthy sprites; relapse beat uses 26/22 once, then 02 | keeps healthy sprites: resolves from the T1 (pre-fracture) column · flag `anchor_relapse`: distress→26, elation→22; crisis→21 at T3 i3; then 02 |
+| HOLLOW | sprite changes only on intensity 3 | freezes below i3; drift default→23, sad→14, tired→12, bored→10 |
+| ANCHOR | keeps healthy sprites; relapse beat uses 26/22 once, then 02 | keeps healthy sprites: resolves from the T1 (pre-fracture) column · flag `anchor_relapse`: distress→26, elation→22; crisis→21 at T3 i3 on a distress (negative-valence) beat; then 02 |
 
 A pool face is a docs/01 §4 signature. Faces docs/03 §3.2 names outside the pool (kept, see above):
 - YANDERE: 22, 28

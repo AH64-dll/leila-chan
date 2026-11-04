@@ -186,8 +186,9 @@ func test_tsun_break_flag_cracks_the_act() -> void:
 
 
 ## docs/03 §3.2 HOLLOW: "sprite changes only on intensity 3" — the face stops
-## responding. i1/i2 beats hold the last face with no budget spend, no entry events
-## and no anti-repeat swap (which would itself be a change); an i3 beat drifts.
+## responding. i1/i2 beats hold the last face with the docs/03 §4 `freeze` preset, no
+## budget spend, no entry events and no anti-repeat swap (which would itself be a
+## change); an i3 beat drifts.
 func test_hollow_freezes_the_face_until_intensity_3() -> void:
 	_resolver.reset_scene()
 	var entered: Array = []
@@ -196,29 +197,70 @@ func test_hollow_freezes_the_face_until_intensity_3() -> void:
 	var open: Dictionary = _resolver.resolve_beat("joy", 3, 4, "HOLLOW")
 	assert_str(String(open["sprite"])).is_equal("23")
 	assert_str(String(open["path_rule"])).is_equal("drift")
+	assert_str(String(open["motion"])).is_equal("freeze")  # 23's own on_enter preset
 	var hold_i1: Dictionary = _resolver.resolve_beat("angry", 1, 4, "HOLLOW")
 	assert_str(String(hold_i1["sprite"])).is_equal("23")
 	assert_str(String(hold_i1["path_rule"])).is_equal("freeze")
 	var hold_i2: Dictionary = _resolver.resolve_beat("sad", 2, 4, "HOLLOW")
 	assert_str(String(hold_i2["sprite"])).is_equal("23")
 	assert_str(String(hold_i2["path_rule"])).is_equal("freeze")
-	# an i3 beat is allowed to move: sad drifts to its own numb face
+	# docs/03 §4: a held beat carries `freeze`, never the held face's own on_enter
+	# motion or the current feeling's (angry -> shake, sad -> sink) — DES-3
+	assert_str(String(hold_i1["motion"])).is_equal("freeze")
+	assert_str(String(hold_i2["motion"])).is_equal("freeze")
+	assert_float(float(hold_i1["motion_scale"])).is_equal_approx(1.0, 0.001)
+	# an i3 beat is allowed to move: sad drifts to its own numb face, with its preset
 	var drift: Dictionary = _resolver.resolve_beat("sad", 3, 4, "HOLLOW")
 	assert_str(String(drift["sprite"])).is_equal("14")
 	assert_str(String(drift["path_rule"])).is_equal("drift")
+	assert_str(String(drift["motion"])).is_equal("sink")
 	# three identical held beats must not anti-repeat into a sibling
 	for i: int in range(3):
 		var held: Dictionary = _resolver.resolve_beat("angry", 1, 4, "HOLLOW")
 		assert_str(String(held["sprite"])).is_equal("14")
+		assert_str(String(held["motion"])).is_equal("freeze")
 		assert_bool(bool(held["anti_repeated"])).is_false()
 	assert_array(entered).is_equal(["23", "14"])
 	_resolver.sprite_entered.disconnect(sink)
-	# the drift faces are exactly the docs/01 §4.4 pool
+	# every drift face is a docs/01 §4.4 signature; 25 reaches the screen from the T3
+	# base cell, never from an entry that could not change a face (DES-2)
 	var drift_faces: Array = []
 	for value: Variant in _resolver.casting["paths"]["HOLLOW"]["drift"].values():
 		if not drift_faces.has(String(value)):
 			drift_faces.append(String(value))
-	assert_array(drift_faces).contains_exactly_in_any_order(DOC_POOLS["HOLLOW"])
+	for face: String in drift_faces:
+		assert_array(DOC_POOLS["HOLLOW"]).contains(face)
+	assert_array(drift_faces).contains_exactly_in_any_order(["23", "14", "12", "10"])
+	# and every face HOLLOW can show is one of those signatures: the dropped `cold: 25`
+	# entry used to leave the healthy 07 on screen at T2, outside docs/01 §4.4 (DES-2)
+	for feeling: String in _resolver.casting["feelings"]:
+		for intensity: int in [1, 2, 3]:
+			for stage: int in [3, 4, 5]:
+				assert_array(DOC_POOLS["HOLLOW"]).contains(
+					_resolver.resolve(feeling, intensity, stage, "HOLLOW")
+				)
+
+
+## DES-2: a drift entry that maps a feeling onto the face it already resolves to is
+## dead data — it cannot change a face, yet docs/10 would print it as a live rule. Every
+## entry must beat the base cell at a tier the drift face may appear at (25 is T3-only
+## and cold's T3 base cell is already 25, which is why `cold` has no entry).
+func test_hollow_drift_entries_are_all_reachable() -> void:
+	var casting: Dictionary = _resolver.casting
+	var drift: Dictionary = casting["paths"]["HOLLOW"]["drift"]
+	for feeling: String in drift:
+		if feeling == "default":
+			continue  # the fallback, pinned by the table's other feelings
+		var drift_face := String(drift[feeling])
+		var reachable := false
+		for tier: String in casting["paths"]["HOLLOW"]["tiers"]:
+			for col: int in [1, 2, 3]:
+				var base := String(casting["feelings"][feeling]["tiers"][tier]["sprite"][str(col)])
+				if base != drift_face and _above_min_tier(casting, drift_face, tier):
+					reachable = true
+		assert_bool(reachable).is_true().append_failure_message(
+			"HOLLOW drift %s -> %s can never change a face" % [feeling, drift_face]
+		)
 
 
 ## docs/03 §3.2 ANCHOR: "keeps healthy sprites; relapse beats use 26/22 for one beat,
@@ -241,8 +283,9 @@ func test_anchor_keeps_healthy_sprites() -> void:
 
 
 ## docs/03 §3.2 ANCHOR relapse: one spike beat (26 for a negative beat, 22 for a
-## positive one, the knife 21 at T3 i3 per docs/01 §4.6), then exactly one 02 recovery
-## beat, then her healthy faces again. The knife still obeys its once-per-scene budget.
+## positive one, the knife 21 at T3 i3 on a distress beat per docs/01 §4.6), then
+## exactly one 02 recovery beat, then her healthy faces again. The knife still obeys
+## its once-per-scene budget.
 func test_anchor_relapse_then_recovery() -> void:
 	_resolver.reset_scene()
 	assert_str(String(_resolver.resolve_beat("sad", 1, 4, "ANCHOR")["sprite"])).is_equal("14")
@@ -267,6 +310,31 @@ func test_anchor_relapse_then_recovery() -> void:
 	assert_str(String(spent["sprite"])).is_equal("17")
 	assert_str(String(spent["budget_spent"])).is_equal("21")
 	assert_str(String(_resolver.resolve_beat("joy", 1, 5, "ANCHOR")["sprite"])).is_equal("01")
+
+
+## DES-1: docs/03 §1 gives 21 valence -3 and docs/03 §3.2 pairs a relapse with 26/22,
+## so the knife is the *distress* spike. A positive beat at the crisis tier/intensity
+## keeps its elation 22 and leaves the once-per-scene knife budget for the real crisis
+## that follows the recovery beat.
+func test_anchor_crisis_is_distress_only() -> void:
+	_resolver.reset_scene()
+	var elated: Dictionary = _resolver.resolve_beat("joy", 3, 5, "ANCHOR", RELAPSE_FLAGS)
+	assert_str(String(elated["sprite"])).is_equal("22")
+	assert_str(String(elated["path_rule"])).is_equal("relapse")
+	assert_str(String(elated.get("budget_spent", ""))).is_empty()
+	# the pure table agrees for every non-negative feeling at the crisis cell
+	assert_str(_resolver.resolve("joy", 3, 4, "ANCHOR", RELAPSE_FLAGS)).is_equal("22")
+	assert_str(_resolver.resolve("warmth", 3, 4, "ANCHOR", RELAPSE_FLAGS)).is_equal("22")
+	assert_str(_resolver.resolve("sad", 3, 5, "ANCHOR", RELAPSE_FLAGS)).is_equal("21")
+	# the elation spike still costs its one recovery beat ...
+	(
+		assert_str(String(_resolver.resolve_beat("angry", 3, 5, "ANCHOR", RELAPSE_FLAGS)["sprite"]))
+		. is_equal("02")
+	)
+	# ... and the knife is still there for the distress beat that follows it
+	var crisis: Dictionary = _resolver.resolve_beat("angry", 3, 5, "ANCHOR", RELAPSE_FLAGS)
+	assert_str(String(crisis["sprite"])).is_equal("21")
+	assert_str(String(crisis.get("budget_spent", ""))).is_empty()
 
 
 ## Every path row is inert below its tiers (docs/03 §3 step 2): stages 0-2 resolve
@@ -368,11 +436,15 @@ func _special_face(
 			return broken
 	var relapse: Dictionary = spec.get("relapse", {})
 	if not relapse.is_empty() and bool(flags.get(String(relapse.get("flag", "")), false)):
+		var valence := int(casting["feelings"][feeling]["valence"])
 		var crisis: Dictionary = relapse.get("crisis", {})
-		if tier == String(crisis.get("tier", "")) and intensity >= int(crisis.get("intensity", 0)):
+		if (
+			valence < 0
+			and tier == String(crisis.get("tier", ""))
+			and intensity >= int(crisis.get("intensity", 0))
+		):
 			return String(crisis.get("sprite", ""))
 		var spike: Dictionary = relapse.get("spike", {})
-		var valence := int(casting["feelings"][feeling]["valence"])
 		return String(spike.get("elation" if valence >= 0 else "distress", ""))
 	var drift: Dictionary = spec.get("drift", {})
 	if not drift.is_empty():

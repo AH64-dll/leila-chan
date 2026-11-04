@@ -138,6 +138,13 @@ func resolve_beat(
 	_last_valence = _valence_of(feeling)
 
 	var packet := _beat_packet(feeling, intensity, stage, tier, sprite, path)
+	if frozen:
+		# docs/03 §4: HOLLOW i1-i2 use the `freeze` preset ("stops breathing
+		# animation"). The held face's own on_enter motion (14 -> sink, 25 -> breathe)
+		# would keep the body moving, which is the opposite of the rule, so the held
+		# beat carries the documented preset and no amplitude (DES-3).
+		packet["motion"] = "freeze"
+		packet["motion_scale"] = 1.0
 	packet["anti_repeated"] = anti_repeated
 	packet["path_rule"] = rule
 	if not budget_spent.is_empty():
@@ -334,19 +341,22 @@ func _base_tier_for(path: String, tier: String) -> String:
 
 
 ## docs/03 §3.2 "relapse beats use 26/22 for one beat"; docs/01 §4.6 also promises
-## "sudden spikes of 26 / 21". A negative beat spikes to distress, a positive one to
-## elation, and the crisis face (the knife) only at its documented tier/intensity —
-## resolve_beat still holds it to the once-per-scene reveal budget.
+## "sudden spikes of 26 / 21". The crisis face is the *distress* spike pushed to its
+## documented tier/intensity — docs/03 §1 gives 21 valence -3 — so it is valence-scoped:
+## a positive beat keeps its elation 22 and never spends the knife's reveal budget
+## (DES-1). resolve_beat still holds any crisis to the once-per-scene cap.
 func _relapse_spike(relapse: Dictionary, feeling: String, intensity: int, tier: String) -> String:
+	var valence := _valence_of(feeling)
 	var crisis: Dictionary = relapse.get("crisis", {})
 	if (
-		not crisis.is_empty()
+		valence < 0
+		and not crisis.is_empty()
 		and tier == String(crisis.get("tier", ""))
 		and intensity >= int(crisis.get("intensity", 0))
 	):
 		return String(crisis.get("sprite", ""))
 	var spike: Dictionary = relapse.get("spike", {})
-	return String(spike.get("elation" if _valence_of(feeling) >= 0 else "distress", ""))
+	return String(spike.get("elation" if valence >= 0 else "distress", ""))
 
 
 ## docs/01 §4.2 "01 ↔ 17 rapid swaps" + docs/03 §3.2 "resolver forces alternation

@@ -2395,8 +2395,7 @@
     "default": "23",
     "sad": "14",
     "tired": "12",
-    "bored": "10",
-    "cold": "25"
+    "bored": "10"
    },
    "rule": "sprite changes only on intensity 3",
    "voice": "no blips at i1",

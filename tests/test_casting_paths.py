@@ -2,8 +2,9 @@
 
 The acceptance criterion is "path sprite pools match docs/01 §4", so this test
 reads the documents instead of a transcription: docs/01 §4.1–§4.6's own
-`- **Sprites:**` line per path, and docs/03 §3.2's override rows. A silent edit to
-either doc or to `data/casting.json` fails here before it reaches a build.
+`- **Sprites:**` line per path, and the faces each docs/03 §3.2 row names. A
+silent edit to either doc or to `data/casting.json` fails here before it reaches
+a build.
 """
 
 import json
@@ -12,23 +13,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DOC_01 = (ROOT / "docs" / "01_GAME_DESIGN.md").read_text(encoding="utf-8")
+DOC_03 = (ROOT / "docs" / "03_EMOTIONS.md").read_text(encoding="utf-8")
 CASTING = json.loads((ROOT / "data" / "casting.json").read_text(encoding="utf-8"))
 
-# docs/01 §4's subsections, in doc order.
+# docs/01 §4's subsections, in doc order. These are the casting keys; docs/03 §3.2
+# labels the TSUN path "TSUN-BREAK", so its row is looked up through DOC_03_ROWS.
 PATHS = ["YANDERE", "SPLIT", "TSUN", "HOLLOW", "AWAKE", "ANCHOR"]
+DOC_03_ROWS = {"TSUN": "TSUN-BREAK"}
 SPRITE_ID = re.compile(r"\b\d{2}\b")
-
-# docs/03 §3.2, transcribed: the faces each path's row names that docs/01 §4's pool
-# omits. They ship (the resolver spec is explicit per feeling) but must stay counted,
-# never silent — see the P3.06 handoff's DCR.
-DOC_03_EXTRAS = {
-    "YANDERE": {"22", "28"},  # joy→22, suspicious→28; §4.1 lists 01, 06, 24, 21, 30, 27
-    "SPLIT": set(),  # 01/17 swap pair, 16 and 19 all sit in the §4.2 pool
-    "TSUN": {"16", "18", "20"},  # disgusted→18; break afraid→20, crying→16
-    "HOLLOW": set(),  # drift 23/10/12/14 is the §4.4 pool
-    "AWAKE": {"26"},  # surprised→26; §4.5 lists 11 instead
-    "ANCHOR": {"22"},  # relapse 26/22; §4.6 gives the spikes as 26 / 21
-}
 
 
 def _doc_section(text: str, heading_prefix: str) -> str:
@@ -48,6 +40,18 @@ def doc_pool(path: str) -> list[str]:
     section = _doc_section(DOC_01, f"### 4.{PATHS.index(path) + 1} ")
     line = next(line for line in section.splitlines() if line.startswith("- **Sprites:**"))
     return SPRITE_ID.findall(line)
+
+
+def doc_03_row(path: str) -> str:
+    """docs/03 §3.2's table row for one path, as raw markdown."""
+    section = _doc_section(DOC_03, "### 3.2 ")
+    label = DOC_03_ROWS.get(path, path)
+    return next(line for line in section.splitlines() if line.startswith(f"| {label} "))
+
+
+def doc_03_faces(path: str) -> set[str]:
+    """Every face docs/03 §3.2's row for `path` names ("love→24", "26/22", "then 02")."""
+    return set(SPRITE_ID.findall(doc_03_row(path)))
 
 
 def rule_faces(spec: dict) -> set[str]:
@@ -86,11 +90,19 @@ def test_pool_faces_are_exported_sprites() -> None:
         assert not missing, f"{path}'s pool names unexported sprites {missing}"
 
 
-def test_docs_03_extras_are_exactly_the_documented_overrides() -> None:
+def test_docs_03_extras_are_the_documented_overrides() -> None:
     for path in PATHS:
         spec = CASTING["paths"][path]
-        assert set(spec["docs_03_extras"]) == DOC_03_EXTRAS[path], (
-            f"{path}'s docs/03 extras drifted from docs/03 §3.2's transcribed row"
+        documented = doc_03_faces(path)
+        assert documented, f"docs/03 §3.2 names no face for {path}: {doc_03_row(path)!r}"
+        # docs_03_extras is the docs/03 §3.2 row minus the path's own §4 pool, limited
+        # to the faces the rule tables actually act on. The intersection is what keeps
+        # DCR 2 visible: docs/03 §3.2's broader SPLIT wording (02/24 and 18/07) is
+        # documented but not forced, so it is neither an extra nor an error here.
+        documented_rule_faces = (documented & rule_faces(spec)) - set(spec["pool"])
+        assert set(spec["docs_03_extras"]) == documented_rule_faces, (
+            f"{path}'s docs_03_extras is not docs/03 §3.2's row minus its pool: "
+            f"table {sorted(spec['docs_03_extras'])} vs doc {sorted(documented_rule_faces)}"
         )
         # the field is load-bearing, not decoration: it is exactly the rule faces that
         # sit outside the path's docs/01 §4 pool

@@ -302,10 +302,11 @@ PATHS = {
              "rule": "the act cracks into a scared child",
              "music_bias": "keep", "cue_bias": ["sigh", "door_slam"]},
     # docs/03 §3.2: "most feelings drift to 23/10/12/14; sprite changes only on intensity 3" — the face stops
-    # responding. Sad/tired/bored keep their own numb face, cold keeps its shadowed one (docs/01 §4.4's 25);
-    # every other feeling drifts to 23.
+    # responding. Sad/tired/bored keep their own numb face, every other feeling (cold included) drifts to 23.
+    # Cold has no entry of its own: 25's first tier is T3 and cold's T3 base cell is already 25, so a `cold: 25`
+    # entry could never change a face (DES-2); 25 stays a docs/01 §4.4 pool signature via the base table.
     "HOLLOW": {"pool": PATH_POOLS["HOLLOW"], "tiers": ["T2", "T3"], "change_intensity": 3,
-               "drift": {"default": "23", "sad": "14", "tired": "12", "bored": "10", "cold": "25"},
+               "drift": {"default": "23", "sad": "14", "tired": "12", "bored": "10"},
                "rule": "sprite changes only on intensity 3", "voice": "no blips at i1",
                "music_bias": "silence", "cue_bias": ["clock_tick", "music_box_note"]},
     "AWAKE": {"pool": PATH_POOLS["AWAKE"], "tiers": ["T2", "T3"],
@@ -315,7 +316,8 @@ PATHS = {
     # docs/03 §3.2: "keeps healthy sprites; relapse beats use 26/22 for one beat, then 02". healthy_tier is the
     # pre-fracture column the beat resolves from, so ANCHOR never shows a corrupt face (docs/01 §4.6). The
     # relapse spike is data: distress for a negative beat, elation for a positive one, and — docs/01 §4.6's
-    # "sudden spikes of 26 / 21" — the knife at stage 5 intensity 3 (still under its 1-per-scene reveal budget).
+    # "sudden spikes of 26 / 21" — the knife at stage 5 intensity 3 on a distress beat (docs/03 §1 gives 21
+    # valence -3, and it stays under its 1-per-scene reveal budget).
     "ANCHOR": {"pool": PATH_POOLS["ANCHOR"], "tiers": ["T2", "T3"], "healthy_tier": "T1",
                "relapse": {"flag": "anchor_relapse", "spike": {"distress": "26", "elation": "22"},
                            "crisis": {"sprite": "21", "tier": "T3", "intensity": 3}, "then": "02"},
@@ -640,7 +642,8 @@ def write_doc(c):
             r = d["relapse"]
             spikes = ", ".join(f"{k}→{s}" for k, s in r["spike"].items())
             bits.append(f'flag `{r["flag"]}`: {spikes}; crisis→{r["crisis"]["sprite"]} at '
-                        f'{r["crisis"]["tier"]} i{r["crisis"]["intensity"]}; then {r["then"]}')
+                        f'{r["crisis"]["tier"]} i{r["crisis"]["intensity"]} on a distress '
+                        f'(negative-valence) beat; then {r["then"]}')
         if bits:
             w(f'| {p} | {d.get("rule", "")} | {" · ".join(bits)} |')
     w("")
