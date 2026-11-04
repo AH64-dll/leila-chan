@@ -1,0 +1,97 @@
+{
+  "id": "I02_love_letter",
+  "kind": "interrupt",
+  "title": "Love letter",
+  "background": "bg/classroom",
+  "music": "romantic",
+  "ambience": "none",
+  "available": {
+    "days": [1, 14],
+    "stages": [0, 5],
+    "paths": "any"
+  },
+  "goal": "Have {player_name} read your letter.",
+  "prompt": "You set a folded letter on the desk between you. {player_name}'s name is on the front in careful handwriting, and the corner is soft from being held.",
+  "stage_variants": {
+    "0": "You wrote {player_name} a letter and you want him to read it here, where you can see his face. You keep smoothing the fold flat with your thumb.",
+    "1": "You tell him you wrote it last night and then wrote it again this morning. You ask him to read the second one.",
+    "2": "The letter is longer than you remember writing. You tell him to skip the middle part, then change your mind and watch his eyes move down the page.",
+    "3": "You watch him read every line. You know which line makes him stop, and you wait for it, and you keep your hands still on the desk.",
+    "4": "The letter mentions things he has not told you yet. You ask him to read those parts out loud, slowly, so you can hear them in his voice.",
+    "5": "There is more than one letter. You keep taking them out of your bag and setting them down, and every one has his name on the front."
+  },
+  "path_twists": {
+    "YANDERE": "The last paragraph lists everyone who might read the letter before he does.",
+    "AWAKE": "The ink is still being written as he reads. You tell him the letter is not finished because he has not reacted yet.",
+    "ANCHOR": "You tell him to stop if any line frightens him, and you mean it, and your hand shakes on the desk."
+  },
+  "events": [
+    {
+      "at_turn": 1,
+      "line": "The letter shifts a little on the desk, though there is no wind."
+    },
+    {
+      "at_turn": 3,
+      "line": "Someone in the corridor stops walking, and does not start again."
+    },
+    {
+      "on_trigger": "T01",
+      "line": "A girl's name appears in the letter in a place you did not write it."
+    }
+  ],
+  "end": {
+    "min_turns": 3,
+    "max_turns": 6,
+    "on_goal": "end_date"
+  },
+  "opening_beats": {
+    "0": [
+      {
+        "feeling": "shy",
+        "intensity": 1,
+        "cue": "none",
+        "say": "I wrote you a letter, and you can read it here. I don't mind — I mean, I do mind, but read it."
+      }
+    ],
+    "1": [
+      {
+        "feeling": "nervous",
+        "intensity": 1,
+        "cue": "none",
+        "say": "I wrote this last night, and then I wrote it again this morning. Read the second one."
+      }
+    ],
+    "2": [
+      {
+        "feeling": "nervous",
+        "intensity": 2,
+        "cue": "none",
+        "say": "It's longer than I thought, so skip the middle. No — don't skip it."
+      }
+    ],
+    "3": [
+      {
+        "feeling": "cold",
+        "intensity": 2,
+        "cue": "none",
+        "say": "Read it all the way to the end, and I'll wait. I know which line you'll stop at."
+      }
+    ],
+    "4": [
+      {
+        "feeling": "love",
+        "intensity": 3,
+        "cue": "heartbeat_fast",
+        "say": "Read the parts about you out loud, slowly. I want to hear them in your voice."
+      }
+    ],
+    "5": [
+      {
+        "feeling": "pleading",
+        "intensity": 3,
+        "cue": "breath_close",
+        "say": "There's another one, and another. Take them all — I have more at home."
+      }
+    ]
+  }
+}

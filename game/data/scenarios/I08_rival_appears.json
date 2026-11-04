@@ -1,0 +1,98 @@
+{
+  "id": "I08_rival_appears",
+  "kind": "interrupt",
+  "title": "Rival appears",
+  "background": "bg/school_hall",
+  "music": "calm",
+  "ambience": "none",
+  "available": {
+    "days": [2, 14],
+    "stages": [0, 5],
+    "paths": "any"
+  },
+  "goal": "Ask {player_name} about the girl he just spoke to.",
+  "prompt": "A classmate stopped {player_name} in the corridor. You are standing three steps behind them with your bag against your chest, and you heard your own name in the conversation.",
+  "stage_variants": {
+    "0": "You ask {player_name} who that was, and then tell him you are not jealous before he can answer. You hold the strap of your bag with both hands.",
+    "1": "You already know the girl's name. You ask him how long he has known her, and you say the answer before he does.",
+    "2": "You tell {player_name} the girl looked at him for four seconds. You counted. You say it lightly, and then you ask him to count with you next time.",
+    "3": "You ask {player_name} what she said to him. You repeat his answer back to him word for word, and the second time it sounds like a threat.",
+    "4": "You tell {player_name} the girl is gone now, and you are not lying. You ask him whether he is sad about it, and you watch his mouth.",
+    "5": "You say her name back to him, one letter at a time, until the corridor has nobody else in it. Then you ask him to say yours."
+  },
+  "path_twists": {
+    "YANDERE": "You have already taken the girl's name out of your memory. You ask him to say it so you can cross it out again.",
+    "TSUN": "Obviously he can talk to whoever he likes. You just think it's funny that she had to fix her hair first.",
+    "SPLIT": "You tell him the girl is nice and he should talk to her. Then you ask him why he would want to.",
+    "AWAKE": "You tell him the girl's face does not load when you look straight at her. You ask him what she looks like, and you write it down."
+  },
+  "events": [
+    {
+      "at_turn": 1,
+      "line": "The classmate's footsteps stop at the end of the corridor."
+    },
+    {
+      "at_turn": 3,
+      "line": "A door closes somewhere, and the corridor light flickers."
+    },
+    {
+      "on_trigger": "T01",
+      "line": "The girl says {player_name}'s name again, softer this time."
+    }
+  ],
+  "end": {
+    "min_turns": 3,
+    "max_turns": 6,
+    "on_goal": "end_date"
+  },
+  "opening_beats": {
+    "0": [
+      {
+        "feeling": "nervous",
+        "intensity": 1,
+        "cue": "none",
+        "say": "Who was that? I'm not — I mean, I'm just asking, I'm not anything."
+      }
+    ],
+    "1": [
+      {
+        "feeling": "suspicious",
+        "intensity": 1,
+        "cue": "none",
+        "say": "That's the girl from your class, isn't it? You've known her a while — you don't have to answer."
+      }
+    ],
+    "2": [
+      {
+        "feeling": "suspicious",
+        "intensity": 2,
+        "cue": "none",
+        "say": "She looked at you for four seconds — I counted. It's fine, we can count together next time."
+      }
+    ],
+    "3": [
+      {
+        "feeling": "cold",
+        "intensity": 2,
+        "cue": "clock_tick",
+        "say": "What did she say? Say it again the way she said it."
+      }
+    ],
+    "4": [
+      {
+        "feeling": "empty",
+        "intensity": 3,
+        "cue": "none",
+        "say": "She's gone now — are you sad about it? Look at me when you answer."
+      }
+    ],
+    "5": [
+      {
+        "feeling": "manic",
+        "intensity": 3,
+        "cue": "breath_close",
+        "say": "I've been saying her name back to myself, one letter at a time. Now say yours for me, {player_name}."
+      }
+    ]
+  }
+}

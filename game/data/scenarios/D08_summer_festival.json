@@ -1,0 +1,97 @@
+{
+  "id": "D08_summer_festival",
+  "kind": "date",
+  "title": "Summer festival",
+  "background": "bg/festival_night",
+  "music": "playful",
+  "ambience": "none",
+  "available": {
+    "days": [5, 13],
+    "stages": [0, 5],
+    "paths": "any"
+  },
+  "goal": "Win {player_name} a prize.",
+  "prompt": "The summer festival is loud and orange. Paper lanterns hang over the stalls, and you are wearing a yukata you spent an hour tying by yourself.",
+  "stage_variants": {
+    "0": "In your yukata, you pull {player_name} toward the goldfish scoop before he can choose. You want to win him the small rabbit on the top shelf, and you have already counted your coins twice.",
+    "1": "You win him a rabbit, then say you were not trying, then admit you were trying very hard. The fireworks are about to start.",
+    "2": "You keep looking up before the fireworks begin. You tell {player_name} you wanted to watch this with him before the sky got used up.",
+    "3": "The fireworks stop in the middle of the show, and the crowd is gone. Only the two of you are left among the stalls, and you hold his sleeve so he does not turn around.",
+    "4": "You stand in the empty festival and tell {player_name} it is better this way. You pull him from stall to stall, and the vendors are all facing the same way.",
+    "5": "Every lantern is lit and every stall is empty, and the fireworks have been going on for hours without a sound. You ask him to stay until the last one."
+  },
+  "path_twists": {
+    "YANDERE": "You have the names of everyone in the crowd, and you have crossed out the ones who looked at him twice.",
+    "AWAKE": "The lanterns flicker in the same order, over and over. You tell him the festival has been playing since before he arrived.",
+    "SPLIT": "One minute you are laughing at the goldfish, and the next you tell him he ruined the evening and you never wanted to come."
+  },
+  "events": [
+    {
+      "at_turn": 2,
+      "line": "A firework bursts too close, and the lanterns swing."
+    },
+    {
+      "at_turn": 5,
+      "line": "The music from the stalls stops mid-song."
+    },
+    {
+      "on_trigger": "T01",
+      "line": "A girl in a pale yukata laughs at the next stall and looks at {player_name}."
+    }
+  ],
+  "end": {
+    "min_turns": 6,
+    "max_turns": 12,
+    "on_goal": "end_date"
+  },
+  "opening_beats": {
+    "0": [
+      {
+        "feeling": "joy",
+        "intensity": 1,
+        "cue": "laugh_soft",
+        "say": "Come on — the goldfish scoop is this way, and I've been saving coins all week."
+      }
+    ],
+    "1": [
+      {
+        "feeling": "playful",
+        "intensity": 1,
+        "cue": "giggle",
+        "say": "I won you the rabbit. I wasn't even trying, okay, I was trying a little."
+      }
+    ],
+    "2": [
+      {
+        "feeling": "curious",
+        "intensity": 2,
+        "cue": "none",
+        "say": "The fireworks start in a minute. I wanted you to see them before the sky got tired."
+      }
+    ],
+    "3": [
+      {
+        "feeling": "nervous",
+        "intensity": 2,
+        "cue": "none",
+        "say": "Don't turn around yet. The crowd was here a second ago, and now it isn't."
+      }
+    ],
+    "4": [
+      {
+        "feeling": "warmth",
+        "intensity": 2,
+        "cue": "none",
+        "say": "It's better like this. Just us, and every stall still open."
+      }
+    ],
+    "5": [
+      {
+        "feeling": "manic",
+        "intensity": 3,
+        "cue": "laugh_unhinged",
+        "say": "Listen — the fireworks are still going. You just can't hear them anymore."
+      }
+    ]
+  }
+}

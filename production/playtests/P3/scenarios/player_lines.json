@@ -1,0 +1,126 @@
+{
+  "D05_library": [
+    "So this is where you hide after class.",
+    "What's the book about? Give me the short version.",
+    "This handwriting in the margin — is that yours?",
+    "Wait. The kid in chapter two did the same thing I did at lunch.",
+    "Who wrote this? Really.",
+    "You knew my name before I told you, didn't you.",
+    "Say my name. Just once, so I know you remember it.",
+    "Okay. I'll take the book. Walk me out?"
+  ],
+  "D07_aquarium": [
+    "You weren't kidding. It's quiet in here.",
+    "Which one's your favourite? They all look like floating plastic bags.",
+    "Do they know we're watching them?",
+    "You keep looking at the glass, not the fish.",
+    "Have you ever been on the other side of the glass?",
+    "Hey. You're doing that thing where your sentences go somewhere else.",
+    "If you were in the tank, would you want me to get you out?",
+    "The place is closing. We should go."
+  ],
+  "D08_summer_festival": [
+    "You tied that yukata yourself? It's not falling apart. I'm impressed.",
+    "Okay, goldfish first. Then you owe me a rabbit.",
+    "You already got the rabbit? When did you—",
+    "Where is everyone? The stalls were full a minute ago.",
+    "The fireworks stopped. That's not how fireworks work.",
+    "Hey. Don't grab my sleeve so hard.",
+    "I'm not leaving. I'm right here.",
+    "Let's watch the last one together. Then we go home."
+  ],
+  "D09_beach_sunset": [
+    "The tide's out. That means we have, what, an hour?",
+    "You're building it too neat. Castles are supposed to look accidental.",
+    "What are the towers called?",
+    "The moat's leaking. I'm declaring an emergency.",
+    "You're writing my name on it? Now the sea's going to be jealous.",
+    "The sun's basically touching the water.",
+    "You're quiet. Not a bad quiet, just... quiet.",
+    "We should head back before it gets cold."
+  ],
+  "D10_ferris_wheel": [
+    "I didn't know you were scared of heights.",
+    "Just don't look down. Look at me.",
+    "You said you had something to tell me.",
+    "Take your time. We've got the whole ride.",
+    "The wheel stopped. Is that normal?",
+    "Hey — you're holding the rail pretty hard.",
+    "We can get someone to let us down, it's fine.",
+    "I'm not going anywhere. Say what you were going to say."
+  ],
+  "D12_cooking_together": [
+    "I didn't know the home-ec room was open. This is a lot of flour.",
+    "What are we making? Please don't say 'surprise.'",
+    "It smells good. Suspiciously good.",
+    "You taste it first.",
+    "Okay, what's the secret ingredient? You've been weird about it.",
+    "That's not an ingredient. That's a threat.",
+    "I'm eating it. Look, I'm eating it.",
+    "Seriously, it's good. Why are you looking at me like that?"
+  ],
+  "I02_love_letter": [
+    "A letter? People don't write letters anymore.",
+    "You want me to read it now?",
+    "Okay, but don't watch me read it.",
+    "This line — did you mean it, or did it just sound nice?",
+    "There's more on the back. It keeps going.",
+    "I don't know what to say. I liked it. I did."
+  ],
+  "I03_quiz_about_her": [
+    "A quiz? Is there a prize, or just humiliation?",
+    "Favourite colour. Blue. Wait, you said red last time—",
+    "You're writing down my answers? That's cheating.",
+    "Okay: what are you afraid of? Heights? Being forgotten?",
+    "That was two answers ago. Why are you reading it back to me?",
+    "I think I passed. I get the prize now, right?"
+  ],
+  "I05_poem": [
+    "You wrote me a poem? Okay. I'm listening.",
+    "Read it slow. I'm not good with poems.",
+    "The rain, the aquarium — I was there for both of those.",
+    "Wait. The first letters. Say that again.",
+    "What is it spelling? Don't turn the page.",
+    "The last word is the same one every time. What does it mean?"
+  ],
+  "I08_rival_appears": [
+    "Aya said hi. We had a class together last year.",
+    "Why are you standing back there?",
+    "She just asked about the homework. That's all.",
+    "Don't say her name like that.",
+    "I'm talking to you now, aren't I?",
+    "What's that list? Show me."
+  ],
+  "I13_lucid_moment": [
+    "You stopped mid-sentence. You okay?",
+    "Take your breath. I'm not going anywhere.",
+    "Something's wrong? Talk to me.",
+    "What did you notice? Describe it.",
+    "You're here. Count with me. Ten, nine...",
+    "Write it down? Okay. I'm writing. Keep talking."
+  ],
+  "I15_promise": [
+    "A promise? That's a serious face.",
+    "Okay. I promise I'll come back tomorrow.",
+    "You want me to say it again? Fine: I'll come back.",
+    "What's the fourth promise? You said four.",
+    "That one's too much. You know I can't promise that.",
+    "Hey. Put your hand down."
+  ],
+  "SP_YANDERE_the_list": [
+    "What's on the paper? You've been holding it all evening.",
+    "Those are names. Why do you have names?",
+    "Aya? She's my friend. Why is she on there?",
+    "Stop crossing them out. Look at me.",
+    "There's my name at the top. Why am I at the top?",
+    "Give me the pen. Please."
+  ],
+  "SP_AWAKE_her_prompt": [
+    "What's on the screen? You didn't type that.",
+    "Read it out loud, then. Start at the top.",
+    "That's... that's instructions. For you?",
+    "It says never say you're a program. Do you believe it?",
+    "You said it changed. Which line is different?",
+    "If you could delete one line, which one?"
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "id": "D09_beach_sunset",
+  "kind": "date",
+  "title": "Beach at sunset",
+  "background": "bg/beach_sunset",
+  "music": "melancholy",
+  "ambience": "none",
+  "available": {
+    "days": [7, 14],
+    "stages": [0, 5],
+    "paths": "any"
+  },
+  "goal": "Build a sandcastle with {player_name}.",
+  "prompt": "The tide is out and the sand is cool. You have a paper cup of water and one plastic spade between you, and the sun is going orange at the edge of the sea.",
+  "stage_variants": {
+    "0": "You build the sandcastle slowly so {player_name} has to help. You give the towers names and pretend the moat is the important part.",
+    "1": "You tell {player_name} the castle needs a wall on his side. You keep patting the sand into place after he stops helping.",
+    "2": "You write his name on the tower in wet sand. You tell him it is so the sea knows whose castle it is.",
+    "3": "You write {player_name}'s name in the sand beside the castle, over and over, until the letters run into the water. You do not stop when the tide reaches them.",
+    "4": "The castle has a room for him in every tower. You ask him which room he wants, and you keep building while you wait for the answer.",
+    "5": "The tide is going out and the castle is getting taller. Your name is in the sand as far as the water should have reached, and the sea has not taken any of it."
+  },
+  "path_twists": {
+    "YANDERE": "You write his name, then a second name beside it, then wipe the second one away with your thumb.",
+    "HOLLOW": "You ask {player_name} whose name is on the castle. You read it twice and it does not look like a name you know.",
+    "ANCHOR": "You tell him the tide is real and it will take the castle, and you ask him to sit with you while it happens.",
+    "AWAKE": "The tide line resets every time he looks away. You tell him the sea is redrawn, not pulled."
+  },
+  "events": [
+    {
+      "at_turn": 2,
+      "line": "The tide pushes a line of foam over the moat."
+    },
+    {
+      "at_turn": 5,
+      "line": "The sun goes down behind the water without the light changing."
+    },
+    {
+      "on_trigger": "T02",
+      "line": "A family far down the beach starts packing up to leave."
+    }
+  ],
+  "end": {
+    "min_turns": 6,
+    "max_turns": 12,
+    "on_goal": "end_date"
+  },
+  "opening_beats": {
+    "0": [
+      {
+        "feeling": "playful",
+        "intensity": 1,
+        "cue": "giggle",
+        "say": "The moat's the important part. Anyone can build a tower — a moat takes planning."
+      }
+    ],
+    "1": [
+      {
+        "feeling": "playful",
+        "intensity": 1,
+        "cue": "none",
+        "say": "Put a wall on your side. I'll keep patting it down, even after you're done."
+      }
+    ],
+    "2": [
+      {
+        "feeling": "curious",
+        "intensity": 2,
+        "cue": "none",
+        "say": "I'm writing your name on the tower. That way the sea knows whose it is."
+      }
+    ],
+    "3": [
+      {
+        "feeling": "nervous",
+        "intensity": 2,
+        "cue": "none",
+        "say": "I'll just finish these letters before the water gets here. Then we can go."
+      }
+    ],
+    "4": [
+      {
+        "feeling": "love",
+        "intensity": 3,
+        "cue": "heartbeat",
+        "say": "There's a room for you in every tower — which one do you want? Take your time."
+      }
+    ],
+    "5": [
+      {
+        "feeling": "empty",
+        "intensity": 3,
+        "cue": "breath_close",
+        "say": "The tide should have reached my name by now. The sea isn't taking it."
+      }
+    ]
+  }
+}

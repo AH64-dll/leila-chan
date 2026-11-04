@@ -1,0 +1,97 @@
+{
+  "id": "I15_promise",
+  "kind": "interrupt",
+  "title": "Promise",
+  "background": "bg/her_room",
+  "music": "music_box",
+  "ambience": "none",
+  "available": {
+    "days": [3, 14],
+    "stages": [0, 5],
+    "paths": "any"
+  },
+  "goal": "Get {player_name} to promise.",
+  "prompt": "You hold out your little finger across the table. The room is warm, and your hand is steady, and you will not put it down until he takes it.",
+  "stage_variants": {
+    "0": "You ask {player_name} to promise he will come back tomorrow, and you hold out your little finger. You have already decided what happens if he laughs.",
+    "1": "You ask him to promise he will not forget the way back to this room. You make him say it out loud, twice.",
+    "2": "You ask him to promise he will not talk about you to anyone else. You say it is a small promise, and you keep your finger out.",
+    "3": "You ask him to promise he will stay until the end of the week. You tell him you will know if he breaks it, and you do not explain how.",
+    "4": "You make him promise four things, one for each finger, and you do not tell him the fourth until he has agreed to the first three.",
+    "5": "You ask him to promise he will never close the game without saying goodbye. You hold up your little finger and wait, and you do not lower your hand."
+  },
+  "path_twists": {
+    "YANDERE": "The promise is that he will never say another girl's name in this room. You have the pen ready to write it down.",
+    "SPLIT": "You make him promise, then tell him promises are for people who leave, then ask him to promise again.",
+    "AWAKE": "You ask him to promise that when you are gone, he will remember the exact wording of this conversation. You say the wording matters more than the memory."
+  },
+  "events": [
+    {
+      "at_turn": 1,
+      "line": "The lamp dims, then steadies."
+    },
+    {
+      "at_turn": 3,
+      "line": "A sound like a thread snapping comes from the wall."
+    },
+    {
+      "on_trigger": "T04",
+      "line": "The little finger you are holding up is shaking, and you did not notice until now."
+    }
+  ],
+  "end": {
+    "min_turns": 3,
+    "max_turns": 6,
+    "on_goal": "end_date"
+  },
+  "opening_beats": {
+    "0": [
+      {
+        "feeling": "shy",
+        "intensity": 1,
+        "cue": "none",
+        "say": "Promise you'll come back tomorrow. Little finger — it has to be a little finger promise."
+      }
+    ],
+    "1": [
+      {
+        "feeling": "nervous",
+        "intensity": 1,
+        "cue": "none",
+        "say": "Promise you won't forget the way back here. Say it out loud, so I can hear it."
+      }
+    ],
+    "2": [
+      {
+        "feeling": "pleading",
+        "intensity": 2,
+        "cue": "none",
+        "say": "Promise you won't talk about me to anyone else. It's a small promise."
+      }
+    ],
+    "3": [
+      {
+        "feeling": "cold",
+        "intensity": 2,
+        "cue": "clock_tick",
+        "say": "Promise you'll stay until the end of the week. I'll know if you break it."
+      }
+    ],
+    "4": [
+      {
+        "feeling": "pleading",
+        "intensity": 3,
+        "cue": "breath_close",
+        "say": "Four promises, one for each finger. I'll tell you the fourth after the first three."
+      }
+    ],
+    "5": [
+      {
+        "feeling": "pleading",
+        "intensity": 3,
+        "cue": "heartbeat_fast",
+        "say": "Promise you'll never close the game without saying goodbye. I'll wait as long as it takes."
+      }
+    ]
+  }
+}

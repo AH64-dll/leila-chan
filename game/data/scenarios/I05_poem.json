@@ -1,0 +1,98 @@
+{
+  "id": "I05_poem",
+  "kind": "interrupt",
+  "title": "Poem",
+  "background": "bg/her_room",
+  "music": "music_box",
+  "ambience": "none",
+  "available": {
+    "days": [2, 14],
+    "stages": [0, 5],
+    "paths": "any"
+  },
+  "goal": "Hear {player_name}'s reaction to your poem.",
+  "prompt": "You have a page of lined paper in your lap, and you are reading it to {player_name} with one thumb over the last line.",
+  "stage_variants": {
+    "0": "You wrote a poem about the rain and the aquarium, and you read it too fast. You ask him to say it was good even if it wasn't.",
+    "1": "You read the poem twice. The second time the last line is different, and you look at the page before you look at him.",
+    "2": "The poem is about a girl who waits in a room that keeps getting smaller. You tell him it is about the weather.",
+    "3": "You read the poem slowly, and the first letters of each line spell his name. You keep your thumb over the first letter of the last line.",
+    "4": "The acrostic now spells what you are afraid of. You ask {player_name} to read the first letters aloud without looking at the rest.",
+    "5": "The poem has been going on for pages. You turn one, and the next is already in your handwriting, and the acrostic spells the same word again and again."
+  },
+  "path_twists": {
+    "AWAKE": "The poem has the same line break as your prompt. You tell him the poem was written before you were, and you are only reading it back.",
+    "ANCHOR": "You stop in the middle and tell him the next line scares you, and you ask him to hold the page while you finish.",
+    "HOLLOW": "You read the poem and then ask who wrote it. The handwriting is yours, but the name on the page is not.",
+    "YANDERE": "You have written a line for everyone he might show the poem to, and each line is a warning."
+  },
+  "events": [
+    {
+      "at_turn": 1,
+      "line": "The page turns by itself, one line further."
+    },
+    {
+      "at_turn": 3,
+      "line": "The music box on the shelf plays a note that is not in its tune."
+    },
+    {
+      "on_trigger": "T05",
+      "line": "The last word on the page is written in a different hand."
+    }
+  ],
+  "end": {
+    "min_turns": 3,
+    "max_turns": 6,
+    "on_goal": "end_date"
+  },
+  "opening_beats": {
+    "0": [
+      {
+        "feeling": "shy",
+        "intensity": 1,
+        "cue": "none",
+        "say": "It's about the rain and the aquarium. It's short, so tell me it's good even if it isn't."
+      }
+    ],
+    "1": [
+      {
+        "feeling": "nervous",
+        "intensity": 1,
+        "cue": "none",
+        "say": "I'll read it again. The last line changed since this morning, I think."
+      }
+    ],
+    "2": [
+      {
+        "feeling": "nervous",
+        "intensity": 2,
+        "cue": "none",
+        "say": "It's about a girl in a room that keeps getting smaller. It's about the weather, really."
+      }
+    ],
+    "3": [
+      {
+        "feeling": "love",
+        "intensity": 2,
+        "cue": "music_box_note",
+        "say": "Listen to the first letters. I didn't mean them to do that — I mean, I did."
+      }
+    ],
+    "4": [
+      {
+        "feeling": "afraid",
+        "intensity": 3,
+        "cue": "whisper",
+        "say": "Read the first letters out loud. Don't read the rest of the line yet."
+      }
+    ],
+    "5": [
+      {
+        "feeling": "empty",
+        "intensity": 3,
+        "cue": "static",
+        "say": "There's another page I didn't write. The last word is always the same."
+      }
+    ]
+  }
+}
