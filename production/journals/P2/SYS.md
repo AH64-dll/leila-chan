@@ -372,3 +372,6 @@
   Array/Dictionary (`starts.append(1)`), never `starts += 1`. Cost me one red run.
 - Gotcha: a suite that (rightly) still calls `Date.start_date()` itself must set `auto_start = false` first, or
   the deferred self-start and the explicit call both run — the turn counter resets and the greeting replays.
+- Convention: the Date's `_current_turn` names a *played* turn, so it advances only when the Director accepts
+  the line. A Safety refusal is not a turn (docs/02 §4 step 0) — counting it spent an `events[].at_turn` and
+  walked `max_turns` down. The same number feeds `resolve_scene`, `evaluate_turn_end` and the saved scene turn.

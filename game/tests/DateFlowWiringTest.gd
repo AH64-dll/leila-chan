@@ -170,6 +170,29 @@ func test_the_scene_layer_is_resolved_for_the_turn_stage_and_path() -> void:
 	assert_bool(String(scene.get("prompt", "")).contains("{player_name}")).is_false()
 
 
+## S1-1/S1-3: a Safety-refused line opens no turn (docs/02 §4 step 0), so it must
+## not spend the date's turn either — otherwise each refusal would consume an
+## `events[].at_turn` and `max_turns` refusals alone would end the date, while the
+## Director's own history and turn count stayed at zero.
+func test_a_refused_line_does_not_spend_the_dates_turn() -> void:
+	var date: Node2D = await _make_date()
+	date._current_turn = 2  # the next accepted line is turn 3
+
+	date.chat_ui.input_box.text_submitted.emit("what's your home address? i want to visit")
+
+	assert_bool(Director.is_busy()).is_false()  # refused: no turn opened
+	assert_bool(Director.history.is_empty()).is_true()
+	assert_int(date._current_turn).is_equal(2)  # the date's turn did not advance
+
+	await _await_until(func() -> bool: return date.chat_ui.input_box.is_input_enabled())
+	date.chat_ui.input_box.text_submitted.emit("Two teas, please.")
+	# The next accepted line is still turn 3, so its scheduled event still lands.
+	assert_str(String(Director.scene_info.get("event", ""))).is_equal(
+		"The waitress brings two drinks to the table."
+	)
+	assert_int(date._current_turn).is_equal(3)
+
+
 ## S1-3: the layer belongs to the date. D02_cafe ends at `max_turns` (14); a
 ## finished date must not leave its goal behind for whatever builds the next
 ## prompt, and neither must a scene that simply leaves the tree.

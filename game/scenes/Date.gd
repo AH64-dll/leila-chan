@@ -584,27 +584,32 @@ func _shake_camera(amount: float, duration: float) -> void:
 ## opened no turn in the shipped game — the playtest harness installed its own
 ## bridge, which is exactly why the gap survived. This is the production seam.
 func _on_player_turn_sent(text: String) -> void:
-	_current_turn += 1
+	# The layer and the counter both name the turn this line opens.
+	var turn := _current_turn + 1
 	# docs/08 §1: the scene layer belongs to this turn. The Director reads
 	# `scene_info` while it builds the prompt (`build_turn_context`), so it must
 	# land before the submit, never after it.
-	_apply_director_scene()
+	_apply_director_scene(turn)
 	player_turn_submitted.emit(text)
-	Director.submit_player_input(text)
+	# docs/02 §4 step 0: a Safety-refused line opens no turn. Counting it would
+	# spend an `events[].at_turn` and walk the date to `max_turns` on refusals
+	# alone, so the date's turn count follows the Director's, not the keystroke.
+	if Director.submit_player_input(text):
+		_current_turn = turn
 
 
-## docs/08 §1 + §7: this turn's `[scene]` layer — the scenario's goal, its
-## prompt, the stage/path variant and the turn's `events` line. The Director owns
-## the field (its TurnContext carries it into the prompt); the Date owns the
-## value, because it is the only node that knows which scenario, stage and turn
-## this prompt is for. P2.22 S1-3: nothing assigned it, so every prompt kept the
+## docs/08 §1 + §7: a turn's `[scene]` layer — the scenario's goal, its prompt,
+## the stage/path variant and that turn's `events` line. The Director owns the
+## field (its TurnContext carries it into the prompt); the Date owns the value,
+## because it is the only node that knows which scenario, stage and turn this
+## prompt is for. P2.22 S1-3: nothing assigned it, so every prompt kept the
 ## Director's constructor café line and no scenario ever reached the model.
-func _apply_director_scene() -> void:
+func _apply_director_scene(turn: int) -> void:
 	if _scenario.is_empty():
 		_clear_director_scene()
 		return
 	Director.scene_info = ScenarioLoader.resolve_scene(
-		_scenario, stage, _scene_path(), _current_turn, player_name
+		_scenario, stage, _scene_path(), turn, player_name
 	)
 
 
