@@ -71,12 +71,12 @@ func test_displays_gamestate_meters_and_state() -> void:
 
 
 func test_displays_steering_dose() -> void:
-	Director.last_dose = {"malice": 3.5, "path": 2.0}
+	Director.last_dose = {"malice": 3.5, "path_mix": 2.0}
 	_overlay.refresh()
 
 	var dose_text := _overlay.get_dose_text()
 	assert_bool(dose_text.contains("malice 3.5/12")).is_true()
-	assert_bool(dose_text.contains("path 2.0")).is_true()
+	assert_bool(dose_text.contains("path_mix 2.0")).is_true()
 
 
 func test_displays_the_scheduled_dose_before_the_first_turn() -> void:
@@ -86,7 +86,7 @@ func test_displays_the_scheduled_dose_before_the_first_turn() -> void:
 
 	var dose_text := _overlay.get_dose_text()
 	assert_bool(dose_text.contains("malice 6.0/12")).is_true()
-	assert_bool(dose_text.contains("path 4.0")).is_true()
+	assert_bool(dose_text.contains("path_mix 4.0")).is_true()
 
 
 func test_displays_last_turn_read_and_inner() -> void:

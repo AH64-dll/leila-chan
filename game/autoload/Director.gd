@@ -391,7 +391,8 @@ func _start_turn(player_text: String) -> bool:
 	}
 
 	# docs/06 §3: Steering owns the dose schedule (P2.04), so the request carries
-	# per-vector scales ({"malice": 4.5, "path": 3.0}). The docs/02 §9 dose column
+	# per-vector scales ({"malice": 4.5, "path_mix": 3.0}; path_mix is the
+	# interim path-weight key). The docs/02 §9 dose column
 	# is only the last-resort fallback when the autoload is absent; the P1.09
 	# retry observable still holds (`DirectorFallbackTest`: stage-1 malice 2.5
 	# plus the -2.0 retry reaches the request). The transmission gap

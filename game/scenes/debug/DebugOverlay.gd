@@ -261,7 +261,9 @@ func refresh() -> void:
 
 	# --- Steering Dose ---
 	# docs/06 §3 (P2.04): the schedule's control-vector scales for the last turn
-	# — or this turn's, before the first one runs — e.g. "malice 4.5/12 · path 3.0".
+	# — or this turn's, before the first one runs — e.g.
+	# "malice 4.5/12 · path_mix 3.0" (path_mix is the dose key, not the
+	# narrative `Path:` above).
 	if _dose_label != null:
 		var dose: Dictionary = Director.get_current_dose()
 		var dose_str := "none"
