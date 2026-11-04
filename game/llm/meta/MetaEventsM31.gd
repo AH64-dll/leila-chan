@@ -165,6 +165,14 @@ func begin_session(start_unix := -1) -> void:
 	_last_fired = {}
 
 
+## Host reset (MetaDirector.reset_session / GameState.reset): restore clean state
+## and default paths/clock so tests and new games start unpolluted.
+func reset_session() -> void:
+	_clock = Callable()
+	user_root = "user://"
+	_on_state_reset()
+
+
 ## The host's date boundary (`MetaDirector.note_scene`): a greeting belongs to
 ## the scene it opens, so the key includes it.
 func on_scene(scene_key: String) -> void:
@@ -279,6 +287,10 @@ func open_notes_folder() -> bool:
 ## Builds the Extras section (M31's folder button + the M32 reader). One call
 ## from `Extras._ready`; the section inserts itself above the Back button.
 func build_extras_section(parent: Node) -> Node:
+	if not has_notes():
+		# docs/05 §1.4: the button appears once she has written something. The
+		# section stays off the screen until then; early exit avoids orphan nodes.
+		return null
 	var ui := _section("ui")
 	var box := VBoxContainer.new()
 	box.name = "MetaNotes"
@@ -287,16 +299,12 @@ func build_extras_section(parent: Node) -> Node:
 	title.text = String(ui.get("section_title", "Her notes"))
 	title.add_theme_font_size_override("font_size", 13)
 	box.add_child(title)
-	if not has_notes():
-		# docs/05 §1.4: the button appears once she has written something. The
-		# section stays off the screen until then; the reader's own empty state
-		# is what the panel would show.
-		return box
 	box.add_child(_section_button(String(ui.get("read_button", "")), _on_read_pressed))
 	box.add_child(_section_button(String(ui.get("folder_button", "")), _on_folder_pressed))
-	parent.add_child(box)
-	if parent.get_child_count() >= 2:
-		parent.move_child(box, parent.get_child_count() - 2)
+	if parent != null:
+		parent.add_child(box)
+		if parent.get_child_count() >= 2:
+			parent.move_child(box, parent.get_child_count() - 2)
 	return box
 
 
@@ -496,7 +504,10 @@ func _diary_due(stage: int) -> bool:
 
 
 func _slots_due(stage: int) -> bool:
-	return _slots_pending and stage >= _gate("slot_names")
+	if not _slots_pending or stage < _gate("slot_names"):
+		return false
+	var values := _slot_values()
+	return not String(values.get("name", "")).is_empty()
 
 
 ## docs/05 §1.4 "St 4 / AWAKE": the path is part of the gate, not a weight.
@@ -640,8 +651,8 @@ func _write_diary(day: int) -> void:
 		_diary_pending = day  # an older, richer page for the same day wins
 		return
 	var result := _notes_store().write(rel, text)
+	_diary_pending = day
 	if bool(result.get("ok", false)):
-		_diary_pending = day
 		_memory_notes.erase(rel)
 		return
 	_memory_notes.merge({rel: _entry("diary", rel, text)}, true)

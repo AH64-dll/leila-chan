@@ -40,6 +40,12 @@ func after_test() -> void:
 	_wipe(SCRATCH)
 	SaveSystem.save_dir = SaveSlots.DEFAULT_DIR
 	Settings.photosensitive = false
+	var module: Variant = _module()
+	if module != null:
+		module.set_clock(Callable())
+		module.user_root = "user://"
+		module.begin_session(-1)
+	MetaDirector.reset_session()
 
 
 func test_the_meta_director_mounts_this_range_through_its_seam() -> void:
@@ -273,6 +279,26 @@ func test_the_sky_tint_is_skipped_for_photosensitive_players() -> void:
 	Settings.photosensitive = false
 	module.apply_sky(canvas)
 	assert_bool(canvas.modulate == Color.WHITE).is_false()
+
+
+func test_the_diary_in_memory_fallback_arms_the_announcement_event() -> void:
+	# docs/05 §1.4 M32: in-memory fallback still arms the announcement event.
+	var module: Variant = _module()
+	GameState.set_meter(&"instability", 55.0)  # stage 3
+	_at(12, 0)
+	_consume_greeting(module, 3)
+	DirAccess.make_dir_recursive_absolute(SCRATCH)
+	# Block directory creation by creating a file named 'diary'
+	var blocking_file := FileAccess.open(SCRATCH + "/diary", FileAccess.WRITE)
+	assert_object(blocking_file).is_not_null()
+	blocking_file.store_string("block")
+	blocking_file.close()
+	module._on_turn_completed(0, {"inner": "memory fallback thought"})
+	GameState.advance_day()
+	assert_int(int(module.state()["diary_pending"])).is_equal(1)
+	_consume_greeting(module, 3)
+	var due: Dictionary = module.poll_scripted(3)
+	assert_str(String(due.get("id", ""))).is_equal("M32")
 
 
 ## ── helpers ───────────────────────────────────────────────────────────────

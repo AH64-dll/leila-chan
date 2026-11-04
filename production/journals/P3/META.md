@@ -131,3 +131,16 @@ Round 2 (rework) of P3.14:
   on the next scene. M34 never writes a loadable save — a `fiction: true` name in the ledger only.
 - Files are owned by `MetaNotesStore`, which refuses any root outside `user://` — note the scheme colon:
   the root check must strip `user://` before testing for `:` or every root looks illegal (found the hard way).
+
+Round 2 (rework) of P3.11:
+- Teardown hygiene: `MetaEventsM31Test.gd:after_test()` left a 3:00 AM clock and scratch paths on the mounted
+  child node of autoload `MetaDirector`, poisoning subsequent test suites with late-night triggers. Always
+  reset injected seams (`set_clock(Callable())`, `user_root = "user://"`) in `after_test()`.
+- Implemented `reset_session()` on `MetaEventsM31.gd` to clear `_clock`, `user_root`, and pending diary/slots
+  at every `MetaDirector.reset_session()` call.
+- GOTCHA: `MetaDirector.offers()` must NEVER side-effect scripted rolls. Coupling `_roll_scripted()` to
+  offer queries starved turn-1 offers under "never two in a row" and polluted `_session_log` on inspections.
+- Memory leak: `build_extras_section()` allocated VBoxContainer and Label before checking `has_notes()`,
+  orphaning 2 nodes per Extras visit. Guard early before allocating.
+- Accessibility parity: `_write_diary()` in-memory fallback now sets `_diary_pending = day` so the M32
+  announcement event still arms when writing to disk fails.

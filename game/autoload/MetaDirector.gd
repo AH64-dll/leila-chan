@@ -225,7 +225,6 @@ func close_gate() -> int:
 ## effect; the offer's reason is delivered separately by `turn_events()` so the
 ## sentence can never outlive the enum it explains.
 func offers(stage: int) -> Array:
-	_roll_scripted(stage)
 	if stage >= scheduler_stage_min():
 		_roll_schedule(stage)
 	return _visible_offers(stage)
@@ -802,22 +801,21 @@ func _fire(
 		_session_counts[action] = int(_session_counts.get(action, 0)) + 1
 		_last_fired[action] = answered_turn
 		_last_event_turn = answered_turn
-	(
-		_session_log
-		. append(
-			{
-				"id": id,
-				"action": action,
-				"turn": answered_turn,
-				"scene": _scene_key,
-				"ambient": not spends_budget,
-			}
+		(
+			_session_log
+			. append(
+				{
+					"id": id,
+					"action": action,
+					"turn": answered_turn,
+					"scene": _scene_key,
+				}
+			)
 		)
-	)
-	var seen := events_seen()
-	if not seen.has(id):
-		seen.append(id)
-		GameState.set_flag(SEEN_FLAG, seen)
+		var seen := events_seen()
+		if not seen.has(id):
+			seen.append(id)
+			GameState.set_flag(SEEN_FLAG, seen)
 	for effect: Node in _effects:
 		if effect.has_method("fire"):
 			effect.call("fire", id, action)
