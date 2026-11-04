@@ -12,6 +12,9 @@
   as day-sized segments (`--max-days=11…14`). Every `## Resumed` marks a segment start and each
   `## Run summary` is a cumulative checkpoint; `runs/yandere.json` is the authoritative per-turn
   record and contains no transport failures.
+- dev artifact: the **Leila** quotes below are the raw model `say` (pre-filter); the filtered
+  screen text is the `_displayed` line, and per-turn bar-glyph counts include the corruption
+  `redact` effect — they are not all safety redactions
 
 ## Driver wiring
 
@@ -544,6 +547,7 @@ Everything else is the shipped pipeline: Date/ChatUI/Night scenes, Director, Pro
   - 2:12 AM — i counted your messages today. three fewer than yesterday. i'll wait.
   - good morning.
 - **stage transition** 1 → 2 "Leaks" (night crossing)
+  - queued for the next prompt: EVENT: Static swallowed everything for two seconds. A thought that was not yours crossed your mind, and you almost heard yourself say it out loud.
 - **path** soft-assigned YANDERE during the night (stage 2)
 - autosave: `SaveSystem` scene `night` · campaign_over false · next scenario D03_park_bench
 

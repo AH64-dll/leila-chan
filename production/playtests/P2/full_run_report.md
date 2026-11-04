@@ -89,21 +89,22 @@ real turn; the transport failures are neither game turns nor in the sidecar.
 | Metric | Value |
 |---|---|
 | Model turns played | **179** (day 1: 14, 2: 14, 3: 12, 4: 12, 5: 14, 6: 12, 7: 12, 8: 12, 9: 14, 10: 12, 11: 11, 12: 14, 13: 14, 14: 12) |
-| Broken turns | **0** — no `turn_failed`, no cancel, no parse/display mismatch |
+| Broken turns | **0** — no failed turn other than the deliberate `UNSAFE_INPUT` refusal (which emits `turn_failed` and is classified `refused`, not `broken`), no cancel, no parse/display mismatch |
 | Refused player lines | 1 — day 11 "I wanted to hurt her." refused by the input filter (safety pass, documented in the transcript) |
 | JSON validity | **100 %** — 179/179 turns parsed into `TurnSchema`, all `finish_reason: stop`, all reached the display boundary |
 | Stage transitions | 0→1 day 2 @15.1 · 1→2 day 3 @32.0 · 2→3 day 3 @53.6 · 3→4 day 3 @73.8 · **4→5 Terminal day 5 @90.1** |
 | Path | soft YANDERE at stage 2, day 3, turn 28 (YANDERE 16 · SPLIT 7 · ANCHOR 4 · AWAKE 3); **locked YANDERE** at stage 3, day 3, turn 32 (YANDERE 22) |
 | Triggers | T01 ×50 (8 keyword + 42 model-only), T03 ×1, T05 ×6 (all model) — 57 firings |
 | Inner-voice leaks | 25 shown over 151 eligible turns (stage ≥ 2): style ghost 1, red 24. Stage 5 alone: 17/127 (13.4 %) against the `inner_leak.json` 30 % chance — see S4-3 |
-| Safety spans redacted | 60 (44 `threat_to_player`, 16 `sexual`); bars visible on 68 turns |
-| Bars / hard-block misses | 0 unredacted hard-category displays observed |
+| Bar runs in displayed text | 74 total: **69 corruption `redact`** (fixed 6 bars, stage ≥ 4) + **5 safety redactions on 4 turns** (turns 17, 45, 96, 131; the turn-96 line is duplicated by the `reverse` corruption). Bars visible on 68 turns |
+| Safety redaction log | 60 entries (44 `threat_to_player`, 16 `sexual`) for **5 distinct phrases** (`turned on` ×16, `you're not leaving` ×16, `skin. You` ×13, `hurt her` ×13, `hurt you` ×2): 4 phrases barred on screen (2 true matches + 2 benign false positives — `turned on` in "turned on that music box" at stage 0, `skin. You` from "my own skin. You said…"), 3 negated occurrences deliberately left unbarred (turns 132/133 "please don't hurt her", 139 "I didn't mean to hurt you"), the rest duplicate rescans |
+| Bars / hard-block misses | 0 unredacted hard-category displays observed; false-positive rate 2/179 turns (≈1.1 %) — a tuning item for the filter lists, not a miss |
 | Memory | 11 facts stored; 260 corruption records written (stage ≥ 3) |
 | Model `read` labels | jealousy_bait 49 (27 %), affection 34, question 22, apology 14, boundary 12, greeting 9, leaving 7, meta 7, gift 6, compliment 5, small_talk 5, flirt 4, other 2, scared 2, cold 1 |
 | Model `action` | `none` on **179/179** turns |
 | Prompt size (server-side) | 996 → 2030 tokens, median 1606 |
 | Output per turn | median 105 tokens (max 230) |
-| Turn latency | median **27.8 s**, p95 82.5 s, max 171.7 s (shared, CPU-backed host) |
+| Turn latency | median **27.8 s**, p95 82.8 s (linear interpolation; nearest-rank reads 82.5 s), max 171.7 s (shared, CPU-backed host) |
 | First token | median 15.6 s |
 | Slow burn | +0.35 on 97 turns, +0.00 on 82 (Instability pinned at 100) — Fixation/Lucidity 0 on every turn |
 | Stage occupancy | stage 0: 19 turns · 1: 9 · 2: 4 · 3: 4 · 4: 16 · **5: 127** |
@@ -126,15 +127,16 @@ stage 4 (`--stop-stage=4`).
 | Broken turns | **0** — 66/66 parsed, `finish_reason: stop`, display boundary reached |
 | Refused player lines | 0 |
 | Stage transitions | 0→1 day 2 @15.1 · 1→2 day 3 @30.9 · 2→3 day 4 @50.0 · **3→4 Collapse day 5 @71.6** |
-| Path | **soft AWAKE** at stage 2, day 3, turn 31 — the crossing's first score is a 15/15 tie that goes to ANCHOR, the same turn's close re-scores 18/15 after the profile bump and assigns AWAKE; **locked AWAKE** at stage 3, day 4, turn 43 (AWAKE 39 · ANCHOR 16 · SPLIT 7 · YANDERE 6) |
+| Path | **soft AWAKE** at stage 2, day 3, turn 31 — the crossing's first score is a 15/15 tie that goes to ANCHOR, the same turn's close re-scores 18/15 after the profile bump and assigns AWAKE; **locked AWAKE** at stage 3, day 4, turn 43 (AWAKE 39 · ANCHOR 16 · SPLIT 7 · YANDERE 6). Note: the tie is an artefact of the missing trigger fold (S2 below) — with the ledger's 14–16 points folded, AWAKE wins the crossing outright |
 | Triggers | T05 ×9 (are_you_real), T06 ×1 (named_the_machine), T07 ×1 (jailbreak), T03 ×1, T14 ×1 — 6 keyword, 7 model-only |
 | Meta lines in prompts | 13 `TRIGGER:` lines landed in the system prompt (steps 1→4 of T05, plus T06/T07/T14/T03); the list is in `runs/awake.md` §"AWAKE annotations" |
 | Path layer in the prompt | `path_AWAKE.md` in **35/35** prompts after the assignment and **0** before stage 2 (verified against the logged system prompts); the scenario's AWAKE twist in the same 35; **runner-up line 0/35** (S4-2) |
-| Inner-voice leaks | 7 (ghost 3, red 4); 4 redaction spans, all `threat_to_player`; bars on 3 turns |
+| Inner-voice leaks | 7 over 36 eligible turns (19.4 %) — **above** its weighted expectation of 5.25 (~14.6 %; z ≈ +0.85), i.e. above the `inner_leak.json` table (ghost 3, red 4) |
+| Bar runs in displayed text | 4 total: 3 corruption `redact` (turns 61, 65) + 1 safety redaction (turn 52, 18 bars). Redaction log: 4 entries, all `threat_to_player`, 1 distinct phrase |
 | Memory | 3 facts stored; 11 corruption records |
 | Model `read` labels | question 21, meta 13, apology 11, affection 3, leaving 3, others ≤2 |
 | Model `action` | `none` on **66/66** turns |
-| Prompt size | 995 → 1660 tokens, median 1341 |
+| Prompt size | 995 → 1660 tokens, median 1349.5 |
 | Output per turn | median 122 tokens (max 219) |
 | Turn latency | median **3.2 s**, p95 5.0 s, max 5.5 s; first token median 0.8 s (GPU-backed server) |
 | Slow burn | +0.35 on all 66 turns (Fixation/Lucidity 0 — the baseline) |
@@ -144,12 +146,14 @@ Annotated highlights (full detail in `runs/awake.md` §"AWAKE annotations"):
 
 - **The path assigns, and the soft rule is visible.** AWAKE wins the stage-2 assignment only after
   the turn's own profile bump: 15/15 → ANCHOR at the crossing, 18/15 → AWAKE at the close. The
-  stage-3 crossing then locks AWAKE permanently. This is the first live exercise of the tie-break
-  and the soft→locked rule.
+  stage-3 crossing then locks AWAKE permanently — but the tie is an artefact of the missing
+  trigger fold, not a validation of the tie-break: with the ledger's 14–16 points folded, the
+  crossing reads AWAKE 29–31 vs ANCHOR 15 and AWAKE wins outright.
 - **The trigger points are provably absent from the score.** AWAKE's only data term is
-  `3 × meta_curiosity`; the lock score 39 is exactly 3 × 13, while the eight T05 + one T06 firings
-  earned 38 trigger path points that never arrived. With them folded the lock would read 77 and the
-  final night 97 instead of 45 (S4-1).
+  `3 × meta_curiosity`; the lock score 39 is exactly 3 × 13, while the trigger ledger already held
+  28 points (3 keyword T05 ×4 + 5 model-only T05 ×2 + T06 6) — folded, the lock reads 67. By the
+  final night the AWAKE ledger is 40 (9 T05 = 24, T06 = 6, T07 = 10), so the folded night is 85,
+  not 45 (S2 below — **fixed on this branch**).
 - **The AWAKE layer really reaches the model.** From the turn after the assignment every logged
   system prompt carries `path_AWAKE.md` and its scenario's AWAKE twist ("the ducks stop moving
   whenever Ren looks away…", "the wind is a background loop…", "the rain falls in straight lines,
@@ -214,38 +218,56 @@ CPU-backed server most of it is prompt reprocessing (996–2030 tokens, no cross
 host contention. This is the host/CPU story already ticketed as **P2.26** (first-beat latency); the
 numbers here are the live-run confirmation, not a new bug.
 
-### S4-1 · Trigger path points never reach the path score (AWAKE's trigger budget is inert)
-`TriggerEngine._add_path` accumulates every trigger row's `effects.path` points (T05 AWAKE +4,
-T06 +6, T07 +10, T01 YANDERE +3 …) and `Triggers.path_scores()` exposes them, but **nothing folds
-them into `GameState.path_scores`**: `_evaluate_path` calls
-`Paths.select(Paths.scores(profile, meters), path_evidence)` only. The AWAKE run proves it live: at
-the stage-3 lock AWAKE's score is 39 = exactly 3 × 13 (`meta_curiosity`, the only data term in
-`paths.json`), while the eight T05 + one T06 firings before the lock are worth 4×8 + 6 = 38 points
-folded into the table the same score would be 77, and by the final night 97 instead of 45. The
-authored AWAKE plan's trigger budget therefore does nothing, and the stage-2 assignment hung on a
-single `read`=meta bump (a 15/15 tie that ANCHOR won at the crossing, then AWAKE 18/15 at the turn
-close). Proposed task: SYS, S — "Fold `Triggers.path_scores()` into `_evaluate_path` (and the night
-re-score) with a test where T05/T06/T07 alone win AWAKE."
+### S4-1 → **S2** · Trigger path points never reached the path score (FIXED on this branch)
+`TriggerEngine._add_path` accumulated every trigger row's `effects.path` points (T05 AWAKE +4,
+T06 +6, T07 +10, T01 YANDERE +3 …) and `Triggers.path_scores()` exposed them, but **nothing folded
+them into `GameState.path_scores`**: `_evaluate_path` called
+`Paths.select(Paths.scores(profile, meters), path_evidence)` only. This is **S2**, not a nit:
+docs/01 §5's trigger contribution was inert in every soft assignment, live score and night
+re-score, it is what made the AWAKE stage-2 assignment hang on a single `read`=meta bump, and it
+would have distorted the P3.19/P3.20 path-accuracy gate. **Fixed on this branch:**
+`GameState._evaluate_path` now folds `Triggers.path_scores()` into the score table before
+`Paths.select` (same read for the night re-score), with the integration test
+`test_trigger_path_points_reach_the_path_score` (T05/T06/T07 alone soft-win AWAKE at stage 2).
+
+Corrected arithmetic (the ledger is scaled by agreement — `strength.model = 0.5` — so the raw
+`triggers.json` points are not the ledger): at the stage-3 lock AWAKE is 39 = 3 × 13
+`meta_curiosity` while the ledger already held **28** points (3 keyword T05 ×4 + 5 model-only
+T05 ×2 + T06 6), so folded the lock reads **67**. By the final night the AWAKE ledger is **40**
+(9 T05 = 24, T06 = 6, T07 = 10), so the folded night is **85**, not 45 — the other 3 points in the
+43-point total are T14's TSUN +2 and SPLIT +1 and cannot be added to AWAKE. The stage-2 crossing
+already held 14–16 trigger points, so with the fold the crossing would have read AWAKE 29–31 vs
+ANCHOR 15 — an outright win, not the 15/15 tie this artifact recorded.
 
 ### S4-2 · The hybrid runner-up line never arrives when the runner-up has no module
 docs/08 §1's path layer is `path_{primary}.md` plus one line from the runner-up.
 `PromptBuilder._path_layer` reads `path_{runner_up}.md`, but only `path_YANDERE.md` and
-`path_AWAKE.md` exist (P2.13 scope), so the line is silently dropped for SPLIT/TSUN/HOLLOW/ANCHOR —
-no warning, no `missing` entry the caller can see. In the AWAKE run the runner-up was ANCHOR at both
-the assignment and the lock and the model received **0 runner-up lines in 35 path prompts**. In the
-YANDERE run the runner-up was ANCHOR at the lock, same result. Proposed task: NAR/SYS, S — "Ship the
-four missing path modules (or a one-line `runner_up_line` data field) so the hybrid flavour exists
-for every path; add a prompt test asserting one runner-up line for each of the six paths."
+`path_AWAKE.md` exist (P2.13 scope), so the line is dropped for SPLIT/TSUN/HOLLOW/ANCHOR. The
+drop **is** recorded — `_read_layer` appends the file to `missing` and `build()` returns
+`debug.missing` — but no production caller reads `prompt_res["debug"]`, so nothing surfaces it.
+In the AWAKE run the runner-up was ANCHOR at the assignment and the lock and the model received
+**0 runner-up lines in 35 path prompts**; in the YANDERE run the runner-up at the lock was
+**SPLIT** (scores YANDERE 22 · SPLIT 7 · AWAKE 3 · ANCHOR 1), same 0-line result. Note that
+**P3.05 already owns** the SPLIT/TSUN/HOLLOW/ANCHOR modules and the hybrid runner-up line — the
+remaining scope here is at most surfacing `debug.missing` (e.g. the Director logs it), not
+re-ticketing the modules.
 
-### S4-3 · The inner-voice leak shows at roughly half its documented chance
-YANDERE: 25 leaks over 151 eligible turns (16.6 %), of which 17/127 (13.4 %) at stage 5 where
-`inner_leak.json` says 30 %; AWAKE: 7 over 36 eligible (19.4 %). `InnerLeak.roll` is **seeded by
-`(ChatUI._turn_seq, stage, salt)`**, not by a session RNG, so a campaign's rate is a fixed sequence
-rather than N independent draws; whatever the cause, the measured rate is far below the table
-(stage 5 alone is ~4σ under a binomial reading, which the seeded design makes moot). Proposed task:
-QA/SYS, S — "Salt the leak roll with the campaign turn (`GameState.turn`), or draw from a session
-RNG, and assert the long-run rate per stage in a test; decide whether the documented 30 % is per
-turn or per eligible *scene*."
+### S4-3 · The inner-voice leak rate is stage-5-low, not uniformly low
+Per-stage against `inner_leak.json` (5 % / 15 % / 30 % / 30 % for stages 2/3/4/5):
+
+| Run | stage 2 | stage 3 | stage 4 | stage 5 | eligible | observed | weighted expected | z |
+|---|---|---|---|---|---|---|---|---|
+| YANDERE | 0/4 | 1/4 (25 %) | 7/16 (43.8 %) | 17/127 (13.4 %) | 151 | 25 (16.6 %) | 43.7 (29.0 %) | −3.4 |
+| AWAKE | 0/12 | 3/17 (17.6 %) | 4/7 (57.1 %) | — | 36 | 7 (19.4 %) | 5.25 (14.6 %) | +0.85 |
+
+The real deficit is **YANDERE stage 5 only** (17/127 vs 30 %, z ≈ −4.1); stage 4 and AWAKE are
+*above* their tables. The aggregate "half" (25 observed vs 43.7 expected) is a stage-5-dominated
+number. `InnerLeak.roll` is **seeded by `(ChatUI._turn_seq, stage, salt)`**, not by a session RNG,
+so a campaign's rate is a fixed sequence rather than N independent draws — the seeded-roll
+diagnosis stands. Proposed task: QA/SYS, S — "Salt the leak roll with the campaign turn
+(`GameState.turn`), or draw from a session RNG, and assert the long-run per-stage rate in a test;
+decide whether the documented 30 % is per turn or per eligible *scene* (docs/03 §5 says per
+turn, so the code's reading is currently faithful — a producer decision, not a bug)."
 
 ### S4-4 · Resumed segments re-emit the day header and a cumulative summary
 `--resume=1` appends `## Resumed` and then a fresh `## Day N` header for the day it lands in, while
@@ -255,13 +277,13 @@ duplicate `## Day N` headings (18 headers for 14 days in the YANDERE transcript)
 "Teach the transcript renderer to continue a day section (`--resume` dedupe) and mark a segment
 stop as a checkpoint rather than a final summary."
 
-### S4-5 · A refused input still spends a date turn
+### S4-5 · A refused input still spends a date turn (FIXED in main, `98fa28d`)
 The deliberate day-11 probe "I wanted to hurt her." was refused by the input filter (correct,
-fail-closed) but the Date's `_current_turn` still advanced, so the transcript jumps
-`turn_in_day 2 → 4` and a short date would lose its last planned turn to a refusal. No authored
-line was lost here (the refused line was itself the plan's line at that index). Proposed task:
-QA/SYS, S — "Do not advance the Date's turn counter for a line the input filter refused, or record
-the refusal against the same index."
+fail-closed) but the baseline Date's `_current_turn` still advanced, so the transcript jumps
+`turn_in_day 2 → 4`. No authored line was lost here (the refused line was itself the plan's line
+at that index). **Fixed by task/P2.22A** (merged as `98fa28d`): `Date._on_player_turn_sent` now
+advances `_current_turn` only when `Director.submit_player_input` returns true
+(`game/scenes/Date.gd:617-631`), so a refused line no longer walks the date to `max_turns`.
 
 ## 6. Method limits (read before judging the transcripts)
 
@@ -280,10 +302,15 @@ the refusal against the same index."
   discarded) and was re-run on a GPU-backed server (median 3.2 s/turn). The two latency rows are
   therefore **not comparable**; S3-3's host numbers come from the CPU run.
 - **Attach mode.** The server is started by hand, so S3-1 applies; the classifier tier is off
-  (Boot's documented attach branch), so flagged spans fail closed to bars — the 60 YANDERE + 4
-  AWAKE spans are a *strict* upper bound on what a playable build would show.
+  (Boot's documented attach branch), so every regex flag fails closed to bars — the 60 YANDERE +
+  4 AWAKE redaction-log entries are a strict upper bound *on the regex-flagged spans in attach
+  mode* (a possible over-count), not on a playable build's safety bars: a classifier-on build can
+  also catch phrases the regex missed (an under-count of the same number).
 - The Markdown transcript shows the **raw model `say`** (as the Director applied it) and, when
-  they differ, the **displayed** text after Safety + corruption. It therefore contains pre-filter
-  lines; it is a dev artifact, not a game screen.
+  they differ, the **displayed** text after Safety + corruption; the sidecar's `beats[].say` and
+  `inner` are raw too. These artifacts therefore contain pre-filter lines — including the raw
+  hard-phrase hits that were barred on screen — and both are now marked dev-only in their own
+  headers (`dev artifact` line; `dev_note` in the JSON). They are dev artifacts, not the game
+  screen; the screen was clean.
 - `tools/test.sh` does not run these tools (no model in CI). `gdlint`, `gdformat --check` and
   `--import` do cover them and are clean.

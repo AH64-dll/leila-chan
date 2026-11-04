@@ -567,7 +567,18 @@ func _evaluate_path() -> Dictionary:
 	var meters := {}
 	for meter: StringName in METER_NAMES:
 		meters[String(meter)] = get_meter(meter)
-	var decision := Paths.select(Paths.scores(profile, meters), path_evidence)
+	var score_table := Paths.scores(profile, meters)
+	# docs/01 §5: each trigger row's `effects.path` points are additive on top
+	# of the §4 formulas ("YANDERE +3", "AWAKE +4" in the trigger table). They
+	# accumulate in the Triggers engine's own ledger and fold in here — the
+	# same score the soft assignment, the lock, the night re-score and the
+	# overlay read. Standalone instances (tests' `GameState.new()`) carry no
+	# trigger ledger, so only the tree-mounted autoload reads it.
+	var trigger_points := _trigger_path_scores()
+	for name: Variant in trigger_points:
+		var key := str(name)
+		score_table[key] = float(score_table.get(key, 0.0)) + float(trigger_points[name])
+	var decision := Paths.select(score_table, path_evidence)
 	path_scores = decision["scores"]
 	if not path_locked and stage >= Paths.assign_stage():
 		assign_path(decision["path"], stage >= Paths.lock_stage())
@@ -575,6 +586,16 @@ func _evaluate_path() -> Dictionary:
 	# primary rather than the one this turn is about to replace.
 	path_runner_up = _runner_up_for(decision)
 	return decision
+
+
+## The trigger ledger the §4 formulas are topped up with: every path point a
+## trigger firing has earned this campaign (`Triggers.path_scores()`, scaled
+## by agreement). Empty for instances that are not the autoload — a test's
+## `GameState.new()` keeps a clean, trigger-free score table.
+func _trigger_path_scores() -> Dictionary:
+	if not is_inside_tree() or Triggers == null:
+		return {}
+	return Triggers.path_scores()
 
 
 ## The hybrid runner-up must be the best path that is not the LIVE primary. Once

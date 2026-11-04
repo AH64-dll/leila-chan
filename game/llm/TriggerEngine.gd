@@ -259,8 +259,9 @@ func report() -> Dictionary:
 
 
 ## docs/01 §4/§5: the path points the triggers have added so far ("YANDERE +3"
-## and friends). P2.12 folds these into the path scores; nothing else writes
-## here, so the trigger contribution stays attributable.
+## and friends). GameState._evaluate_path folds them into the score table it
+## selects from; nothing else writes here, so the trigger contribution stays
+## attributable.
 func path_scores() -> Dictionary:
 	return _path_scores.duplicate()
 

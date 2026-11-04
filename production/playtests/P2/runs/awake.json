@@ -1,5 +1,6 @@
 {
   "run": "awake",
+  "dev_note": "dev artifact — `turns[].beats[].say` and `inner` hold the raw, pre-filter model text; `displayed` is the filtered screen text",
   "started": "2026-11-04T20:26:36",
   "model": "Qwen3.5-4B-Q4_K_M.gguf",
   "url": "http://127.0.0.1:8089",

@@ -54,6 +54,14 @@ func header_lines() -> Array[String]:
 	)
 	lines.append("- started: %s" % started)
 	lines.append("- command: `%s`" % command)
+	lines.append(
+		(
+			"- dev artifact: the **Leila** quotes below are the raw model `say` "
+			+ "(pre-filter); the filtered screen text is the `_displayed` line, "
+			+ "and bar-glyph counts include the corruption `redact` effect — "
+			+ "they are not all safety redactions"
+		)
+	)
 	lines.append("")
 	lines.append("## Driver wiring\n")
 	lines.append(
@@ -286,6 +294,9 @@ func night_lines(
 				]
 			)
 		)
+		var event_line := Stages.event_line(int(entry.get("to", 0)))
+		if not event_line.is_empty():
+			lines.append("  - queued for the next prompt: %s" % event_line)
 	for entry: Dictionary in path_events:
 		(
 			lines
@@ -520,7 +531,9 @@ func _annotation_lines(record: Dictionary) -> Array[String]:
 		)
 	var bars := int(record.get("bars", 0))
 	if bars > 0:
-		lines.append("- **safety bars on screen:** %d bar glyph(s) in the displayed text" % bars)
+		lines.append(
+			"- **bars in displayed text:** %d glyph(s) (safety + corruption `redact`)" % bars
+		)
 	var leak: Dictionary = record.get("leak", {})
 	if not leak.is_empty():
 		(

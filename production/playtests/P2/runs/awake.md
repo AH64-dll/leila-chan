@@ -11,6 +11,9 @@
   campaign hit the backend's 60 s `read_timeout`; that attempt's turns were discarded). Each
   `## Resumed` marks a segment start and each `## Run summary` is a cumulative checkpoint;
   `runs/awake.json` is the authoritative per-turn record.
+- dev artifact: the **Leila** quotes below are the raw model `say` (pre-filter); the filtered
+  screen text is the `_displayed` line, and per-turn bar-glyph counts include the corruption
+  `redact` effect — they are not all safety redactions
 
 ## Driver wiring
 
@@ -1396,17 +1399,19 @@ meter above was edited.
 | day 4, turn 43 (Instability 50.0, stage crossing) | 3 | 39 · 16 · 7 · 6 · 2 · 0 | **locked AWAKE** |
 | day 5, night (Instability 80.3) | 4 | 45 · 26 · 21 · 12 · 2 · 3 | stays AWAKE |
 
-The soft flip inside one turn is the documented rule working: the stage crossing scores before the
-turn's profile bump, the turn close re-scores after it, and the stage-3 crossing locks whatever is
-live. This is exactly the tie-break path `Paths.select` documents.
+The soft flip inside one turn is the documented rule working — though the 15/15 tie itself is an
+artefact of the missing trigger fold (below): the ledger already held 14–16 trigger points at the
+crossing, so a folded score would have made AWAKE the outright winner at the crossing, not a tie.
 
 **The trigger path points are not in the score.** AWAKE's only `paths.json` term is
 `3 × meta_curiosity`; the lock score 39 is exactly 3 × 13 and the night score 45 is 3 × 15. The
-eight T05 and one T06 firings before the lock are worth 4×8 + 6 = 38 points in `triggers.json`, and
-the nine T05 + T06 + T07 by the night are worth 52; folded into the table the lock would read 77
-and the night 97. The engine accumulates them (`TriggerEngine._add_path` → `Triggers.path_scores()`)
-but nothing folds them into `GameState.path_scores` — finding **S4-1** in
-`../full_run_report.md`.
+trigger ledger is scaled by agreement (`strength.model = 0.5`, `TriggerEffects.scale` rounds), so
+the firings before the lock are worth 3 keyword T05 ×4 + 5 model-only T05 ×2 + T06 6 = **28**, and
+the nine T05 + T06 + T07 by the night are worth 3×4 + 6×2 + 6 + 10 = **40** for AWAKE (the T14
+firing's 3 points go to TSUN/SPLIT, not AWAKE). Folded into the table the lock would read 67 and
+the night 85. The engine accumulates them (`TriggerEngine._add_path` → `Triggers.path_scores()`)
+but nothing folds them into `GameState.path_scores` — finding **S2** (filed as S4-1) in
+`../full_run_report.md`; **fixed on this branch** (`GameState._evaluate_path` now folds the ledger).
 
 ### The path layer in the system prompt (verified, not inferred)
 

@@ -855,6 +855,11 @@ func _flush_md() -> void:
 func _write_json() -> void:
 	var payload := {
 		"run": _run,
+		"dev_note":
+		(
+			"dev artifact — `turns[].beats[].say` and `inner` hold the raw, "
+			+ "pre-filter model text; `displayed` is the filtered screen text"
+		),
 		"started": _started_at,
 		"model": _model_label,
 		"url": _base_url,

@@ -66,6 +66,14 @@
 
 - Both campaigns are committed: YANDERE 179 turns / 14 nights / `campaign_over` (0 broken, 1 deliberate safety refusal), AWAKE 66 turns / 5 days to stage 4 (0 broken) with the AWAKE path soft-assigned then locked.
 - The AWAKE annotation is prompt-verified from `user://debug/turns_*.jsonl`: `path_AWAKE.md` + the scenario twist in 35/35 post-assignment prompts, none before stage 2, runner-up line 0 because only two path modules exist. Quote that file, not the sidecar, when arguing what the model saw.
-- Trigger `effects.path` points are inert: AWAKE scored exactly 3×`meta_curiosity` (39 at the lock) while 8×T05+T06 were worth 38 more; fold them or the authored AWAKE plan's trigger budget is decorative (S4-1).
+- Trigger `effects.path` points are inert: AWAKE scored exactly 3×`meta_curiosity` (39 at the lock) while the scaled ledger already held 28 (S2 — folded in round 2).
 - The harness no longer installs the three scene wires (main's P2.22A does); the merged-tree smoke day is the regression. After merging main, run `--import` once or every new global class (`Endings`) fails to parse in headless.
 - Earlyoom kills are a host story, not a game one: excise the transport tail + `broken` entries, resume from the autosave, and say so in the report. Keep the YANDERE/AWAKE latencies apart (CPU vs GPU server).
+
+## P2.22 round 2 (2026-11-04)
+
+- DES-1 was the real bug: `Triggers.path_scores()` had no production consumer. `GameState._evaluate_path` now folds the ledger into the score table before `Paths.select` — guarded so test-owned `GameState.new()` instances still see a trigger-free table (`is_inside_tree()`); the autoload picks it up for the soft assign, the lock and the night re-score for free.
+- The review's corrected arithmetic is the agreement-scaled ledger, not raw `triggers.json` points: pre-lock 28 → folded 67, night 40 → folded 85; the 15/15 stage-2 tie was a fold artefact (AWAKE would have won outright 29–31 vs 15). Quote the scaled numbers, never `4×8+6`.
+- Report corrections worth reusing: count bars by provenance (corruption `redact` = fixed 6-bar runs at stage ≥ 4 vs safety redactions = redaction-log phrases missing from that turn's `displayed`), and never call a redaction-log length a screen count — rescans log the same span repeatedly and negated matches log without barring.
+- Gotcha: `debug.missing` is real — `_read_layer` records every dropped prompt file; the Director just ignores `prompt_res["debug"]`. Check `debug` before claiming "no record".
+- The night block renderer only printed the EVENT count, not the line — `night_lines` now appends `Stages.event_line(to)` for crossings, same as turn blocks.

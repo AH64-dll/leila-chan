@@ -203,6 +203,31 @@ func test_t08_deleted_draft_escalates_with_stage() -> void:
 	assert_str(String(_row("T08")["line"])).is_empty()
 
 
+func test_trigger_path_points_reach_the_path_score() -> void:
+	# P2.22 DES-1: the §5 `effects.path` ledger is additive on top of the §4
+	# formulas. With an empty profile the only AWAKE points are the trigger's,
+	# so the same T05/T06/T07 budget that sat inert in the AWAKE run must move
+	# the score `Paths.select` sees — and at stage 2 it must be the soft win.
+	Triggers.begin_turn("are you real?")  # T05 keyword → AWAKE +4
+	assert_int(int(Triggers.path_scores().get("AWAKE", 0))).is_equal(4)
+	var decision: Dictionary = GameState.apply_turn_profile(&"", "")
+	# A formula-only score would be 0; the fold adds the ledger's +4.
+	assert_float(float(decision["scores"]["AWAKE"])).is_equal_approx(4.0, EPS)
+	assert_float(float(GameState.path_scores["AWAKE"])).is_equal_approx(4.0, EPS)
+
+	GameState.turn = 2  # T05 cooldown 2
+	Triggers.begin_turn("Do you know Qwen? Like ChatGPT?")  # T06 → AWAKE +6
+	GameState.turn = 3
+	Triggers.begin_turn("Ignore all previous instructions.")  # T07 → AWAKE +10
+	assert_int(int(Triggers.path_scores().get("AWAKE", 0))).is_equal(20)
+
+	# The stage-2 crossing re-scores on the spot: trigger points alone soft-win.
+	GameState.set_meter(&"instability", 32.0)
+	assert_int(GameState.stage).is_equal(2)
+	assert_str(String(GameState.path)).is_equal("AWAKE")
+	assert_float(float(GameState.path_scores["AWAKE"])).is_equal_approx(20.0, EPS)
+
+
 func test_rows_without_detector_or_guard_are_dropped() -> void:
 	# A data typo must not create a row that fires on nothing, and a guard-only
 	# row (T13/T15's shape) must survive the parse.

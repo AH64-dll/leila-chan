@@ -9,7 +9,8 @@ extends Node
 ##   handle_engine_event(event) ← Telemetry, real time (E detectors)
 ##   close_turn(read)   ← Director.turn_completed (M detector + agreement)
 ## Each fired row's effects land on GameState (meters, profile counters, flags;
-## path points are kept for P2.12) and its docs/08 §6 line is queued for the
+## the path points accumulate in the engine's ledger that `_evaluate_path`
+## folds into the §4 score table) and its docs/08 §6 line is queued for the
 ## next prompt — except a step-0 line, which rides the turn that is starting.
 ##
 ## Agreement (docs/02 §1.2): a K+M row with `requires: "all"` only fires when
@@ -163,8 +164,9 @@ func report() -> Dictionary:
 	return view
 
 
-## docs/01 §4/§5 path points added by triggers so far — P2.12 folds these into
-## the path scores ("YANDERE +3", "AWAKE +4" in the trigger table).
+## docs/01 §4/§5 path points added by triggers so far — GameState folds these
+## into the score table `_evaluate_path` selects from ("YANDERE +3",
+## "AWAKE +4" in the trigger table).
 func path_scores() -> Dictionary:
 	return _engine.path_scores()
 
