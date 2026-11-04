@@ -247,6 +247,12 @@ func _sibling_for(feeling: String, repeated: String, tier: String, flags: Dictio
 		return ""
 	if _candidate_gated(sibling, tier, flags):
 		return ""
+	# docs/03 §1 / docs/10 §3: a budgeted face ("1 reveal per scene") must not come
+	# back through the anti-repeat swap once its budget is spent — the swap runs after
+	# resolve_beat's own cap check, so the cap has to be re-read here (CODE-1/DES-1).
+	var cap := _reveal_cap(sibling)
+	if cap > 0 and int(_reveals.get(sibling, 0)) >= cap:
+		return ""
 	return sibling
 
 

@@ -108,6 +108,34 @@ func test_reveal_budget_is_one_per_scene() -> void:
 	assert_str(String(third["sprite"])).is_equal("21")
 
 
+## CODE-1 / DES-1 (round 1): the anti-repeat sibling swap runs after the reveal
+## cap check, so it must consult the budget itself. Off-path stage 4, three
+## repeated angry i3 beats resolve 30 and swap to its corrupt sibling 21; the
+## fourth beat's repeat must NOT bring the knife (or knife_draw/stinger/vignette/
+## dread) back a second time in the scene — docs/03 §1 "Reveal budget: 1 per scene".
+func test_anti_repeat_cannot_respend_the_knife_budget() -> void:
+	var sprites: Array[String] = []
+	var knife_cues := 0
+	var anti_beats: Array[int] = []
+	for i: int in range(6):
+		var packet: Dictionary = _resolver.resolve_beat("angry", 3, 4)
+		sprites.append(String(packet["sprite"]))
+		if String(packet["on_enter_events"]["cue"]) == "knife_draw":
+			knife_cues += 1
+		if bool(packet["anti_repeated"]):
+			anti_beats.append(i)
+	assert_array(sprites).contains_exactly(["30", "30", "21", "30", "30", "30"])
+	assert_array(anti_beats).contains_exactly([2])
+	assert_int(knife_cues).is_equal(1)
+	# The same rule on the path that owns the reveal: 21 shows once, the budget
+	# step-down (17) repeats, and its healthy sibling swap never reaches the band.
+	_resolver.reset_scene()
+	var path_sprites: Array[String] = []
+	for i: int in range(4):
+		path_sprites.append(String(_resolver.resolve_beat("angry", 1, 4, "YANDERE")["sprite"]))
+	assert_array(path_sprites).contains_exactly(["21", "17", "17", "18"])
+
+
 ## docs/03 §3 step 4 + docs/10 §3.2: a corrupt face repeating swaps inside the
 ## corruption band (24 -> 28), never to a healthy sibling.
 func test_corrupt_siblings_swap_within_the_band() -> void:

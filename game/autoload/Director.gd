@@ -18,7 +18,6 @@ signal turn_cancelled(turn_index: int)
 const DEBUG_OVERLAY_KEY := KEY_F3
 const UNSAFE_INPUT_CODE := "unsafe_input"
 const UNSAFE_INPUT_MESSAGE := "Input blocked by safety policy"
-const SpriteEnterEventsScript := preload("res://scenes/SpriteEnterEvents.gd")  # docs/10 §3
 ## Turn history maintained by Director: array of {"role": "user"|"assistant", ...}
 var history: Array[Dictionary] = []
 ## Validated player memories (docs/02 §6)
@@ -49,8 +48,7 @@ var last_inner: String = ""
 ## Written by GameState.apply_turn_meters(); dev tooling reads it (DirectorTest
 ## asserts the wiring, the P2.19 night screen can show it).
 var last_meter_ledger: Dictionary = {}
-## docs/10 §3 ledger of the last sprite on-enter dispatch: {"events", "report"}.
-var last_sprite_enter: Dictionary = {}
+var last_sprite_enter: Dictionary = {}  # docs/10 §3: last {"events", "report"} dispatch
 
 var transcript_logger: TranscriptLogger = null
 var _overlay: CanvasLayer = null
@@ -60,7 +58,7 @@ var _safety := SaySafetyGate.new()
 ## The transcript redactor (gate r2 B1) — see _wire_safety_redactor(). Held in a
 ## member because a Callable does not keep its RefCounted target alive.
 var _redactor: TranscriptRedactor = null
-var _sprite_enter := SpriteEnterEventsScript.new()
+var _sprite_enter := preload("res://scenes/SpriteEnterEvents.gd").new()  # docs/10 §3
 
 var _active_stream: TurnStream = null
 var _parser: IncrementalJson = null
@@ -88,10 +86,8 @@ var _current_path := ""
 
 func _ready() -> void:
 	_connect_stage()
-	# P2.14 / docs/10 §3: the resolver announces every face change with its entry
-	# effects; this is the only connection (a second would double every entry sound).
 	if not SpriteResolver.sprite_entered.is_connected(_on_sprite_entered):
-		SpriteResolver.sprite_entered.connect(_on_sprite_entered)
+		SpriteResolver.sprite_entered.connect(_on_sprite_entered)  # docs/10 §3 dispatch
 	reset()
 
 
@@ -599,7 +595,6 @@ func _maybe_route_sprite() -> void:
 		character_node.set_sprite(str(packet.get("sprite", "00")))
 
 
-## docs/10 §3: dispatch the resolver's entry effects, keep the report for tooling.
 func _on_sprite_entered(events: Dictionary) -> void:
 	last_sprite_enter = {"events": events, "report": _sprite_enter.fire(events)}
 

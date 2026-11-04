@@ -352,13 +352,35 @@ func test_reduced_motion_snaps_in_flight_camera() -> void:
 
 
 ## CODE-2: lean_in must not animate under reduced motion — it lands on the
-## static end pose instead of creating a scale tween.
+## static end pose instead of creating a scale tween — and enabling reduced
+## motion mid-beat re-runs the preset with that beat's motion_scale. The i1/i3
+## rungs prove the scale survives (1.09 / 1.21); the i2 baseline alone is what
+## the old `_apply_motion(_motion)` call also produced.
 func test_reduced_motion_lean_in_is_static() -> void:
 	_char.set_reduced_motion(true)
 	_char.set_feeling("suspicious", 2, 0)  # lean_in beat
 	await get_tree().process_frame
 	assert_bool(_char._motion_tween == null or not _char._motion_tween.is_running()).is_true()
 	assert_vector(_lean_root.scale).is_equal(Vector2(1.15, 1.15))  # pose, no tween
+
+	# i3 (casting.motion_intensity = 1.4): a beat applied WITHOUT reduced motion
+	# tweens to 1.21, and switching reduced motion on then re-runs lean_in at the
+	# same amplitude — it must not snap the pose back to the i2 1.15 baseline.
+	_char.set_reduced_motion(false)
+	_char.set_feeling("suspicious", 3, 0)
+	await _wait_seconds(0.5)  # lean_in tween is 0.35 s
+	assert_vector(_lean_root.scale).is_equal_approx(Vector2(1.21, 1.21), Vector2(0.001, 0.001))
+	_char.set_reduced_motion(true)
+	assert_bool(_char._motion_tween == null).is_true()
+	assert_vector(_lean_root.scale).is_equal_approx(Vector2(1.21, 1.21), Vector2(0.001, 0.001))
+
+	# i1 (0.6): the same re-run holds 1.09, not 1.15.
+	_char.set_reduced_motion(false)
+	_char.set_feeling("pleading", 1, 0)
+	await _wait_seconds(0.5)
+	assert_vector(_lean_root.scale).is_equal_approx(Vector2(1.09, 1.09), Vector2(0.001, 0.001))
+	_char.set_reduced_motion(true)
+	assert_vector(_lean_root.scale).is_equal_approx(Vector2(1.09, 1.09), Vector2(0.001, 0.001))
 	_char.set_reduced_motion(false)
 
 
