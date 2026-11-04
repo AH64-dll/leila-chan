@@ -103,20 +103,15 @@
 
 ## P2.11 — memory model (round 1, 2026-11-04, agent: commandcode)
 
-- Built: `game/llm/MemoryStore.gd` owns the 24 slots (true facts only); `MemoryRules.gd` grew the three-rule
-  reason ladder, importance/eviction and the 10–25 % corruption band; the `Memory` autoload is now the single
-  owner (Director's `var memories: Array[String]` is gone), so prompt, save (P2.20) and transcript read one list.
-- Convention: a rejected proposal returns a *reason* (`empty|too_long|no_content|meta_word|ungrounded|duplicate`),
-  not just `false`. `store.last_proposal` and `report()` push it into the transcript's new `memory` field.
-  A field `TranscriptLogger.OPTIONAL_FIELDS` does not list is dropped silently, so the round trip is tested.
-- Corruption is a display lie: applied per injection (`prompt_facts`) to what she reads, never to the store, so
-  the true fact survives and she can be wrong on one turn and right on the next. Chance per fact is stage
-  3/4/5 = 0.10/0.175/0.25 from `data/memory.json`, clamped in code to the doc's 0.10–0.25 band.
-- Gotcha: the `false_promise` kind keeps the original as a prefix, so "the true fact is not in the prompt" as a
-  substring check stays green on a corrupted prompt. Assert on the whole memory bullet line (`PromptBuilder.
-  MEMORY_BULLET + text`). That assertion caught the bug the first time it ran.
-- Gotcha: `_same()` in a suite hits gdlint `max-returns: 6`; split the dictionary/array halves out. Also
-  `Director.gd` was 987/1000 lines — `spoken_text()` went to `TurnContext` to stay under the cap.
-- Next SYS on this seam: P2.20 must save `Memory.to_dict()` (seed + rng state) or a reloaded save re-rolls
-  corruption from a different point; the seed is still fixed at 0 so replays and tests are identical.
+- Built `llm/MemoryStore.gd` (24 true-fact slots, importance, eviction, seeded per-injection corruption), grew
+  `MemoryRules.gd` into the rule/reason + corruption model and made the `Memory` autoload the single owner
+  (Director's `var memories` is gone). Every tunable lives in `data/memory.json`; the docs fallback is pinned equal.
+- A rejection returns a *reason* (`meta_word|ungrounded|duplicate|…`), and `report()` → the transcript's new
+  `memory` field logs corruption + the proposal. A field missing from `TranscriptLogger.OPTIONAL_FIELDS` is
+  dropped silently, so that round trip is a test, not a hope.
+- Gotcha: `false_promise` keeps the original as a prefix — assert the whole `- ` bullet line, not a substring, or
+  "the true fact is not in the prompt" passes green on a corrupted prompt. `Director.gd` was 987/1000 lines, so
+  `spoken_text()` went to `TurnContext`.
+- Next SYS on this seam: P2.20 must save `Memory.to_dict()` (seed **and** rng state) or a reload re-rolls
+  corruption from a different point; the seed is fixed at 0 today so replays and tests are identical.
 
