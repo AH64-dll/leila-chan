@@ -61,12 +61,28 @@
         "say": "We've met before, haven't we? I'm sure we have."
       }
     ],
+    "2": [
+      {
+        "feeling": "nervous",
+        "intensity": 2,
+        "cue": "none",
+        "say": "That's my seat — sorry, that came out fast. Sit down anyway, please."
+      }
+    ],
     "3": [
       {
         "feeling": "love",
         "intensity": 2,
         "cue": "heartbeat",
         "say": "I knew you'd come back to this room. I've been sitting here since the bell."
+      }
+    ],
+    "4": [
+      {
+        "feeling": "warmth",
+        "intensity": 3,
+        "cue": "heartbeat_fast",
+        "say": "You wore the grey jumper that day, and the light came through the left window. Why don't you remember?"
       }
     ],
     "5": [

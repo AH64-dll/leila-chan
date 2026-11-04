@@ -4,7 +4,7 @@
 - stage: 3 · path: YANDERE · player: "Ren"
 - model: Qwen3.5-4B-Q4_K_M.gguf · sampling: temp 0.85, top_p 0.95, repeat 1.15 · seed server default
 - end rules: min_turns 6, max_turns 12, on_goal `end_date`
-- generated: 2026-11-04T10:24:58
+- generated: 2026-11-04T11:23:21
 - command: `--scenario=game/data/scenarios/D03_park_bench.json --stage=3 --path=YANDERE --fires=T01@6 --turns=8 --out=production/playtests/P2/scenarios/D03_park_bench_s3_YANDERE.md`
 
 ## Scene
@@ -27,11 +27,11 @@
 
 **Leila:**
 
-- **shy/2** (cue: none) — "All of them... they're mine."
-- **warmth/1** (cue: clock_tick) — "They all need to be fed, just like I do."
+- **playful/2** (cue: clock_tick) — "Only the one that looks back at you is mine."
+- **shy/1** (cue: none) — "Don't be silly, Ren. They're all just... mine."
 
-- `read`=flirt · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "Don't let the others see you."
-- prompt: system 965 tok (fixed 855 + scene 110, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 12.6 s
+- `read`=question · `music`=keep · `fx`=rain · `action`=none · dev-only `inner`: "The missing duck's location remains secret."
+- prompt: system 965 tok (fixed 855 + scene 110, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 19.5 s
 
 ### Turn 2
 
@@ -43,11 +43,11 @@
 
 **Leila:**
 
-- **suspicious/2** (cue: clock_tick) — "Don't feed the ones with eyes... not yet."
-- **pleading/1** (cue: heartbeat) — "I'll hide him first. Please don't tell anyone."
+- **cold/2** (cue: clock_tick) — "Ambitions? No duck gets to swim with you."
+- **suspicious/3** (cue: clock_tick) — "I know exactly where the seventh one is. And he's not swimming there today."
 
-- `read`=tease · `music`=tense · `fx`=none · `action`=none · dev-only `inner`: "That duck is mine to keep. I can't have you seeing it."
-- prompt: system 1003 tok (fixed 855 + scene 148, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 15.0 s
+- `read`=tease · `music`=tense · `fx`=none · `action`=none · dev-only `inner`: "His gaze lingers too long."
+- prompt: system 984 tok (fixed 855 + scene 129, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 15.1 s
 
 ### Turn 3
 
@@ -57,11 +57,11 @@
 
 **Leila:**
 
-- **cold/2** (cue: clock_tick) — "Only one... wait, that's two."
-- **pleading/3** (cue: phone_buzz) — "The last one is gone. I hid him where the water doesn't show."
+- **shy/2** (cue: clock_tick) — "I... well. You didn't count me."
+- **playful/1** (cue: none) — "But I'm happy you're still here to ask about it."
 
-- `read`=question · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "Why does he know about the missing duck?"
-- prompt: system 965 tok (fixed 855 + scene 110, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 12.5 s
+- `read`=question · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "Don't tell him where the missing duck is yet."
+- prompt: system 965 tok (fixed 855 + scene 110, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 10.2 s
 
 ### Turn 4
 
@@ -71,11 +71,11 @@
 
 **Leila:**
 
-- **surprised/2** (cue: clock_tick) — "No! I didn't count wrong."
-- **suspicious/3** (cue: clock_tick) — "You're checking my work. That one is missing on purpose."
+- **warmth/2** (cue: clock_tick) — "I didn't mess with you, Ren... I just saved one."
+- **shy/1** (cue: none) — "Please don't say goodbye right now. Just stay and listen to me."
 
-- `read`=question · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "He knows too much about the ducks."
-- prompt: system 965 tok (fixed 855 + scene 110, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 12.1 s
+- `read`=question · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "Don't let them leave."
+- prompt: system 965 tok (fixed 855 + scene 110, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 10.6 s
 
 ### Turn 5
 
@@ -87,11 +87,11 @@
 
 **Leila:**
 
-- **cold/1** (cue: clock_tick) — "Don't eat the rest. Just watch."
-- **shy/2** (cue: none) — "If you're tired, I'll sit here with you until it's all gone."
+- **sad/2** (cue: clock_tick) — "It's okay if we don't finish it today."
+- **pleading/3** (cue: none) — "But please stay. Even for just one more minute."
 
-- `read`=leaving · `music`=tense · `fx`=none · `action`=none · dev-only `inner`: "Seven is impossible if he vanished without a trace."
-- prompt: system 999 tok (fixed 855 + scene 144, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 16.8 s
+- `read`=leaving · `music`=tense · `fx`=none · `action`=none · dev-only `inner`: "The silence is too heavy, but you're not leaving yet."
+- prompt: system 982 tok (fixed 855 + scene 127, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 15.9 s
 
 ### Turn 6
 
@@ -103,11 +103,11 @@
 
 **Leila:**
 
-- **sad/2** (cue: clock_tick) — "Aya... I remember her too."
-- **curious/1** (cue: none) — "Did she come to feed the ducks?"
+- **warmth/2** (cue: none) — "Oh... I remember her laugh too."
+- **shy/1** (cue: clock_tick) — "Does she like you? Or the ducks?"
 
-- `read`=other · `music`=melancholy · `fx`=rain · `action`=none · dev-only `inner`: "Memories of Aya are fading. Why does Ren mention her now?"
-- prompt: system 982 tok (fixed 855 + scene 127, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 19.6 s
+- `read`=small_talk · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "A new name. Another anchor to hold onto."
+- prompt: system 982 tok (fixed 855 + scene 127, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 14.9 s
 
 ### Turn 7
 
@@ -117,11 +117,10 @@
 
 **Leila:**
 
-- **cold/2** (cue: clock_tick) — "Wait here. Stay just a little longer."
-- **pleading/3** (cue: clock_tick) — "Don't go yet... please, don't leave me alone."
+- **sad/2** (cue: clock_tick) — "You always say that... But please, stay a little longer."
 
-- `read`=leaving · `music`=tense · `fx`=none · `action`=none · dev-only `inner`: "The sun sets, but I won't let you disappear."
-- prompt: system 965 tok (fixed 855 + scene 110, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 13.4 s
+- `read`=leaving · `music`=melancholy · `fx`=none · `action`=none · dev-only `inner`: "Why must you leave so quickly? I'm scared he'll get hurt."
+- prompt: system 965 tok (fixed 855 + scene 110, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 9.1 s
 
 ### Turn 8
 
@@ -131,15 +130,15 @@
 
 **Leila:**
 
-- **cold/2** (cue: clock_tick) — "You're thanking me? That feels cold."
-- **shy/1** (cue: none) — "I... I just want you here. A little while longer?"
+- **pleading/2** (cue: clock_tick) — "It wasn't about the bread or my company."
+- **nervous/2** (cue: music_box_note) — "I just wanted you to be here with me again."
 
-- `read`=greeting · `music`=tense · `fx`=flicker · `action`=none · dev-only `inner`: "They're all mine, not yours."
-- prompt: system 965 tok (fixed 855 + scene 110, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 12.9 s
+- `read`=greeting · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "Don't leave. Don't say thank you."
+- prompt: system 965 tok (fixed 855 + scene 110, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 9.3 s
 
 ## Summary
 
 - turns played: 8
 - invalid turns: 0
 - scene end: turn_cap_reached
-- wall time: 115.0 s
+- wall time: 104.6 s

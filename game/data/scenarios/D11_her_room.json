@@ -61,12 +61,28 @@
         "say": "You can look at anything, almost anything. I'll tell you if it's boring."
       }
     ],
+    "2": [
+      {
+        "feeling": "nervous",
+        "intensity": 2,
+        "cue": "none",
+        "say": "These are from days you were there. This one — no, not that one yet."
+      }
+    ],
     "3": [
       {
         "feeling": "love",
         "intensity": 2,
         "cue": "heartbeat",
         "say": "I made this wall for you. You don't have to look at all of it at once."
+      }
+    ],
+    "4": [
+      {
+        "feeling": "love",
+        "intensity": 3,
+        "cue": "heartbeat_fast",
+        "say": "Which one is your favourite? I already know, but say it anyway."
       }
     ],
     "5": [

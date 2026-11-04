@@ -121,7 +121,7 @@ func _run() -> void:
 		var turn_no := _played + 1
 		var player_line := _lines[turn_no - 1]
 		var scene := ScenarioLoader.resolve_scene(_scenario, _stage, _path, turn_no, _player)
-		var events := _turn_events(scene, turn_no)
+		var events := _turn_events(turn_no)
 		var ctx := {
 			"stage": _stage,
 			"path": _path,
@@ -170,13 +170,15 @@ func _run() -> void:
 	quit(0 if _invalid == 0 else 1)
 
 
-## The turn's staged event lines: the scenario's at_turn event and any trigger
-## line requested with --fires (docs/08 §6 lines are prefixed "EVENT: ").
-func _turn_events(scene: Dictionary, turn_no: int) -> Array[String]:
+## The turn's events-layer lines. The at_turn event is deliberately NOT here:
+## it travels inside scene["event"], which PromptBuilder._scene_layer() renders
+## as "EVENT: …" (docs/08 §1 — the scene layer owns "prompt + current event";
+## the events layer carries only Director/Triggers lines). Passing it here too
+## doubled the line in the system prompt and inflated the scene token estimate.
+## Trigger lines requested with --fires are events-layer lines, as the Triggers
+## engine would deliver them (docs/08 §6 renders them with the "EVENT: " prefix).
+func _turn_events(turn_no: int) -> Array[String]:
 	var events: Array[String] = []
-	var line := String(scene.get("event", "")).strip_edges()
-	if not line.is_empty():
-		events.append("EVENT: " + line)
 	if _fires.has(turn_no):
 		var trigger_line := ScenarioLoader.get_event_for_trigger(
 			_scenario, String(_fires[turn_no]), _player
@@ -184,6 +186,17 @@ func _turn_events(scene: Dictionary, turn_no: int) -> Array[String]:
 		if not trigger_line.is_empty():
 			events.append("EVENT: " + trigger_line)
 	return events
+
+
+## What the transcript shows for a turn: the scene layer's at_turn event (the
+## same line the prompt carries once) followed by the events-layer lines.
+func _display_events(scene: Dictionary, events: Array[String]) -> Array[String]:
+	var lines: Array[String] = []
+	var scene_line := String(scene.get("event", "")).strip_edges()
+	if not scene_line.is_empty():
+		lines.append("EVENT: " + scene_line)
+	lines.append_array(events)
+	return lines
 
 
 func _turn_lines(
@@ -201,8 +214,9 @@ func _turn_lines(
 	var variant := String(scene.get("variant", "")).strip_edges()
 	if not variant.is_empty():
 		lines.append("**Scene variant:** %s\n" % variant)
-	if not events.is_empty():
-		lines.append("**Events:** %s\n" % " / ".join(events))
+	var display_events := _display_events(scene, events)
+	if not display_events.is_empty():
+		lines.append("**Events:** %s\n" % " / ".join(display_events))
 	lines.append("**Leila:**\n")
 	var beats: Variant = turn.get("beats", [])
 	if beats is Array:

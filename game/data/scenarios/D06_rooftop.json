@@ -61,12 +61,28 @@
         "say": "Okay, okay. I'll tell you, but let me say it in my own order."
       }
     ],
+    "2": [
+      {
+        "feeling": "nervous",
+        "intensity": 2,
+        "cue": "laugh_soft",
+        "say": "I know which window is yours. That was a joke — did it sound like one?"
+      }
+    ],
     "3": [
       {
         "feeling": "curious",
         "intensity": 2,
         "cue": "none",
         "say": "Come closer to the fence. I want to see your face when I tell you."
+      }
+    ],
+    "4": [
+      {
+        "feeling": "love",
+        "intensity": 3,
+        "cue": "heartbeat_fast",
+        "say": "If I wasn't here tomorrow, what would you do? Look at me while you answer."
       }
     ],
     "5": [

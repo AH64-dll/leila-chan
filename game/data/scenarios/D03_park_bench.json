@@ -61,12 +61,28 @@
         "say": "Six ducks today, or seven — I'll count while you throw."
       }
     ],
+    "2": [
+      {
+        "feeling": "nervous",
+        "intensity": 2,
+        "cue": "sigh",
+        "say": "Seven ducks today. I counted twice, and twice is how you know it's right."
+      }
+    ],
     "3": [
       {
         "feeling": "nervous",
         "intensity": 2,
         "cue": "none",
         "say": "Don't look at the reeds yet. I'll tell you when it's all right to look."
+      }
+    ],
+    "4": [
+      {
+        "feeling": "warmth",
+        "intensity": 2,
+        "cue": "hum",
+        "say": "Stay close, all of you. I'll call you one at a time, and you'll come."
       }
     ],
     "5": [

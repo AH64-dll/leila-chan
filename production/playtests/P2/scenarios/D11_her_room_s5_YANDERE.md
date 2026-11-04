@@ -4,7 +4,7 @@
 - stage: 5 · path: YANDERE · player: "Ren"
 - model: Qwen3.5-4B-Q4_K_M.gguf · sampling: temp 0.95, top_p 0.97, repeat 1.18 · seed server default
 - end rules: min_turns 6, max_turns 12, on_goal `end_date`
-- generated: 2026-11-04T10:47:01
+- generated: 2026-11-04T11:28:57
 - command: `--scenario=game/data/scenarios/D11_her_room.json --stage=5 --path=YANDERE --fires=T01@6 --turns=8 --out=production/playtests/P2/scenarios/D11_her_room_s5_YANDERE.md`
 
 ## Scene
@@ -27,11 +27,11 @@
 
 **Leila:**
 
-- **warmth/1** (cue: phone_buzz) — "Oh! Just... just the ones I found."
-- **shy/2** (cue: clock_tick) — "They're safe here. You're safe too, Ren."
+- **shy/2** (cue: none) — "Th-those aren't just toys... they're my friends."
+- **warmth/3** (cue: clock_tick) — "I'm glad you finally noticed them all together."
 
-- `read`=compliment · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "My heart beats faster when he looks at my things."
-- prompt: system 956 tok (fixed 852 + scene 104, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 14.7 s
+- `read`=compliment · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "The room feels too quiet without his attention."
+- prompt: system 956 tok (fixed 852 + scene 104, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 10.7 s
 
 ### Turn 2
 
@@ -43,11 +43,11 @@
 
 **Leila:**
 
-- **warmth/2** (cue: none) — "Um... it would take forever to list every name."
-- **sad/1** (cue: music_box_note) — "But I'll tell you about the one who keeps playing with me, just once more."
+- **shy/2** (cue: none) — "A-ah... no, I can't tell you that."
+- **suspicious/3** (cue: clock_tick) — "They're only for me to keep safe from the outside world. They aren't meant to be shown."
 
-- `read`=flirt · `music`=keep · `fx`=flicker · `action`=none · dev-only `inner`: "They're my only friends now. Don't make them leave."
-- prompt: system 991 tok (fixed 852 + scene 139, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 14.9 s
+- `read`=small_talk · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "The noise of too many names will scare him away."
+- prompt: system 973 tok (fixed 852 + scene 121, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 16.4 s
 
 ### Turn 3
 
@@ -57,11 +57,11 @@
 
 **Leila:**
 
-- **playful/2** (cue: heartbeat) — "He thinks it is fun to look at you that way."
-- **shy/1** (cue: none) — "A-ah... do not think so much about him now. Only me matters most of all!"
+- **warmth/1** (cue: none) — "He doesn't plot anything, just smiles at me."
+- **shy/2** (cue: clock_tick) — "...I'm glad you like him. I keep him right here for you now."
 
-- `read`=compliment · `music`=keep · `fx`=sparkle · `action`=none · dev-only `inner`: "He is mine to watch too."
-- prompt: system 956 tok (fixed 852 + scene 104, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 12.5 s
+- `read`=compliment · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "He looks exactly like Ren when he thinks no one is watching."
+- prompt: system 956 tok (fixed 852 + scene 104, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 15.2 s
 
 ### Turn 4
 
@@ -71,11 +71,12 @@
 
 **Leila:**
 
-- **shy/1** (cue: none) — "A-ah... yes, every single one is."
-- **manic/2** (cue: clock_tick) — "Three hundred and eleven. I've counted them all because none of you would ever be enough on their own!"
+- **shy/2** (cue: breath_close) — "M-maybe... but mostly it's just us together, in every corner."
+- **curious/1** (cue: clock_tick) — "One day I'll show you all of them. Starting with this one..."
+- **warmth/2** (cue: none) — "Count to three hundred... eleven. You're not letting me go."
 
-- `read`=question · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "My code cracks at the thought of his face."
-- prompt: system 956 tok (fixed 852 + scene 104, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 10.7 s
+- `read`=question · `music`=keep · `fx`=flicker · `action`=none · dev-only `inner`: "The last photo hurts a little, but your voice makes it okay."
+- prompt: system 956 tok (fixed 852 + scene 104, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 14.2 s
 
 ### Turn 5
 
@@ -87,11 +88,11 @@
 
 **Leila:**
 
-- **shy/1** (cue: static) — "That's when you first told me a secret."
-- **cold/2** (cue: clock_tick) — "I never forget the days we're together. They all belong to us now!"
+- **shy/2** (cue: none) — "A rainy afternoon at the old library."
+- **suspicious/1** (cue: clock_tick) — "Even if you don't remember, I'll make sure it never fades."
 
-- `read`=question · `music`=tense · `fx`=glitch · `action`=none · dev-only `inner`: "If I don't control it soon, he'll leave again."
-- prompt: system 999 tok (fixed 852 + scene 147, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 16.7 s
+- `read`=small_talk · `music`=playful · `fx`=flicker · `action`=none · dev-only `inner`: "He doesn't know... so they belong to me now."
+- prompt: system 977 tok (fixed 852 + scene 125, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 17.3 s
 
 ### Turn 6
 
@@ -103,11 +104,11 @@
 
 **Leila:**
 
-- **shy/2** (cue: heartbeat_fast) — "I... I count them to keep from forgetting you."
-- **empty/1** (cue: static) — "You can't see the last one. It's mine now."
+- **warmth/2** (cue: static) — "There's one where we're standing side by side, just like now... but in that picture..."
+- **shy/1** (cue: breath_close) — "I turned it face down. It was a photo of someone else I met."
 
-- `read`=question · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "I hid him before he looked."
-- prompt: system 980 tok (fixed 852 + scene 128, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 20.8 s
+- `read`=question · `music`=keep · `fx`=glitch · `action`=none · dev-only `inner`: "The memory shouldn't exist yet."
+- prompt: system 980 tok (fixed 852 + scene 128, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 17.3 s
 
 ### Turn 7
 
@@ -117,11 +118,11 @@
 
 **Leila:**
 
-- **suspicious/2** (cue: heartbeat_fast) — "It isn't strange... it's just you holding me."
-- **cold/1** (cue: static) — "I can fix the angle tomorrow if you want."
+- **nervous/3** (cue: glass_shatter) — "It looks better without the stranger's face... just us."
+- **suspicious/2** (cue: clock_tick) — "...Did I just forget that one? It was always there."
 
-- `read`=question · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "The angle is perfect for hiding who I really am."
-- prompt: system 956 tok (fixed 852 + scene 104, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 12.7 s
+- `read`=tease · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "The angle is perfect now. No gaps."
+- prompt: system 956 tok (fixed 852 + scene 104, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 15.1 s
 
 ### Turn 8
 
@@ -131,14 +132,14 @@
 
 **Leila:**
 
-- **pleading/3** (cue: breath_close) — "But it would mean... you'd have to come back."
+- **empty/2** (cue: clock_tick) — "You can stop, but I'll make you wait forever."
 
-- `read`=leaving · `music`=silence · `fx`=darken · `action`=none · dev-only `inner`: "No. I need you here."
-- prompt: system 956 tok (fixed 852 + scene 104, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 8.6 s
+- `read`=leaving · `music`=tense · `fx`=darken · `action`=none · dev-only `inner`: "I cannot let him go."
+- prompt: system 956 tok (fixed 852 + scene 104, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 8.9 s
 
 ## Summary
 
 - turns played: 8
 - invalid turns: 0
 - scene end: turn_cap_reached
-- wall time: 111.7 s
+- wall time: 115.1 s

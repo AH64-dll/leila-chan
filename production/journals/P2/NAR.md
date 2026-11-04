@@ -34,3 +34,19 @@
   SIGINT'd mid-run and cost two batches; the harness records `REQUEST FAILED` and keeps the partial file honest.
 - `tests/test_scenarios.py`'s disorder scan now matches acronyms as uppercase whole words: the old substring check
   flagged every ordinary "did". Future scenario text can use English again.
+
+## P2.18 — round 2 rework
+
+- CON-1: the acronym scan is case-insensitive again for bpd/npd/ocd/ptsd (whole word against the lowered text);
+  only `did` keeps the uppercase rule. `test_disorder_scan_catches_every_case` is the negative control — a green
+  scan over clean data proves nothing on its own, so the guard test asserts both directions ("he did not" passes,
+  `DID` fails).
+- CON-3: authored beats at stages 2 and 4 in all six files, and `get_opening_beats()` now falls back to the
+  highest defined stage ≤ the current one — the `_resolve_variant` rule. Never author 0/1/3/5 only again: a
+  stage-2/4 date opened on the stage-0 line, and the I01 s4 transcript showed it.
+- DES-1: the harness fed the `at_turn` event into both `scene["event"]` (scene layer) and `ctx["events"]` (events
+  layer), doubling the line in the system prompt. The scene layer owns it; the events layer is for
+  `--fires`/Director/Triggers lines only. Keep a separate display list so the transcript still shows what the
+  prompt carried.
+- Any prompt-layer change invalidates every voice excerpt: re-quote all six transcripts, then machine-check the
+  quotes against the files (26 strings here) instead of eyeballing them.

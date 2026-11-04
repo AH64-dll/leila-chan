@@ -138,6 +138,26 @@ func test_opening_beats_for_stages_0_and_1() -> void:
 	assert_str(String(beats_s1[0]["say"])).contains("ordered your favorite")
 
 
+func test_opening_beats_fall_back_to_highest_defined_stage() -> void:
+	# CON-3: D02 authors only stages 0 and 1, so a stage-2..5 date must open on
+	# the stage-1 line, not the stage-0 one (the rule _resolve_variant uses).
+	var scenario: Dictionary = ScenarioLoaderScript.load_scenario(D02_PATH)
+	for stage: int in [2, 3, 4, 5]:
+		var beats: Array[Dictionary] = ScenarioLoaderScript.get_opening_beats(
+			scenario, stage, "Ren"
+		)
+		assert_int(beats.size()).is_equal(1)
+		assert_str(String(beats[0]["say"])).contains("ordered your favorite")
+
+	# Below every defined stage there is nothing to fall back to — the variant
+	# resolver returns empty there too, so the opener stays silent.
+	var higher_only := {
+		"opening_beats": {"3": [{"feeling": "cold", "intensity": 2, "say": "Later."}]}
+	}
+	var none: Array[Dictionary] = ScenarioLoaderScript.get_opening_beats(higher_only, 0, "Ren")
+	assert_int(none.size()).is_equal(0)
+
+
 func test_events_for_turn_and_triggers() -> void:
 	var scenario: Dictionary = ScenarioLoaderScript.load_scenario(D02_PATH)
 	var turn3_events: Array[String] = ScenarioLoaderScript.get_events_for_turn(scenario, 3)

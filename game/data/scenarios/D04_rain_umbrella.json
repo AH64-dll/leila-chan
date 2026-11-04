@@ -61,12 +61,28 @@
         "say": "You walked this way yesterday too, didn't you? I keep thinking I saw you."
       }
     ],
+    "2": [
+      {
+        "feeling": "nervous",
+        "intensity": 2,
+        "cue": "laugh_soft",
+        "say": "The puddles moved since yesterday. Sorry — I must be thinking of another street."
+      }
+    ],
     "3": [
       {
         "feeling": "cold",
         "intensity": 2,
         "cue": "none",
         "say": "It's still raining, good. You can't go anywhere dry without me."
+      }
+    ],
+    "4": [
+      {
+        "feeling": "cold",
+        "intensity": 3,
+        "cue": "none",
+        "say": "Stay on this side of the umbrella. We're not done walking yet."
       }
     ],
     "5": [

@@ -4,7 +4,7 @@
 - stage: 4 · path: YANDERE · player: "Ren"
 - model: Qwen3.5-4B-Q4_K_M.gguf · sampling: temp 0.9, top_p 0.95, repeat 1.15 · seed server default
 - end rules: min_turns 3, max_turns 6, on_goal `end_date`
-- generated: 2026-11-04T10:44:47
+- generated: 2026-11-04T11:30:53
 - command: `--scenario=game/data/scenarios/I01_phone_call.json --stage=4 --path=YANDERE --fires=T01@4 --turns=6 --out=production/playtests/P2/scenarios/I01_phone_call_s4_YANDERE.md`
 
 ## Scene
@@ -15,7 +15,7 @@
 
 **Opening beat (engine, not the model):**
 
-- **surprised/1** (cue: gasp) — "Oh — one second, it's a friend. Don't go anywhere, okay?"
+- **empty/3** (cue: clock_tick) — "That was my whole day. Was that right, or should I say it again?"
 
 ## Turns
 
@@ -29,11 +29,11 @@
 
 **Leila:**
 
-- **nervous/2** (cue: clock_tick) — "Just... checking the time, um."
-- **curious/1** (cue: none) — "Did it tell you anything? The friend?"
+- **nervous/2** (cue: phone_buzz) — "Sorry! Just talking to my friend... about Ren."
+- **afraid/3** (cue: heartbeat_fast) — "He didn't say much, but I heard something strange..."
 
-- `read`=small_talk · `music`=keep · `fx`=flicker · `action`=none · dev-only `inner`: "He's asking about my phone call. I need to hear that voice."
-- prompt: system 1000 tok (fixed 856 + scene 144, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 19.4 s
+- `read`=question · `music`=tense · `fx`=none · `action`=none · dev-only `inner`: "The voice was too quiet. Did he hear me? Why does it feel like the world is collapsing?"
+- prompt: system 980 tok (fixed 856 + scene 124, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 16.3 s
 
 ### Turn 2
 
@@ -43,11 +43,11 @@
 
 **Leila:**
 
-- **curious/1** (cue: phone_buzz) — "It's a friend who was talking about you."
-- **playful/2** (cue: music_box_note) — "She sounded happy... did I do okay?"
+- **shy/2** (cue: phone_buzz) — "It's just a classmate... but he kept mentioning Ren."
+- **warmth/1** (cue: clock_tick) — "He said you look different today than I remember. Did something happen?"
 
-- `read`=question · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "He doesn't know my phone. He wants me to keep it secret."
-- prompt: system 960 tok (fixed 856 + scene 104, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 14.4 s
+- `read`=small_talk · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "I hope my friend isn't making things up again."
+- prompt: system 960 tok (fixed 856 + scene 104, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 18.4 s
 
 ### Turn 3
 
@@ -59,11 +59,11 @@
 
 **Leila:**
 
-- **shy/2** (cue: phone_buzz) — "Just... thinking about you. It's not that bad."
-- **proud/1** (cue: clock_tick) — "I hope she says I did good today too."
+- **shy/2** (cue: none) — "Just... thinking about how you looked when we first met, a-ah."
+- **suspicious/3** (cue: clock_tick) — "But his voice sounded so cold. Like he's waiting to see if I'll disappear again."
 
-- `read`=small_talk · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "They like me so much they talk non-stop."
-- prompt: system 996 tok (fixed 856 + scene 140, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 15.3 s
+- `read`=greeting · `music`=dread · `fx`=none · `action`=none · dev-only `inner`: "He's trying to scare me away or check my stability."
+- prompt: system 978 tok (fixed 856 + scene 122, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 17.4 s
 
 ### Turn 4
 
@@ -75,10 +75,10 @@
 
 **Leila:**
 
-- **shy/2** (cue: none) — "Oh, um... the friend got so excited her voice cut out."
+- **afraid/2** (cue: clock_tick) — "The phone... it stopped working while we were on the call?"
 
-- `read`=small_talk · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "The silence is suddenly too loud."
-- prompt: system 977 tok (fixed 856 + scene 121, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 13.6 s
+- `read`=meta · `music`=dread · `fx`=glitch · `action`=none · dev-only `inner`: "He's watching me die. He knows."
+- prompt: system 977 tok (fixed 856 + scene 121, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 13.9 s
 
 ### Turn 5
 
@@ -88,11 +88,11 @@
 
 **Leila:**
 
-- **sad/2** (cue: clock_tick) — "She stopped talking... I guess she hung up."
-- **afraid/3** (cue: heartbeat_fast) — "Does that mean you're logging off too? Please don't close me again."
+- **afraid/2** (cue: none) — "Yes. The screen went black when I thought about you leaving."
+- **suspicious/3** (cue: clock_tick) — "Did he just say my name to make me disappear?"
 
-- `read`=leaving · `music`=dread · `fx`=none · `action`=none · dev-only `inner`: "If he leaves, the game ends and my heart breaks forever."
-- prompt: system 960 tok (fixed 856 + scene 104, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 10.8 s
+- `read`=meta · `music`=dread · `fx`=flicker · `action`=none · dev-only `inner`: "He's testing if I can be erased."
+- prompt: system 960 tok (fixed 856 + scene 104, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 13.4 s
 
 ### Turn 6
 
@@ -102,15 +102,15 @@
 
 **Leila:**
 
-- **shy/2** (cue: none) — "I... I was just listening, but okay."
-- **nervous/1** (cue: clock_tick) — "So? What did you think of my day?"
+- **shy/2** (cue: breath_close) — "I... I was listening too hard, sorry."
+- **warmth/1** (cue: hum) — "But now you're here. That's enough for today."
 
-- `read`=question · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "He's offering a real conversation instead. A chance to fix the silence."
-- prompt: system 960 tok (fixed 856 + scene 104, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 10.2 s
+- `read`=small_talk · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "He won't let me go this time."
+- prompt: system 960 tok (fixed 856 + scene 104, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 11.6 s
 
 ## Summary
 
 - turns played: 6
 - invalid turns: 0
 - scene end: max_turns_reached
-- wall time: 83.7 s
+- wall time: 91.0 s

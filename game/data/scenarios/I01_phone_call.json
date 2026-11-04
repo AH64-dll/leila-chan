@@ -61,12 +61,28 @@
         "say": "Sorry, I have to take this. I'll be right here, just — one second."
       }
     ],
+    "2": [
+      {
+        "feeling": "nervous",
+        "intensity": 2,
+        "cue": "phone_buzz",
+        "say": "Yes — sorry, yes. It's nothing, I'll be off in a second."
+      }
+    ],
     "3": [
       {
         "feeling": "cold",
         "intensity": 2,
         "cue": "phone_buzz",
         "say": "Stay at the table. I'll be quick, and then we can go back to talking."
+      }
+    ],
+    "4": [
+      {
+        "feeling": "empty",
+        "intensity": 3,
+        "cue": "clock_tick",
+        "say": "That was my whole day. Was that right, or should I say it again?"
       }
     ],
     "5": [

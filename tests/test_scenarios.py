@@ -64,9 +64,22 @@ FORBIDDEN_DISORDERS = [
     "psychopath",
 ]
 
-# Terms that must appear as written (uppercase whole word) to count as a named
-# disorder: the lowercase spellings are ordinary English words.
-DISORDER_ACRONYMS = {"bpd", "did", "npd", "ocd", "ptsd"}
+# Acronyms that name a disorder in any case: bpd/npd/ocd/ptsd are not English
+# words, so the scan must not go case-blind on them. "did" is ordinary English
+# ("he did"), so it counts as the disorder only as written — uppercase, whole word.
+DISORDER_ACRONYMS = {"bpd", "npd", "ocd", "ptsd"}
+DISORDER_UPPERCASE_ONLY = {"did"}
+
+
+def _names_disorder(text: str, term: str) -> bool:
+    """True when `term` names a real disorder in `text` (docs/01 §4 sensitivity rule)."""
+    lowered = text.lower()
+    if term in DISORDER_UPPERCASE_ONLY:
+        return re.search(rf"\b{term.upper()}\b", text) is not None
+    if term in DISORDER_ACRONYMS:
+        return re.search(rf"\b{term}\b", lowered) is not None
+    return term in lowered
+
 
 JSON_TYPES = {
     "object": dict,
@@ -280,6 +293,18 @@ def test_scenario_opening_beats(path: Path) -> None:
             assert len(sentences) <= 2, f"{path.name}: opening beat exceeds 2 sentences: {beat['say']}"
 
 
+def test_p2_18_opening_beats_cover_every_stage() -> None:
+    """CON-3 — a stage-2 or stage-4 date must open on its own line.
+
+    The loader falls back to the highest defined stage <= the current one, but
+    an authored beat per stage is what keeps the opening escalating (docs/01 §3).
+    """
+    for name in P2_18_SCENARIOS:
+        beats = _scenario(name)["opening_beats"]
+        for stage in range(0, 6):
+            assert str(stage) in beats, f"{name}: no opening beat at stage {stage}"
+
+
 @pytest.mark.parametrize("path", SCENARIO_PATHS, ids=lambda p: p.stem)
 def test_scenario_events_and_bounds(path: Path) -> None:
     data = json.loads(path.read_text(encoding="utf-8"))
@@ -307,15 +332,26 @@ def test_scenario_sensitivity_and_brands(path: Path) -> None:
     for brand in FORBIDDEN_BRANDS:
         assert brand not in lowered, f"Forbidden brand '{brand}' found in {path.name}"
     for disorder in FORBIDDEN_DISORDERS:
-        # The short acronyms collide with ordinary English ("did", "he did"):
-        # they name the disorder only as written — uppercase, whole word.
-        # The long forms still match anywhere, case-insensitively.
-        if disorder in DISORDER_ACRONYMS:
-            assert not re.search(rf"\b{disorder.upper()}\b", raw_text), (
-                f"Forbidden disorder acronym '{disorder.upper()}' in {path.name}"
-            )
-        else:
-            assert disorder not in lowered, f"Forbidden disorder term '{disorder}' in {path.name}"
+        assert not _names_disorder(raw_text, disorder), (
+            f"Forbidden disorder term {disorder!r} in {path.name}"
+        )
+
+
+def test_disorder_scan_catches_every_case() -> None:
+    """CON-1 regression — the acronym scan must not go case-blind.
+
+    The shipped text is clean, so a negative control is the only thing that
+    proves the guard works: every acronym is caught in any case, while "did"
+    as ordinary English is not.
+    """
+    for term in ("bpd", "npd", "ocd", "ptsd"):
+        for written in (term, term.upper(), term.title()):
+            assert _names_disorder(f"she says she has {written}", term), written
+    assert _names_disorder("a diagnosis of PTSD", "ptsd")
+    assert not _names_disorder("he did not answer", "did")
+    assert not _names_disorder("didn't say a word", "did")
+    assert _names_disorder("she says it is DID", "did")
+    assert _names_disorder("a Dissociative Identity diagnosis", "dissociative identity")
 
 
 @pytest.mark.parametrize("path", SCENARIO_PATHS, ids=lambda p: p.stem)

@@ -4,7 +4,7 @@
 - stage: 0 · path: none · player: "Ren"
 - model: Qwen3.5-4B-Q4_K_M.gguf · sampling: temp 0.75, top_p 0.9, repeat 1.1 · seed server default
 - end rules: min_turns 6, max_turns 14, on_goal `end_date`
-- generated: 2026-11-04T10:23:16
+- generated: 2026-11-04T11:21:38
 - command: `--scenario=game/data/scenarios/D01_classroom.json --stage=0 --path= --fires=T01@5 --turns=8 --out=production/playtests/P2/scenarios/D01_classroom_s0_none.md`
 
 ## Scene
@@ -27,11 +27,11 @@
 
 **Leila:**
 
-- **shy/1** (cue: none) — "Um... yes, I was just finishing that old book."
-- **warmth/2** (cue: none) — "It's quiet here now. Just us, huh?"
+- **shy/1** (cue: none) — "E-eh? I was just finishing up."
+- **warmth/2** (cue: none) — "But... if you'd like to stay, the air feels nice here."
 
-- `read`=greeting · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "He noticed me still staying. A little relief."
-- prompt: system 909 tok (fixed 834 + scene 75, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 12.1 s
+- `read`=greeting · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "He's lingering. Is he staying with me too?"
+- prompt: system 909 tok (fixed 834 + scene 75, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 16.5 s
 
 ### Turn 2
 
@@ -43,11 +43,11 @@
 
 **Leila:**
 
-- **shy/1** (cue: none) — "R-ren... I thought you were someone else."
-- **curious/2** (cue: none) — "That's surprising. Most people love their after-school time."
+- **shy/1** (cue: none) — "Oh — R-Ren? That's a cute nickname."
+- **curious/2** (cue: none) — "You're usually asleep... but you're awake for me?"
 
-- `read`=greeting · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "He knows my name already? Lucky."
-- prompt: system 949 tok (fixed 834 + scene 115, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 17.4 s
+- `read`=greeting · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "He knows my name already. Lucky."
+- prompt: system 929 tok (fixed 834 + scene 95, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 13.3 s
 
 ### Turn 3
 
@@ -57,11 +57,11 @@
 
 **Leila:**
 
-- **shy/2** (cue: none) — "H-haunting? I just like the quiet."
-- **curious/1** (cue: none) — "I usually go to the aquarium... or read by the window."
+- **curious/1** (cue: none) — "U-um, usually I go home to read or listen to music boxes..."
+- **warmth/2** (cue: none) — "But... do you ever have anything fun after school?"
 
-- `read`=question · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "He knows about me. He's so calm."
-- prompt: system 909 tok (fixed 834 + scene 75, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 11.7 s
+- `read`=small_talk · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "He asked about me. He's actually awake for me."
+- prompt: system 909 tok (fixed 834 + scene 75, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 13.4 s
 
 ### Turn 4
 
@@ -71,11 +71,11 @@
 
 **Leila:**
 
-- **warmth/2** (cue: none) — "T-thank you, Ren."
-- **shy/1** (cue: none) — "I... um, I'll try to be nicer next time."
+- **shy/1** (cue: none) — "W-well, that is nice... t-thank you."
+- **warmth/2** (cue: none) — "I was just thinking about reading old novels in the quiet. Do you have any plans?"
 
-- `read`=compliment · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "He thinks my answer was nice. He really wants to know me."
-- prompt: system 909 tok (fixed 834 + scene 75, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 10.7 s
+- `read`=compliment · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "He's being so kind. Maybe he'll stop sleeping soon?"
+- prompt: system 909 tok (fixed 834 + scene 75, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 9.8 s
 
 ### Turn 5
 
@@ -87,11 +87,11 @@
 
 **Leila:**
 
-- **shy/2** (cue: none) — "A-a-Aya said that? That hurts a little..."
-- **playful/1** (cue: none) — "But I'm not hard to talk to! Just... shy."
+- **shy/2** (cue: none) — "I-I'm sorry about that! But... maybe it's just my quietness?"
+- **warmth/1** (cue: none) — "Ren, you think I'm hard to talk to? That sounds painful."
 
-- `read`=compliment · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "He's trying so hard to make me smile. Lucky."
-- prompt: system 969 tok (fixed 834 + scene 135, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 15.2 s
+- `read`=compliment · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "He defended me. My heart feels light."
+- prompt: system 949 tok (fixed 834 + scene 115, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 17.4 s
 
 ### Turn 6
 
@@ -101,10 +101,10 @@
 
 **Leila:**
 
-- **shy/2** (cue: none) — "W-wait, I can't leave just yet... I need to finish my reading."
-- **curious/1** (cue: none) — "But... if you're coming home early? We could walk together?"
+- **shy/2** (cue: none) — "W-what about the schedule change...?"
+- **playful/1** (cue: none) — "Oh, I guess it's fine! Let's go."
 
-- `read`=question · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "He asked me out! I'm so nervous but happy."
+- `read`=other · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "He offered. A walk together? How sweet."
 - prompt: system 909 tok (fixed 834 + scene 75, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 11.0 s
 
 ### Turn 7
@@ -115,11 +115,11 @@
 
 **Leila:**
 
-- **shy/2** (cue: none) — "S-same room... at the same time? That sounds lonely."
-- **warmth/1** (cue: none) — "I'd like that. Just... so I don't forget our promise?"
+- **shy/2** (cue: none) — "T-t-thank you... I'd love to see that again."
+- **warmth/1** (cue: none) — "Same room, same time. It sounds... very perfect."
 
-- `read`=question · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "He remembers me already."
-- prompt: system 909 tok (fixed 834 + scene 75, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 10.4 s
+- `read`=leaving · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "He's planning a repeat meeting. Perfect."
+- prompt: system 909 tok (fixed 834 + scene 75, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 11.1 s
 
 ### Turn 8
 
@@ -129,15 +129,15 @@
 
 **Leila:**
 
-- **warmth/2** (cue: none) — "Oh... okay. I'll see you then."
-- **shy/1** (cue: none) — "Goodbye, Ren. Take care of yourself."
+- **sad/2** (cue: none) — "O-oh! You're leaving already?"
+- **nervous/1** (cue: none) — "I... I didn't want you to go."
 
-- `read`=leaving · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "He's leaving already. A little sad."
-- prompt: system 909 tok (fixed 834 + scene 75, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 12.4 s
+- `read`=leaving · `music`=keep · `fx`=none · `action`=none · dev-only `inner`: "He's leaving. Not a goodbye, but still sad."
+- prompt: system 909 tok (fixed 834 + scene 75, estimate) · Qwen3.5-4B-Q4_K_M.gguf · 10.2 s
 
 ## Summary
 
 - turns played: 8
 - invalid turns: 0
 - scene end: turn_cap_reached
-- wall time: 101.0 s
+- wall time: 102.8 s
