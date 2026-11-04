@@ -217,13 +217,34 @@ func _resume_from_save() -> void:
 	if not saved_scenario.is_empty() and FileAccess.file_exists(saved_scenario):
 		scenario_path = saved_scenario
 	_saved_turn = int(pending.get("turn", 0))
-	_resumed = true
+	# A resumed date skips her greeting only when the restored log already carries
+	# it: this scene's entry autosave can land before the opening beats reach the
+	# ChatLog (they arrive one drained beat at a time), so an empty saved log means
+	# the player quit during the greeting and must see it played.
+	var restored_entries := 0
+	if chat_log != null and chat_log.has_method("entry_count"):
+		restored_entries = int(chat_log.call("entry_count"))
+	_resumed = restored_entries > 0
 
 
 ## What a save needs to resume this scene (docs/07 §3.5 "state, memories, log"
 ## plus the scene the log belongs to).
 func _save_scene_data() -> Dictionary:
 	return {"scenario": scenario_path, "turn": _current_turn}
+
+
+## P2.20: one autosave attempt with its outcome surfaced. A refusal is a value,
+## not an error — `disabled` is the documented headless/tool switch and `busy`
+## means a turn streamed past this call — but the "Continue resumes the date the
+## player left" guarantee rides on these writes, so an unexpected miss is a
+## warning instead of a silently dropped result.
+func _autosave_scene(reason: String) -> void:
+	var result := SaveSystem.autosave(SaveSystem.SCENE_DATE, _save_scene_data())
+	if bool(result.get("ok", false)):
+		return
+	if String(result.get("error", "")) == "disabled":
+		return
+	push_warning("Date: %s autosave skipped — %s" % [reason, String(result.get("message", ""))])
 
 
 ## The P2.09 seam, resolved by path: a Date scene must run in tests and tools
@@ -321,7 +342,7 @@ func start_date() -> void:
 	# Autosave per scene: the date writes itself as it becomes the live scene,
 	# and again after every completed turn (_on_turn_displayed), so Continue
 	# resumes the date the player actually left.
-	SaveSystem.autosave(SaveSystem.SCENE_DATE, _save_scene_data())
+	_autosave_scene("scene-entry")
 
 
 func play_opening_beats() -> void:
@@ -491,8 +512,12 @@ func _on_turn_displayed() -> void:
 		opening_beats_finished.emit()
 	turn_completed.emit(_current_turn)
 	# P2.20: the scene autosaves as it progresses, so a quit mid-date resumes
-	# the log the player actually saw instead of replaying the date.
-	SaveSystem.autosave(SaveSystem.SCENE_DATE, _save_scene_data())
+	# the log the player actually saw instead of replaying the date. Deferred:
+	# `turn_displayed` fires from inside the Director's turn close (ChatUI calls
+	# TextBox.end_turn, which can emit all_displayed synchronously), and the
+	# Director clears its in-flight flag only after that call returns — every
+	# save is refused ("busy") while it is set.
+	_autosave_scene.call_deferred("after turn")
 
 
 ## docs/03 §5 (P2.07): her private thought can surface for a moment. The ChatUI
