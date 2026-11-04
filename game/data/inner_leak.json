@@ -1,0 +1,32 @@
+{
+	"version": 1,
+	"doc": "P2.07 inner-voice leak (docs/05 M41, docs/03 §5): the model's private `inner` thought surfaces for a moment. `chances` is the documented per-turn probability — stage 2 5%, stage 3 15%, stage 4–5 30%. The stage gate (2+) and the per-turn cap (1) are code (InnerLeak.GATE_MIN / InnerLeak.MAX_PER_TURN), so no data edit can unlock the leak earlier or fire it twice in one turn, and the stage→style mapping is docs-fixed as well (2–3 ghost, 4–5 red): data tunes each style's look and timing, never which stage gets which. `hold` is how long the completed line stays on screen after its reveal (code floors it at 0.1 s, so a data edit cannot make the leak invisible); `reveal: instant` draws it whole (the documented 1 s ghost), `word_by_word` assembles it at `word_interval` (stage 4–5). `behind_overlap` is how many pixels of the label's bottom edge tuck behind the TextBox panel — the label is drawn at z -1, behind the box. `reduced_motion.instant_reveal` keeps the whole line and drops only the word-by-word animation (docs/05 §0.5). `debug_sample` is the F3/F4 overlay's test line. Safety: the text is scanned by the Safety filter in ChatUI.leak_inner before this label can show it, and a build without the scan shows the fail-closed bars (docs/02 §8).",
+	"chances": {"2": 0.05, "3": 0.15, "4": 0.3, "5": 0.3},
+	"styles": {
+		"ghost": {
+			"color": "#b9b9c2",
+			"alpha": 0.55,
+			"italic": true,
+			"font_size": 12,
+			"hold": 1.0,
+			"reveal": "instant",
+			"word_interval": 0.18,
+			"align": "right",
+			"behind_overlap": 2
+		},
+		"red": {
+			"color": "#c0272f",
+			"alpha": 0.95,
+			"italic": false,
+			"font_size": 13,
+			"hold": 1.6,
+			"reveal": "word_by_word",
+			"word_interval": 0.22,
+			"align": "left",
+			"behind_overlap": 0
+		}
+	},
+	"reduced_motion": {"instant_reveal": true},
+	"layout": {"margin": 12, "max_lines": 2},
+	"debug_sample": "I could keep him here."
+}
