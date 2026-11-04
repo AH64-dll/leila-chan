@@ -235,7 +235,7 @@ func get_current_dose() -> Dictionary:
 	var stage := int(GameState.stage)
 	if Steering != null and Steering.has_method("dose_for"):
 		return Steering.dose_for(build_turn_context(""))
-	return {"base": float(sampling_spec(stage).get("dose", 0.0))}
+	return {"malice": float(sampling_spec(stage).get("dose", 0.0))}
 
 
 ## docs/02 §9 sampling row for `stage` (data-owned, see TurnContext).
@@ -396,23 +396,27 @@ func _start_turn(player_text: String) -> bool:
 		"repeat_penalty": float(sampling_spec.get("repeat_penalty", 1.10)),
 	}
 
-	# Steering owns the dose once it lands (docs/06 §4). Until then the table's
-	# docs/02 §9 dose column is the source, because the merged P1.09 retry path
-	# pins it (`DirectorFallbackTest` asserts the stage-1 base 2.5 + retry -2.0
-	# reaches the request). CODE-7's "leave dose empty" would drop that
-	# observable: the facade only fills from set_dose(), which nothing calls
-	# yet. The transmission gap (LlamaServerBackend ignores request.dose —
-	# control vectors are a server launch flag, docs/06 §4) is P1.02/P2.02 work.
+	# docs/06 §3: Steering owns the dose schedule (P2.04), so the request carries
+	# per-vector scales ({"malice": 4.5, "path_mix": 3.0}; path_mix is the
+	# interim path-weight key). The docs/02 §9 dose column
+	# is only the last-resort fallback when the autoload is absent; the P1.09
+	# retry observable still holds (`DirectorFallbackTest`: stage-1 malice 2.5
+	# plus the -2.0 retry reaches the request). The transmission gap
+	# (LlamaServerBackend ignores request.dose — control vectors are a server
+	# launch flag, docs/06 §4) is P2.03's restart work.
 	var dose_dict := {}
 	if Steering != null and Steering.has_method("dose_for"):
 		dose_dict = Steering.dose_for(ctx)
 	if dose_dict.is_empty() and float(sampling_spec.get("dose", 0.0)) > 0.0:
-		dose_dict = {"base": float(sampling_spec.get("dose", 0.0))}
-	# docs/02 §7 empty-say retry: dose -2 applies to whichever dose source won
+		dose_dict = {"malice": float(sampling_spec.get("dose", 0.0))}
+	# docs/02 §7 empty-say retry: dose -2 lands once, on the dose (malice) scale
 	if _dose_offset != 0.0:
-		for vector: Variant in dose_dict:
-			var name := str(vector)
-			dose_dict[name] = maxf(0.0, float(dose_dict[name]) + _dose_offset)
+		if Steering != null and Steering.has_method("offset_dose"):
+			dose_dict = Steering.offset_dose(dose_dict, _dose_offset)
+		else:
+			for vector: Variant in dose_dict:
+				var name := str(vector)
+				dose_dict[name] = maxf(0.0, float(dose_dict[name]) + _dose_offset)
 	last_dose = dose_dict.duplicate()
 
 	_current_dose = dose_dict.duplicate(true)

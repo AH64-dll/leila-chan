@@ -116,12 +116,15 @@ use this convention instead of reading the paths verbatim:
 # LLM.gd
 signal token(text: String)                      # raw stream
 func generate(req: TurnRequest) -> TurnStream   # req = {messages, schema, sampling, dose, max_tokens}
-func set_dose(vectors: Dictionary) -> void      # {"malice": 4.5, "possessive": 3.0}
+func set_dose(vectors: Dictionary) -> void      # {"malice": 4.5, "path_mix": 3.0}
 func get_dose() -> Dictionary
 func set_backend(backend: LLMBackend) -> void
 func cancel() -> void
 func is_busy() -> bool
 ```
+- `dose` keys are control-vector names (docs/06 §2). Under P2.04 they are `malice` plus the interim single path
+  weight `path_mix`; P3.04 replaces `path_mix` with the locked path's vector name — the eventual shape is
+  `{"malice": 4.5, "possessive": 3.0}` (docs/06 §3).
 - Runs on a worker thread; emits to the main thread via `call_deferred`.
 - Context: 8192 tokens; KV cache reuse between turns (system prompt prefix is stable within a scene → prompt caching).
 - Prompt budget: system ~900 tokens, memories ~150, scene ~150, history ~12 exchanges (~1500), output ≤ 600.

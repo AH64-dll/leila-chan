@@ -126,7 +126,7 @@ func _build_ui() -> void:
 
 	# --- Steering Section ---
 	_create_section_header(root_vbox, "STEERING & DOSE")
-	_dose_label = _create_label(root_vbox, "Steering Dose: base: 0.0", COLOR_LABEL)
+	_dose_label = _create_label(root_vbox, "Steering Dose: (none)", COLOR_LABEL)
 
 	# --- Last Turn Dialogue & Monologue ---
 	_create_section_header(root_vbox, "LAST TURN")
@@ -260,11 +260,15 @@ func refresh() -> void:
 		_lucidity_label.text = "Lucidity: %.1f / 100.0" % GameState.lucidity
 
 	# --- Steering Dose ---
+	# docs/06 §3 (P2.04): the schedule's control-vector scales for the last turn
+	# — or this turn's, before the first one runs — e.g.
+	# "malice 4.5/12 · path_mix 3.0" (path_mix is the dose key, not the
+	# narrative `Path:` above).
 	if _dose_label != null:
 		var dose: Dictionary = Director.get_current_dose()
-		var dose_str := "base: 0.0"
-		if not dose.is_empty():
-			dose_str = JSON.stringify(dose)
+		var dose_str := "none"
+		if Steering != null and Steering.has_method("describe"):
+			dose_str = Steering.describe(dose)
 		_dose_label.text = "Steering Dose: %s" % dose_str
 
 	# --- Last Turn Read & Inner ---

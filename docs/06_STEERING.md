@@ -53,10 +53,10 @@ dose(turn) = base[stage]
            + spike                          # trigger spikes: +3..+4 for 1–2 turns, decays
            + scene_modifier                 # e.g. 3 AM +1, ANCHOR lucid moment −2
            - player_slider                  # ANCHOR only (M26/M43)
-clamped to [0, 12]; >12 only in the scripted collapse (M40)
+clamped to [0, 12] on every scale; >12 only in the scripted collapse (M40)
 ```
 
-| Stage | malice | path vector | Notes |
+| Stage | malice | path_mix | Notes |
 |---|---|---|---|
 | 0 | 0 | 0 | Pure persona |
 | 1 | 2.5 | 1.0 | Barely perceptible |
@@ -67,6 +67,20 @@ clamped to [0, 12]; >12 only in the scripted collapse (M40)
 
 (Numbers are llama.cpp scales for unit vectors; to be re-tuned once path vectors exist, by blind-reading
 transcripts at each level.)
+
+The schedule reaches the model as `TurnRequest.dose`, a `{name: scale}` map (docs/07 §3.1). Its keys:
+
+- `malice` — the §2 tweet vector, the axis §1's behaviour curve and §5's JSON-risk row measure. The "steering
+  dose (base)" column of docs/02 §9 is this number; the two tables must not drift apart.
+- `path_mix` — **interim**: the stage's path-vector weight as one number. The path vectors are the §2 names
+  (`possessive`, `unstable`, `contempt`, `hollow`, `aware`, `lucid`); P3.04 replaces `path_mix` with the locked
+  path's vector name(s) and their own weight curves. It is not the narrative path (which already owns the word
+  `path` in the turn context and the debug panel), so it does not borrow that name.
+
+Two rules bound every value in the map. The [0, 12] clamp is **code** (`Steering.gd`), never data: no row may
+widen it. Calmer mode (docs/02 §8) applies the stage-3 row as a ceiling after the modifier terms, so a calmer
+turn is exactly a stage-3 turn — retuning stage 3 retunes the calmer ceiling with it, because §5 defines calmer
+as "stage-3 levels".
 
 ## 4. Runtime
 
