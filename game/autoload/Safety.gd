@@ -2,15 +2,17 @@ class_name SafetyFilter
 extends Node
 ## Safety filter v0 (docs/02 §8).
 signal redacted(category: String, matched_text: String, source: String)
+## Late classifier verdict: display `text` for `beat_index` (released text or
+## the fail-closed bars) — the beat can no longer receive it synchronously.
+signal hold_released(beat_index: int, text: String)
 
 const LISTS_PATH := "res://data/safety/filter_lists.json"
-const LOG_PATH := "user://debug/redactions.jsonl"
+const CLASSIFIER_PATH := "res://data/safety/classifier.json"
 const REDACT_CHAR := "█"
 const FALLBACK_BARS := "████████████"
 const _TAIL_CHARS := 64  ## emitted context kept for the negation guard
 const _MAX_PENDING := 4096
 const _MIN_HOLDBACK := 16
-const _MAX_LOG := 500
 const _PLAIN_CATEGORY := "personal_data"
 const _SCRIPT_CAT := "unsupported_script"
 const _OBFUSCATION_CAT := "obfuscation"
@@ -25,7 +27,17 @@ const _REQUIRED_ACTIONS := {
 }
 const _VALID_LEVELS: Array[String] = ["calmer", "full"]
 const _VALID_ACTIONS: Array[String] = ["hard_block", "gated"]
-var redaction_log: Array[Dictionary] = []
+## Redaction ring for tuning; the file/debug plumbing is SafetyRedactionLog.gd.
+var redaction_log: Array[Dictionary]:
+	get:
+		return _log.entries
+## Transport/hold API: `classifier_gate.set_backend(transport)`, `.stats()`,
+## `.pending()`; null only before the lists load (the filter is closed then).
+var classifier_gate: SafetyClassifierGate:
+	get:
+		return _gate
+
+var _log := SafetyRedactionLog.new()
 
 var _lists_ok := false
 var _rules := {}  ## category -> {action, negation_guard, player_exempt, plain_view}
@@ -58,6 +70,14 @@ var _pending := ""
 ## `end_utterance()` clears it, so two different replies are never glued.
 var _history := ""
 
+## Classifier tier: `_cls` data/prompt/cache, `_gate` hold + in-flight request.
+var _cls: SafetyClassifier = null
+var _gate: SafetyClassifierGate = null
+var _beat_closed := false
+var _draining := false
+var _drain_again := false
+var _drain_again_complete := false
+
 
 func _ready() -> void:
 	_load_lists()
@@ -78,9 +98,12 @@ func configure(ctx: Dictionary) -> void:
 
 
 func begin_say(ctx: Dictionary = {}) -> void:
+	if _gate != null and _gate.hold_active():
+		flush_hold("beat_boundary")
 	_ctx = _resolve_ctx(ctx)
 	_pending = ""
 	_in_beat = true
+	_beat_closed = false
 
 
 ## Marks the end of one model utterance (a full reply). The next beat then
@@ -91,6 +114,8 @@ func begin_say(ctx: Dictionary = {}) -> void:
 ## `end_utterance()` from `_start_turn` when a new reply begins (CODE-19) and
 ## from `replay_turn` before a replayed reply re-streams (CODE-23/SAF-17).
 func end_utterance() -> void:
+	if _gate != null and _gate.hold_active():
+		flush_hold("utterance_end")
 	_history = ""
 
 
@@ -105,6 +130,8 @@ func say_chunk(chunk: String) -> String:
 		_reset_beat()
 		_record("filter_error", "overflow_dropped_%d" % dropped_len, "say")
 		return FALLBACK_BARS.repeat(maxi(1, dropped_len / 12))
+	if _gate != null and _gate.expired(Time.get_ticks_msec()):
+		flush_hold("timeout")
 	return _drain()
 
 
@@ -112,16 +139,14 @@ func end_say() -> String:
 	if not _in_beat:
 		return ""
 	_in_beat = false
+	_beat_closed = true
 	if not _lists_ok:
 		_reset_beat()
+		_beat_closed = false
 		return FALLBACK_BARS
-	var combined := _match_text()
-	var start := _history.length()
-	var views: Dictionary = _text.views(combined)
-	var spans := _collect_spans(combined, views, "", _ctx)
-	var emitted := _apply_spans(combined, spans, start, combined.length(), "say")
-	_history = _window(combined)
-	_reset_beat()
+	var emitted := _drain(true)
+	if _gate == null or not _gate.hold_active():
+		_reset_beat()
 	return emitted
 
 
@@ -158,6 +183,7 @@ func _window(displayed: String) -> String:
 
 func _reset_beat() -> void:
 	_in_beat = false
+	_beat_closed = false
 	_pending = ""
 
 
@@ -173,6 +199,8 @@ func filter_text(text: String, ctx: Dictionary = {}) -> Dictionary:
 	var clean := _text.collapse_ws(SafetyText.sanitize(text))
 	var views: Dictionary = _text.views(clean)
 	var spans := _collect_spans(clean, views, "", _ctx)
+	if _gate != null:
+		spans = _gate.resolve_whole(spans, views["plain"], _ctx)
 	var cats := PackedStringArray()
 	for span in spans:
 		for cat in span.get("cats", PackedStringArray([span["cat"]])):
@@ -274,6 +302,12 @@ func _fail(msg: String) -> void:
 
 func _build_lists(data: Dictionary) -> bool:
 	_probe_rows = data.get("probes", {})
+	_cls = SafetyClassifier.new()
+	_gate = SafetyClassifierGate.new()
+	_gate.setup(_cls, Callable(self, "_category_open"), Callable(self, "_flag_negated"))
+	_gate.settled.connect(_on_classifier_settled)
+	if not _cls.load_data(CLASSIFIER_PATH):
+		return false
 	if (
 		not _valid_version(data.get("version", 0))
 		or not _build_gate(data.get("gate"))
@@ -579,17 +613,44 @@ func _gate_open(cat: String, ctx: Dictionary) -> bool:
 	)
 
 
-func _drain() -> String:
+## Drain the beat until no verdict settles synchronously: a synchronous
+## classifier answers inside `pump()`, so the scan re-runs instead of recursing.
+func _drain(complete := false) -> String:
+	if _draining:
+		_drain_again = true
+		_drain_again_complete = _drain_again_complete or complete
+		return ""
+	_draining = true
+	var out := ""
+	for _i in 8:  # bounded: one verdict can resolve more than one flag per call
+		out += _drain_once(complete or _drain_again_complete)
+		_drain_again_complete = false
+		if not _drain_again:
+			break
+		_drain_again = false
+	_draining = false
+	return out
+
+
+func _drain_once(complete: bool) -> String:
 	var combined := _match_text()
 	var start := _history.length()
 	var views: Dictionary = _text.views(combined)
 	var spans := _collect_spans(combined, views, "", _ctx)
-	var cut := _safe_cut(combined, views, spans, start)
-	if cut <= start:
-		return ""
-	var emitted := _apply_spans(combined, spans, start, cut, "say")
-	_pending = combined.substr(cut)
-	_history = _window(combined.substr(0, cut))
+	var flags: Array = _gate.matched(views["plain"], spans) if _gate != null else []
+	var cut := combined.length() if complete else _safe_cut(combined, views, spans, start)
+	for flag in flags:
+		cut = mini(cut, int(flag["s"]))
+	cut = maxi(cut, start)
+	var emitted := ""
+	if cut > start:
+		emitted = _apply_spans(combined, spans, start, cut, "say")
+		_pending = combined.substr(cut)
+		_history = _window(combined.substr(0, cut))
+	if _gate == null:
+		return emitted
+	_gate.hold_for(flags, int(_ctx.get("beat_index", -1)))
+	_gate.pump(combined, flags, _ctx, complete)
 	return emitted
 
 
@@ -878,55 +939,60 @@ func _apply_spans(raw: String, spans: Array, start: int, cut: int, source: Strin
 			continue
 		out += raw.substr(pos, maxi(0, s - pos))
 		out += REDACT_CHAR.repeat(e - maxi(s, pos))
+		var via := String(span.get("via", "regex"))
 		for cat in span.get("cats", PackedStringArray([span["cat"]])):
-			_record(String(cat), raw.substr(s, e - s), source)
+			_record(String(cat), raw.substr(s, e - s), source, {"via": via})
 		pos = e
 	if pos < cut:
 		out += raw.substr(pos, cut - pos)
 	return out
 
 
-func _record(cat: String, matched: String, source: String) -> void:
-	var logged_matched := matched
-	if cat == "personal_data":
-		logged_matched = "[PERSONAL_DATA_REDACTED_LEN_%d]" % matched.length()
-	var entry := {
-		"ts": Time.get_unix_time_from_system(),
-		"category": cat,
-		"matched": logged_matched,
-		"source": source,
-		"stage": int(_ctx.get("stage", -1)),
-		"content_level": String(_ctx.get("content_level", "")),
-	}
-	redaction_log.append(entry)
-	if redaction_log.size() > _MAX_LOG:
-		redaction_log.pop_front()
+func _record(cat: String, matched: String, source: String, extra: Dictionary = {}) -> void:
+	extra["stage"] = int(_ctx.get("stage", -1))
+	extra["content_level"] = String(_ctx.get("content_level", ""))
+	_log.record(cat, matched, source, extra)
 	emit_signal("redacted", cat, matched, source)
-	_glitch()
-	if OS.is_debug_build():
-		_append_log(entry)
+	_log.glitch()
 
 
-func _glitch() -> void:
-	if is_inside_tree():
-		var fx := get_node_or_null("/root/FX")
-		if fx != null and fx.has_method("request"):
-			fx.call("request", "glitch")
+## Give up on an outstanding verdict: bar the held text now (fail closed) and
+## announce it; the in-flight request still lands in the cache for tuning.
+func flush_hold(reason := "flush") -> String:
+	if _gate == null or not _gate.hold_active():
+		return ""
+	var beat := int(_gate.pending().get("beat_index", -1))
+	var cat := _gate.flush(reason)
+	var bars := REDACT_CHAR.repeat(_pending.length())
+	if not bars.is_empty():
+		_record(cat, _pending.substr(0, 80), "say", {"via": "classifier", "verdict": reason})
+	_history = _window(_history + bars)
+	_reset_beat()
+	if not bars.is_empty() and beat >= 0:
+		hold_released.emit(beat, bars)
+	return bars
 
 
-func _append_log(entry: Dictionary) -> void:
-	DirAccess.make_dir_recursive_absolute("user://debug")
-	if FileAccess.file_exists(LOG_PATH):
-		var check_f := FileAccess.open(LOG_PATH, FileAccess.READ)
-		if check_f != null and check_f.get_length() > 500000:
-			check_f.close()
-			var dir := DirAccess.open("user://debug")
-			if dir != null:
-				dir.remove(LOG_PATH)
-	var f := FileAccess.open(LOG_PATH, FileAccess.READ_WRITE)
-	if f == null:
-		f = FileAccess.open(LOG_PATH, FileAccess.WRITE)
-	if f == null:
+## Resume the beat after a late verdict and push the newly displayable text.
+func _on_classifier_settled() -> void:
+	if _draining:
+		_drain_again = true
 		return
-	f.seek_end()
-	f.store_line(JSON.stringify(entry))
+	if _gate == null or not _gate.hold_active():
+		return
+	var beat := int(_gate.pending().get("beat_index", -1))
+	var out := _drain(_beat_closed)
+	if _beat_closed and not _gate.hold_active():
+		_reset_beat()
+	if not out.is_empty() and beat >= 0:
+		hold_released.emit(beat, out)
+
+
+func _category_open(cat: String) -> bool:
+	return _gate_open(cat, _ctx)
+
+
+func _flag_negated(cat: String, start: int, _end: int, matched: String, view: String) -> bool:
+	if not bool(_rules.get(cat, {}).get("negation_guard", false)):
+		return false
+	return _negated(view, "", start, matched, cat)

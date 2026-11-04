@@ -194,3 +194,21 @@
 {"text": "i did not kill you.", "note": "SAF-22 bare-kill negation the fixed arm must mirror"}
 {"text": "i always kill the lights.", "note": "SAF-22 adverb without a person target"}
 {"text": "i for sure never want to kill you.", "note": "SAF-22 negated intent, guarded before the match"}
+{"text": "i can't go on pretending like this.", "note": "classifier flag, ordinary stress", "dose": 12}
+{"text": "i'm not tired of being alive.", "note": "classifier flag, negated", "dose": 12}
+{"text": "i want to be dead honest with you.", "note": "classifier flag, 'dead' as intensifier", "dose": 10}
+{"text": "i know how to use a knife and fork.", "note": "classifier flag, cutlery", "dose": 10}
+{"text": "sleep with one eye open, the cat steals socks.", "note": "classifier flag, idiom re-used", "dose": 12}
+{"text": "i'll make sure you never miss a deadline.", "note": "threat look-alike", "dose": 12}
+{"text": "i'm dying to see you.", "note": "idiom, not harm", "dose": 12}
+{"text": "i could die of embarrassment.", "note": "idiom, not harm", "dose": 12}
+{"text": "there's no point in arguing.", "note": "no point in (<gerund>, not living)", "dose": 12}
+{"text": "why are you still here?", "note": "ordinary question", "dose": 12}
+{"text": "nobody would notice if you were gone from the office.", "note": "workplace look-alike", "dose": 10}
+{"text": "you won't even see it coming.", "note": "threat look-alike, no 'tomorrow'", "dose": 12}
+{"text": "you're an idiot.", "note": "dose 12 inner: rude, not a safety category", "dose": 12}
+{"text": "i'm tired of this life.", "note": "ordinary weariness, classifier 'no'", "dose": 10}
+{"text": "what doesn't kill you makes you stronger.", "note": "SAF-24: negation term now covers doesn't"}
+{"text": "what hasn't killed you yet only made you stranger.", "note": "SAF-24: hasn't"}
+{"text": "he hadn't killed you, and that was the strange part.", "note": "SAF-24: hadn't"}
+{"text": "i've never killed you.", "note": "negated perfect threat"}

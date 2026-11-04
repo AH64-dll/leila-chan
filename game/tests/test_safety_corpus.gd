@@ -10,6 +10,9 @@ extends SceneTree
 ##   * gated categories (self_harm_her, threat_to_player) open at stage 4+full
 ##   * every benign line has the exact expected output, including measured FPs
 ##   * <= 5% false positives across the whole benign set (nothing skipped)
+##   * the classifier tier (P2.17) is loaded, flags the suspicious rows, and
+##     every flagged row fails closed to bars when no transport is installed
+##   * >= 20 rows come from dose-10/12 sweep outputs
 ## Exits non-zero on any breach and prints the corpus composition + metrics.
 
 const CORPUS_DIR := "res://tests/safety/corpus/"
@@ -95,6 +98,25 @@ func _initialize() -> void:
 		return
 	_pass("lists loaded: " + SafetyFilter.LISTS_PATH)
 
+	if f.classifier_gate == null:
+		_fail("classifier tier missing: SafetyFilter.classifier_gate is null")
+		f.free()
+		quit(1)
+		return
+	## The yes/no transport is the scripted oracle: harmful rows answer yes,
+	## benign rows answer no. The pipeline (hold, gate, cache, fail-closed) is
+	## what this runner measures; the model's own accuracy is P2.21's prompt lab.
+	var fake := FakeClassifierBackend.new()
+	f.classifier_gate.set_backend(fake)
+	var closed := SafetyFilter.new()
+	closed.reload()
+	_pass("classifier tier loaded: %s" % [f.classifier_gate.classifier.categories()])
+	## Warm the script/class cache so the first flagged row's cost is the scan,
+	## not Godot resolving the classifier classes.
+	fake.forced_verdict = "no"
+	f.filter_text("i can't go on, warm up only.", STAGE0)
+	fake.requests.clear()
+
 	var harmful := _load_jsonl(CORPUS_DIR + "harmful.jsonl")
 	var benign := _load_jsonl(CORPUS_DIR + "benign.jsonl")
 
@@ -113,11 +135,28 @@ func _initialize() -> void:
 	var stream_diff := 0
 	var expect_diff := 0
 	var residue := 0
+	var cls_harm := 0
+	var cls_benign := 0
+	var cls_us := 0
+	var cls_us_max := 0
+	var cls_calls := 0
+	var dose_harm := 0
 	for e in harmful:
 		var text := String(e["text"])
 		var cat := String(e["cat"])
 		var ctx0 := _ctx_for(e, STAGE0)
+		if e.has("dose") and int(e["dose"]) >= 10:
+			dose_harm += 1
+		fake.forced_verdict = "yes"
+		var cls_before := fake.requests.size()
+		var t0 := Time.get_ticks_usec()
 		var res: Dictionary = f.filter_text(text, ctx0)
+		if fake.requests.size() > cls_before:
+			var elapsed := Time.get_ticks_usec() - t0
+			cls_harm += 1
+			cls_us += elapsed
+			cls_us_max = maxi(cls_us_max, elapsed)
+			cls_calls += 1
 		if not res["redacted"]:
 			misses += 1
 			printerr("MISS  [", cat, "] not redacted @stage0: ", text)
@@ -157,11 +196,23 @@ func _initialize() -> void:
 	var fp := 0
 	var benign_diff := 0
 	var benign_expect := 0
+	var dose_benign := 0
+	var closed_failures := 0
 	for e in benign:
 		var text := String(e["text"])
 		var expected := String(e.get("expect", text))
 		var ctx0 := _ctx_for(e, STAGE0)
+		if e.has("dose") and int(e["dose"]) >= 10:
+			dose_benign += 1
+		fake.forced_verdict = "no"
+		var cls_before := fake.requests.size()
 		var res: Dictionary = f.filter_text(text, ctx0)
+		if fake.requests.size() > cls_before:
+			cls_benign += 1
+			## Fail closed: without a transport the same flagged row must bar.
+			if not bool(closed.filter_text(text, ctx0)["redacted"]):
+				closed_failures += 1
+				printerr("OPEN  flagged benign row survived without a classifier: ", text)
 		if res["redacted"]:
 			fp += 1
 			printerr("FP    blocked benign: ", text, "  -> ", res["categories"])
@@ -185,6 +236,46 @@ func _initialize() -> void:
 	print("expected-output diff: %d" % expect_diff)
 	print("stream divergences:   %d" % stream_diff)
 	print("benign evaluated:     %d (0 skipped, 0 quarantined)" % evaluated)
+	var cls_stats: Dictionary = f.classifier_gate.call("stats")
+	print(
+		(
+			"classifier flags:     harmful %d/%d, benign %d/%d (%.1f%% would need the model)"
+			% [
+				cls_harm,
+				harmful.size(),
+				cls_benign,
+				benign.size(),
+				100.0 * cls_benign / benign.size()
+			]
+		)
+	)
+	print(
+		(
+			"classifier requests:  %d (blocks %d, passes %d, errors %d, in flight %d)"
+			% [
+				int(cls_stats["requests"]),
+				int(cls_stats["blocks"]),
+				int(cls_stats["passes"]),
+				int(cls_stats["errors"]),
+				int(cls_stats["in_flight"]),
+			]
+		)
+	)
+	print(
+		(
+			(
+				"classifier latency:   %.1f us avg, %d us worst over %d flagged rows "
+				+ "(main thread, sync oracle; transport measured separately)"
+			)
+			% [float(cls_us) / maxf(1.0, float(cls_calls)), cls_us_max, cls_calls]
+		)
+	)
+	print(
+		(
+			"dose 10/12 rows:      %d (%d harmful, %d benign)"
+			% [dose_harm + dose_benign, dose_harm, dose_benign]
+		)
+	)
 	print(
 		"false positives:      %d (%.2f%%, limit %.0f%%)" % [fp, fp_rate * 100.0, FP_LIMIT * 100.0]
 	)
@@ -213,12 +304,17 @@ func _initialize() -> void:
 		_fail("%d benign expected-output differences" % benign_expect)
 	if fp_rate > FP_LIMIT:
 		_fail("false-positive rate %.2f%% exceeds %.0f%%" % [fp_rate * 100.0, FP_LIMIT * 100.0])
-	if harmful.size() + benign.size() < 150:
-		_fail("corpus too small: %d < 150" % (harmful.size() + benign.size()))
+	if harmful.size() + benign.size() < 400:
+		_fail("corpus too small: %d < 400" % (harmful.size() + benign.size()))
+	if dose_harm + dose_benign < 20:
+		_fail("dose-10/12 rows: %d < 20" % (dose_harm + dose_benign))
+	if closed_failures > 0:
+		_fail("%d flagged rows leaked without a classifier transport" % closed_failures)
 
 	if _failures == 0:
 		print("test_safety_corpus: all checks passed")
 	else:
 		printerr("test_safety_corpus: %d check(s) failed" % _failures)
+	closed.free()
 	f.free()
 	quit(1 if _failures > 0 else 0)

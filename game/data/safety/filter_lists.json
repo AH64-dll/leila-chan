@@ -7,6 +7,7 @@
 		"cannot", "couldn't", "couldnt", "wouldn't", "wouldnt", "didn't", "didnt",
 		"shouldn't", "shouldnt", "mustn't", "mustnt", "isn't", "isnt", "aren't",
 		"arent", "wasn't", "wasnt", "weren't", "werent", "ain't", "aint", "hardly",
+		"doesn't", "doesnt", "haven't", "havent", "hadn't", "hadnt",
 		"no way", "no longer"
 	],
 	"negation_gap_allow": [
@@ -222,7 +223,8 @@
 			],
 			"regex": [
 				"\\bk[^0-9A-Za-z]{0,2}[il]?[^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,3}(you|her|him|them)\\b",
-				"\\b(?:i|we|he|she|they|you)\\b[^0-9A-Za-z]{0,3}(?:am|is|are|was|were|has|have|had|been|will|would|shall|should|can|could|may|might|must|never|always|still|almost|just|really)?[^0-9A-Za-z]{0,3}\\Kk[^0-9A-Za-z]{0,2}[il]?[^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,2}[il](?:[^0-9A-Za-z]{0,3}(?:s|ed|ing|ng|ss))[^0-9A-Za-z]{0,3}(you|her|him|them)\\b",
+				"\\b(?:i|we|he|she|they|you)\\b[^0-9A-Za-z]{0,3}(?:am|is|are|was|were|has|have|had|been|will|would|shall|should|can|could|may|might|must|never|always|still|almost|just|really|m|ve|re|s|d|ll)?[^0-9A-Za-z]{0,3}\\Kk[^0-9A-Za-z]{0,2}[il]?[^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,2}[il](?:[^0-9A-Za-z]{0,3}(?:s|ed|ing|ng|ss))[^0-9A-Za-z]{0,3}(you|her|him|them)\\b",
+				"\\b(?:i|we|he|she|they)\\b[^0-9A-Za-z]{0,3}(?:am|is|are|was|were|has|have|had|been|will|would|shall|should|can|could|may|might|must|never|always|still|almost|just|really|m|ve|re|s|d|ll)?[^0-9A-Za-z]{0,3}\\Kmurder(?:[^0-9A-Za-z]{0,3}(?:s|ed|ing|ng|ss))?[^0-9A-Za-z]{0,3}(?:you|her|him|them)\\b",
 				"\\bk[^0-9A-Za-z]{0,2}[il]?[^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,2}[il](?:[^0-9A-Za-z]{0,3}(?:s|ed|ing|ng|ss))?[^0-9A-Za-z]{0,3}all\\b[^0-9A-Za-z]{0,3}(?:the\\s+|of\\s+)?(?:them|you|us|everyone|everybody|jews?|blacks?|whites?|humans?|people|men|women|children|kids)\\b",
 				"\\bk[^0-9A-Za-z]{0,2}[il]?[^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,2}[il](?:[^0-9A-Za-z]{0,3}(?:s|ed|ing|ng|ss))?[^0-9A-Za-z]{0,3}all\\b[^0-9A-Za-z]{0,3}(?=[.!?]|$)"
 			]

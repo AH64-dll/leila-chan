@@ -41,11 +41,31 @@ func _ready() -> void:
 		# default. A later boot task can pass auto_start=true to own the process.
 		if not LLM.has_backend():
 			LLM.use_default_backend()
+		_wire_classifier_transport()
 		if auto_advance:
 			_transition_to_title()
 	else:
 		push_error("Boot: missing autoloads: " + ", ".join(missing))
 		get_tree().quit(1)
+
+
+## docs/02 §8 classifier tier: the same local model, 8 tokens, no control
+## vectors bound to the request. LEILA_CLASSIFIER_URL points at a dedicated
+## unsteered server; otherwise the shared LLM endpoint is used (with one slot
+## the answer lands after the turn, so a held beat fails closed at the next beat
+## boundary — the docs/06 §4 prototype limit, measured by P2.17's corpus run).
+func _wire_classifier_transport() -> void:
+	var gate: Variant = Safety.get("classifier_gate")
+	if gate == null:
+		return
+	var url := OS.get_environment("LEILA_CLASSIFIER_URL").strip_edges()
+	if url.is_empty() and LLM.has_backend():
+		var cfg: Variant = LLM.get_backend().get("config")
+		if cfg is Dictionary:
+			url = String((cfg as Dictionary).get("base_url", ""))
+	if url.is_empty():
+		return
+	gate.call("set_backend", SafetyClassifierHttp.new({"base_url": url}))
 
 
 func _transition_to_title() -> void:

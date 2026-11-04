@@ -21,6 +21,10 @@ extends RefCounted
 ## evaluator at all the player's own line is not blocked — what the game displays
 ## stays fail-closed either way.
 
+## Late classifier verdict for a held beat (relayed from Safety.hold_released):
+## `text` is displayable now — the released text, or the fail-closed bars.
+signal hold_released(beat_index: int, text: String)
+
 const REDACT_CHAR := "█"
 
 var _filter: Object = null
@@ -30,10 +34,47 @@ var _streaming := false
 
 func set_filter(node: Object) -> void:
 	_filter = node
+	if node != null and node.has_signal("hold_released"):
+		if not node.is_connected("hold_released", _relay_hold_released):
+			node.connect("hold_released", _relay_hold_released)
 
 
 func filter_node() -> Object:
 	return _filter
+
+
+## The classifier transport/hold API on the real filter (docs/02 §8), or null
+## for a build whose filter has no classifier tier (the fake in Director tests).
+func classifier_gate() -> Object:
+	var node := _filter as Node
+	if node == null or not ("classifier_gate" in node):
+		return null
+	return node.get("classifier_gate")
+
+
+## Install the yes/no transport (same model, dose 0, 8 tokens). No-op when the
+## filter has no classifier tier, so the gate stays usable in old builds.
+func set_classifier_backend(backend: Object) -> void:
+	var gate := classifier_gate()
+	if gate != null:
+		gate.call("set_backend", backend)
+
+
+func pending_hold() -> Dictionary:
+	var gate := classifier_gate()
+	return gate.call("pending") if gate != null else {}
+
+
+## Give up on the outstanding verdict now: Safety bars the held text and emits
+## `hold_released` (fail closed). Returns the bars, "" when nothing was held.
+func flush_hold(reason := "flush") -> String:
+	if _filter != null and _filter.has_method("flush_hold"):
+		return str(_filter.call("flush_hold", reason))
+	return ""
+
+
+func _relay_hold_released(beat_index: int, text: String) -> void:
+	hold_released.emit(beat_index, text)
 
 
 ## True when the filter can stream say text (P1.19 begin_say/say_chunk/end_say).

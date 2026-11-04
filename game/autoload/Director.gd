@@ -104,6 +104,19 @@ func _sync_stage() -> void:
 	if AudioDirector != null and AudioDirector.has_method("set_stage"):
 		AudioDirector.set_stage(int(GameState.stage))
 	_safety.set_filter(Safety)
+	if not _safety.hold_released.is_connected(_on_hold_released):
+		_safety.hold_released.connect(_on_hold_released)
+
+
+## A classifier hold resolved after its beat's chunks: route the text to that
+## beat (TextBox appends to a known beat, closed or not). A turn that already
+## ended drops it — its fail-closed bars were sent at the boundary.
+func _on_hold_released(beat_index: int, text: String) -> void:
+	if text.is_empty() or not _turn_in_flight:
+		return
+	beat_say_chunk.emit(beat_index, text)
+	if chat_ui_node != null and chat_ui_node.has_method("say_chunk"):
+		chat_ui_node.say_chunk(beat_index, text)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -468,7 +481,7 @@ func _process_stream_event(event: Dictionary) -> void:
 			# One scan per beat: Safety holds the streaming state (docs/02 §8).
 			# `beat` marks a streamed-beat scan, so the filter can tell it from
 			# a whole-text scan (the transcript redactor uses filter_text).
-			_safety.begin_beat({"stage": int(GameState.stage), "beat": true})
+			_safety.begin_beat({"stage": int(GameState.stage), "beat": true, "beat_index": b_idx})
 			beat_started.emit(b_idx)
 			if chat_ui_node != null and chat_ui_node.has_method("begin_beat"):
 				chat_ui_node.begin_beat(b_idx)
