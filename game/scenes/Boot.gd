@@ -4,6 +4,7 @@ extends Node
 ## and transitions to the Title screen (P1.14).
 
 const TITLE_SCENE_PATH := "res://scenes/Title.tscn"
+const DATE_SCENE_PATH := "res://scenes/Date.tscn"
 
 const EXPECTED_AUTOLOADS: PackedStringArray = [
 	"GameState",
@@ -46,7 +47,7 @@ func _ready() -> void:
 			LLM.use_default_backend(prototype_backend_config())
 		_wire_classifier_transport()
 		if auto_advance:
-			_transition_to_title()
+			_advance()
 	else:
 		push_error("Boot: missing autoloads: " + ", ".join(missing))
 		get_tree().quit(1)
@@ -114,6 +115,33 @@ static func _shared_classifier_url(config: Dictionary) -> String:
 	if SafetyClassifierGate.is_steered_config(config):
 		return ""
 	return String(config.get("base_url", ""))
+
+
+## docs/05 §1.1 M03: on a cold open the launch goes straight into the date. The
+## decision belongs to the P3.09 module (stage gate, once per save); this only
+## routes it.
+func _advance() -> void:
+	if initial_scene_path() == DATE_SCENE_PATH:
+		get_tree().change_scene_to_file.call_deferred(DATE_SCENE_PATH)
+		return
+	_transition_to_title()
+
+
+## The scene this launch opens on. `initial_scene_path()` also loads the save a
+## cold open resumes (there is no title screen in between to press Continue), so
+## it is the one call that both decides and prepares; a save that will not load
+## falls back to the title, never to a half-loaded game (the P2.20 rule).
+func initial_scene_path() -> String:
+	var meta := MetaEventsM01.find(MetaDirector)
+	if meta == null or not meta.has_method("cold_open_requested"):
+		return TITLE_SCENE_PATH
+	if not bool(meta.call("cold_open_requested")):
+		return TITLE_SCENE_PATH
+	var loaded: Dictionary = SaveSystem.load_latest()
+	if not bool(loaded.get("ok", false)):
+		push_warning("Boot: cold open skipped — %s" % String(loaded.get("message", "")))
+		return TITLE_SCENE_PATH
+	return DATE_SCENE_PATH
 
 
 func _transition_to_title() -> void:

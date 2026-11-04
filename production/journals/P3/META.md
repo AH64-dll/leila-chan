@@ -110,3 +110,19 @@ Round 2 (rework) of P3.14:
   20-public-method cap. Read `_current_prompt`/`_current_schema` BEFORE awaiting the turn.
 - Gotcha: `Director.gd` sits exactly at gdlint's 1000-line cap — every line added there needs one removed;
   `MetaDirector` is at exactly 20 public methods (`load_catalog_doc` was folded into `set_catalog`).
+
+## P3.09 — M01–M12 effect module (2026-11-04)
+
+- Built `game/llm/meta/MetaEventsM01.gd` under the MetaDirector mount seam (fire/on_scene/poll_scripted/
+  set_scripted_hooks/set_quit_callable/debug_ids/debug_fire) + `MetaDialogsM01` replicas (crash/update/credits/
+  black-out, all in-window `Control`s), `MetaStateM01` (user://.leila/meta_state.json), `MetaDemoM01` F3 previews.
+- Data: strings/notes/tuning in `meta_messages.json`; offered rows (M02/M09/M12) in `meta_events.json` only —
+  S/R events announce via triggers/telemetry, not the offer catalogue.
+- Gotchas: (1) `MetaDirector.reset_session()` did not notify modules — a leftover MOUSE_FILTER_STOP replica ate
+  every click in later suites; fixed by propagating reset to `_effects`. (2) `fire("M02")` with an invalid quit
+  callable falls through to `get_tree().quit()` and crashes the gdUnit4 runner — stub with a no-op lambda.
+  (3) Any line routed through `_speak_now` gets docs/07 §3.4 corruption at stage ≥2 — assert on word lists
+  after stripping combining marks, never raw substrings. (4) `scripted_chance` defaults to 0 under headless
+  so unrelated suites that call `note_scene` stay deterministic.
+- Never write to the real user:// during debugging — `SaveSystem.shadow_path`/`store.path` scratch first; a
+  polluted real shadow.json makes M08/M10 fire inside other suites.
