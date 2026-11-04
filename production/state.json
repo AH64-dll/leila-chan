@@ -3266,9 +3266,9 @@
       "started": "2026-11-04T20:30:51+02:00"
     },
     "P2.22": {
-      "status": "changes_requested",
+      "status": "done",
       "agent": "deepseek",
-      "round": 1,
+      "round": 2,
       "reviews": [
         {
           "kind": "design",
@@ -3287,10 +3287,30 @@
           "report": "production/reviews/P2.22-safety-r1.md",
           "ts": "2026-11-04T21:25:50+02:00",
           "declared": "deepseek"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "gemini-flash",
+          "report": "production/reviews/P2.22-design-r2.md",
+          "ts": "2026-11-04T21:50:43+02:00",
+          "declared": "gemini-flash"
+        },
+        {
+          "kind": "safety",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "gemini-flash",
+          "report": "production/reviews/P2.22-safety-r2.md",
+          "ts": "2026-11-04T21:50:43+02:00",
+          "declared": "gemini-flash"
         }
       ],
       "started": "2026-11-04T20:37:55+02:00",
-      "handoff": "production/handoffs/P2.22.md"
+      "handoff": "production/handoffs/P2.22.md",
+      "agent_declared": "swe-2",
+      "finished": "2026-11-04T21:50:43+02:00"
     }
   },
   "history": [
@@ -7972,6 +7992,42 @@
       "ts": "2026-11-04T21:46:38+02:00",
       "event": "in_review->done",
       "ref": "P3.17",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T21:50:43+02:00",
+      "event": "changes_requested->in_progress",
+      "ref": "P2.22",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T21:50:43+02:00",
+      "event": "agent-drift",
+      "ref": "P2.22",
+      "note": "handoff declares swe-2; recorded deepseek kept (--force)"
+    },
+    {
+      "ts": "2026-11-04T21:50:43+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P2.22",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T21:50:43+02:00",
+      "event": "review:design:approved",
+      "ref": "P2.22",
+      "note": "production/reviews/P2.22-design-r2.md"
+    },
+    {
+      "ts": "2026-11-04T21:50:43+02:00",
+      "event": "review:safety:approved",
+      "ref": "P2.22",
+      "note": "production/reviews/P2.22-safety-r2.md"
+    },
+    {
+      "ts": "2026-11-04T21:50:43+02:00",
+      "event": "in_review->done",
+      "ref": "P2.22",
       "note": ""
     }
   ]
