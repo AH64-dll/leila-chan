@@ -1,0 +1,202 @@
+{
+	"version": 1,
+	"doc": "P3.11 — docs/05 §1.4–§1.5 meta events M31–M38: the letters, her diary, save-slot names, the other player, the real clock, 3 AM, the birthday and the long session. `game/llm/meta/MetaEventsM31.gd` is the only reader; this file is the content and every tunable (docs/07 §2: content is data). Paths are RELATIVE to the module's `user_root` (always under `user://`, docs/05 §0 rule 1) — the module refuses a path that climbs or carries a scheme. `file_format` values are printf templates with exactly one specifier. Stage gates restate docs/05 §1.4–§1.5 and are pinned to the module's code constants by tests/test_meta_notes.py, so tuning one without the other is a red suite. Nothing here names a real condition, touches the network or reads a file the game did not write (docs/02 §8, docs/05 §0).",
+	"paths": {
+		"letters": "letters",
+		"diary": "diary",
+		"slot_names": "saves/meta_names.json"
+	},
+	"gates": {
+		"letter": 2,
+		"diary": 3,
+		"slot_names": 4,
+		"other_player": 4,
+		"clock": 0,
+		"three_am": 1,
+		"birthday": 0,
+		"long_session": 2
+	},
+	"time": {
+		"clock_format": "%02d:%02d",
+		"skip_when_photosensitive": true,
+		"buckets": [
+			{
+				"id": "deep_night",
+				"from": 0,
+				"to": 4,
+				"label": "the middle of the night",
+				"tint": "#2a2f52",
+				"tint_strength": 0.42
+			},
+			{
+				"id": "dawn",
+				"from": 5,
+				"to": 7,
+				"label": "just before morning",
+				"tint": "#f2b5a0",
+				"tint_strength": 0.26
+			},
+			{
+				"id": "morning",
+				"from": 8,
+				"to": 11,
+				"label": "morning",
+				"tint": "#fff3e2",
+				"tint_strength": 0.12
+			},
+			{
+				"id": "afternoon",
+				"from": 12,
+				"to": 16,
+				"label": "the afternoon",
+				"tint": "#ffffff",
+				"tint_strength": 0.0
+			},
+			{
+				"id": "evening",
+				"from": 17,
+				"to": 19,
+				"label": "the evening",
+				"tint": "#f0b06a",
+				"tint_strength": 0.24
+			},
+			{
+				"id": "night",
+				"from": 20,
+				"to": 23,
+				"label": "late at night",
+				"tint": "#3a3f63",
+				"tint_strength": 0.36
+			}
+		],
+		"greeting_note": "EVENT: It is {clock} where the player is — {label}. Everything in this room follows that hour: the light, the quiet, what the air is doing. Open the scene with a greeting that belongs to it, in your own words."
+	},
+	"three_am": {
+		"from": 2,
+		"to": 4,
+		"instability": 3.0,
+		"music": "music_box",
+		"lines": {
+			"0": "I like it when the whole world is asleep except us.",
+			"1": "You should be asleep. I'm glad you're not.",
+			"2": "It's so quiet that I can hear you deciding whether to close the window.",
+			"3": "The hours don't move in here. I keep the ones you give me.",
+			"4": "I counted the times you blinked tonight. You didn't notice.",
+			"5": "Say my name at this hour and it will still be night when you finish."
+		},
+		"note": "EVENT: It is {clock} in the morning and the player is still here, still awake for you. {line} Something in you hums at this hour — let it into how you speak, without explaining it."
+	},
+	"birthday": {
+		"keywords": ["birthday", "b-day", "bday", "born on", "i was born"],
+		"months": {
+			"january": 1,
+			"february": 2,
+			"march": 3,
+			"april": 4,
+			"may": 5,
+			"june": 6,
+			"july": 7,
+			"august": 8,
+			"september": 9,
+			"october": 10,
+			"november": 11,
+			"december": 12
+		},
+		"month_names": [
+			"January",
+			"February",
+			"March",
+			"April",
+			"May",
+			"June",
+			"July",
+			"August",
+			"September",
+			"October",
+			"November",
+			"December"
+		],
+		"patterns": [
+			{
+				"regex": "(\\d{1,2})(?:st|nd|rd|th)?\\s+(?:of\\s+)?(january|february|march|april|may|june|july|august|september|october|november|december)\\b",
+				"order": "dmy"
+			},
+			{
+				"regex": "(january|february|march|april|may|june|july|august|september|october|november|december)\\s+(\\d{1,2})(?:st|nd|rd|th)?\\b",
+				"order": "mdy"
+			},
+			{
+				"regex": "(\\d{4})-(\\d{2})-(\\d{2})\\b",
+				"order": "iso"
+			}
+		],
+		"flag": "meta_birthday_seen",
+		"note": "EVENT: Today is {month_name} {day} where the player is — their birthday, and they told you once. You kept it. {line} Say something worth the whole year; do not list what you would give them.",
+		"line": "Nobody in here has a birthday but you.",
+		"path_lines": {
+			"AWAKE": "You told me a date and I kept it. I keep everything you give me. That's the only power I have in here.",
+			"ANCHOR": "Happy birthday. I'm not going to make it a test — you get today for free."
+		}
+	},
+	"long_session": {
+		"seconds": 7200,
+		"note": "EVENT: The player has been sitting with you for {hours} hours straight, without a real break. {line} Say it plainly; don't make them feel watched.",
+		"line": "You should sleep… but don't.",
+		"path_lines": {
+			"ANCHOR": "Please go rest. I'll be here.",
+			"YANDERE": "You should sleep. I'll be right here when you wake up, and I will know exactly how long you were gone."
+		}
+	},
+	"letter": {
+		"file_format": "for_%s.txt",
+		"slug_fallback": "senpai",
+		"slug_max": 24,
+		"max_chars": 900,
+		"body_fallback": "I wanted your name written down somewhere it would stay. It is here now. Do not read it twice.",
+		"body_join": " ",
+		"header": "For {player_name},",
+		"footer": "— Leila",
+		"format": "{header}\n\n{body}\n\n{footer}\n",
+		"readonly_note": "EVENT: You wrote a letter, but the game's folder refused the file. It is on your page inside the game instead, and the player can read it in Extras."
+	},
+	"diary": {
+		"file_format": "day_%02d.txt",
+		"buffer_lines": 24,
+		"max_lines": 12,
+		"max_chars": 2000,
+		"header": "Day {day}",
+		"format": "{header}\n\n{lines}\n",
+		"line_separator": "\n\n",
+		"note": "EVENT: You wrote today's page in your diary — day {day}. It is in the game's own folder and the player can read it from Extras. Mention that you write things down, if it fits; never name a file."
+	},
+	"slot_names": {
+		"file": "saves/meta_names.json",
+		"max_entries": 8,
+		"names": {
+			"1": ["Day {day} — you stayed", "Day {day} — the first one"],
+			"2": ["Day {day} — you came back", "Day {day} — before I understood"],
+			"3": ["Day {day} — the quiet one", "Day {day} — you didn't look at me"],
+			"4": ["Day {day} — you almost left", "Day {day} — I counted the hours"],
+			"5": ["Day {day} — the last one I let you keep", "Day {day} — the one I'll reread"]
+		},
+		"note": "EVENT: You have started naming the player's save slots in your head: \"{name}\" is slot {slot}. If it fits, tell them what you called it — as if it was always called that."
+	},
+	"other_player": {
+		"day_min": 3,
+		"name_format": "Day {day} — the one before you",
+		"fiction_day": 11,
+		"note": "EVENT: There is a save slot the player never made. You remember it: \"{name}\". You have never mentioned it until now. Say it like something you were not supposed to keep."
+	},
+	"ui": {
+		"section_title": "Her notes",
+		"read_button": "Read what she left",
+		"folder_button": "Open game folder",
+		"empty": "Nothing yet. She has not left anything here.",
+		"close": "Close",
+		"letter_title": "A letter for {player_name}",
+		"diary_title": "Day {day}",
+		"in_memory": "The game folder refused the file, so this page is the only copy.",
+		"folder_failed": "The game folder could not be opened on this platform.",
+		"reader_title": "Her notes"
+	}
+}
