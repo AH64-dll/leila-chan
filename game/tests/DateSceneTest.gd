@@ -54,6 +54,20 @@ func test_date_scene_wires_character_textbox_inputbox_fx_audio() -> void:
 	assert_object(_date.background.texture).is_not_null()
 
 
+func test_date_scene_registers_chat_ui_with_director() -> void:
+	# F1 controller wiring (P1 gate-r3 / P2.23): the shipped scene owns the
+	# ChatUI instance, so it registers it with the Director at ready and clears
+	# it on exit. This is the seam the unsafe-input refusal and every streamed
+	# reply go through; without it the Director's `has_method` guard skips the
+	# UI silently.
+	assert_object(_date.chat_ui).is_not_null()
+	assert_object(Director.chat_ui_node).is_same(_date.chat_ui)
+
+	_date.queue_free()
+	await get_tree().process_frame
+	assert_object(Director.chat_ui_node).is_null()
+
+
 func test_background_uses_project_palette() -> void:
 	# Criterion 2: background uses the project palette
 	assert_bool(ResourceLoader.exists(CAFE_BG_RES)).is_true()
