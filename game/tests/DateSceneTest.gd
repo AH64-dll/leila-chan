@@ -248,6 +248,7 @@ func test_opening_beats_pass_game_state_flags_to_the_resolver() -> void:
 ## real scene route (scenario pick, opening beats, resolver, Character) end to end.
 func _opening_packets(stage: int, path: String) -> Array:
 	var date: Node2D = DatePacked.instantiate()
+	date.auto_start = false
 	date.stage = stage
 	date.path_name = path
 	date.set_instant_text(true)
