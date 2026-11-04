@@ -316,11 +316,15 @@ func _attach_date(date: Node) -> void:
 	var chat_ui: Node = date.get("chat_ui")
 	_chat_ui = chat_ui
 	if chat_ui != null:
-		# Wiring gap (2): the shipped ChatUI's line never reaches the Director.
+		# Wiring gap (2): the shipped ChatUI's line never reaches the Director
+		# in this baseline. A Date that forwards it (the production fix) runs
+		# first; `_submit_to_director` yields when a turn is already in flight.
 		if not chat_ui.player_turn_sent.is_connected(_submit_to_director):
 			chat_ui.player_turn_sent.connect(_submit_to_director)
-	# Wiring gap (1): the shipped Date has no caller of start_date().
-	date.start_date()
+	# Wiring gap (1): the shipped Date has no caller of start_date(); a Date
+	# that starts itself (`auto_start`) must not be started twice.
+	if not bool(date.get("auto_start")):
+		date.start_date()
 	_md.append_array(
 		_render.day_header_lines(
 			date.get_scenario(),
@@ -437,6 +441,10 @@ func _simulate_draft(box: Node, day: int, index: int) -> void:
 ## The ChatUI seam ends here in production; the driver returns the Director's
 ## answer so a refused line is recorded instead of stalling the pump.
 func _submit_to_director(text: String) -> void:
+	# A Date that forwards the line itself (the production fix) opened the turn
+	# already; this handler runs after the scene's own connection.
+	if Director.is_busy():
+		return
 	if Director.submit_player_input(text):
 		return
 	_awaiting = false
