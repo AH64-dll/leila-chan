@@ -426,12 +426,18 @@ func test_absent_filter_fails_closed_to_redaction_bars() -> void:
 
 func test_stage_change_tells_audio_director() -> void:
 	# review CODE-2: the §5 cue gates read AudioDirector._stage, so the Director
-	# must hand over the stage when GameState's derived stage moves.
+	# must hand over the stage when GameState's derived stage moves. Behavioural
+	# proof: sob's gate is 1, so at the stale stage 0 it would deny "gated";
+	# handed over, it clears the gate and dies on its documented asset gap.
 	AudioDirector.set_stage(0)
 	GameState.instability = Stages.bands()[1] + 1.0  # cross into stage 1
 	await get_tree().process_frame
 	assert_int(GameState.stage).is_equal(1)
-	assert_int(AudioDirector.get_stage()).is_equal(1)
+	AudioDirector.begin_turn()
+	AudioDirector._silence_this_turn = false
+	AudioDirector._last_cue_reject = &""
+	AudioDirector.play_cue(&"sob")
+	assert_str(String(AudioDirector.last_cue_reject())).is_equal("gap")
 
 
 func test_sprite_change_is_noted_for_rare_reveals() -> void:

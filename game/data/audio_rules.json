@@ -1,6 +1,6 @@
 {
- "version": 1,
- "doc": "AudioDirector v1 rule tables (P1.12). Sources: docs/04 §1-§2, docs/02 §2.1-§2.2, docs/02 §5. P1.07 consumes the *_gates tables for the dynamic schema; AudioDirector enforces them again at play time (never trust the model).",
+ "version": 2,
+ "doc": "AudioDirector rule tables (P1.12, extended P2.16). Sources: docs/04 §1-§7, docs/02 §2.1-§2.2, docs/02 §5, docs/10 §5. TurnSchema consumes stage_gates.json for the dynamic schema; AudioDirector enforces the same gates again at play time (never trust the model). stage_layers/voice_blips are P2.16's per-stage layers (docs/04 §2 drift, §7 blips).",
  "buses": {
   "Music": {"parent": "Master", "expose": true},
   "MusicA": {"parent": "Music", "expose": false},
@@ -59,10 +59,11 @@
   "melancholy": 0,
   "tense": 2,
   "music_box": 2,
-  "dread": 3,
-  "distorted": 3,
+  "dread": 4,
+  "distorted": 4,
   "silence": 2
  },
+ "music_gate_doc": "docs/02 §2.2 offers dread/distorted from stage 3, but docs/04 §8.3 maps no track for either before stage 4 (docs/04 §2: '—' at stage 2-3). The audio gate follows the track map, so a stage-3 request is denied 'gated' — DCR P2.16-1 asks the producer to align docs/02 §2.2 + stage_gates.json to 4 (or to commission a stage-3 drone).",
  "cue_budget": {
   "doc": "docs/02 §5: stage 0-1 = 1 cue per 2 turns, 2-3 = 1 per turn, 4-5 = 2 per turn. Token bucket: every begin_turn adds per_turn, capped at cap; a played cue costs 1.0.",
   "bands": [
@@ -84,6 +85,29 @@
   "crossfade_seconds": 1.5,
   "silence_crossfade_seconds": 0.0,
   "keep_restore_turns": 3
+ },
+ "stage_layers": {
+  "doc": "docs/04 §1-§2 stage drift on the Music bus: the pitch drifts -5 cents per stage and the low-pass closes 1 kHz per stage after stage 2. The docs give no absolute cut-off base; 12 kHz at stage 2 is the chosen base so the drift is audible without muffling (P2.16 deviation note). Distortion/reverb are the docs/04 §1 'driven by stage' effects — drive/wet per stage, effect bypassed while zero.",
+  "pitch_cents_per_stage": -5.0,
+  "lowpass_start_stage": 2,
+  "lowpass_base_hz": 12000.0,
+  "lowpass_hz_per_stage": -1000.0,
+  "distortion": {
+   "min_stage": 4,
+   "drive": {"4": 0.12, "5": 0.25}
+  },
+  "reverb": {
+   "min_stage": 3,
+   "wet": {"3": 0.08, "4": 0.16, "5": 0.28}
+  }
+ },
+ "voice_blips": {
+  "doc": "docs/04 §4/§7 and docs/10 §5: a soft blip every 2-3 revealed characters, pool chosen by voice_by_stage (game/data/casting.json), pitched by the beat's feeling (feelings[f].voice.pitch_st/gain_db; null voice = no blips). Stage 5 keeps the stage-4 whisper blips as its base and mixes the demon pool under them 30% of the time.",
+  "every_chars_min": 2,
+  "every_chars_max": 3,
+  "awake_min_stage": 3,
+  "stage5_demon_mix": 0.3,
+  "stage5_base_key": "voice_blip.stage4"
  },
  "randomisation": {
   "cue_pitch_cents_range": 0.05,
