@@ -353,29 +353,28 @@ func test_stage_profile_maps_desaturation_from_data() -> void:
 		assert_float(float(table[stage_key]["desaturation"])).is_equal_approx(
 			float(DOC_STAGE_FX[stage_key]), 0.0001
 		)
-		assert_float(FX.desaturation_for(int(stage_key))).is_equal_approx(
+		assert_float(float(FX.stage_profile(int(stage_key))["desaturation"])).is_equal_approx(
 			float(DOC_STAGE_FX[stage_key]), 0.0001
 		)
 	# the world never drains less as the stage rises
 	for stage: int in range(1, 6):
-		assert_float(FX.desaturation_for(stage)).is_greater_equal(FX.desaturation_for(stage - 1))
-	assert_float(FX.desaturation_for(-3)).is_equal_approx(0.0, 0.0001)
-	assert_float(FX.desaturation_for(9)).is_equal_approx(0.75, 0.0001)
+		var amount := float(FX.stage_profile(stage)["desaturation"])
+		var previous := float(FX.stage_profile(stage - 1)["desaturation"])
+		assert_float(amount).is_greater_equal(previous)
+	assert_float(float(FX.stage_profile(-3)["desaturation"])).is_equal_approx(0.0, 0.0001)
+	assert_float(float(FX.stage_profile(9)["desaturation"])).is_equal_approx(0.75, 0.0001)
 	# not a cue: no casting.fx row, so a model pick drops as unknown
 	assert_bool(SpriteResolver.casting["fx"].has("desaturation")).is_false()
 	assert_str(FX.check("desaturation", 5)).is_equal("unknown")
 
 
 ## FX.gd owns the stage -> baseline mapping (the task's "stage-to-fx"): it reads
-## the row, names it to the host and announces it with the stage it clamped to.
-func test_set_stage_names_the_host_and_emits_the_row() -> void:
+## the row, names it to the host and keeps the stage it clamped to.
+func test_set_stage_names_the_host_with_the_clamped_row() -> void:
 	var host := _spawn_fake_host()
 	host.stage_profiles.clear()
-	var seen := []
-	FX.stage_fx_changed.connect(func(s: int, p: Dictionary) -> void: seen.append(s))
 	FX.set_stage(4)
 	assert_int(FX.stage).is_equal(4)
-	assert_array(seen).contains([4])
 	assert_int(host.stage_profiles.size()).is_equal(1)
 	assert_float(float(host.stage_profiles[0]["desaturation"])).is_equal_approx(0.6, 0.0001)
 	# out-of-range names clamp: 9 is stage 5

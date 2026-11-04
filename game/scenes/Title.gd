@@ -1,8 +1,14 @@
 extends Control
 ## Title — main title screen (P1.14).
 ## Displays the title, subtitle, and menu options:
-## New Game, Continue, Settings, Quit.
+## New Game, Continue, Photosensitive mode, Settings, Quit.
 ## Supports keyboard navigation (Up/Down/Tab/Enter) and Esc handling.
+##
+## The accessibility row is the player's entry point for the safety
+## accommodation of docs/02 §2.3: photosensitive mode must be reachable before
+## the first date, because the stage-3 `flicker` cue is the pattern it exists
+## for. It writes Settings (which persists the flag and pushes it to FX); the
+## P3.13 Settings screen takes the row over.
 
 signal new_game_requested
 signal continue_requested
@@ -13,10 +19,12 @@ const NEW_GAME_SCENE_PATH := "res://scenes/NewGame.tscn"
 
 var scene_change_enabled := true
 var _config := {}
+var _title_cfg := {}
 @onready var title_label: Label = $Margin/VBox/TitleLabel
 @onready var subtitle_label: Label = $Margin/VBox/SubtitleLabel
 @onready var new_game_button: Button = $Margin/VBox/MenuContainer/NewGameButton
 @onready var continue_button: Button = $Margin/VBox/MenuContainer/ContinueButton
+@onready var photosensitive_button: Button = $Margin/VBox/MenuContainer/PhotosensitiveButton
 @onready var settings_button: Button = $Margin/VBox/MenuContainer/SettingsButton
 @onready var quit_button: Button = $Margin/VBox/MenuContainer/QuitButton
 
@@ -27,14 +35,17 @@ func _ready() -> void:
 
 	new_game_button.pressed.connect(_on_new_game_pressed)
 	continue_button.pressed.connect(_on_continue_pressed)
+	photosensitive_button.pressed.connect(_on_photosensitive_pressed)
 	settings_button.pressed.connect(_on_settings_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
+	_refresh_photosensitive_button()
 
 	# Focus New Game by default for keyboard play
 	new_game_button.grab_focus()
 
 
 func apply_config(cfg: Dictionary) -> void:
+	_title_cfg = cfg
 	if title_label != null and cfg.has("game_title"):
 		title_label.text = str(cfg["game_title"])
 	if subtitle_label != null and cfg.has("subtitle"):
@@ -47,6 +58,19 @@ func apply_config(cfg: Dictionary) -> void:
 		settings_button.text = str(cfg["btn_settings"])
 	if quit_button != null and cfg.has("btn_quit"):
 		quit_button.text = str(cfg["btn_quit"])
+	_refresh_photosensitive_button()
+
+
+## The row names its own state ("Photosensitive mode: Off") so the player can
+## see the accommodation exists before it matters. The strings live in ui.json.
+func _refresh_photosensitive_button() -> void:
+	if photosensitive_button == null:
+		return
+	var defaults: Dictionary = UiConfig.DEFAULTS["title"]
+	var state_key := "photosensitive_on" if Settings.photosensitive else "photosensitive_off"
+	var state_text := String(_title_cfg.get(state_key, defaults[state_key]))
+	var label := String(_title_cfg.get("btn_photosensitive", defaults["btn_photosensitive"]))
+	photosensitive_button.text = label.format({"state": state_text})
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -79,6 +103,14 @@ func _on_continue_pressed() -> void:
 
 func _on_settings_pressed() -> void:
 	settings_requested.emit()
+
+
+## The accommodation must be toggleable with keyboard only (Enter on the row,
+## same as every other menu item), and it must stick for the session and
+## beyond: Settings persists it and cuts a running strobe immediately.
+func _on_photosensitive_pressed() -> void:
+	Settings.toggle_photosensitive()
+	_refresh_photosensitive_button()
 
 
 func _on_quit_pressed() -> void:

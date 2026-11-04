@@ -332,3 +332,51 @@ func test_stage_effects_compose_on_one_pass() -> void:
 	assert_float(float(_mat.get_shader_parameter("darken"))).is_less(1.0)
 	assert_float(float(_mat.get_shader_parameter("glitch"))).is_greater(0.0)
 	assert_bool(_stage_fx.visible).is_true()
+
+
+# --- round 2: cue bookkeeping and the reset seam -----------------------------
+
+
+## CODE-1 (r2): pass visibility must not be derived from the uniforms alone. A
+## stepped cue sits at exactly 1.0 between its dips, so another cue's end (the
+## twitch's split clearing, a darken finishing) used to hide the pass there and
+## the rest of the flicker never rendered.
+func test_a_live_flicker_survives_another_cues_end_callback() -> void:
+	assert_str(_char.play_fx("flicker")).is_equal("")
+	var waited := 0.0
+	while waited < 0.06 or _char.flicker_level() < 0.999:
+		await get_tree().process_frame
+		waited += get_process_delta_time()
+	assert_float(_char.flicker_level()).is_equal_approx(1.0, 0.001)  # a lit step
+	_char._set_split(0.0)  # what _process does when the twitch's split ends
+	assert_bool(_stage_fx.visible).is_true()
+	var probe := {"dips": 0, "erased": 0}
+	await _wait_seconds(
+		0.25,
+		func() -> void:
+			if _char.flicker_level() < 0.8:
+				probe["dips"] += 1
+				if not _stage_fx.visible:
+					probe["erased"] += 1
+	)
+	assert_int(int(probe["dips"])).is_greater(0)  # the rest of the cue rendered
+	assert_int(int(probe["erased"])).is_zero()
+	await _wait_seconds(0.4)
+	assert_bool(_stage_fx.visible).is_false()  # the cue ended and released it
+
+
+## CODE-2 (r2): clear_screen_fx promises "back to neutral". A killed shake
+## tween used to leave the camera on its last interpolated offset (the dev tool
+## captured every later still displaced) and a live cue kept the pass on.
+func test_clear_screen_fx_restores_the_camera_and_drops_live_cues() -> void:
+	assert_str(_char.play_fx("shake_big")).is_equal("")
+	await _wait_seconds(0.1)
+	assert_float(_cam.offset.length()).is_greater(0.5)
+	assert_str(_char.play_fx("flicker")).is_equal("")
+	await _wait_seconds(0.05)
+	assert_bool(_stage_fx.visible).is_true()
+	_char.clear_screen_fx()
+	assert_vector(_cam.offset).is_equal_approx(Vector2.ZERO, Vector2(0.001, 0.001))
+	assert_bool(_stage_fx.visible).is_false()
+	assert_float(_char.flicker_level()).is_equal_approx(1.0, 0.001)
+	assert_float(float(_mat.get_shader_parameter("darken"))).is_equal_approx(1.0, 0.001)

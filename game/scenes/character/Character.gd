@@ -146,6 +146,10 @@ var _sparkle_tex: Texture2D
 ## Screen-effect timelines, one slot per effect name, so a re-fire restarts only
 ## its own effect (flicker and glitch may overlap). Reduced motion kills "shake".
 var _screen_tweens := {}
+## Cues whose timeline is still in flight. Pass visibility must not be derived
+## from the uniforms alone: a stepped cue (`flicker`) sits at exactly 1.0 between
+## its dips, so "every uniform at rest" does not mean the cue has ended.
+var _live_fx := {}
 ## The one full-screen stage pass, shared by every docs/02 §2.3 effect.
 var _stage_mat: ShaderMaterial
 ## Live values of that pass's uniforms. Tracked here instead of read back from
@@ -270,7 +274,7 @@ func set_photosensitive(enabled: bool) -> void:
 		return
 	var tween := _restart_screen_tween("flicker")
 	tween.tween_method(_set_flicker_level, flicker_level(), 1.0, FX_FLASH_MIN_STEP_S)
-	tween.tween_callback(_refresh_stage_fx)
+	tween.tween_callback(_end_fx.bind("flicker"))
 
 
 ## The flicker timeline the host will play in the current mode. Public so the
@@ -315,6 +319,9 @@ func clear_screen_fx() -> void:
 		if tween != null and tween.is_valid():
 			tween.kill()
 		_screen_tweens.erase(key)
+	_live_fx.clear()
+	# a killed shake tween leaves the camera on its last interpolated offset
+	_cam.offset = Vector2.ZERO
 	_set_flicker_level(1.0)
 	_set_darken_level(1.0)
 	_set_vignette_strength(0.0)
@@ -761,6 +768,7 @@ func _fx_zoom_face() -> void:
 ## to FX_FLASH_MIN_STEP_S here, not just asserted in tests.
 func _fx_flicker() -> void:
 	_stage_fx.visible = true
+	_live_fx["flicker"] = true
 	var tween := _restart_screen_tween("flicker")
 	if photosensitive:
 		var level := flicker_level()
@@ -773,18 +781,19 @@ func _fx_flicker() -> void:
 		for step: Array in FX_FLICKER_STEPS:
 			tween.tween_callback(_set_flicker_level.bind(float(step[1])))
 			tween.tween_interval(float(step[0]))
-	tween.tween_callback(_refresh_stage_fx)
+	tween.tween_callback(_end_fx.bind("flicker"))
 
 
 ## darken: docs/02 §2.3 "scene darkens to 40%" — down, hold, back. A fade, not
 ## a strobe, so the photosensitive mode needs no variant.
 func _fx_darken() -> void:
 	_stage_fx.visible = true
+	_live_fx["darken"] = true
 	var tween := _restart_screen_tween("darken")
 	tween.tween_method(_set_darken_level, _darken, FX_DARKEN_TO, FX_DARKEN_S)
 	tween.tween_interval(FX_DARKEN_HOLD_S)
 	tween.tween_method(_set_darken_level, FX_DARKEN_TO, 1.0, FX_DARKEN_S)
-	tween.tween_callback(_refresh_stage_fx)
+	tween.tween_callback(_end_fx.bind("darken"))
 
 
 ## vignette_red: docs/02 §2.3 "red pulsing vignette". The pulse lives in the
@@ -792,11 +801,12 @@ func _fx_darken() -> void:
 ## only fades the envelope in and out.
 func _fx_vignette_red() -> void:
 	_stage_fx.visible = true
+	_live_fx["vignette_red"] = true
 	var tween := _restart_screen_tween("vignette_red")
 	tween.tween_method(_set_vignette_strength, _vignette, FX_VIGNETTE_STRENGTH, FX_VIGNETTE_S * 0.3)
 	tween.tween_interval(FX_VIGNETTE_S * 0.3)
 	tween.tween_method(_set_vignette_strength, FX_VIGNETTE_STRENGTH, 0.0, FX_VIGNETTE_S * 0.4)
-	tween.tween_callback(_refresh_stage_fx)
+	tween.tween_callback(_end_fx.bind("vignette_red"))
 
 
 ## glitch: docs/02 §2.3 "scanline displacement + RGB split on the whole screen"
@@ -808,6 +818,7 @@ func _fx_glitch() -> void:
 	# `from` lands one frame late, which would flash the un-glitched screen)
 	_set_glitch_strength(1.0)
 	_stage_fx.visible = true
+	_live_fx["glitch"] = true
 	var tween := _restart_screen_tween("glitch")
 	(
 		tween
@@ -815,7 +826,7 @@ func _fx_glitch() -> void:
 		. set_trans(Tween.TRANS_EXPO)
 		. set_ease(Tween.EASE_IN)
 	)
-	tween.tween_callback(_refresh_stage_fx)
+	tween.tween_callback(_end_fx.bind("glitch"))
 
 
 ## text_bleed: docs/02 §2.3 "text drips/smears out of the box". The Date scene
@@ -826,13 +837,12 @@ func _fx_text_bleed() -> void:
 		_set_bleed_rect(_bleed_rect_provider.call())
 	_stage_mat.set_shader_parameter("bleed_seed", randf())
 	_stage_fx.visible = true
+	_live_fx["text_bleed"] = true
 	var tween := _restart_screen_tween("text_bleed")
-	tween.tween_method(
-		_set_bleed_amount, float(_stage_mat.get_shader_parameter("bleed")), 1.0, FX_BLEED_S * 0.25
-	)
+	tween.tween_method(_set_bleed_amount, _bleed, 1.0, FX_BLEED_S * 0.25)
 	tween.tween_interval(FX_BLEED_S * 0.35)
 	tween.tween_method(_set_bleed_amount, 1.0, 0.0, FX_BLEED_S * 0.4)
-	tween.tween_callback(_refresh_stage_fx)
+	tween.tween_callback(_end_fx.bind("text_bleed"))
 
 
 ## The bleed band starts at the box's bottom edge; the pass wants uv space.
@@ -880,11 +890,21 @@ func _set_desaturation(value: float) -> void:
 	_stage_mat.set_shader_parameter("desaturation", value)
 
 
-## The pass is hidden whenever every uniform is at rest, so a clean stage pays
-## no full-screen blit at all; any live effect shows it for its frames.
+## Ends one cue: it no longer holds the pass on by itself. Called from that
+## cue's own timeline, so a re-fire that replaces the tween keeps the slot live.
+func _end_fx(name: String) -> void:
+	_live_fx.erase(name)
+	_refresh_stage_fx()
+
+
+## The pass is hidden whenever no cue is in flight and every uniform is at
+## rest, so a clean stage pays no full-screen blit at all. Uniform values alone
+## are not enough to decide that: a stepped cue (`flicker`) reads 1.0 between
+## its dips, and hiding the pass there would erase the rest of the timeline.
 func _refresh_stage_fx() -> void:
 	_stage_fx.visible = (
-		_desaturation > 0.0
+		not _live_fx.is_empty()
+		or _desaturation > 0.0
 		or _flicker < 1.0
 		or _darken < 1.0
 		or _vignette > 0.0

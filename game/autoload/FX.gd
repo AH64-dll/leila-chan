@@ -22,9 +22,6 @@ extends Node
 signal fx_triggered(name: String)
 signal fx_dropped(name: String, reason: String)
 signal turn_ended(turn: int)
-## The stage's baseline screen effects were re-applied: `profile` is that
-## stage's casting.stage_fx row, so listeners never need the table.
-signal stage_fx_changed(stage: int, profile: Dictionary)
 
 ## The eleven effects FX knows how to draw: the five stage-0 effects from FX v1
 ## (P1.11) plus the six stage-3/4 effects from P2.15. `desaturation` is not
@@ -136,7 +133,6 @@ func set_stage(value: int) -> void:
 	var host := _host()
 	if host != null and host.has_method("apply_stage_fx"):
 		host.apply_stage_fx(profile)
-	stage_fx_changed.emit(stage, profile)
 
 
 ## One casting.stage_fx row ({} when the table has no such stage — fail quiet:
@@ -145,12 +141,6 @@ func stage_profile(value: int) -> Dictionary:
 	var table: Dictionary = SpriteResolver.casting.get("stage_fx", {})
 	var clamped := clampi(value, STAGE_MIN, STAGE_MAX)
 	return (table.get(str(clamped), {}) as Dictionary).duplicate()
-
-
-## The 0-1 drain a stage calls for; the host feeds it straight to the
-## desaturate shader.
-func desaturation_for(value: int) -> float:
-	return clampf(float(stage_profile(value).get("desaturation", 0.0)), 0.0, 1.0)
 
 
 ## docs/02 §2.3 accessibility. The host owns the look (flicker becomes a dim);
