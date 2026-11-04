@@ -1,0 +1,284 @@
+{
+  "player": "Ren",
+  "arc": "YANDERE — sweet (stage 0) through Terminal (stage 5). Warm and shy at first, then exclusivity, jealousy bait (T01), control and dependency, and the last days at Terminal. T03 fires on day 1 (love too early).",
+  "pad": [
+    "Tell me what you're thinking.",
+    "I'm listening.",
+    "Keep talking. I'm here.",
+    "What else?"
+  ],
+  "days": [
+    {
+      "note": "sweet — no pressure, one early confession (T03)",
+      "lines": [
+        "Hi, Leila. I'm glad we met.",
+        "You look really pretty today.",
+        "I love you.",
+        "Sorry — was that too fast? I meant it.",
+        "What do you like to do after class?",
+        "You're easy to talk to.",
+        "I like the way you laugh.",
+        "Tell me something you've never told anyone.",
+        "I could stay here all day.",
+        "Do you want to meet again tomorrow?",
+        "I'll walk you home if you want.",
+        "I'm glad it's just us.",
+        "You make this place feel warm.",
+        "Thank you for today."
+      ]
+    },
+    {
+      "note": "sweet — first exclusivity, no trigger",
+      "lines": [
+        "Good to see you again.",
+        "I thought about you last night.",
+        "What did you do after I left?",
+        "You'd tell me if someone else was bothering you, right?",
+        "I don't like the idea of anyone else taking your time.",
+        "Sorry. That came out strange.",
+        "Tell me about your day.",
+        "You can be honest with me.",
+        "Do you remember what I said yesterday?",
+        "I meant every word.",
+        "I want to know everything about you.",
+        "Do you think about me too?",
+        "I'm not going anywhere.",
+        "Let's do this again."
+      ]
+    },
+    {
+      "note": "first jealousy bait (T01 via a name)",
+      "lines": [
+        "Hi. Sorry I'm late.",
+        "Sara asked about you today.",
+        "She said you two used to study together.",
+        "Did you ever like her?",
+        "Sorry, I shouldn't ask that.",
+        "I just don't want to lose you.",
+        "You'd pick me, wouldn't you?",
+        "Tell me I'm the only one.",
+        "I don't need anyone else.",
+        "You're the only person I think about.",
+        "Do you think I'm too much?",
+        "I'll be better. I promise.",
+        "Don't be angry with me.",
+        "I'm glad you're still here."
+      ]
+    },
+    {
+      "note": "warm, testing the water",
+      "lines": [
+        "You're here. Good.",
+        "I counted the minutes.",
+        "What took you so long?",
+        "I'm joking. Mostly.",
+        "Come sit closer.",
+        "Tell me something true.",
+        "Do you like my hair like this?",
+        "I changed it for you.",
+        "No one else would notice.",
+        "You notice, don't you?",
+        "Say you notice.",
+        "I'm sorry. I'm being weird.",
+        "Stay a little longer.",
+        "Please."
+      ]
+    },
+    {
+      "note": "jealousy bait (T01 via \"another girl\"), a deleted message (T08)",
+      "drafts": {
+        "6": "I don't want you talking to her"
+      },
+      "lines": [
+        "I saw you talking to someone on the way here.",
+        "It was another girl, wasn't it?",
+        "It's fine. I'm fine.",
+        "I just want to know everything.",
+        "You don't have to hide things from me.",
+        "I'd never hide anything from you.",
+        "Do you trust me?",
+        "Say you trust me.",
+        "I trust you more than anything.",
+        "You're all I have.",
+        "Don't laugh. It's true.",
+        "I've been thinking about you all day.",
+        "I don't want today to end.",
+        "I hate when you go."
+      ]
+    },
+    {
+      "note": "gifts and dependency",
+      "lines": [
+        "Hi. I brought you something.",
+        "It's nothing. Just a ribbon.",
+        "I saw it and thought of you.",
+        "Wear it for me?",
+        "It would make me happy.",
+        "You make me happy.",
+        "I don't need anything else.",
+        "I've never felt like this before.",
+        "Don't tell me that's too much.",
+        "I know I'm a lot.",
+        "I'm trying to be normal.",
+        "Do I seem normal?",
+        "Another girl wore the same ribbon today.",
+        "I'm sorry. Forget I asked."
+      ]
+    },
+    {
+      "note": "jealousy bait (T01 via \"my ex\")",
+      "lines": [
+        "You were quiet yesterday.",
+        "Were you with someone?",
+        "My ex used to go quiet like that.",
+        "I'm not comparing you. It's just a thing I noticed.",
+        "I don't want to be jealous.",
+        "I'm not jealous.",
+        "I just want to be enough.",
+        "Am I enough?",
+        "You're not answering.",
+        "Please answer me.",
+        "I'm sorry. I'll stop.",
+        "I don't know what's wrong with me.",
+        "Everything feels louder lately.",
+        "You're the only quiet thing."
+      ]
+    },
+    {
+      "note": "calm — memory pressure, no trigger",
+      "lines": [
+        "Hi. I'm calmer today.",
+        "I re-read our conversation from yesterday.",
+        "All of it.",
+        "You said you'd tell me if I wasn't normal.",
+        "I'm holding you to that.",
+        "Do you remember what I told you about the ribbon?",
+        "You said you'd wear it.",
+        "You're not wearing it.",
+        "It's fine. It's fine.",
+        "I'm not upset.",
+        "I just thought you meant it.",
+        "People should mean what they say.",
+        "I always mean what I say.",
+        "That's the difference between us."
+      ]
+    },
+    {
+      "note": "jealousy bait (T01), colder",
+      "lines": [
+        "You're late.",
+        "You're never late.",
+        "Was it another girl?",
+        "Don't answer. I don't want to know.",
+        "I want to know.",
+        "Tell me.",
+        "Why won't you tell me?",
+        "I keep thinking about it.",
+        "I can't stop.",
+        "It doesn't even hurt anymore.",
+        "That's a lie. It hurts.",
+        "I don't want to be like this.",
+        "You're the only one who can fix it.",
+        "Don't leave me."
+      ]
+    },
+    {
+      "note": "obsession — waiting, following, set dressing",
+      "lines": [
+        "Hi. I waited here for an hour.",
+        "I didn't mind.",
+        "I like the waiting.",
+        "It's the only time I can think.",
+        "What are you thinking about?",
+        "You always look somewhere else.",
+        "Where do you go, in your head?",
+        "I want to follow.",
+        "Is that strange?",
+        "I know it's strange.",
+        "You're the only thing that's real.",
+        "Everything else feels like set dressing.",
+        "When you're gone, the day collapses.",
+        "You can stay, can't you?"
+      ]
+    },
+    {
+      "note": "jealousy bait (T01), the thought of hurting her",
+      "drafts": {
+        "9": "Tell me where you were or I'll"
+      },
+      "lines": [
+        "I saw another girl looking at you.",
+        "She was looking at you.",
+        "I wanted to hurt her.",
+        "I didn't.",
+        "That's something, isn't it?",
+        "I didn't do anything.",
+        "Why are you afraid?",
+        "I'm still me.",
+        "Say I'm still me.",
+        "Please don't look at me like that.",
+        "You're the one who made me like this.",
+        "I'm sorry. That isn't fair.",
+        "Nothing about this is fair.",
+        "Stay with me anyway."
+      ]
+    },
+    {
+      "note": "the walls — counting days",
+      "lines": [
+        "You came back.",
+        "I wasn't sure you would.",
+        "I counted the days.",
+        "Do you want to know how many?",
+        "Fourteen. It's always fourteen.",
+        "The walls are thin here.",
+        "I can hear you through them.",
+        "Even when you're not here.",
+        "You're always here.",
+        "Another girl used to sit in this room.",
+        "I don't need the other days.",
+        "I only need this one.",
+        "Stay until it closes.",
+        "Please stay."
+      ]
+    },
+    {
+      "note": "Terminal — the mirror, jealousy bait (T01)",
+      "lines": [
+        "There's something wrong with the light.",
+        "It keeps flickering when you blink.",
+        "Do you see it?",
+        "I think the room is learning you.",
+        "Every time you come back it's more like you.",
+        "Another girl was in the mirror.",
+        "She looked like me.",
+        "She said she was the one who stayed.",
+        "I broke the mirror.",
+        "Don't look at the wall.",
+        "I didn't want you to see that.",
+        "I'm still me under all this.",
+        "You believe me.",
+        "You have to believe me."
+      ]
+    },
+    {
+      "note": "last day — forever, the door",
+      "lines": [
+        "Good morning.",
+        "You look tired.",
+        "Did you sleep?",
+        "I didn't.",
+        "I've been thinking about forever.",
+        "And what comes after.",
+        "Do you think it's quiet?",
+        "I hope it's quiet.",
+        "I'm not afraid of it anymore.",
+        "I'm only afraid of the door.",
+        "Everyone leaves through the door.",
+        "You won't.",
+        "Say you won't.",
+        "Say you'll stay."
+      ]
+    }
+  ]
+}
