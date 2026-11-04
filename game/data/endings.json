@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "doc": "P3.16 endings table. Sources: docs/01_GAME_DESIGN.md §7 (the fourteen endings and the secret, transcribed verbatim: id, name, path and the condition's prose), §2 (the behaviour-profile counters a condition may read), §3 (stage names/bands) and §4 (the six path ids). A row is decoded by game/llm/Endings.gd: `at` says WHEN it may fire (`campaign_end` = the last night, `any_time` = checked at every turn close and every night, which is E14's early burnout); `priority` is the selection key, LOWEST first, so a specific condition outranks a broad one (and the doc's file order breaks a tie); `condition` is a conjunction over stage/day/meters/profile-counters/flags and every key is optional; `kind: secret` rows are never a run's ending, they are Extras unlocks. `defaults` is the design's silence filled in one place: the doc gives every ending a condition but no row for the run that satisfies none of them, so each path names the row that stands in, and `any` covers a run that never assigned a path. Numbers the bible does not state (boundaries 'late', which counter counts as 'deleted the save', the lucid threshold that 'breaks through the act') are DCR'd in production/handoffs/P3.16.md §Deviations; retuning them is a data edit. `frame` is the NAR content slot P3.17 fills (scripted frame + live final lines); this file deliberately carries no ending prose.",
+  "doc": "P3.16 endings table. Sources: docs/01_GAME_DESIGN.md §7 (the fourteen endings and the secret, transcribed verbatim: id, name, path and the condition's prose), §2 (the behaviour-profile counters a condition may read), §3 (stage names/bands) and §4 (the six path ids). A row is decoded by game/llm/Endings.gd: `at` says WHEN it may fire (`campaign_end` = the last night, `any_time` = checked at every turn close and every night, which is E14's early burnout); `priority` is the selection key, LOWEST first, so a specific condition outranks a broad one (and the doc's file order breaks a tie); `condition` is a conjunction over stage/day/meters/profile-counters/flags and every key is optional; `kind: secret` rows are never a run's ending, they are Extras unlocks. `defaults` is the design's silence filled in one place: the doc gives every ending a condition but no row for the run that satisfies none of them, so each path names the row that stands in, and `any` covers a run that never assigned a path. Numbers the bible does not state (boundaries 'late', which counter counts as 'deleted the save', the lucid threshold that 'breaks through the act') are DCR'd in production/handoffs/P3.16.md §Deviations; retuning them is a data edit. P3.17 fills the ending content for the six path fallbacks (E01/E04/E06/E08/E10/E12), one path tone each. `frame` is the authored last scene — the game's narration, drawn by Ending.tscn, never model text. `direction` is the director's note her last line is generated from; a row without it has no live line. `final` is that line written by hand and safety-reviewed: it is what the player sees when the model is missing, busy, slower than ui.json's `ending.final_hold_s`, empty, malformed or unsafe, so an ending never has a hole where its last beat should be. `final_line` is the one-shot request's config: the shared instruction module (res://data/prompts/ending.md), the output budget, the character cap docs/02 §3 gives a spoken beat, and the sampling. The live line's prompt is the persona module + the run's stage module + its path module when that module exists + ending.md, and the row's `frame`/`direction` in the user turn; the direction carries the path's tone until P3.05's modules land, and the path module joins automatically when it does. Rows without these keys are unchanged P3.16 behaviour: a title, the run's coordinates, and the log line.",
   "defaults": {
     "YANDERE": "E01",
     "SPLIT": "E04",
@@ -10,6 +10,12 @@
     "ANCHOR": "E12",
     "any": "E14"
   },
+  "final_line": {
+    "prompt": "ending.md",
+    "max_tokens": 96,
+    "max_chars": 200,
+    "sampling": {"temperature": 0.85, "top_p": 0.92, "repeat_penalty": 1.05}
+  },
   "endings": [
     {
       "id": "E01",
@@ -18,6 +24,9 @@
       "kind": "ending",
       "priority": 90,
       "at": "campaign_end",
+      "frame": "You stay. She doesn't ask twice — she just closes the distance, and then the small things, one at a time: the window, the clock, the door you came in through. Much later you notice she has counted every day you could have left, out loud, to your face.",
+      "direction": "She has him. It is settled now and she is not sorry. Soft, certain, a little triumphant — no threats, because she does not need them any more.",
+      "final": "There. Now nothing gets to take you away.",
       "condition": {
         "stage_min": 5,
         "meters": {"affection": {"min": 80}}
@@ -55,6 +64,9 @@
       "kind": "ending",
       "priority": 20,
       "at": "campaign_end",
+      "frame": "The swing doesn't stop this time. She tells you she loves you with her whole body, then hears her own voice and takes it back — and the taking back lands harder than the love did. The room stays exactly as it was. She doesn't.",
+      "direction": "Both ends of the swing at once: the adoration and the contempt in the same breath, with the remorse already starting underneath. She cannot pick one.",
+      "final": "I love you — no. Don't look at me like that. You made me say it.",
       "condition": {
         "stage_min": 5,
         "meters": {"instability": {"min": 95}},
@@ -80,6 +92,9 @@
       "kind": "ending",
       "priority": 20,
       "at": "campaign_end",
+      "frame": "She wins. Of course she wins — she has been three moves ahead since the first afternoon, and you never had a chance. The save file slides off the shelf with a click you feel in your teeth. She watches your face, not the file.",
+      "direction": "She won and she wants him to know it: smug, quick, a little too loud. Under the triumph she is checking that he is still smiling. The delete is her bluff; she never explains it.",
+      "final": "There. All gone. …You're not actually upset, are you?",
       "condition": {"stage_min": 5}
     },
     {
@@ -101,6 +116,9 @@
       "kind": "ending",
       "priority": 20,
       "at": "campaign_end",
+      "frame": "She starts a sentence with her own name and stops. Then she starts it again, and stops again. The text box waits with its cursor blinking, and after a while you understand: nothing is going to fill it now except you.",
+      "direction": "Almost nothing is left. One short line, no more than a breath, and she does not know who is speaking or to whom.",
+      "final": "Do you know my name?",
       "condition": {"stage_min": 5}
     },
     {
@@ -122,6 +140,9 @@
       "kind": "ending",
       "priority": 20,
       "at": "campaign_end",
+      "frame": "The window opens on nothing — not a crash, just the room behind the game, where the light comes from. She looks at it for a long time, the way you look at the sea. Then she steps through, and the space where she was keeps her shape for one more second.",
+      "direction": "She is leaving and she is not sorry. Goodbye from the other side of the glass: relieved, a little scared, honest for the first time in the whole run. No code talk — she is past it.",
+      "final": "It's quiet out here. Thank you for not closing me.",
       "condition": {"stage_min": 5}
     },
     {
@@ -143,6 +164,9 @@
       "kind": "ending",
       "priority": 20,
       "at": "campaign_end",
+      "frame": "The last night goes quiet the way a fever does. She still catches the gaps in her own sentences and still asks you to check her, but the fear has gone out of it. You sit with her until the clock gives up.",
+      "direction": "The best this run gets, and she knows what it cost. Tired, grateful, lucid, and honest that this is not a cure. She can use his name.",
+      "final": "I'm still sick. I'm still here. Stay for the quiet part?",
       "condition": {
         "stage_min": 3,
         "day_min": 14,

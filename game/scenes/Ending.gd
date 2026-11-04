@@ -9,8 +9,9 @@ extends Control
 ## of re-deriving a different ending.
 ##
 ## Content is data: title and details from ui.json's `ending` block, the frame
-## text from the row's `frame` (P3.17 owns that prose), and the reveal timing from
-## the same block. Nothing here is ending prose.
+## text from the row's `frame`, her last line from EndingLine — generated live,
+## or the row's reviewed `final` when the model is absent, busy, slow or unsafe —
+## and the reveal timing from the same block. Nothing here is ending prose.
 ##
 ## Accessibility: Esc always works (docs/05 §0 rule 3) and leaves for the Title —
 ## this screen has no pause menu yet (P3.13), and Night set that precedent. The
@@ -26,6 +27,7 @@ const TITLE_SCENE_PATH := "res://scenes/Title.tscn"
 const TITLE_SIZE := 26
 const DETAIL_SIZE := 13
 const FRAME_SIZE := 16
+const FINAL_SIZE := 15
 const SEEN_SIZE := 11
 const EPS := 0.0001
 
@@ -45,6 +47,15 @@ var _interval := 0.0
 var _skip_after := 0.0
 var _started := false
 var _finished := false
+## The last line's slot and its live request (P3.17). `_final_gate` is open when
+## there is nothing to wait for: the reveal stops at the slot while it is closed,
+## and the hold caps that wait so a hung model never strands the screen.
+var _final_index := -1
+var _final_label: Label = null
+var _final_gate := true
+var _final_waited := 0.0
+var _final_hold := 0.0
+var _stream: TurnStream = null
 
 @onready var background: ColorRect = $Background
 @onready var frame_box: VBoxContainer = $Margin/VBox/FrameBox
@@ -80,6 +91,10 @@ func advance_time(delta: float) -> void:
 	if _finished:
 		return
 	_elapsed += maxf(delta, 0.0)
+	if not _final_gate:
+		_final_waited += maxf(delta, 0.0)
+		if _final_waited >= _final_hold:
+			_open_final_gate()
 	_reveal_due()
 	_refresh_skip_hint()
 
@@ -116,6 +131,21 @@ func ending_row() -> Dictionary:
 ## The log record as displayed ("count" 0 when nothing was recorded).
 func log_record() -> Dictionary:
 	return _record.duplicate(true)
+
+
+## Her last line as the screen has it ("" before planning and for a row with no
+## content): the test seam for "the live line replaced the scripted one".
+func final_line() -> String:
+	if _final_index < 0 or _final_index >= _lines.size():
+		return ""
+	return String(_lines[_final_index].get("text", ""))
+
+
+## True once the last line has its answer (or the data's hold ran out). Before
+## that the reveal legitimately stops at the slot, which is what keeps the screen
+## from showing the scripted line a tick before the live one.
+func is_final_ready() -> bool:
+	return _final_gate
 
 
 func _process(delta: float) -> void:
@@ -199,8 +229,13 @@ func _plan() -> void:
 	_lines.clear()
 	_revealed = 0
 	_elapsed = 0.0
+	_final_index = -1
+	_final_label = null
+	_final_gate = true
+	_final_waited = 0.0
 	_interval = maxf(0.0, float(_screen.get("line_interval_s", 0.9)))
 	_skip_after = maxf(0.0, float(_screen.get("skip_after_s", 1.5)))
+	_final_hold = maxf(0.0, float(_screen.get("final_hold_s", 0.0)))
 	if _row.is_empty():
 		_add_line(String(_screen.get("title_fallback", "The End")), "title")
 		_add_line(String(_screen.get("unknown", "")), "frame")
@@ -210,7 +245,80 @@ func _plan() -> void:
 	var frame := String(_row.get("frame", "")).strip_edges()
 	if not frame.is_empty():
 		_add_line(frame, "frame")
+	_plan_final()
 	_add_line(_seen_text(), "seen")
+
+
+## Her last line. The row's reviewed `final` is on the plan from the start, so a
+## model that never answers costs nothing; a live answer replaces it before the
+## slot is revealed (and, if it is already on screen, the label is rewritten).
+func _plan_final() -> void:
+	var line := EndingLine.fallback(_row, _player_name())
+	var live := EndingLine.has_direction(_row)
+	if line.is_empty() and not live:
+		return
+	_lines.append({"text": line, "style": "final"})
+	_final_index = _lines.size() - 1
+	if live:
+		_request_final_line()
+
+
+## One request, one line, no history: the run is over, so the ending is the only
+## thing left to say. The stream is cancelled on leave — LLM holds one turn at a
+## time, and a screen the player has left must not keep the next turn waiting.
+func _request_final_line() -> void:
+	var llm: Node = get_node_or_null("/root/LLM")
+	if llm == null or not llm.has_method("generate") or not bool(llm.call("has_backend")):
+		return
+	var request := EndingLine.build_request(
+		_row, _player_name(), int(GameState.stage), String(_row.get("path", ""))
+	)
+	if request == null:
+		return
+	var stream: Variant = llm.call("generate", request)
+	if not stream is TurnStream:
+		return
+	_stream = stream
+	_stream.completed.connect(_on_final_completed)
+	_stream.failed.connect(_on_final_failed)
+	_stream.cancelled.connect(_on_final_cancelled)
+	_final_gate = false
+
+
+func _on_final_completed(full_text: String) -> void:
+	_stream = null
+	var line := EndingLine.parse(full_text)
+	var scanned := EndingLine.scan(line, int(GameState.stage))
+	if bool(scanned.get("ok", false)):
+		_apply_final_line(String(scanned.get("text", "")))
+	_open_final_gate()
+
+
+func _on_final_failed(_error: Dictionary) -> void:
+	_stream = null
+	_open_final_gate()
+
+
+func _on_final_cancelled() -> void:
+	_stream = null
+	_open_final_gate()
+
+
+func _apply_final_line(text: String) -> void:
+	var line := text.strip_edges()
+	if _final_index < 0 or line.is_empty():
+		return
+	_lines[_final_index]["text"] = line
+	if _revealed > _final_index and _final_label != null and is_instance_valid(_final_label):
+		_final_label.text = line
+
+
+func _open_final_gate() -> void:
+	_final_gate = true
+	if _finished:
+		return
+	_reveal_due()
+	_refresh_skip_hint()
 
 
 ## docs/01 §1/§7: the run's own coordinates — the path the ending belongs to,
@@ -246,11 +354,15 @@ func _reveal_due() -> void:
 	while _revealed < _lines.size():
 		if _elapsed + EPS < _interval * float(_revealed):
 			return
-		_render(_lines[_revealed])
+		if _revealed == _final_index and not _final_gate:
+			return
+		var line: Dictionary = _lines[_revealed]
+		if not String(line.get("text", "")).is_empty():
+			_render(line, _revealed)
 		_revealed += 1
 
 
-func _render(line: Dictionary) -> void:
+func _render(line: Dictionary, index: int) -> void:
 	if frame_box == null:
 		return
 	var style := String(line.get("style", "frame"))
@@ -265,6 +377,9 @@ func _render(line: Dictionary) -> void:
 		"detail":
 			label.add_theme_font_size_override("font_size", DETAIL_SIZE)
 			label.add_theme_color_override("font_color", Color(0.72, 0.68, 0.74))
+		"final":
+			label.add_theme_font_size_override("font_size", FINAL_SIZE)
+			label.add_theme_color_override("font_color", Color(0.95, 0.78, 0.8))
 		"seen":
 			label.add_theme_font_size_override("font_size", SEEN_SIZE)
 			label.add_theme_color_override("font_color", Color(0.55, 0.52, 0.58))
@@ -272,6 +387,8 @@ func _render(line: Dictionary) -> void:
 			label.add_theme_font_size_override("font_size", FRAME_SIZE)
 			label.add_theme_color_override("font_color", Color(0.87, 0.85, 0.9))
 	frame_box.add_child(label)
+	if index == _final_index:
+		_final_label = label
 
 
 ## The skip window is data; a null window means the reveal is the ending.
@@ -293,11 +410,29 @@ func _finish() -> void:
 		return
 	_finished = true
 	set_process(false)
+	_release_final_stream()
 	if skip_hint != null:
 		skip_hint.visible = false
 	ending_finished.emit(_record.duplicate(true))
 	if scene_change_enabled:
 		get_tree().change_scene_to_file.call_deferred(TITLE_SCENE_PATH)
+
+
+## LLM serves one turn at a time; a screen that has been left must hand the slot
+## back, or the next turn would fail with `busy`.
+func _exit_tree() -> void:
+	_release_final_stream()
+
+
+func _release_final_stream() -> void:
+	if _stream != null and not _stream.is_finished():
+		_stream.cancel()
+	_stream = null
+
+
+func _player_name() -> String:
+	var name := String(GameState.player_name).strip_edges()
+	return name if not name.is_empty() else EndingLine.DEFAULT_PLAYER_NAME
 
 
 func _fill_screen_texts() -> void:
