@@ -3228,7 +3228,7 @@
       "started": "2026-11-04T20:30:51+02:00"
     },
     "P2.22": {
-      "status": "in_review",
+      "status": "changes_requested",
       "agent": "deepseek",
       "round": 1,
       "reviews": [],
@@ -7861,6 +7861,12 @@
       "ts": "2026-11-04T21:24:52+02:00",
       "event": "in_review->done",
       "ref": "P3.07",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T21:25:46+02:00",
+      "event": "in_review->changes_requested",
+      "ref": "P2.22",
       "note": ""
     }
   ]
