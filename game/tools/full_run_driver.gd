@@ -9,10 +9,11 @@ extends Node
 ## a JSON sidecar. `--resume=1` continues from the game's own autosave
 ## (`SaveSystem.load_latest`), the P2.20 seam this task exercises.
 ##
-## Three wires the Date scene ships missing — `Date.start_date()`, the
-## `ChatUI.player_turn_sent → Director.submit_player_input` bridge, and
-## `Director.scene_info` — are installed here exactly as the milestone intends;
-## they are reported as S1 findings in the P2.22 handoff.
+## The scene layer is the Date's own: it starts itself (`auto_start`), forwards
+## the InputBox line to `Director.submit_player_input`, and assigns the per-turn
+## `Director.scene_info` (task/P2.22A shipped all three after these live runs
+## found them missing). The driver only submits through the real InputBox and
+## observes — it installs no wire of its own.
 ##
 ## Run (llama-server up): `./tools/godot.sh --headless --path game
 ## res://tools/FullRun.tscn -- --run=yandere --lines=<plan> --out=<md>`.
@@ -59,7 +60,6 @@ var _display_pending := false
 var _turn_start_ms := 0
 var _current_line := ""
 var _turn_failures := 0
-var _last_failure_code := ""
 var _refused: Array[Dictionary] = []
 var _date_ended := ""
 var _date_ended_ms := 0
@@ -315,16 +315,6 @@ func _attach_date(date: Node) -> void:
 		date.turn_completed.connect(_on_turn_displayed)
 	var chat_ui: Node = date.get("chat_ui")
 	_chat_ui = chat_ui
-	if chat_ui != null:
-		# Wiring gap (2): the shipped ChatUI's line never reaches the Director
-		# in this baseline. A Date that forwards it (the production fix) runs
-		# first; `_submit_to_director` yields when a turn is already in flight.
-		if not chat_ui.player_turn_sent.is_connected(_submit_to_director):
-			chat_ui.player_turn_sent.connect(_submit_to_director)
-	# Wiring gap (1): the shipped Date has no caller of start_date(); a Date
-	# that starts itself (`auto_start`) must not be started twice.
-	if not bool(date.get("auto_start")):
-		date.start_date()
 	_md.append_array(
 		_render.day_header_lines(
 			date.get_scenario(),
@@ -400,10 +390,6 @@ func _ready_box() -> Node:
 
 
 func _begin_turn(index: int, line: String, box: Node) -> void:
-	# Wiring gap (3): the Director's scene layer is never assigned by the Date.
-	Director.scene_info = ScenarioLoader.resolve_scene(
-		_date.get_scenario(), int(GameState.stage), String(GameState.path), index + 1, _player
-	)
 	_current_line = line
 	_awaiting = true
 	_data_ready = false
@@ -436,22 +422,6 @@ func _simulate_draft(box: Node, day: int, index: int) -> void:
 		return
 	box.set("text", text)
 	box.set("text", "")
-
-
-## The ChatUI seam ends here in production; the driver returns the Director's
-## answer so a refused line is recorded instead of stalling the pump.
-func _submit_to_director(text: String) -> void:
-	# A Date that forwards the line itself (the production fix) opened the turn
-	# already; this handler runs after the scene's own connection.
-	if Director.is_busy():
-		return
-	if Director.submit_player_input(text):
-		return
-	_awaiting = false
-	if _last_failure_code == "unsafe_input":
-		_last_failure_code = ""
-		return
-	push_warning("full_run: submit opened no turn and raised no failure: %s" % text)
 
 
 func _line_for(day: int, index: int) -> String:
@@ -520,7 +490,6 @@ func _on_turn_completed(_index: int, turn_data: Dictionary) -> void:
 
 func _on_turn_failed(_index: int, code: String, message: String) -> void:
 	_awaiting = false
-	_last_failure_code = code
 	if code == "unsafe_input":
 		# docs/02 §8: the filter refused the player's line and the UI answered
 		# in character; the turn never opened. That is the safety rule working,

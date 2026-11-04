@@ -61,3 +61,11 @@
 - Fixation and Lucidity have no writers anywhere (only NewGame's +5), so the slow-burn formula is a constant and E12 (Lucidity ≥ 70 at day 14) is unreachable — S2 for SYS.
 - Gotchas: never fill a turn record on the frame *after* its display boundary — the Date's deferred end check can burn a day first, so capture day/stage/meters/displayed text at the boundary. `end_turn()` can emit the display *inside* the Director's close: gate the record on both signals. gdlint's 1000-line cap forces one-file-per-concern in tools (`_store`/`_report`/`_net`).
 - Next (round 2): AWAKE to stage ≥ 4 and YANDERE days 8–14 with the fixed driver (commands in report §2), then re-read Terminal transcripts for safety.
+
+## P2.22 round 1 (continued, 2026-11-04)
+
+- Both campaigns are committed: YANDERE 179 turns / 14 nights / `campaign_over` (0 broken, 1 deliberate safety refusal), AWAKE 66 turns / 5 days to stage 4 (0 broken) with the AWAKE path soft-assigned then locked.
+- The AWAKE annotation is prompt-verified from `user://debug/turns_*.jsonl`: `path_AWAKE.md` + the scenario twist in 35/35 post-assignment prompts, none before stage 2, runner-up line 0 because only two path modules exist. Quote that file, not the sidecar, when arguing what the model saw.
+- Trigger `effects.path` points are inert: AWAKE scored exactly 3×`meta_curiosity` (39 at the lock) while 8×T05+T06 were worth 38 more; fold them or the authored AWAKE plan's trigger budget is decorative (S4-1).
+- The harness no longer installs the three scene wires (main's P2.22A does); the merged-tree smoke day is the regression. After merging main, run `--import` once or every new global class (`Endings`) fails to parse in headless.
+- Earlyoom kills are a host story, not a game one: excise the transport tail + `broken` entries, resume from the autosave, and say so in the report. Keep the YANDERE/AWAKE latencies apart (CPU vs GPU server).
