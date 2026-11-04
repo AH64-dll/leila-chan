@@ -1,0 +1,60 @@
+{
+  "D01_classroom": [
+    "Hey. You're still here too?",
+    "I'm Ren. I sit two rows over, but I'm usually asleep by third period.",
+    "What do you do after school? Besides haunting empty classrooms.",
+    "That's a nicer answer than I expected.",
+    "My friend Aya says you're hard to talk to. I don't think so.",
+    "Do you want to walk out together? The gate's still open.",
+    "We should do this again. Same room, same time.",
+    "I have to go soon, but I'm glad I stayed."
+  ],
+  "D03_park_bench": [
+    "Which ones are yours? They all look identical to me.",
+    "Careful, that one has ambitions. Look at him go.",
+    "Okay, I counted six. How many did you get?",
+    "You said seven earlier. Are you messing with me?",
+    "Let's sit for a minute. The bread's almost gone anyway.",
+    "My friend Aya used to come here. She moved away last year.",
+    "The sun's going down. I should head back.",
+    "Thanks for dragging me out here."
+  ],
+  "D04_rain_umbrella": [
+    "I didn't bring an umbrella. Of course I didn't.",
+    "Hold it in the middle, or we'll both get wet.",
+    "Where does this street even go? I've never walked it this far.",
+    "It's really coming down. Should we wait it out?",
+    "You're getting my sleeve wet, you know.",
+    "Okay, five more minutes. Then I have to go.",
+    "You don't have to walk me all the way home.",
+    "I had a good time, weirdly. In the rain."
+  ],
+  "D06_rooftop": [
+    "You said you had a secret. I climbed four flights for this.",
+    "Okay. I'm listening.",
+    "That's not what I expected at all.",
+    "Why are you standing so close to the fence?",
+    "Come back from the edge. Please.",
+    "I'd notice. If you weren't there tomorrow, I'd notice.",
+    "Let's go down. It's cold up here.",
+    "You can tell me the rest another day."
+  ],
+  "D11_her_room": [
+    "Whoa. This is a lot of plushies.",
+    "Do they have names? Tell me all of them.",
+    "This one's my favourite. He looks like he's plotting something.",
+    "These photos. Are they all of me?",
+    "Where was this one taken? I don't remember that day.",
+    "You have a lot of me up on this wall.",
+    "Okay, that one's a little much. The angle is strange.",
+    "I should go. My mum's expecting me."
+  ],
+  "I01_phone_call": [
+    "Everything okay? You've been on that thing for a while.",
+    "Who is it? You don't have to tell me.",
+    "You're nodding a lot. Is it bad news?",
+    "Hey. Your screen went dark.",
+    "There's nobody on the line, is there.",
+    "Come sit down. Talk to me instead."
+  ]
+}

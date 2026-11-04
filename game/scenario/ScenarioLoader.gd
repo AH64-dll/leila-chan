@@ -218,11 +218,19 @@ static func get_opening_beats(
 	var beats_source: Array = []
 
 	if raw is Dictionary:
+		var beats_map := raw as Dictionary
 		var key := str(stage)
-		if (raw as Dictionary).has(key):
-			beats_source = (raw as Dictionary)[key]
-		elif (raw as Dictionary).has("0"):
-			beats_source = (raw as Dictionary)["0"]
+		if beats_map.has(key):
+			beats_source = beats_map[key]
+		else:
+			# Fall back to the highest defined stage <= requested stage, the same
+			# rule _resolve_variant uses: a stage-2 date must not open on the
+			# stage-0 line just because only 0/1/3/5 were authored.
+			for s: int in range(stage, -1, -1):
+				var k := str(s)
+				if beats_map.has(k):
+					beats_source = beats_map[k]
+					break
 	elif raw is Array:
 		beats_source = raw as Array
 
