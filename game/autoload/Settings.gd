@@ -94,6 +94,7 @@ func _ready() -> void:
 
 ## ── Photosensitive (P2.15) ────────────────────────────────────────────────
 
+
 ## Settings → "Reset Everything" (docs/07 §3.5, docs/05 M08): deletes ALL of
 ## `user://` — save slots, the shadow save, letters, diary, debug transcripts —
 ## EXCEPT this file (a wiped game still honours the photosensitive
