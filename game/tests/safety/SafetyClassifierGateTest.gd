@@ -283,6 +283,25 @@ func test_steered_config_rule_reads_vectors_and_launch_flags() -> void:
 	assert_bool(SafetyClassifierGate.is_steered_config({"control_vectors": []})).is_false()
 
 
+## CODE-3/DES-3b: `auto_start` alone does not vouch for the server. With
+## `LEILA_OWN_SERVER=1` Boot requests an app-launched server, but a healthy one
+## already on the port is adopted and its launch flags are invisible — the tier
+## must fail closed instead of letting a dosed model answer (docs/02 §8, SAF-3).
+func test_an_adopted_auto_start_server_keeps_the_tier_off() -> void:
+	var fake := _fake("no")
+	var f := _filter(fake)
+	var config := {"auto_start": true, "server_owned": false, "control_vectors": []}
+	f.classifier_gate.set_config_provider(func() -> Dictionary: return config)
+	assert_bool(f.filter_text(HARM_FLAG, STAGE0)["redacted"]).is_true()
+	assert_int(int(fake.get("requests").size())).is_equal(0)
+	assert_bool(bool(f.classifier_gate.call("stats")["backend_steered"])).is_true()
+	## Once the app owns the process and carries no vector, the same live config
+	## brings the tier back without a restart.
+	config["server_owned"] = true
+	assert_bool(f.filter_text(HARM_FLAG, STAGE0)["redacted"]).is_false()
+	assert_int(int(fake.get("requests").size())).is_equal(1)
+
+
 ## CODE-8: a guard shorter than the transport's own read bound would forget a
 ## healthy answer before it lands, so the loader refuses it.
 func test_quiet_timeout_below_the_transport_floor_fails_the_load() -> void:

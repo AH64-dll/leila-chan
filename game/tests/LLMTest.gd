@@ -392,5 +392,7 @@ func test_backend_config_exposes_the_installed_transport_config() -> void:
 	llm.set_backend(backend)
 	var config: Dictionary = llm.get_backend_config()
 	assert_str(String(config.get("base_url", ""))).is_equal("http://127.0.0.1:9099")
+	# CODE-3: the live classifier check needs ownership, not just `auto_start`.
+	assert_bool(bool(config.get("server_owned", true))).is_false()
 	config["base_url"] = "http://elsewhere"
 	assert_str(String(backend.config.get("base_url", ""))).is_equal("http://127.0.0.1:9099")

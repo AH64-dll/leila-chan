@@ -3,6 +3,10 @@
 # LLM model weights (2.6 GB) — download separately, see README
 models/
 *.gguf
+# ...except the steering control vectors: a shipped game asset of 10–60 KB each
+# (docs/06 §2), not a model weight. Built by experiments/steer_build.py from the
+# pinned GGUF and committed so a fresh clone can bind the dose (P2.03).
+!game/data/steering/*.gguf
 
 # llama.cpp binary distribution — download separately, see README
 tools/llama/

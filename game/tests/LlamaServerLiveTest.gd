@@ -252,3 +252,121 @@ func test_live_first_say_is_measured() -> void:
 			]
 		)
 	)
+
+
+## Polls a `{done, info}` spy until the deferred relaunch callback lands.
+func _await_spy(spy: Dictionary, timeout_ms := 30000) -> bool:
+	var deadline := Time.get_ticks_msec() + timeout_ms
+	while not bool(spy["done"]) and Time.get_ticks_msec() < deadline:
+		await get_tree().process_frame
+	return bool(spy["done"])
+
+
+## P2.03 AC — a stage change binds the new dose by relaunching the real server
+## with the shipped malice vector, and the relaunch fits the transition glitch
+## (docs/06 §4). The player's next line is submitted *while* it is in flight: the
+## turn waits for the session and lands on the new server, so nothing is lost.
+func test_live_stage_relaunch_fits_the_glitch_and_loses_no_turn() -> void:
+	if not _skip_reason.is_empty():
+		print(
+			"LIVE SKIP test_live_stage_relaunch_fits_the_glitch_and_loses_no_turn: " + _skip_reason
+		)
+		return
+	_start_backend()
+	var cold_started := Time.get_ticks_msec()
+	var warm: Dictionary = _backend.ensure_server()
+	var cold_ms := Time.get_ticks_msec() - cold_started
+	assert_bool(bool(warm["ok"])).is_true().append_failure_message(str(warm))
+	var pid_before := _backend.server_pid()
+	assert_int(pid_before).is_greater(0)
+	assert_bool(SafetyClassifierGate.is_steered_config(_backend.config)).is_false()
+
+	var spy := {"done": false, "info": {}}
+	var vector := ProjectSettings.globalize_path("res://data/steering/malice.gguf")
+	var accepted := _backend.apply_steering(
+		[{"path": vector, "scale": 4.5}],
+		3,
+		2500,
+		func(info: Dictionary) -> void:
+			spy["info"] = info
+			spy["done"] = true
+	)
+	assert_bool(accepted).is_true()
+
+	# The next player line arrives during the relaunch (P2.03 "no lost input").
+	var system := "Reply with ONLY one JSON object, no prose."
+	var run: Dictionary = await _run(_new_request(SCHEMA_A, system, "Are you there?"))
+	assert_str(String(run["terminal"])).is_equal("completed")
+	assert_int((run["tokens"] as PackedStringArray).size()).is_greater(0)
+
+	assert_bool(await _await_spy(spy)).is_true()
+	var info: Dictionary = spy["info"]
+	print("LIVE stage relaunch: " + JSON.stringify(info))
+	print(
+		(
+			"LIVE cold start baseline: %dms (budget %dms)"
+			% [cold_ms, LlamaServerBackend.STEERING_BUDGET_MS]
+		)
+	)
+	assert_bool(bool(info["ok"])).is_true()
+	# The relaunch is a stop plus the same cold start. On a machine where a plain
+	# cold start already misses the AC budget (another llama-server holding the GPU:
+	# the model then loads on the CPU), the 3.5 s figure is not measurable — assert
+	# the relaunch added no more than 1 s over what this machine can do instead.
+	var limit := maxi(LlamaServerBackend.STEERING_BUDGET_MS, cold_ms + 1000)
+	if cold_ms > LlamaServerBackend.STEERING_BUDGET_MS:
+		print(
+			(
+				(
+					"LIVE NOTE: cold start %dms already misses the %dms budget on this "
+					+ "machine; asserting relaunch <= baseline + 1000ms"
+				)
+				% [cold_ms, LlamaServerBackend.STEERING_BUDGET_MS]
+			)
+		)
+	assert_bool(int(info["ms"]) <= limit).is_true().append_failure_message(
+		"relaunch took %dms (limit %dms, cold start %dms)" % [int(info["ms"]), limit, cold_ms]
+	)
+	assert_bool(int(_backend.server_pid()) != pid_before).is_true()
+	var bound: Array = _backend.config.get("control_vectors", [])
+	assert_int(bound.size()).is_equal(1)
+	assert_float(float(bound[0]["scale"])).is_equal(4.5)
+	# P2.17's live config provider sees the vector, so Boot's classifier tier turns
+	# itself off instead of asking a dosed model for a verdict (SAF-12).
+	assert_bool(SafetyClassifierGate.is_steered_config(_backend.config)).is_true()
+
+
+## P2.03 AC "failure → keep old dose + log": a vector that cannot be launched is
+## refused before anything is stopped, so the running server keeps its dose and
+## the next turn still completes.
+func test_live_a_bad_vector_keeps_the_running_dose() -> void:
+	if not _skip_reason.is_empty():
+		print("LIVE SKIP test_live_a_bad_vector_keeps_the_running_dose: " + _skip_reason)
+		return
+	_start_backend()
+	assert_bool(bool(_backend.ensure_server()["ok"])).is_true()
+	var pid_before := _backend.server_pid()
+	var spy := {"done": false, "info": {}}
+	var accepted := _backend.apply_steering(
+		[{"path": "/nonexistent/not_a_vector.gguf", "scale": 4.5}],
+		5,
+		2500,
+		func(info: Dictionary) -> void:
+			spy["info"] = info
+			spy["done"] = true
+	)
+	assert_bool(accepted).is_true()
+	assert_bool(await _await_spy(spy)).is_true()
+	var info: Dictionary = spy["info"]
+	print("LIVE bad vector: " + JSON.stringify(info))
+	assert_bool(bool(info["ok"])).is_false()
+	assert_str(String((info["error"] as Dictionary)["code"])).is_equal("control_vector_missing")
+	assert_bool(bool(info["kept_previous"])).is_true()
+	assert_bool(bool(info["recovered"])).is_true()
+	assert_int(_backend.server_pid()).is_equal(pid_before)
+	assert_bool(_backend.is_server_healthy()).is_true()
+
+	var run: Dictionary = await _run(
+		_new_request(SCHEMA_A, "Reply with ONLY one JSON object, no prose.", "Still here?")
+	)
+	assert_str(String(run["terminal"])).is_equal("completed")

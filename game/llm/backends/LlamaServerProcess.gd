@@ -23,6 +23,11 @@ const HEALTH_MAX_BYTES := 16384
 var config := {}
 var _pid := 0
 var _owns := false
+## A healthy server that this process adopted instead of launching (P1.02 attach
+## rule). It is never ours to stop, relaunch, or take over (docs/06 §4.1), and the
+## safety classifier must not be pointed at it when `auto_start` only *asked* for
+## an owned server (CODE-3). Set by the last probe; reset by a launch/stop.
+var _attached := false
 var _supervised := false
 var _mutex := Mutex.new()
 var _host := "127.0.0.1"
@@ -45,11 +50,18 @@ static func default_config() -> Dictionary:
 		"gpu_layers": 99,
 		"parallel_slots": 1,
 		"control_vectors": [],
+		## The working directory the server process will have (docs/06 §4). Only
+		## used to make a Windows drive-letter vector path flag-safe; POSIX paths
+		## and relative paths need no base. See flag_path().
+		"vector_cwd": "",
 		"extra_args": PackedStringArray(),
 		"startup_timeout_ms": DEFAULT_STARTUP_TIMEOUT_MS,
 		"health_timeout_ms": DEFAULT_HEALTH_TIMEOUT_MS,
 		"stop_timeout_ms": DEFAULT_STOP_TIMEOUT_MS,
 		"connect_timeout_ms": DEFAULT_CONNECT_TIMEOUT_MS,
+		## A stage-change relaunch waits this long for an in-flight turn rather
+		## than cutting off a line the player is reading (no lost input).
+		"steering_turn_wait_ms": 15000,
 	}
 
 
@@ -79,6 +91,153 @@ static func find_free_port() -> int:
 	var port := server.get_local_port()
 	server.stop()
 	return port
+
+
+## `tools/llm/cvec_path.py`'s rule for the in-game launcher (P0 gate C1 → P1.23 →
+## P2.03). llama.cpp splits `--control-vector-scaled FNAME:SCALE` on ':' and ',',
+## so a FNAME containing either can never be passed. POSIX absolute and relative
+## paths pass through; a Windows drive path becomes a same-drive path relative to
+## `cwd` (the server's working directory, which the launcher cannot control); the
+## ambiguous `X:file` form and a filename literally containing ':'/',' are
+## refused. Returning `ok: false` is the point: a server that silently ignores a
+## vector reports healthy, so a bad path must keep the old dose instead.
+## Returns {ok, path, error}.
+static func flag_path(path: String, cwd := "", platform := "") -> Dictionary:
+	var target := platform
+	if target.is_empty():
+		target = "windows" if OS.get_name() == "Windows" else "posix"
+	if target == "posix":
+		if _flag_unsafe_chars(path):
+			return _flag_refused(_unsafe_message(path))
+		return {"ok": true, "path": path, "error": ""}
+	if target != "windows":
+		return _flag_refused("unknown platform '%s' (windows|posix)" % target)
+	var normalized := path.replace("\\", "/")
+	if _is_drive_relative(normalized):
+		return _flag_refused(
+			(
+				(
+					"ambiguous drive-relative vector path '%s': 'X:file' means a saved "
+					+ "directory on drive X, not a path; pass the full 'X:/...' path"
+				)
+				% path
+			)
+		)
+	if _is_drive_rooted(normalized):
+		var base := cwd.replace("\\", "/")
+		if base.is_empty() or not (_is_drive_rooted(base) or base.begins_with("//")):
+			return _flag_refused(
+				(
+					(
+						"vector path '%s' is a Windows drive path and no server working "
+						+ "directory is configured; set `vector_cwd` to the directory "
+						+ "llama-server will run in"
+					)
+					% path
+				)
+			)
+		if base[0].to_lower() != normalized[0].to_lower():
+			return _flag_refused(
+				(
+					(
+						"vector '%s' is on a different drive than the server working "
+						+ "directory '%s'; llama.cpp cannot take an absolute drive path"
+					)
+					% [path, cwd]
+				)
+			)
+		var relative := _windows_relative(normalized, base)
+		if _flag_unsafe_chars(relative):
+			return _flag_refused(_unsafe_message(path))
+		return {"ok": true, "path": relative, "error": ""}
+	var out := _windows_normalise(normalized)
+	if _flag_unsafe_chars(out):
+		return _flag_refused(_unsafe_message(path))
+	return {"ok": true, "path": out, "error": ""}
+
+
+static func _flag_unsafe_chars(path: String) -> bool:
+	return ":" in path or "," in path
+
+
+static func _flag_refused(message: String) -> Dictionary:
+	return {"ok": false, "path": "", "error": message}
+
+
+static func _unsafe_message(path: String) -> String:
+	return (
+		(
+			"control vector path '%s' contains ':' or ',' — the "
+			+ "--control-vector-scaled FNAME:SCALE parser cannot accept it; rename "
+			+ "the file or use a path without ':'/','"
+		)
+		% path
+	)
+
+
+## True for `X:\foo` / `X:/foo` (drive letter + separator). Expects '/'.
+static func _is_drive_rooted(path: String) -> bool:
+	return (
+		path.length() >= 3
+		and _is_letter(path[0])
+		and path[1] == ":"
+		and (path[2] == "/" or path[2] == "\\")
+	)
+
+
+## True for `X:foo` (drive letter, colon, no separator) — ambiguous: Windows
+## reads it as "this name in the saved directory of drive X".
+static func _is_drive_relative(path: String) -> bool:
+	return (
+		path.length() >= 3
+		and _is_letter(path[0])
+		and path[1] == ":"
+		and path[2] != "/"
+		and path[2] != "\\"
+	)
+
+
+static func _is_letter(character: String) -> bool:
+	var upper := character.to_upper()
+	return character.length() == 1 and upper >= "A" and upper <= "Z"
+
+
+## A path relative to `base`, both drive-rooted ('/' form, same drive). Walks up
+## when the target is outside `base`, exactly like ntpath.relpath.
+static func _windows_relative(absolute: String, base: String) -> String:
+	var target_parts := absolute.split("/", false)
+	var base_parts := base.split("/", false)
+	var shared := 0
+	while (
+		shared < target_parts.size()
+		and shared < base_parts.size()
+		and target_parts[shared].to_lower() == base_parts[shared].to_lower()
+	):
+		shared += 1
+	var parts := PackedStringArray()
+	for _index: int in range(shared, base_parts.size()):
+		parts.append("..")
+	for index: int in range(shared, target_parts.size()):
+		parts.append(String(target_parts[index]))
+	if parts.is_empty():
+		return "."
+	return "/".join(parts)
+
+
+## ntpath.normpath's essence for the forms that skip the relative branch: drop
+## '.', fold 'x/..' and keep leading '//' (a UNC share).
+static func _windows_normalise(path: String) -> String:
+	var prefix := "//" if path.begins_with("//") else ""
+	var parts := path.trim_prefix(prefix).split("/", false)
+	var out := PackedStringArray()
+	for part: String in parts:
+		if part == ".":
+			continue
+		if part == ".." and not out.is_empty() and String(out[out.size() - 1]) != "..":
+			out.remove_at(out.size() - 1)
+			continue
+		out.append(part)
+	return prefix + "/".join(out)
 
 
 func configure(updates: Dictionary) -> void:
@@ -169,6 +328,12 @@ func restart(cancel: LLMCancelToken = null) -> Dictionary:
 	if not _lock(cancel):
 		return _cancelled()
 	var old_pid := _pid
+	if _foreign_locked():
+		# A server this process did not launch is not ours to stop; starting a
+		# second one would only fight it for the port (docs/06 §4.1).
+		var refused := _foreign_result(old_pid)
+		_mutex.unlock()
+		return refused
 	_stop_locked()
 	_supervised = true
 	var result := _start_locked(cancel)
@@ -178,12 +343,83 @@ func restart(cancel: LLMCancelToken = null) -> Dictionary:
 	return result
 
 
+## docs/06 §4 stage change: relaunch with a new control-vector set. The whole
+## stop/start runs under the process mutex, so a turn's ensure_running() waits
+## here and lands on the new server instead of racing a second one onto the port
+## (no lost player input). Nothing is killed before the new set validates: a bad
+## vector leaves the running server and its old dose untouched. If the launch
+## fails after the stop, `previous` is put back and relaunched — "keep the old
+## dose" has to mean a live server carrying the last dose it bound, not a dead
+## port. Returns the same shape as restart() plus:
+##   kept_previous — the vectors in effect are the old ones
+##   recovered     — a server is answering again (kept or relaunched)
+##   restart_ms    — validate/stop/start wall time
+func restart_with_vectors(
+	vectors: Array, previous: Array, cancel: LLMCancelToken = null
+) -> Dictionary:
+	if not _lock(cancel):
+		return _cancelled()
+	var started := Time.get_ticks_msec()
+	var old_pid := _pid
+	if _foreign_locked():
+		# docs/06 §4.1 "only a server the app launched can be rebound": the
+		# stop below cannot kill an adopted server, so launching a replacement
+		# would leave two llama-servers on the port and report a failure the
+		# attached one never had. `_attached` is only a memory of the last probe
+		# (a fresh backend may never have probed), so check the live server.
+		var refused := _foreign_result(old_pid)
+		refused["restart_ms"] = Time.get_ticks_msec() - started
+		_mutex.unlock()
+		return refused
+	config["control_vectors"] = vectors.duplicate(true)
+	var validation := _validate_files()
+	if not validation["ok"]:
+		config["control_vectors"] = previous.duplicate(true)
+		_mutex.unlock()
+		return {
+			"ok": false,
+			"error": validation["error"],
+			"kept_previous": true,
+			"recovered": is_running(),
+			"old_pid": old_pid,
+			"pid": _pid,
+			"restart_ms": Time.get_ticks_msec() - started,
+		}
+	_stop_locked()
+	_supervised = true
+	var result := _start_locked(cancel)
+	result["old_pid"] = old_pid
+	result["kept_previous"] = false
+	result["recovered"] = true
+	if not result["ok"]:
+		config["control_vectors"] = previous.duplicate(true)
+		_supervised = true
+		var recovery := _start_locked(cancel)
+		result["kept_previous"] = true
+		result["recovered"] = bool(recovery.get("ok", false))
+		result["recovery_error"] = recovery.get("error", {})
+		result["pid"] = _pid
+	result["restart_ms"] = Time.get_ticks_msec() - started
+	_mutex.unlock()
+	return result
+
+
 func server_pid() -> int:
 	return _pid
 
 
 func owns_process() -> bool:
-	return _owns and _pid > 0
+	## A dead pid is not ownership: `server_owned` (the classifier's live check,
+	## SAF-12) and the relaunch guard must describe the server answering *now*,
+	## not one this process used to have.
+	return _owns and is_running()
+
+
+## True when the last probe found a healthy server this process did not launch.
+## Cheap (no probe): the caller uses it for the main-thread refusal, while the
+## worker path re-probes before it touches anything (`_foreign_locked`).
+func is_attached() -> bool:
+	return _attached
 
 
 func is_supervised() -> bool:
@@ -198,11 +434,54 @@ func is_healthy(timeout_ms := -1) -> bool:
 	return probe_health(timeout_ms)["ok"]
 
 
+## Under `_mutex`, worker threads only: true when a healthy server answers that
+## this process did not launch. The live probe is why this is not the cheap
+## main-thread check — `is_attached()` is the cached answer for that. The flag is
+## set here so the next main-thread call refuses without a probe (docs/06 §4.1).
+func _foreign_locked() -> bool:
+	if _owns and is_running():
+		_attached = false
+		return false
+	if not is_healthy():
+		return false
+	_attached = true
+	return true
+
+
+## The refusal every relaunch reports for an adopted server. Nothing was
+## stopped, so the old dose still runs: `kept_previous` and `recovered` hold.
+func _foreign_result(old_pid: int) -> Dictionary:
+	return {
+		"ok": false,
+		"error":
+		{
+			"code": "server_not_owned",
+			"message":
+			(
+				(
+					"a server is already answering on %s and this app did not launch it; "
+					+ "refusing to relaunch a process it does not own"
+				)
+				% String(config["base_url"])
+			),
+		},
+		"kept_previous": true,
+		"recovered": true,
+		"old_pid": old_pid,
+		"pid": _pid,
+		"restart_ms": 0,
+	}
+
+
 func _ensure_locked(cancel: LLMCancelToken) -> Dictionary:
 	if _owns and is_running():
+		_attached = false
 		return _running_result(false, 0)
 	var health := probe_health()
 	if health["ok"]:
+		# Another task's server: adopted, never killed (P1.02). The flag is what
+		# makes a relaunch refuse instead of spawning a doomed second server.
+		_attached = true
 		return _running_result(false, 0)
 	if _port_is_open():
 		return {
@@ -248,6 +527,7 @@ func _start_locked(cancel: LLMCancelToken) -> Dictionary:
 		}
 	_pid = pid
 	_owns = true
+	_attached = false
 	var started := Time.get_ticks_msec()
 	var budget := int(config["startup_timeout_ms"])
 	while Time.get_ticks_msec() - started < budget:
@@ -301,7 +581,44 @@ func _validate_files() -> Dictionary:
 				"message": "model not found: " + model,
 			},
 		}
+	var vector_error := _control_vector_error()
+	if not vector_error.is_empty():
+		return {"ok": false, "error": vector_error}
 	return {"ok": true}
+
+
+## Every configured vector must be a readable GGUF with a flag-safe FNAME before
+## anything is launched: llama.cpp only logs "no valid control vector files
+## passed" for a bad one and then serves healthy, so an unvalidated set would run
+## unsteered while the game believed it was dosed (docs/06 §4). {} when clean.
+func _control_vector_error() -> Dictionary:
+	var cwd := String(config.get("vector_cwd", ""))
+	for vector: Variant in config.get("control_vectors", []):
+		if typeof(vector) != TYPE_DICTIONARY:
+			continue
+		var entry: Dictionary = vector
+		var path := String(entry.get("path", ""))
+		if path.is_empty():
+			continue
+		if not FileAccess.file_exists(path):
+			return {
+				"code": "control_vector_missing",
+				"message": "control vector not found: " + path,
+			}
+		if not StageSteering.has_gguf_magic(path):
+			return {
+				"code": "control_vector_invalid",
+				"message": "not a GGUF control vector: " + path,
+			}
+		var flag := flag_path(path, cwd)
+		if not flag["ok"]:
+			return {"code": "control_vector_path_unsafe", "message": String(flag["error"])}
+		if not is_finite(float(entry.get("scale", 1.0))):
+			return {
+				"code": "control_vector_invalid",
+				"message": "non-finite control-vector scale for " + path,
+			}
+	return {}
 
 
 func _build_args() -> PackedStringArray:
@@ -322,14 +639,19 @@ func _build_args() -> PackedStringArray:
 			str(int(config["parallel_slots"])),
 		]
 	)
+	var cwd := String(config.get("vector_cwd", ""))
 	for vector: Variant in config.get("control_vectors", []):
 		if typeof(vector) != TYPE_DICTIONARY or not vector.has("path"):
 			continue
 		var path := String(vector["path"])
 		if path.is_empty():
 			continue
+		# _validate_files() already refused anything the flag grammar cannot take,
+		# through the same rule tools/llm/cvec_path.py applies to the shell launchers.
+		var flag := flag_path(path, cwd)
+		var scale := String.num(float(vector.get("scale", 1.0)), 4)
 		args.append("--control-vector-scaled")
-		args.append("%s:%s" % [path, String.num(float(vector.get("scale", 1.0)), 4)])
+		args.append("%s:%s" % [String(flag["path"]), scale])
 	for arg: Variant in config.get("extra_args", PackedStringArray()):
 		args.append(String(arg))
 	return args
@@ -337,10 +659,14 @@ func _build_args() -> PackedStringArray:
 
 func _stop_locked() -> void:
 	_supervised = false
+	_attached = false
 	if _pid > 0 and OS.is_process_running(_pid):
 		OS.kill(_pid)
+		# Wait for the socket to close rather than for the pid to vanish: once a
+		# child is reaped, OS.is_process_running() prints an engine error on Linux
+		# (P1.02 CODE-2), and the free port is what a relaunch actually needs back.
 		var deadline := Time.get_ticks_msec() + int(config["stop_timeout_ms"])
-		while OS.is_process_running(_pid) and Time.get_ticks_msec() < deadline:
+		while Time.get_ticks_msec() < deadline and _port_is_open():
 			OS.delay_msec(POLL_MS)
 	_pid = 0
 	_owns = false
