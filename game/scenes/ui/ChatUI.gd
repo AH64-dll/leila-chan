@@ -52,7 +52,8 @@ var _config := {}
 var _filter_warning_emitted_this_turn := false
 var _turn_seq := 0  # seeded per-turn counter for the corruption filter
 var _inner_leaked_turn := -1  # `_turn_seq` of the turn whose thought already leaked
-## docs/08 §1.5 stage 5: her name replaces the player's tag once per run.
+## docs/08 §1.5 stage 5: her name replaces the player's tag for one line per
+## chat log (a Date scene owns one ChatUI, so the cap spans that date's turns).
 var _name_tag_swapped := false
 
 @onready var chat_log: ScrollContainer = $Margin/VBox/ChatLog
@@ -466,9 +467,9 @@ func is_reduced_motion() -> bool:
 
 
 ## The name-tag the next player line shows in the log (docs/08 §1.5 stage 5):
-## at stage 5 hers replaces yours for exactly one line per run — a seeded roll
-## on the upcoming turn counter, like the corruption session's, so a replay of
-## the same turn sequence shows the same swap. Below stage 5 it is always the
+## at stage 5 hers replaces yours for exactly one line per chat log — a seeded
+## roll on the upcoming turn counter, like the corruption session's, so a replay
+## of the same turn sequence shows the same swap. Below stage 5 it is always the
 ## confirmed name.
 func player_tag_for(next_turn: int) -> String:
 	if _name_tag_swapped:

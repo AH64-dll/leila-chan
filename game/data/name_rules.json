@@ -1,5 +1,5 @@
 {
-  "doc": "P3.14 player-name decay rules, docs/08 §1.5 renderer-side effects (never the model). Stage 3: she occasionally types the name with a letter missing and corrects it. Stage 4: she sometimes adds -kun when affectionate and drops it when angry. Stage 5: the player's name tag in the chat log is replaced by hers for one line. The shadow-name greeting gate lives under 'shadow'. Read by game/llm/Corruption.gd; the in-code fallback DOCS_NAME_RULES holds the same values so a broken file degrades to the documented behaviour. Tuning chances here is retuning a documented effect — test_data_file_carries_the_docs_table pins the file to the fallback.",
+  "doc": "P3.14 player-name decay rules, docs/08 §1.5 renderer-side effects (never the model). Stage 3: she occasionally types the name with a letter missing and corrects it. Stage 4: she sometimes adds -kun when affectionate and drops it when angry (a positive stress suggestion is the angry turn, docs/02 §1.1). Stage 5: the player's name tag in the chat log is replaced by hers for one line, once per chat log (the cap lives in ChatUI, one Date scene per log, so it is not a tunable here). The shadow-name greeting gate lives under 'shadow'. Read by game/llm/Corruption.gd; the in-code fallback DOCS_NAME_RULES holds the same values so a broken file degrades to the documented behaviour. Tuning chances here is retuning a documented effect — test_data_file_carries_the_docs_table pins the file to the fallback.",
   "decay": {
     "gate": 3,
     "chance": 0.5,
@@ -17,8 +17,7 @@
   },
   "tag_swap": {
     "gate": 5,
-    "chance": 0.35,
-    "max_per_run": 1
+    "chance": 0.35
   },
   "shadow": {
     "gate": 3

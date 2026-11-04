@@ -90,21 +90,29 @@ func confirm_name() -> void:
 
 	# Apply game state updates (docs/08 §1.5)
 	var tree: SceneTree = Engine.get_main_loop() as SceneTree
-	var prev_stage := 0
 	var shadow_first := ""
 	var shadow_names: Array = []
+	var stored_stage := 0
+	var live_stage := 0
+	var run_in_progress := false
+	# The stage the shadow-name line gates on (assigned below, before the seal).
+	var prev_stage := 0
 	if tree != null and tree.root != null:
-		# docs/08 §1.5 shadow name memory (P3.14): capture the ended run's
-		# stage and the first name she ever knew BEFORE begin_new_game seals
-		# the run — that call records the name being confirmed right now, so
-		# reading the shadow first would make the comparison always match.
+		# docs/08 §1.5 shadow name memory (P3.14): read the ended run's stage
+		# and the first name she ever knew BEFORE begin_new_game seals the run
+		# — that call records the name being confirmed right now, so reading
+		# the shadow first would make the comparison always match.
 		if tree.root.has_node("GameState"):
 			var gs_node: Node = tree.root.get_node("GameState")
-			prev_stage = int(gs_node.get("stage"))
+			live_stage = int(gs_node.get("stage"))
+			run_in_progress = ShadowStore.has_run(
+				int(gs_node.get("day")), int(gs_node.get("turn")), live_stage
+			)
 		if tree.root.has_node("SaveSystem"):
 			var saves_node: Node = tree.root.get_node("SaveSystem")
-			# One shadow read serves both values: the first name ever typed
-			# and every name she has known.
+			# One shadow read serves every value: the first name ever typed,
+			# every name she has known, and the stage the last sealed run
+			# reached (the only stage a fresh process still knows).
 			if saves_node.has_method("shadow_data"):
 				var record: Variant = saves_node.call("shadow_data")
 				if record is Dictionary:
@@ -112,8 +120,14 @@ func confirm_name() -> void:
 					var raw_names: Variant = (record as Dictionary).get("names", [])
 					if raw_names is Array:
 						shadow_names = raw_names
+					stored_stage = int((record as Dictionary).get("last_stage", 0))
 			elif saves_node.has_method("shadow_first_name"):
 				shadow_first = String(saves_node.call("shadow_first_name"))
+		# The gate is the run that just ended: its live stage while this
+		# process had one, otherwise the stage the shadow sealed.
+		# `GameState.stage` is 0 in a fresh process, so reading it alone would
+		# silence the quit-and-relaunch flow the shadow save exists for (DES-2).
+		prev_stage = live_stage if run_in_progress else stored_stage
 		# docs/05 M08: seal the ending run and record this name in the shadow
 		# save BEFORE the reset below erases the run's memories and name —
 		# this is the one write point, so the shadow only ever learns what a

@@ -27,14 +27,21 @@ extends RefCounted
 ##                                 stage 3+). Chosen by the memory model's own
 ##                                 importance, ties keep the newest — the facts
 ##                                 she quoted most, not the newest noise.
+##       "last_stage": <int>,         the stage the run she last sealed had
+##                                 reached (0 before any run ended). The gate
+##                                 for the docs/08 §1.5 shadow line, which must
+##                                 survive the process: `GameState.stage` is 0
+##                                 on the next launch.
 ##     }
 ##   }
 ## Never in this file: conversation logs or transcripts, deletions or drafts
-## (docs/09 "deleted drafts never leave memory"), the OS username (docs/09,
-## opt-in only — a typed name is stored, but nothing reads it from the OS),
-## telemetry, device identifiers, IP or network data. The content is plain
-## JSON the player can open and verify; "Reset Everything" removes the whole
-## `user://` tree except `settings.cfg`, including this file.
+## (docs/09 "deleted drafts never leave memory"), an environment read (the OS
+## username is never fetched — only a name the player TYPES is stored, and a
+## player who opts in may type that same account name, which is then treated
+## like any other typed name), telemetry, device identifiers, IP or network
+## data. The content is plain JSON the player can open and verify; "Reset
+## Everything" removes the whole `user://` tree except `settings.cfg`, including
+## this file.
 ##
 ## Bytes are the P2.20 envelope: same canonical-JSON sha256 and atomic
 ## tmp+rename write as a save slot, under the `leila.shadow` format tag so a
@@ -59,7 +66,16 @@ var _codec := SaveSlots.new(FORMAT, VERSION)
 
 ## The empty-shadow shape every reader sees before the first New Game.
 static func blank() -> Dictionary:
-	return {"first_name": "", "names": [], "runs": [], "memories": []}
+	return {"first_name": "", "names": [], "runs": [], "memories": [], "last_stage": 0}
+
+
+## True when the live state is a run worth sealing (docs/05 M08): anything past
+## a fresh install's first day. One definition, shared by
+## `SaveSystem.begin_new_game` (which decides whether to seal) and by the New
+## Game screen's shadow-name gate (which must know whether the stage it reads is
+## the ended run's or a leftover).
+static func has_run(day: int, turn: int, stage: int) -> bool:
+	return day > 1 or turn > 0 or stage > 0
 
 
 ## Read + validate the envelope. A missing file is `not_found`, never a crash;
@@ -123,12 +139,19 @@ func record_name(record: Dictionary, player_name: String) -> Dictionary:
 	return record
 
 
-## M08 "New Game, same her": the run just ended is appended to `runs`, and —
-## only when it had reached the meta gate — its most-quoted memories are kept.
-## `had_run` distinguishes a real ended run from the first-ever New Game (a
-## fresh install at day 1 / turn 0 seals nothing, so `runs` counts restarts,
-## not first starts).
-func seal_run(record: Dictionary, run_name: String, had_run: bool, memories: Array) -> Dictionary:
+## M08 "New Game, same her": the run just ended is appended to `runs`, its
+## final stage is remembered, and — only when it had reached the meta gate — its
+## most-quoted memories are kept. `had_run` distinguishes a real ended run from
+## the first-ever New Game (a fresh install at day 1 / turn 0 seals nothing, so
+## `runs` counts restarts, not first starts).
+##
+## `stage` is the ended run's stage on the same terms: it is the gate the
+## docs/08 §1.5 shadow line reads, and it has to survive the process — the live
+## `GameState.stage` is 0 on the next launch, so a player who quit at stage 3 and
+## started over would otherwise never hear the line again.
+func seal_run(
+	record: Dictionary, run_name: String, had_run: bool, memories: Array, stage: int
+) -> Dictionary:
 	if had_run:
 		var runs := _strings(record.get("runs"))
 		var label := run_name.strip_edges()
@@ -138,6 +161,7 @@ func seal_run(record: Dictionary, run_name: String, had_run: bool, memories: Arr
 		while runs.size() > RUN_LIMIT:
 			runs.remove_at(0)
 		record["runs"] = runs
+		record["last_stage"] = maxi(0, stage)
 		if not memories.is_empty():
 			record["memories"] = _kept_memories(memories)
 	return record
@@ -184,7 +208,8 @@ func _kept_memories(entries: Array) -> Array:
 
 
 ## A corrupt/hand-edited payload heals to the blank shape plus whatever keys
-## parse: the four lists are string-filtered, never trusted.
+## parse: the four lists are string-filtered and the stage is a non-negative
+## int, never trusted.
 func _heal(value: Variant) -> Dictionary:
 	var record := blank()
 	if not value is Dictionary:
@@ -193,6 +218,7 @@ func _heal(value: Variant) -> Dictionary:
 	record["first_name"] = _string(payload.get("first_name"))
 	record["names"] = _strings(payload.get("names"))
 	record["runs"] = _strings(payload.get("runs"))
+	record["last_stage"] = _stage_int(payload.get("last_stage"))
 	var memories: Array = []
 	for item: Variant in _array(payload.get("memories")):
 		var text := _string(item)
@@ -200,6 +226,16 @@ func _heal(value: Variant) -> Dictionary:
 			memories.append(text)
 	record["memories"] = memories
 	return record
+
+
+## A stage value from disk, healed: an int/float floors to a non-negative int,
+## anything else (a hand-edited string, null, a list) reads as "no run sealed".
+static func _stage_int(value: Variant) -> int:
+	if value is int:
+		return maxi(0, value)
+	if value is float:
+		return maxi(0, int(value))
+	return 0
 
 
 func _replace(temporary: String, target: String) -> bool:

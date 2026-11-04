@@ -71,7 +71,7 @@ Steam release · then Android/iOS: smaller model, first-launch download, in-app 
 - **Art:** the final sprites are a code-driven pixel redraw (palette, faces, hands, clip, effects all original), but they
   are still traced from the AI-generated reference renders — confirm that generator's terms allow commercial use.
 - **Tweet recipe:** an idea/technique, not copyrighted material; credit the author in the credits as inspiration.
-- **Privacy:** no telemetry by default; OS username use is opt-out; deleted-draft text never leaves memory.
+- **Privacy:** no telemetry by default; OS username use is opt-in (default off); deleted-draft text never leaves memory.
 
 ## 4. Decisions only you can make
 

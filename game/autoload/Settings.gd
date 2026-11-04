@@ -89,12 +89,28 @@ func toggle_photosensitive() -> bool:
 ## Reads the persisted flags. A missing or unreadable file keeps the defaults;
 ## photosensitive defaults to off because the Title row is its entry point, and
 ## a player who needs it turns it on before the first date.
+##
+## Each flag is read fail-closed through `_stored_bool`: a hand-edited file can
+## hold any type where a bool belongs, and `bool("false")` would raise
+## `Nonexistent 'bool' constructor` mid-load, so only a real bool is trusted.
 func load_settings() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(settings_path) != OK:
 		return
-	_apply_photosensitive(bool(cfg.get_value(SECTION, "photosensitive", photosensitive)))
-	use_os_username = bool(cfg.get_value(SECTION_PRIVACY, "use_os_username", use_os_username))
+	_apply_photosensitive(_stored_bool(cfg, SECTION, "photosensitive", photosensitive))
+	use_os_username = _stored_bool(cfg, SECTION_PRIVACY, "use_os_username", use_os_username)
+
+
+## A persisted flag, healed: only a bool is accepted, anything else (a string,
+## a number, a list) keeps `fallback` and warns. Both flags default to off, so a
+## value the file cannot express leaves the safe state — the opt-in stays off
+## and the photosensitive accommodation keeps whatever the Title row set.
+static func _stored_bool(cfg: ConfigFile, section: String, key: String, fallback: bool) -> bool:
+	var stored: Variant = cfg.get_value(section, key, fallback)
+	if stored is bool:
+		return stored
+	push_warning("Settings: [%s] %s is not a bool; keeping %s" % [section, key, fallback])
+	return fallback
 
 
 ## Writes the flags a player can set today. Only keys this file owns are

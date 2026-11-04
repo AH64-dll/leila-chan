@@ -87,21 +87,21 @@ var _pending_scene: Dictionary = {}
 
 ## The moment M08 happens (see the class note): called by the New Game scene
 ## before it resets GameState/Director, while the ended run's facts and name
-## are still live. Seals that run into the shadow save — the name list and, at
-## the meta gate (stage 3+), the memories she keeps — then records the new
-## name. Returns the ShadowStore write result.
+## are still live. Seals that run into the shadow save — the name list, its
+## final stage and, at the meta gate (stage 3+), the memories she keeps — then
+## records the new name. Returns the ShadowStore write result.
 func begin_new_game(player_name: String) -> Dictionary:
 	var record := shadow.blank()
 	var read := shadow.load_shadow()
 	if bool(read["ok"]):
 		record = read["payload"]
-	var had_run := GameState.day > 1 or GameState.turn > 0 or GameState.stage > 0
+	var had_run := ShadowStore.has_run(GameState.day, GameState.turn, GameState.stage)
 	var memories: Array = []
 	# docs/05 M08's gate: a few memories only survive a New Game from a run
 	# that had already deteriorated far enough for meta events.
 	if had_run and TurnSchema.is_meta_unlocked(GameState.stage):
 		memories = _dict(Memory.to_dict()).get("entries", [])
-	record = shadow.seal_run(record, GameState.player_name, had_run, memories)
+	record = shadow.seal_run(record, GameState.player_name, had_run, memories, GameState.stage)
 	record = shadow.record_name(record, player_name)
 	return shadow.store(record)
 

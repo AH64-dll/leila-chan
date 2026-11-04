@@ -64,6 +64,9 @@ func test_shadow_survives_new_game_and_keeps_stage3_memories() -> void:
 	assert_str(String(shadow["first_name"])).is_equal("Ren")
 	assert_array(shadow["names"]).contains_exactly(["Ren", "Aya"])
 	assert_array(shadow["runs"]).contains_exactly(["Ren"])
+	# The ended run's stage is sealed with it: the docs/08 §1.5 shadow line has
+	# to fire in the next process too (P3.14 round 2, DES-2).
+	assert_int(int(shadow["last_stage"])).is_equal(3)
 	# memory.json shadow.limit = 3 → a few memories: the quoted fact first,
 	# then the newest of the equal-importance rest.
 	assert_array(shadow["memories"]).contains_exactly(
@@ -85,6 +88,9 @@ func test_new_game_below_meta_gate_keeps_names_but_no_memories() -> void:
 	assert_array(shadow["names"]).contains_exactly(["Ren", "Aya"])
 	assert_array(shadow["runs"]).contains_exactly(["Ren"])
 	assert_array(shadow["memories"]).is_empty()
+	# The stage is sealed on the same terms as the memories: this run never
+	# left stage 0, so the next process has no stage-3+ "last time" to invoke.
+	assert_int(int(shadow["last_stage"])).is_equal(0)
 
 
 ## docs/08 §1.5: the FIRST name ever typed is fixed; repeats dedupe.
@@ -137,8 +143,10 @@ func test_shadow_file_contains_only_the_documented_keys() -> void:
 	assert_dict(envelope).contains_keys(["format", "version", "checksum", "payload"])
 	assert_int(envelope.keys().size()).is_equal(4)
 	var payload := envelope["payload"] as Dictionary
-	assert_dict(payload).contains_keys(["first_name", "names", "runs", "memories"])
-	assert_int(payload.keys().size()).is_equal(4)
+	assert_dict(payload).contains_keys(["first_name", "names", "runs", "memories", "last_stage"])
+	assert_int(payload.keys().size()).is_equal(5)
+	# The stage the docs/08 §1.5 shadow line gates on: 0 before any run ended.
+	assert_int(int(payload["last_stage"])).is_equal(0)
 
 
 ## Acceptance 2: Reset Everything removes the shadow save, every slot and any

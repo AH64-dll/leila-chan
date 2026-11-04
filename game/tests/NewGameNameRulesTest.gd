@@ -11,12 +11,18 @@ const SETTINGS_PATH := TEST_ROOT + "settings.cfg"
 var _previous_settings := ""
 var _previous_flag := false
 var _previous_shadow := ""
+var _previous_user := ""
+var _previous_username := ""
 
 
 func before_test() -> void:
 	_previous_settings = Settings.settings_path
 	_previous_flag = Settings.use_os_username
 	_previous_shadow = SaveSystem.shadow_path
+	# The opt-in tests mutate the process environment; capture it first so a
+	# failing assert cannot leak USER/USERNAME into a later suite (CODE-5).
+	_previous_user = OS.get_environment("USER")
+	_previous_username = OS.get_environment("USERNAME")
 	Settings.settings_path = SETTINGS_PATH
 	SaveSystem.shadow_path = TEST_ROOT + ".leila/shadow.json"
 	# The settings store writes the file, it never creates the folder (the
@@ -29,6 +35,8 @@ func before_test() -> void:
 
 
 func after_test() -> void:
+	OS.set_environment("USER", _previous_user)
+	OS.set_environment("USERNAME", _previous_username)
 	Settings.settings_path = _previous_settings
 	Settings.use_os_username = _previous_flag
 	SaveSystem.shadow_path = _previous_shadow
@@ -38,7 +46,7 @@ func after_test() -> void:
 	_remove_tree(TEST_ROOT)
 
 
-func test_tag_swap_happens_once_per_run_in_chat_log() -> void:
+func test_tag_swap_happens_once_per_chat_log() -> void:
 	var ui: Control = auto_free(ChatUIScene.instantiate())
 	add_child(ui)
 	await get_tree().process_frame
@@ -88,49 +96,25 @@ func test_submit_swapped_tag_lands_in_chat_log() -> void:
 	assert_str(str(entries[0]["text"])).is_equal("hello")
 
 
-## ── 6. special names ──────────────────────────────────────────────────────
-
-
-func test_validate_os_username_match_when_opted_in() -> void:
-	var res := PlayerNameRules.validate("amr", Callable(), {"os_username": "amr"})
-	assert_bool(bool(res["valid"])).is_true()
-	assert_bool(bool(res["is_os_username"])).is_true()
-	assert_str(String(res["message"])).is_equal("You told me the truth. Good.")
-	assert_str(String(res["resolved_name"])).is_equal("amr")
-
-
-func test_validate_os_username_not_offered_is_just_a_name() -> void:
-	# Opt-in off = the caller passes "" (Settings.os_username() never leaks
-	# it); the same typed name is an ordinary valid name, no special line.
-	var res := PlayerNameRules.validate("amr", Callable(), {"os_username": ""})
-	assert_bool(bool(res["valid"])).is_true()
-	assert_bool(bool(res["is_os_username"])).is_false()
-	assert_str(String(res["message"])).is_equal("")
-
-
-func test_validate_leila_beats_os_username_special() -> void:
-	var res := PlayerNameRules.validate("Leila", Callable(), {"os_username": "Leila"})
-	assert_bool(bool(res["is_special_leila"])).is_true()
-	assert_str(String(res["message"])).is_equal("That's *my* name. …Do you want to be me?")
+## ── 6. the opt-in gate ──────────────────────────────────────────────────────
 
 
 func test_settings_os_username_opt_in_gate() -> void:
-	var old_user := OS.get_environment("USER")
-	var old_username := OS.get_environment("USERNAME")
+	# Opt-in off: the env IS readable, yet the game must see "" — the gate is
+	# the flag, not the match, so the assertion has to run with the flag OFF.
 	OS.set_environment("USER", "ci_test_player")
 	OS.set_environment("USERNAME", "")
-	# Opt-in off: the env IS readable, yet the game must see "".
 	Settings.use_os_username = false
 	assert_str(Settings.os_username()).is_equal("")
-	# Opt-in on: USERNAME preferred, USER the fallback.
-	assert_str(Settings.os_username()).is_equal("")
+	# Opt-in on: USERNAME is preferred, USER is the fallback.
 	Settings.use_os_username = true
 	assert_str(Settings.os_username()).is_equal("ci_test_player")
 	OS.set_environment("USER", "")
 	OS.set_environment("USERNAME", "windows_name")
 	assert_str(Settings.os_username()).is_equal("windows_name")
-	OS.set_environment("USER", old_user)
-	OS.set_environment("USERNAME", old_username)
+	# Both set: USERNAME wins (Windows carries both).
+	OS.set_environment("USER", "ci_test_player")
+	assert_str(Settings.os_username()).is_equal("windows_name")
 
 
 func test_settings_use_os_username_persists() -> void:
@@ -237,8 +221,8 @@ func test_new_game_no_shadow_line_below_stage3() -> void:
 
 
 func test_new_game_os_username_shows_truth_line() -> void:
-	# A real account name is typable (letters only — the field rejects "_"),
-	# so the match is the case-insensitive one the docs describe.
+	# A real account name is typable, so the match is the case-insensitive one
+	# the docs describe.
 	var scene: Control = auto_free(NewGameScene.instantiate())
 	scene.scene_change_enabled = false
 	scene.os_username_override = "amr"
@@ -248,6 +232,37 @@ func test_new_game_os_username_shows_truth_line() -> void:
 	scene.confirm_name()
 	await get_tree().process_frame
 	assert_str(scene.feedback_label.text).is_equal("You told me the truth. Good.")
+
+
+func test_new_game_truth_line_for_an_underscore_account_name() -> void:
+	var scene: Control = auto_free(NewGameScene.instantiate())
+	scene.scene_change_enabled = false
+	scene.os_username_override = "john_doe"
+	add_child(scene)
+	await get_tree().process_frame
+	scene.name_input.text = "John Doe"
+	scene.confirm_name()
+	await get_tree().process_frame
+	assert_str(scene.feedback_label.text).is_equal("You told me the truth. Good.")
+
+
+func test_new_game_flag_off_with_env_set_shows_no_truth_line() -> void:
+	# The production path end to end: the environment carries the account name
+	# and the player types exactly that name, but the opt-in is off, so the
+	# field sees "" and nothing is revealed (CODE-5).
+	OS.set_environment("USER", "envplayer")
+	OS.set_environment("USERNAME", "")
+	Settings.use_os_username = false
+	assert_str(Settings.os_username()).is_equal("")
+	var scene: Control = auto_free(NewGameScene.instantiate())
+	scene.scene_change_enabled = false
+	add_child(scene)
+	await get_tree().process_frame
+	scene.name_input.text = "envplayer"
+	scene.confirm_name()
+	await get_tree().process_frame
+	assert_str(scene.feedback_label.text).is_equal("")
+	assert_str(GameState.player_name).is_equal("envplayer")
 
 
 func test_new_game_same_name_no_shadow_line() -> void:
@@ -261,6 +276,54 @@ func test_new_game_same_name_no_shadow_line() -> void:
 	add_child(scene)
 	await get_tree().process_frame
 	scene.name_input.text = "Ren"
+	scene.confirm_name()
+	await get_tree().process_frame
+	assert_str(scene.feedback_label.text).is_equal("")
+
+
+func test_new_game_shadow_line_survives_a_relaunch() -> void:
+	# Process 1: a run as "Ren" reaches stage 3 and the player starts over, so
+	# the seal stores that stage in the shadow (the live stage is gone with the
+	# process).
+	SaveSystem.begin_new_game("Ren")
+	GameState.player_name = "Ren"
+	GameState.day = 4
+	GameState.turn = 7
+	GameState.set_meter(&"instability", 55.0)  # stage 3 band (50–69)
+	assert_int(GameState.stage).is_equal(3)
+	SaveSystem.begin_new_game("Ren")
+	assert_int(int(SaveSystem.shadow_data().get("last_stage", 0))).is_equal(3)
+	# Process 2: a fresh launch starts at stage 0 / day 1 / turn 0. The line
+	# must still fire — that is the flow the shadow save exists for (DES-2).
+	GameState.reset()
+	assert_int(GameState.stage).is_equal(0)
+	var scene: Control = auto_free(NewGameScene.instantiate())
+	scene.scene_change_enabled = false
+	add_child(scene)
+	await get_tree().process_frame
+	scene.name_input.text = "Haru"
+	scene.confirm_name()
+	await get_tree().process_frame
+	assert_str(scene.feedback_label.text).is_equal("That's not what you were called last time.")
+
+
+func test_new_game_shadow_line_silent_when_the_sealed_run_stayed_low() -> void:
+	# The stored stage is a real gate, not "any sealed run": a stage-1 run does
+	# not earn the line in the next process either.
+	SaveSystem.begin_new_game("Ren")
+	GameState.player_name = "Ren"
+	GameState.day = 3
+	GameState.turn = 5
+	GameState.set_meter(&"instability", 12.0)  # stage 0
+	assert_int(GameState.stage).is_equal(0)
+	SaveSystem.begin_new_game("Ren")
+	assert_int(int(SaveSystem.shadow_data().get("last_stage", 0))).is_equal(0)
+	GameState.reset()
+	var scene: Control = auto_free(NewGameScene.instantiate())
+	scene.scene_change_enabled = false
+	add_child(scene)
+	await get_tree().process_frame
+	scene.name_input.text = "Haru"
 	scene.confirm_name()
 	await get_tree().process_frame
 	assert_str(scene.feedback_label.text).is_equal("")

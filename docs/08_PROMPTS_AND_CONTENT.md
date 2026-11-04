@@ -28,10 +28,15 @@ old cues.
   the diary and the window title (M12, M28).
 - **The name decays with her** (renderer-side, never by the model): stage 3 she occasionally types it with a letter
   missing and corrects it; stage 4 she sometimes adds "-kun" when she is affectionate and drops it when she is angry;
-  stage 5 your name tag in the chat log is replaced by *hers* for one line.
+  stage 5 your name tag in the chat log is replaced by *hers* for one line, once per chat log (one Date scene owns
+  one log). "Angry" is a **positive** stress suggestion (docs/02 §1.1: the turn that raised Instability), and she
+  judges the *previous* turn's mood, because this turn's is applied after her lines stream. The filter is word-serial,
+  so a multi-word name decays on its last word — the given name ("Mary Jane" → "Jane-kun", never "Mary-kun").
 - Special names: typing **"Leila"** → "That's *my* name. …Do you want to be me?" (+Fixation). Typing the OS username
-  (when opted in) → "You told me the truth. Good." The shadow save remembers the first name ever typed; a New Game
-  with a different name at stage 3+ gets "That's not what you were called last time."
+  (when opted in) → "You told me the truth. Good." The match ignores what the field cannot type, so the account
+  `john_doe` answers to "John Doe" or "johndoe". The shadow save remembers the first name ever typed and the stage the
+  run she last sealed reached; a New Game with a different name at stage 3+ gets "That's not what you were called last
+  time." — the stage is the ended run's, so the line also works after a relaunch, not only within one session.
 
 ## 2. persona.md (draft)
 

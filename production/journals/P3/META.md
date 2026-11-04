@@ -32,3 +32,22 @@
 - Wave hazard seen this round: an interrupted agent had deleted `Corruption.gd`'s whole public API
   mid-reapply. Before continuing someone else's half-done edit, diff `func` names against `HEAD`
   (`git show HEAD:<file> | grep "^static func"` vs the working copy) instead of trusting `git status`.
+
+Round 2 (rework) of P3.14:
+- The `-kun` sign is docs/02 §1.1's, not the negated one: a POSITIVE stress suggestion is the angry
+  turn. `stress > angry_stress` appends on calm turns (118/200 at affection 100) and never on angry
+  ones. When a mood drives a text rule, read the meter-scaling line in docs/02 §1.1 and write the
+  sign into the docstring + a 200-seed test, because the fixtures are the only thing that can pin it.
+- GOTCHA: gdlint's max-public-methods counts `before_test`/`after_test`, so a GdUnit suite caps at 18
+  tests, not 20. Splitting a suite with python: blocks end at the next top-level `func`/`##`, and any
+  `for`-local `var` must not be reused after the loop (GDScript block scoping) — that broke a split
+  with `Identifier "out" not declared`.
+- GOTCHA: `SaveSystem` is at gdlint's 20 public methods, so persistence helpers go on `ShadowStore`
+  (`has_run(day, turn, stage)` is now the single "is this a real ended run" definition used by both
+  the seal and the New Game gate).
+- Cross-process data must be stored, never inferred: the shadow line read the live `GameState.stage`,
+  which is 0 after a relaunch, so `ShadowStore.last_stage` was added (blank/seal/_heal) and the gate
+  is `live if a run is in progress else stored`. Prove such things in two processes, not one.
+- Content the writer tunes belongs in `data/ui.json` with the code consts behind it as a fallback —
+  `PlayerNameRules._messages()` now merges the file over the six `MSG_*` consts, the same shape as
+  `Corruption.DOCS_NAME_RULES` behind `name_rules.json`.

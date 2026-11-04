@@ -172,7 +172,7 @@ const DOCS_NAME_RULES := {
 		"angry_stress": 0,
 		"drop": "",
 	},
-	"tag_swap": {"gate": 5, "chance": 0.35, "max_per_run": 1},
+	"tag_swap": {"gate": 5, "chance": 0.35},
 	"shadow": {"gate": 3},
 }
 
@@ -293,21 +293,59 @@ static func seed_for(turn: int, beat: int, stage: int, salt: int = 0) -> int:
 ## player-name word per rule, so a transcript replay stays deterministic.
 static func name_rules() -> Dictionary:
 	if _name_rules_cache.is_empty():
-		_name_rules_cache = DOCS_NAME_RULES.duplicate(true)
-		var parsed: Variant = _read_json(NAME_RULES_PATH)
-		if parsed is Dictionary:
-			for section: String in parsed as Dictionary:
-				if section.begins_with("_") or section == "doc":
-					continue
-				var data: Variant = (parsed as Dictionary)[section]
-				var base: Variant = (_name_rules_cache as Dictionary).get(section)
-				if data is Dictionary and base is Dictionary:
-					var merged: Dictionary = (base as Dictionary).duplicate(true)
-					merged.merge(data, true)
-					_name_rules_cache[section] = merged
-				else:
-					_name_rules_cache[section] = data
+		reload_name_rules()
 	return _name_rules_cache
+
+
+## Test seam (mirrors reload_table): rebuild the name-rules overlay from `path`,
+## defaulting to the shipped file, and report whether the file was usable.
+## Every documented section always exists afterwards: a missing, malformed or
+## partially wrong file degrades section-by-section to DOCS_NAME_RULES.
+##
+## Healing is PER KEY: a value whose JSON type disagrees with the documented
+## value (a hand-edited `"chance": "often"`) is dropped with a warning and the
+## docs number holds. Copying it instead would leave a String where the rules
+## read a float — `float("often") == 0.0` — silently disabling the effect.
+static func reload_name_rules(path := NAME_RULES_PATH) -> bool:
+	_name_rules_cache = DOCS_NAME_RULES.duplicate(true)
+	if not FileAccess.file_exists(path):
+		push_warning("Corruption: %s missing; using the docs name rules" % path)
+		return false
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if not parsed is Dictionary:
+		push_warning("Corruption: %s is not a JSON object; using the docs name rules" % path)
+		return false
+	for section: String in parsed as Dictionary:
+		if section.begins_with("_") or section == "doc":
+			continue
+		var data: Variant = (parsed as Dictionary)[section]
+		var base: Variant = (_name_rules_cache as Dictionary).get(section)
+		if not (data is Dictionary and base is Dictionary):
+			push_warning("Corruption: " + ("name_rules.%s is not a documented section" % section))
+			continue
+		var merged: Dictionary = (base as Dictionary).duplicate(true)
+		for key: String in data as Dictionary:
+			if not _same_name_rule_type(merged.get(key), (data as Dictionary)[key]):
+				push_warning(
+					"Corruption: " + ("name_rules.%s.%s has the wrong type" % [section, key])
+				)
+				continue
+			merged[key] = (data as Dictionary)[key]
+		_name_rules_cache[section] = merged
+	return true
+
+
+## True when a data value may replace a documented one: same JSON kind, and any
+## two numbers are interchangeable (JSON has no ints — `3` parses as `3.0`).
+## An undocumented key (no docs value) is accepted, so a file may add tunables.
+static func _same_name_rule_type(docs_value: Variant, data_value: Variant) -> bool:
+	if docs_value == null:
+		return true
+	var docs_number := docs_value is int or docs_value is float
+	var data_number := data_value is int or data_value is float
+	if docs_number or data_number:
+		return docs_number and data_number
+	return typeof(docs_value) == typeof(data_value)
 
 
 ## One section of the name-rules table, healed to its documented defaults.
@@ -319,11 +357,25 @@ static func name_rule(section: String) -> Dictionary:
 	return healed
 
 
-## True when `word`'s affix-stripped core IS the player's name — the gate every
-## name-decay rule shares ("Ren," still counts as Ren).
+## The one word of `player_name` the name rules match. The field accepts spaces
+## ("Mary Jane", docs/08 §1.5), but the pipeline is word-serial — a rule only
+## ever sees one token — so the rules match the LAST word: the given name in
+## both the Western and the Japanese order ("Mary Jane", "Yamada Haru"). A
+## single-word name is its own token, unchanged from P3.14 round 1.
+static func name_token(player_name: String) -> String:
+	var wanted := player_name.strip_edges()
+	var space := wanted.rfind(" ")
+	if space < 0:
+		return wanted
+	return wanted.substr(space + 1).strip_edges()
+
+
+## True when `word`'s affix-stripped core IS the player's name token — the gate
+## every name-decay rule shares ("Ren," still counts as Ren, and "Jane," counts
+## for "Mary Jane").
 static func is_player_name(word: String, player_name: String) -> bool:
 	var core := String(_split_affixes(word)["core"])
-	var wanted := player_name.strip_edges()
+	var wanted := name_token(player_name)
 	return not core.is_empty() and not wanted.is_empty() and core.to_lower() == wanted.to_lower()
 
 
@@ -359,6 +411,14 @@ static func decay_name(
 ## docs/08 §1.5 stage 4: she sometimes adds "-kun" when she is affectionate and
 ## drops it when she is angry. `mood` carries {"affection": meter, "stress": last
 ## mood int} resolved by the caller (ChatUI reads GameState once per turn).
+##
+## The anger sign is docs/02 §1.1's: a POSITIVE stress suggestion is the turn
+## that raised Instability (the doc's own example pairs a bad turn with
+## `"stress": 3`), so `stress > angry_stress` is the angry branch, not `<=`.
+## The mood snapshot is the PREVIOUS turn's suggestion — GameState applies this
+## turn's mood after her beats have streamed — so the turn whose stress rises
+## still gets the suffix and the next calm turn drops it.
+##
 ## Returns "" when the word is not the player's name, when she is angry (the
 ## suffix is dropped — the plain name survives), or when the roll fails. Word
 ## punctuation is preserved.
@@ -383,7 +443,7 @@ static func kun_name(
 	var affection := float(mood.get("affection", 0.0))
 	var parts := _split_affixes(word)
 	var core := String(parts["core"])
-	if stress <= int(rule.get("angry_stress", 0)):
+	if stress > int(rule.get("angry_stress", 0)):
 		var dropped := String(rule.get("drop", ""))
 		if dropped.is_empty():
 			return ""  # "-kun" is dropped: the plain name renders.
@@ -411,20 +471,6 @@ static func should_swap_name_tag(effective_stage: int, turn: int, seed_base: int
 ## beat's seed even when the turn/beat/stage triple matches one.
 static func roll_seed_salt(seed_base: int) -> int:
 	return seed_base * 31 + 7001
-
-
-## Parsed JSON for a data file, or {} when it is missing/malformed — the
-## name-rules overlay's loader, kept tiny because a broken file must degrade to
-## DOCS_NAME_RULES, never throw.
-static func _read_json(path: String) -> Variant:
-	if not FileAccess.file_exists(path):
-		push_warning("Corruption: %s missing; using the docs name rules" % path)
-		return {}
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
-	if not parsed is Dictionary:
-		push_warning("Corruption: %s is not a JSON object; using the docs name rules" % path)
-		return {}
-	return parsed
 
 
 ## docs/01 §3 stage 2 "strike-through words" + docs/07 §3.4 "strike-through
