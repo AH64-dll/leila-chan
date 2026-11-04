@@ -38,6 +38,7 @@ var _last_inner_label: Label
 var _music_label: Label
 var _cue_budget_label: Label
 var _offers_label: Label
+var _telemetry_label: Label
 var _last_turn_data: Dictionary = {}
 var _fx_labels: Dictionary = {}  # fx_name -> Label
 
@@ -154,6 +155,28 @@ func _build_ui() -> void:
 	_offers_label = _create_label(root_vbox, "Offered Actions: (none)", COLOR_LABEL)
 	_offers_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
+	# --- Telemetry Section (P2.09) ---
+	# Every engine event is fireable here for testing (role checklist): one
+	# button per data/telemetry.json row, plus the pending/state line the turn
+	# ctx is about to see.
+	_create_section_header(root_vbox, "TELEMETRY (P2.09)")
+	_telemetry_label = _create_label(root_vbox, "Pending: (none)", COLOR_LABEL)
+	_telemetry_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var telemetry_grid := GridContainer.new()
+	telemetry_grid.columns = 2
+	telemetry_grid.add_theme_constant_override("h_separation", 4)
+	telemetry_grid.add_theme_constant_override("v_separation", 2)
+	root_vbox.add_child(telemetry_grid)
+	if Telemetry != null:
+		for kind: String in Telemetry.catalog_kinds():
+			_add_telemetry_button(telemetry_grid, kind)
+	else:
+		var missing_btn := Button.new()
+		missing_btn.text = "(telemetry autoload missing)"
+		missing_btn.add_theme_font_size_override("font_size", FONT_SIZE)
+		missing_btn.disabled = true
+		telemetry_grid.add_child(missing_btn)
+
 
 func _create_section_header(parent: Container, text: String) -> Label:
 	var label := Label.new()
@@ -171,6 +194,57 @@ func _create_label(parent: Container, text: String, color: Color) -> Label:
 	label.modulate = color
 	parent.add_child(label)
 	return label
+
+
+## One P2.09 debug trigger: click → Telemetry.debug_fire(kind) → refresh. The
+## label is the kind itself ("focus_lost") so a reviewer can match the button
+## to the data/telemetry.json row.
+func _add_telemetry_button(parent: Container, kind: String) -> void:
+	var button := Button.new()
+	button.text = kind
+	button.tooltip_text = "Fire the %s engine event" % kind
+	button.add_theme_font_size_override("font_size", FONT_SIZE)
+	button.pressed.connect(func() -> void: fire_telemetry(kind))
+	parent.add_child(button)
+
+
+## Fire one engine event from the overlay (dev builds only; the seam refuses
+## in release). Public so tests can click the same path the button uses.
+func fire_telemetry(kind: String) -> bool:
+	if Telemetry == null:
+		return false
+	var fired := Telemetry.debug_fire(kind)
+	refresh()
+	return fired
+
+
+## The TELEMETRY section's text: what is queued for the next turn, plus the
+## Live state docs/05 M20/M30 read (her line open, idle seconds).
+func get_telemetry_text() -> String:
+	if _telemetry_label == null:
+		return ""
+	return _telemetry_label.text
+
+
+func _telemetry_text() -> String:
+	if Telemetry == null:
+		return "Pending: (telemetry autoload missing)"
+	var view := Telemetry.state()
+	var kinds: Array[String] = []
+	for event: Dictionary in view.get("pending", []) as Array:
+		var trigger := str(event.get("trigger", ""))
+		var kind := str(event.get("event", ""))
+		kinds.append("%s[%s]" % [kind, trigger] if not trigger.is_empty() else kind)
+	var pending := ", ".join(kinds) if not kinds.is_empty() else "(none)"
+	var state: Array[String] = []
+	state.append("her line open" if bool(view.get("turn_open", false)) else "waiting")
+	if bool(view.get("date_active", false)):
+		state.append("idle %ds" % int(float(view.get("idle_seconds", 0.0))))
+	else:
+		state.append("no date")
+	if bool(view.get("draft_pending", false)):
+		state.append("draft held")
+	return "Pending: %s\nState: %s" % [pending, ", ".join(state)]
 
 
 func _connect_signals() -> void:
@@ -196,6 +270,9 @@ func _connect_signals() -> void:
 		FX.turn_ended.connect(func(_t: int) -> void: refresh())
 		FX.fx_triggered.connect(func(_n: String) -> void: refresh())
 		FX.fx_dropped.connect(func(_n: String, _r: String) -> void: refresh())
+
+	if Telemetry != null:
+		Telemetry.engine_event.connect(func(_e: Dictionary) -> void: refresh())
 
 
 func _on_turn_completed(_idx: int, data: Dictionary) -> void:
@@ -330,6 +407,10 @@ func refresh() -> void:
 			_offers_label.text = "Offered Actions: (none)"
 		else:
 			_offers_label.text = "Offered Actions: %s" % str(offers)
+
+	# --- Telemetry (P2.09) ---
+	if _telemetry_label != null:
+		_telemetry_label.text = _telemetry_text()
 
 
 # --- Helper accessors for testing and inspection ---

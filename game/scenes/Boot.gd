@@ -20,6 +20,7 @@ const EXPECTED_AUTOLOADS: PackedStringArray = [
 	"Steering",
 	"SaveSystem",
 	"Settings",
+	"Telemetry",
 ]
 
 var auto_advance := true
