@@ -408,6 +408,30 @@ def test_t19_run_end_carries_the_ended_stage() -> None:
     assert "_deliver_run_ended" in telegraph and "_run_ended" in telegraph
 
 
+def test_the_deferred_run_end_survives_the_session_reset() -> None:
+    # CODE-7/DES-6: every route from the title into a Date runs
+    # `Telemetry.reset_session()` before the first turn can speak (Continue via
+    # `SaveSystem._apply`, New Game via `NewGame.confirm_name`), so the deferred
+    # T19 note must be the one field that reset keeps. Only the explicit
+    # argument may clear it, so the default call can never drop the row.
+    telegraph = (ROOT / "game" / "autoload" / "Telemetry.gd").read_text(encoding="utf-8")
+    assert "func reset_session(clear_run_ended: bool = false) -> void:" in telegraph
+    body = telegraph.split("func reset_session(", 1)[1].split("\nfunc ", 1)[0]
+    lines = body.splitlines()
+    assignments = [i for i, line in enumerate(lines) if line.strip().startswith("_run_ended")]
+    assert assignments, "reset_session must keep the explicit clear seam"
+    for index in assignments:
+        assert lines[index - 1].strip() == "if clear_run_ended:", (
+            f"reset_session clears _run_ended unconditionally: {lines[index]!r}"
+        )
+    # ...and the clear must not be the default the game's reset path takes.
+    assert "reset_session(true)" not in (
+        ROOT / "game" / "autoload" / "Director.gd"
+    ).read_text(encoding="utf-8")
+    # T23 shares the `text_match` guard with T28/T30 (DES-7).
+    assert "text_match` guard (T23/T28/T30" in TRIGGERS["doc"]
+
+
 def test_effects_use_the_game_vocabulary() -> None:
     for trigger_id, row in TRIGGER_ROWS.items():
         effects = row.get("effects", {})

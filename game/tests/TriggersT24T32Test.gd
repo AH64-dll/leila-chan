@@ -21,13 +21,13 @@ func before_test() -> void:
 	Triggers.clear_engine_events()
 	Triggers.set_clock(Callable())
 	Triggers.set_last_seen(0)
-	Telemetry.reset_session()
+	Telemetry.reset_session(true)
 
 
 func after_test() -> void:
 	Triggers.set_clock(Callable())
 	Triggers.set_last_seen(0)
-	Telemetry.reset_session()
+	Telemetry.reset_session(true)
 
 
 func test_t24_features_look_wrong() -> void:

@@ -163,7 +163,9 @@ var _screenshots := 0
 ## be spoken where it happens — New Game resets GameState/Director right after
 ## it and the Date's activation clears the pending queue — so it waits here for
 ## the new run's first turn (`take_turn_events`), gated on the ENDED run's stage
-## (the live one is 0 by then). P3.07 r2 CODE-2.
+## (the live one is 0 by then). Every route from the title into a Date runs
+## `reset_session()`, and this is the one field that reset keeps (P3.07 r2
+## CODE-2, r3 CODE-7); only `reset_session(true)` clears it.
 var _run_ended: Dictionary = {}
 
 
@@ -304,8 +306,12 @@ func _idle_seconds() -> float:
 
 
 ## Fresh start: boot, `Director.reset()`, or a test. Caps are per session
-## (docs/05 §3), so they restart here too.
-func reset_session() -> void:
+## (docs/05 §3), so they restart here too. `_run_ended` is deliberately NOT
+## cleared: it is the one event whose contract is to outlive this transition
+## (T19 describes the run that is starting, and every route from the title into
+## a Date resets first — P3.07 r3 CODE-7/DES-6). `clear_run_ended` is the
+## explicit full-clear seam; production never passes it, tests do.
+func reset_session(clear_run_ended: bool = false) -> void:
 	_pending.clear()
 	_pending_order.clear()
 	_private_draft = ""
@@ -320,7 +326,8 @@ func reset_session() -> void:
 	_last_activity_ms = _now_ms()
 	_last_resize_emit_ms = 0.0
 	_last_screenshot_ms = 0.0
-	_run_ended = {}
+	if clear_run_ended:
+		_run_ended = {}
 	_sync_window_size()
 
 

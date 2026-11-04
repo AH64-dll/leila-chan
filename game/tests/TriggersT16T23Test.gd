@@ -37,7 +37,7 @@ func before_test() -> void:
 	Triggers.clear_engine_events()
 	Triggers.set_clock(Callable())
 	Triggers.set_last_seen(0)
-	Telemetry.reset_session()
+	Telemetry.reset_session(true)
 	AudioServer.set_bus_mute(0, false)
 	# The T22 pin drives the real Director pipeline, so the suite owns its
 	# backend and its safety seam exactly as DirectorTest does.
@@ -56,7 +56,7 @@ func after_test() -> void:
 	AudioDirector.set_bus_mute(&"Master", false)
 	Triggers.set_clock(Callable())
 	Triggers.set_last_seen(0)
-	Telemetry.reset_session()
+	Telemetry.reset_session(true)
 	Director.reset()
 	Director._safety.set_filter(Safety)
 	if is_instance_valid(_safety):
@@ -158,17 +158,31 @@ func test_t19_new_game_run_end_survives_the_reset() -> void:
 
 
 ## The same deferral from the title: `delete_slot` is where docs/01 §5 T19's
-## "Delete save" happens, and the Date's activation clears `_pending`.
+## "Delete save" happens. Both routes from the title into a Date reset the
+## session first — Continue through `SaveSystem._apply`, New Game through
+## `NewGame.confirm_name` → `Director.reset()` → `InputHook.reset_session` →
+## `Telemetry.reset_session()` — so the note must survive that reset as well as
+## the Date's activation. Driving the reset here is the whole point of the test
+## (P3.07 r3 CODE-7/DES-6): without it the case proved nothing about the flow.
 func test_t19_deleted_slot_survives_the_title_to_date_transition() -> void:
 	var previous := SaveSystem.save_dir
 	SaveSystem.save_dir = SAVE_DIR
 	GameState.set_meter(&"instability", 55.0)  # stage 3
 	assert_bool(bool(SaveSystem.save_to_slot(1)["ok"])).is_true()
-	Telemetry.reset_session()
-	Triggers.clear_engine_events()
 	assert_bool(SaveSystem.delete_slot(1)).is_true()
-	# Deleting happens at the title; the date activation clears the queue, and
-	# the note is not in it. It rides the first turn instead.
+	assert_int(_count("T19")).is_equal(0)
+
+	# The title→date transition, exactly as the game runs it. `date_active` is
+	# the observable proof the reset reached Telemetry — no event is fired to
+	# make the point, so nothing else can move the meters this case asserts.
+	Telemetry.set_date_active(true)
+	assert_bool(bool(Telemetry.state()["date_active"])).is_true()
+	Director.reset()
+	assert_bool(bool(Telemetry.state()["date_active"])).is_false()
+	Triggers.clear_engine_events()
+
+	# The Date opens (`Date._ready` → `set_date_active`) and clears `_pending`;
+	# the note is not in it, so it rides the first turn instead.
 	Telemetry.set_date_active(true)
 	assert_int(_count("T19")).is_equal(0)
 	var spoken := Telemetry.take_turn_events(3)
@@ -177,6 +191,11 @@ func test_t19_deleted_slot_survives_the_title_to_date_transition() -> void:
 	)
 	assert_int(_count("T19")).is_equal(1)
 	assert_int(int(Triggers.path_scores().get("AWAKE", 0))).is_equal(2)
+	# Only the explicit full-clear seam drops an undelivered note; the ordinary
+	# session reset above never does (that is the whole fix).
+	Telemetry.note_player_action("save_gone", {"kind": "delete", "gate_stage": 3})
+	Telemetry.reset_session(true)
+	assert_array(Telemetry.take_turn_events(3)["lines"]).is_empty()
 	SaveSystem.save_dir = previous
 
 
@@ -186,7 +205,7 @@ func test_t19_below_the_gate_is_dropped() -> void:
 	SaveSystem.save_dir = SAVE_DIR
 	GameState.set_meter(&"instability", 35.0)  # stage 2
 	assert_bool(bool(SaveSystem.save_to_slot(1)["ok"])).is_true()
-	Telemetry.reset_session()
+	Telemetry.reset_session(true)
 	Triggers.clear_engine_events()
 	assert_bool(SaveSystem.delete_slot(1)).is_true()
 	Telemetry.set_date_active(true)

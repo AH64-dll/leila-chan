@@ -67,3 +67,18 @@
   keeps a fallback key the data file omits; that bit the first test run).
 - GOTCHA: gdlint's `max-public-methods: 20` means every new Telemetry/Triggers public seam has to pay
   for itself; `note_screenshot()` is public again for T31's release path and there is no budget left.
+
+## P3.07 — triggers T16–T32 (round 3, 2026-11-04, agent: deepseek)
+
+- CODE-7/DES-6: an event that is ABOUT a transition must outlive it. `reset_session()` zeroed
+  `_run_ended`, and every route from the title into a Date runs it (Continue → `SaveSystem._apply` →
+  `Director.reset()`; New Game → `NewGame.confirm_name`), so T19's "Delete save" note died before any
+  `take_turn_events`. `_run_ended` is now the one field the session reset keeps; `reset_session(true)`
+  is the explicit full-clear seam (an argument, not a new method — Telemetry is at gdlint's 20 cap).
+- GOTCHA: a test named for a transition must drive that transition. The r2 delete case called
+  `take_turn_events` with no reset between delete and drain, so it was green on the defect. The fixed
+  case runs `Director.reset()` and proves the reset reached Telemetry via `state().date_active`
+  closing — an observable side effect instead of an assumption.
+- The Python contract now reads `reset_session`'s body and refuses any `_run_ended` assignment that is
+  not under `if clear_run_ended:` (`test_the_deferred_run_end_survives_the_session_reset`); the data
+  `doc` names T23 beside T28/T30 for the shared `text_match` guard (DES-7).

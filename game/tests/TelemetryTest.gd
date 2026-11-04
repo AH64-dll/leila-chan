@@ -37,7 +37,7 @@ func before_test() -> void:
 
 	Director.reset()
 	_now_ms = 1000.0
-	Telemetry.reset_session()
+	Telemetry.reset_session(true)
 	Telemetry.set_clock(Callable(self, "_test_now"))
 	Triggers.clear_engine_events()
 
@@ -51,7 +51,7 @@ func before_test() -> void:
 
 func after_test() -> void:
 	Telemetry.set_clock(Callable())
-	Telemetry.reset_session()
+	Telemetry.reset_session(true)
 	Director.reset()
 	Director.register_chat_ui(null)
 	GameState.reset()
@@ -403,7 +403,7 @@ func test_chatui_forwards_drafts_and_turn_state() -> void:
 	# Hold-backspace erases one character per edit, so the final edit only knows
 	# the last char: the signal must still carry the whole draft (M21). Start
 	# from a clean Telemetry so nothing can stand in for the missing event.
-	Telemetry.reset_session()
+	Telemetry.reset_session(true)
 	Telemetry.set_date_active(true)
 	for step: String in ["h", "he", "hel", "hell", "hel", "he", "h", ""]:
 		ui.input_box.text_changed.emit(step)
