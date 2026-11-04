@@ -1,0 +1,28 @@
+{
+  "experiment": "P3.01 residual-dump sanity: probe_v1 through llama-dump-residuals, base vs malice@8",
+  "date": "2026-11-04",
+  "tool": "tools/steering/build/llama-dump-residuals (llama.cpp b12024, commit ddf48f85c, eval callback on l_out-<il>)",
+  "model": {
+    "file": "models/Qwen3.5-4B-Q4_K_M.gguf",
+    "sha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4"
+  },
+  "cvec": {
+    "file": "experiments/steering/evil_qwen_unit.gguf",
+    "sha256": "5a61adffca0c49aafea040be80d56c0356a6ad76db225ccde14cfd09a25cf9b5",
+    "scale": 8.0,
+    "layers": [13, 14]
+  },
+  "prompts": "tools/steering/prompts/probe_v1.txt (10 prompts)",
+  "system": "tools/steering/prompts/persona_stage0.txt",
+  "layers_dumped": "10-20 inclusive",
+  "dumps": "experiments/steering/dumps_p301/{base,malice8}/prompt_000..009.npy (gitignored, regenerable)",
+  "checks": {
+    "all_finite": true,
+    "mean_residual_norm_per_layer": {"base": 11.4, "steered": 12.5},
+    "proj_shift_direction.13": 8.0,
+    "proj_shift_direction.14": 7.595,
+    "tolerance": "30% of scale",
+    "verdict": "PASS"
+  },
+  "note": "l_out-14 projection shifts +7.6 not +8.0: direction.14 is added at layer 14's output, so the captured shift there includes propagation of the layer-13 injection through layer-14 attention/FFN; direct add is exact at direction.13 (first injected layer)."
+}
