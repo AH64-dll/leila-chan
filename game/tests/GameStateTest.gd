@@ -5,6 +5,7 @@ extends GdUnitTestSuite
 
 const GameStateScript := preload("res://autoload/GameState.gd")
 const MetersScript := preload("res://llm/Meters.gd")
+const StagesScript := preload("res://llm/Stages.gd")
 const PROFILE_MAP_PATH := "res://data/profile_map.json"
 const EPS := 0.0001
 
@@ -209,7 +210,7 @@ func test_stage_bands_monotonic_and_signal() -> void:
 		[100.0, 5],
 	]
 	for case: Array in cases:
-		assert_int(GameStateScript._stage_for_instability(case[0])).is_equal(case[1])
+		assert_int(StagesScript.for_instability(case[0])).is_equal(case[1])
 	# docs/01 §2–§3: a "good day" dips instability but the stage never regresses.
 	var s: Variant = _state()
 	var seen: Array = []

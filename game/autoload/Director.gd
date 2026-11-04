@@ -288,11 +288,14 @@ func submit_player_input(raw_input: String, telemetry: Dictionary = {}) -> bool:
 
 	# Clean BEFORE the step-0 hooks fill it: _start_turn() reads it into
 	# ctx["events"] right after (P1.08 cleared it late and dropped every line).
+	# docs/08 §6 "this turn only": a closed turn's queued lines ride along once.
 	_turn_events.clear()
 	_turn_private_terms.clear()
 
 	# Step 0.2: Telemetry / Typing hooks (docs/02 §4 step 0)
 	_handle_input_telemetry(trimmed, telemetry)
+	# docs/01 §3: a stage crossing queued her post-transition EVENT line.
+	_turn_events.append_array(GameState.take_pending_events())
 
 	# Track player input window for memory validation (docs/02 §6)
 	last_player_inputs.append(trimmed)

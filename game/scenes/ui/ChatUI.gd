@@ -22,6 +22,17 @@ var stage := 0  # Instability stage from GameState — drives the indicator flav
 ## Date.gd sets the pass-through because SaySafetyGate (replies) and
 ## `_scan_opening_say` (opening beats) already scanned the text — P1.19 CODE-19.
 var text_filter: Callable = Callable()
+## docs/07 §3.4 corruption stage. Optional `CorruptionSession` (res://llm/
+## CorruptionSession.gd) installed by the scene that owns the pipeline
+## (Date._ready). It runs AFTER the injected text_filter (Safety) and BEFORE
+## the typewriter, exactly as the documented pipeline orders them. Null = the
+## filter is off (bare UI tests, non-Date hosts).
+var corruption: CorruptionSession = null
+## Accessibility mirror for the text effects: reduced motion switches off the
+## corruption effects that exist only as visual jitter/smear (Corruption data
+## `reduced_motion.disable`). `set_reduced_motion()` writes it; the Settings
+## autoload can only force it on, never off.
+var reduced_motion := false
 
 var _player_name := "Senpai"
 var _leila_name := "Leila"
@@ -30,6 +41,7 @@ var _end_pending := false  # end_turn() arrived; waiting for the last beat to di
 var _log_open := true
 var _config := {}
 var _filter_warning_emitted_this_turn := false
+var _turn_seq := 0  # seeded per-turn counter for the corruption filter
 
 @onready var chat_log: ScrollContainer = $Margin/VBox/ChatLog
 @onready var text_box: PanelContainer = $Margin/VBox/TextBox
@@ -113,9 +125,17 @@ func _note_telemetry(method: String, args: Array) -> void:
 ## token (docs/02 §4). Called on submit; the Director may also call it when a
 ## turn starts without player input (M30 monologue).
 func begin_turn_wait() -> void:
+	# The submit calls this to show the indicator, then the Director calls it
+	# again at step 1 (`_start_turn`) for the same turn. Only the first call of
+	# a turn advances the corruption seed counter, or every reply would be
+	# seeded from twice its turn index.
+	var turn_start := not _turn_open
 	_turn_open = true
 	_end_pending = false
 	_filter_warning_emitted_this_turn = false
+	if turn_start:
+		_turn_seq += 1
+		_begin_corruption_turn()
 	input_box.set_input_enabled(false)
 	text_box.reset()
 	text_box.set_speaker(_leila_name)
@@ -124,11 +144,36 @@ func begin_turn_wait() -> void:
 	_note_telemetry("note_turn_open", [true])
 
 
+## Pipeline context for the docs/07 §3.4 corruption stage: the seeded turn
+## counter, the stage the UI is showing, the player's name (the stage-3 "wrong
+## name" slip targets it) and the accessibility/content switches. The session
+## re-plans every beat, so a stage change between turns is picked up by the
+## next begin_turn_wait.
+func _begin_corruption_turn() -> void:
+	var session := corruption
+	if session == null:
+		return
+	(
+		session
+		. begin_turn(
+			{
+				"turn": _turn_seq,
+				"stage": stage,
+				"player_name": _player_name,
+				"reduced_motion": is_reduced_motion(),
+				"content_level": _content_level(),
+			}
+		)
+	)
+
+
 ## ── Streamed beat events (IncrementalJson order) ───────────────────────────
 
 
 func begin_beat(beat_index: int) -> void:
 	text_box.hide_typing_indicator()
+	if corruption != null:
+		corruption.begin_beat(beat_index)
 	text_box.begin_beat(beat_index)
 
 
@@ -143,23 +188,37 @@ func say_chunk(beat_index: int, chunk: String) -> void:
 		if not _filter_warning_emitted_this_turn:
 			_filter_warning_emitted_this_turn = true
 			push_warning("ChatUI: text_filter unset — say chunk bypassed safety scan")
+	# Safety first, corruption second: the corruption stage consumes only
+	# already-scanned text (docs/07 §3.4 pipeline order).
+	if corruption != null:
+		filtered = corruption.push(beat_index, filtered)
 	text_box.say_chunk(beat_index, filtered)
 
 
 ## Overwrite a queued beat's text (docs/02 §7 post-stream repairs). Runs the
 ## same injected safety filter as say_chunk — corrected text is still model
-## text and must never bypass the scan.
-func replace_beat(beat_index: int, text: String) -> void:
+## text and must never bypass the scan. `corrupt = false` is for game-authored
+## safety refusals: a redacted refusal must stay legible, so it is displayed
+## exactly as the Safety path wrote it.
+func replace_beat(beat_index: int, text: String, corrupt: bool = true) -> void:
 	var filtered := text
 	if text_filter.is_valid():
 		filtered = str(text_filter.call(text))
 	elif not _filter_warning_emitted_this_turn:
 		_filter_warning_emitted_this_turn = true
 		push_warning("ChatUI: text_filter unset — replace_beat bypassed safety scan")
+	if corrupt and corruption != null:
+		filtered = corruption.transform_beat(beat_index, filtered)
 	text_box.replace_beat_text(beat_index, filtered)
 
 
 func end_beat(beat_index: int) -> void:
+	# The beat's trailing partial word (and the stage-5 bleed/reverse echoes)
+	# must land before the typewriter closes the beat, or they would be lost.
+	if corruption != null:
+		var tail := corruption.flush(beat_index)
+		if not tail.is_empty():
+			text_box.say_chunk(beat_index, tail)
 	text_box.end_beat(beat_index)
 
 
@@ -174,6 +233,8 @@ func end_turn() -> void:
 func abort_turn() -> void:
 	_turn_open = false
 	_end_pending = false
+	if corruption != null:
+		corruption.abort()
 	text_box.reset()
 	_unlock_input()
 	_note_telemetry("note_turn_open", [false])
@@ -184,10 +245,14 @@ func abort_turn() -> void:
 ## turn is ended — the same unlock path her reply takes. Self-sufficient: it
 ## drops whatever an earlier turn left queued, so a driver never has to clear
 ## the box first. The Director passes text it already scanned; no second scan.
+## Corruption is skipped: a safety refusal must read as written (`corrupt =
+## false`), and an abandoned stream's pending word is dropped first.
 func reject_turn(text: String) -> void:
+	if corruption != null:
+		corruption.abort()
 	text_box.reset()
 	begin_beat(0)
-	replace_beat(0, text)
+	replace_beat(0, text, false)
 	end_beat(0)
 	end_turn()
 
@@ -270,5 +335,29 @@ func _on_pause_requested() -> void:
 
 
 ## Reduced-motion / instant mode for the typewriter (accessibility, docs/05 §0).
+## The corruption stage reads the same flag through `is_reduced_motion()`: the
+## visual-jitter effects (zalgo, bleed) are switched off there, the textual
+## ones (hesitation, strike, repetition, wrong name, redaction, reverse) stay.
 func set_reduced_motion(enabled: bool) -> void:
+	reduced_motion = enabled
 	text_box.set_instant(enabled)
+
+
+## Reduced motion as the settings menu and tests define it: the scene's flag
+## OR the global Settings switch (the global can only force it on).
+func is_reduced_motion() -> bool:
+	if reduced_motion:
+		return true
+	var settings := get_node_or_null("/root/Settings")
+	if settings == null:
+		return false
+	return bool(settings.get("reduced_motion"))
+
+
+## docs/02 §8 content level for the corruption plan (`calmer` caps the stage).
+func _content_level() -> String:
+	var settings := get_node_or_null("/root/Settings")
+	if settings == null:
+		return ""
+	var level: Variant = settings.get("content_level")
+	return String(level) if level is String else ""

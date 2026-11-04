@@ -381,3 +381,32 @@ func test_build_is_pure_and_repeatable() -> void:
 	assert_str(JSON.stringify(first, "  ")).is_equal(JSON.stringify(second, "  "))
 	builder.clear_cache()
 	assert_str(JSON.stringify(builder.build(ctx), "  ")).is_equal(JSON.stringify(first, "  "))
+
+
+# --- P2.13: the shipped stage_2..5 and path_YANDERE/AWAKE modules -----------
+
+
+func test_shipped_stage_and_path_modules_fill_the_budget() -> void:
+	# Every stage 2-5 × shipped path builds without a missing module, carries the
+	# two few-shots a stage × path assembly must show, and stays inside docs/07
+	# §3.1's 900-token fixed budget even with the runner-up line docs/08 §1 adds.
+	var builder := _builder()
+	for stage: int in [2, 3, 4, 5]:
+		for path: String in ["YANDERE", "AWAKE"]:
+			var runner_up := "AWAKE" if path == "YANDERE" else "YANDERE"
+			var ctx := {
+				"stage": stage,
+				"path": path,
+				"player_name": "Ren",
+				"path_runner_up": runner_up,
+			}
+			var result := builder.build(ctx)
+			var label := "stage %d %s" % [stage, path]
+			assert_array(result["debug"]["missing"]).override_failure_message(label).is_empty()
+			var system := _system(result)
+			assert_bool(system.contains("STAGE %d" % stage)).is_true()
+			assert_bool(system.contains(path)).override_failure_message(label).is_true()
+			assert_int(system.count("Player: ")).override_failure_message(label).is_equal(2)
+			var tokens := int(result["debug"]["tokens"]["system"])
+			var message := "%s system layer = %d tokens (budget 900)" % [label, tokens]
+			assert_int(tokens).override_failure_message(message).is_less_equal(900)

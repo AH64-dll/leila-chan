@@ -65,6 +65,12 @@ func _ready() -> void:
 		var gs_name := String(gs_node.player_name).strip_edges()
 		if not gs_name.is_empty():
 			player_name = gs_name
+	# docs/01 §3: the campaign's stage is GameState's, so a transition must
+	# reach the scene that draws her text. The ChatUI re-plans the corruption
+	# filter on the next turn; the typing indicator reads the same field.
+	if gs_node != null and gs_node.has_signal("stage_changed"):
+		if not gs_node.is_connected("stage_changed", _on_game_state_stage_changed):
+			gs_node.connect("stage_changed", _on_game_state_stage_changed)
 	var pb_node: Node = get_node_or_null("/root/PromptBuilder")
 	if pb_node != null and pb_node.has_method("set_player_name"):
 		pb_node.set_player_name(player_name)
@@ -86,6 +92,13 @@ func _ready() -> void:
 		# pass-through also keeps ChatUI's unset-filter warning accurate — it
 		# only fires when a driver hands it un-scanned text.
 		chat_ui.text_filter = func(chunk: String) -> String: return chunk
+		# docs/07 §3.4 corruption stage: the next stage after Safety. The UI
+		# owns the streaming session (it holds the word buffer across say_chunk
+		# events); the Date owns installing it, exactly as it owns wiring the
+		# safety seam above. Null-safe: a UI test may hand-build a ChatUI.
+		if chat_ui.corruption == null:
+			chat_ui.corruption = CorruptionSession.new()
+		chat_ui.reduced_motion = reduced_motion
 		# F1 controller wiring (P1 gate-r3 / P2.23): the Director routes every
 		# streamed say chunk and the unsafe-input refusal through this node, so
 		# the scene that instantiates the ChatUI owns the registration. An
@@ -286,8 +299,20 @@ func set_reduced_motion(enabled: bool) -> void:
 		character.set_reduced_motion(enabled)
 	if text_box != null:
 		text_box.set_instant(enabled)
+	if chat_ui != null:
+		chat_ui.reduced_motion = enabled
 	if fx != null and "reduced_motion" in fx:
 		fx.reduced_motion = enabled
+
+
+## docs/01 §3: a campaign stage transition lands on the UI that draws her
+## text. The ChatUI re-plans the corruption filter per turn, so the next turn
+## speaks at the new stage; the current reply keeps the stage it was streamed
+## at (the model's dose only changes on the next restart, docs/06 §4).
+func _on_game_state_stage_changed(_previous: int, current: int) -> void:
+	stage = current
+	if chat_ui != null:
+		chat_ui.set_stage(current)
 
 
 func set_photosensitive(enabled: bool) -> void:
