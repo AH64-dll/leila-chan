@@ -79,11 +79,11 @@ static func parse_sampling(parsed: Variant) -> Dictionary:
 		for key: Variant in stages:
 			var name := str(key)
 			var stage := int(name) if name.is_valid_int() else -1
-			if stage < 0 or stage > GameState.STAGE_MAX:
+			if stage < 0 or stage > Stages.max_stage():
 				push_warning(
 					(
 						"TurnContext: %s stage key '%s' is not 0..%d; ignored"
-						% [SAMPLING_PATH, name, GameState.STAGE_MAX]
+						% [SAMPLING_PATH, name, Stages.max_stage()]
 					)
 				)
 				continue

@@ -79,3 +79,62 @@ def test_check_mode_verifies_committed_outputs() -> None:
     )
     assert proc.returncode == 0, proc.stderr
     assert "24 imported file(s)" in proc.stdout
+
+
+BLIP_KEYS = [
+    "voice_blip.stage0_2", "voice_blip.stage3", "voice_blip.stage4",
+    "voice_blip.stage5", "voice_blip.awake",
+]
+
+
+def test_music_stage_scope_opens_every_layer_without_high_stage_cues() -> None:
+    """P2.16: --music-stage 5 imports every music band (and every voice blip
+    pool) while --max-stage 0 keeps the cue scope at the P1.12 set."""
+    cue_map, rules = import_audio.load_tables()
+    sel = import_audio.build_selection(
+        cue_map, rules, max_stage=0, extra_cues=[], extra_music=[],
+        system_keys=BLIP_KEYS, music_max_stage=5,
+    )
+    rows = import_audio.plan_rows(sel)
+    assert len(rows) == 53
+    music = [r for r in rows if r[0] == "music"]
+    assert len(music) == 23
+    srcs = {src for _cat, src, _dst in music}
+    # The stage 2-5 layers for every state in docs/04 §8.3.
+    for state_src in (
+        "music_glitch_stairs/glitchstairs_6.ogg",
+        "music_insistent/Insistent.ogg",
+        "music_music_box/4_music_box_tracks_ogg/musicbox1_spooky_waltz.ogg",
+        "music_music_box/4_music_box_tracks_ogg/musicbox2_cute_tune.ogg",
+        "music_music_box/4_music_box_tracks_ogg/musicbox3_sad_tune.ogg",
+        "music_music_box/4_music_box_tracks_ogg/musicbox4_happy_polka.ogg",
+        "music_creep/CrEEP.ogg",
+        "music_creepy_ambient_loop/creepyloop.ogg",
+        "music_horror_atmosphere/"
+        "Juhani Junkala - Post Apocalyptic Wastelands [Loop Ready].ogg",
+        "music_sirens_in_darkness/012_Sirens_in_Darkness_0.mp3",
+        "music_baby_song/Baby Song.wav",
+        "music_happy_lullaby/song17.mp3",
+    ):
+        assert state_src in srcs, state_src
+    # Voice blip pools for stages 3/4/5 + AWAKE are selected too.
+    vocal_srcs = {src for cat, src, _dst in rows if cat == "vocal"}
+    for pool in ("female_standard_1.ogg", "whisper_1.ogg",
+                 "demon_1.ogg", "robot_1.ogg"):
+        assert any(src.endswith(pool) for src in vocal_srcs), pool
+    # No high-stage cue assets leak in with the music scope: sfx rows stay in
+    # the stage-0 set (static slices, music_box_note etc. are P5.10 work).
+    sfx_srcs = {src for cat, src, _dst in rows if cat == "sfx"}
+    assert not any("static_freq" in src for src in sfx_srcs)
+    assert not any(src.startswith("music_") for src in sfx_srcs)
+
+
+def test_check_mode_covers_the_stage_layer_scope() -> None:
+    """The committed stage 2-5 music and stage 3-5/AWAKE blips exist."""
+    cmd = [sys.executable, str(ROOT / "tools" / "audio" / "import_audio.py"),
+           "--max-stage", "0", "--music-stage", "5"]
+    for key in BLIP_KEYS:
+        cmd += ["--system", key]
+    proc = subprocess.run(cmd + ["--check"], capture_output=True, text=True, cwd=ROOT)
+    assert proc.returncode == 0, proc.stderr
+    assert "53 imported file(s)" in proc.stdout

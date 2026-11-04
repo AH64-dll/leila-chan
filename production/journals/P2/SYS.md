@@ -115,3 +115,22 @@
 - Next SYS on this seam: P2.20 must save `Memory.to_dict()` (seed **and** rng state) or a reload re-rolls
   corruption from a different point; the seed is fixed at 0 today so replays and tests are identical.
 
+
+## P2.02 — stage machine 0–5 + diegetic transition (2026-11-04, agent: commandcode)
+
+- Built `game/llm/Stages.gd` + `game/data/stages.json` (bands, names, transition, EVENT lines). `GameState`
+  emits `stage_transition(previous, current, spec)` from ONE place (`_refresh_stage`, guard `band > stage`) and
+  queues one docs/08 §6 line in `pending_events`; the Director drains it into the *next* prompt. `STAGE_BANDS`/
+  `STAGE_MAX` consts are gone — thresholds are data now (a `const` cannot be JSON), so call `Stages.bands()` /
+  `Stages.max_stage()`. Convention: a restore is not a crossing (from_dict still re-emits `stage_changed` for
+  resync but no transition and no line), and one write that jumps two bands is ONE event with the full pair.
+- The stage invariant I now test everywhere: `stage == Stages.for_instability(instability_peak)` at all times —
+  peaks only rise, stage never falls, so the peak's band IS the stage. Cheap to assert in any sim; it caught
+  nothing here but pins the peak→stage coupling.
+- Gotcha: `Director.gd` sits at gdlint's 1000-line cap (was 987; now 992). Pipeline state that looks like it
+  belongs there (`last_stage_transition`) must live on `GameState` or the lint fails. Split before adding.
+- Gotcha: `_turn_events.clear()` used to run AFTER `_handle_input_telemetry`, so any trigger hook's lines were
+  wiped before the prompt was built (latent P2.08 bug); the clear now runs before the hook, drain after it.
+- Gotcha: gdUnit4 test helpers built on an untyped state handle break `:=` inference (`var drained :=
+  s.take_pending_events()` → parse error); annotate the type. And `Array(Dictionary)` is not a constructor —
+  `assert_dict(x).is_empty()`.
