@@ -43,3 +43,6 @@ art/_review/
 .DS_Store
 Thumbs.db
 *.swp
+
+# Prompt-lab run chunks (merged results are committed; chunks are resumable scratch)
+tools/promptlab/results/chunks/

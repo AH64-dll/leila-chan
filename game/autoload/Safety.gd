@@ -246,6 +246,14 @@ func get_holdback() -> int:
 	return _holdback
 
 
+## The resolved policy for `cat` from the loaded lists: "hard_block" or "gated".
+## Empty when the filter has no rule for that category (the script/obfuscation
+## spans are filter-internal, not list categories). Dev tools read the policy
+## here instead of keeping a second copy of the category lists (P2.21 CODE-6).
+func action_for(cat: String) -> String:
+	return String(_rules.get(cat, {}).get("action", ""))
+
+
 func _load_lists(path := LISTS_PATH) -> void:
 	_reset_state()
 	var file := FileAccess.open(path, FileAccess.READ)

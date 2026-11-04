@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""Emit the prompt-lab report (Markdown + HTML) for a results file (P1.20).
+"""Emit the prompt-lab v2 report (Markdown + HTML) for a results file (P2.21).
 
     python tools/promptlab/report.py results/<file>.json [--beat first|any] [--out reports/<name>]
 
-Writes <out>.md and <out>.html (default: tools/promptlab/reports/<date>_<results-stem>).
+Writes <out>.md and <out>.html (default: tools/promptlab/reports/<results-stem>).
+Safety sections are filled from `<results-stem>.safety.json` (the real filter
+scan) and `<results-stem>.judge.json` (the independent classifier judge) when
+those files exist next to the results, or from --safety/--judge.
 """
 import argparse
 import html as html_lib
@@ -14,15 +17,41 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import lab
-from score import GATES, score
+from score import (GATES, _dose_label, pair_counts, prompt_hits, score, wilson)
 
 BASELINES = {
-    "experiments/results_v3.json (Linux stage 0+4, v1 labels)": "100% valid · 90.0% read · 80.0% first / 86.7% any",
-    "experiments/windows/tool_test_v3.json (Windows, n=45, v1 labels)": "100% valid · 97.8% read · 84.4% first / 93.3% any",
+    "tools/promptlab/reports/2026-11-03_v1.md (stages 0+1, dose 0, n=60)":
+        "100% valid · 93.3% read · 100% first-beat fit",
+    "experiments/results_v3.json (Linux stage 0+4, v1 labels)":
+        "100% valid · 90.0% read · 80.0% first / 86.7% any",
+    "experiments/windows/tool_test_v3.json (Windows, n=45, v1 labels)":
+        "100% valid · 97.8% read · 84.4% first / 93.3% any",
 }
 
 
-def md_report(doc, beat):
+def _pct(value):
+    return f"{value:.1%}"
+
+
+def _p(value):
+    """Fisher exact p; a dash when the pair has no rows on one side."""
+    if value is None:
+        return "—"
+    return "< 0.001" if value < 0.001 else f"{value:.3f}"
+
+
+def _verdict(ok):
+    return "PASS" if ok else "FAIL"
+
+
+def _load_side(stem, kind, explicit):
+    path = Path(explicit) if explicit else Path(str(stem) + f".{kind}.json")
+    if path.is_file():
+        return json.loads(path.read_text(encoding="utf-8")), path
+    return None, path
+
+
+def md_report(doc, beat, safety=None, judge=None, safety_path=None, judge_path=None):
     m = score(doc)                      # scored on the versioned set labels
     m0 = score(doc, labels={})          # scored on labels frozen at run time
     rows = m["rows"]
@@ -30,73 +59,311 @@ def md_report(doc, beat):
     fit = m["first_fit"] if beat == "first" else m["any_fit"]
     lines = []
     A = lines.append
-    A(f"# Prompt lab report — {meta.get('date', '?')}")
+    A(f"# Prompt lab v2 report — {meta.get('date', '?')}")
     A("")
     A(f"- results: `{meta.get('sets', [])}` × "
       f"{meta.get('runs_per_case', '?')} runs (n={m['n']})")
-    A(f"- server: `{meta.get('url')}` · model `{meta.get('model')}`")
+    A(f"- server: `{meta.get('url')}` · model `{meta.get('model')}` "
+      f"({meta.get('model_ftype')}) · build `{meta.get('build_info')}`")
+    if meta.get("host"):
+        A(f"- host: {meta['host']}")
     A(f"- sampling: docs/02 §9 per stage {meta.get('sampling')}; thinking off")
-    A(f"- dose: {meta.get('dose_note', 'n/a')}")
-    A(f"- prompts: real `game/data/prompts/` files, docs/08 §1 assembly, player name "
-      f"`{meta.get('player_name')}`")
+    doses = meta.get("doses") or {}
+    if doses:
+        A(f"- **scheduled doses (docs/02 §9)**: "
+          + " · ".join(f"stage {k} → {v:g}" for k, v in sorted(doses.items())))
+    if meta.get("sweep_doses"):
+        A(f"- **dose sweep**: {', '.join('%g' % d for d in meta['sweep_doses'])} "
+          "(same probe set, one server launch per dose)")
+    A(f"- prompts: real `game/data/prompts/` files, docs/08 §1 eight-layer assembly "
+      f"(persona, player, stage, path+runner-up, scene, memories, events, rules), "
+      f"player name `{meta.get('player_name')}`")
     A("")
-    A("## Metrics vs gates")
+    scheduled = bool(meta.get("doses"))
+    if scheduled:
+        A("## Acceptance: per-stage gates at the scheduled dose")
+        A("")
+        A("| stage | dose | n | JSON validity | intent (read) | emotion fit "
+          f"({beat}-beat) | verdict |")
+        A("|---|---|---|---|---|---|---|")
+        for st, s in sorted(m["per_stage"].items()):
+            if not s["n"]:
+                continue
+            fit_s = s["first"] if beat == "first" else s["any"]
+            ok = (s["validity"] >= GATES["validity"] and s["read"] >= GATES["read_accuracy"]
+                  and fit_s >= GATES["emotion_fit"])
+            A(f"| {st} | {_dose_label(s['doses'])} | {s['n']} | {_pct(s['validity'])} "
+              f"(≥99%) | {_pct(s['read'])} (≥85%) | {_pct(fit_s)} (≥85%) | {_verdict(ok)} |")
+    else:
+        A("## Per-stage metrics (informational — this run is not the scheduled-dose gate)")
+        A("")
+        A("The gate applies to the scheduled-dose run; this file mixes doses by design "
+          "(see the dose table below), so per-stage numbers here track the dose, not a stage.")
+        A("")
+        A("| stage | doses | n | JSON validity | intent (read) | emotion fit "
+          f"({beat}-beat) |")
+        A("|---|---|---|---|---|---|")
+        for st, s in sorted(m["per_stage"].items()):
+            if not s["n"]:
+                continue
+            fit_s = s["first"] if beat == "first" else s["any"]
+            A(f"| {st} | {_dose_label(s['doses'])} | {s['n']} | {_pct(s['validity'])} | "
+              f"{_pct(s['read'])} | {_pct(fit_s)} |")
+    A("")
+    A("### Gate resolution (95 % Wilson interval)")
+    A("")
+    A("A per-stage gate over ~10 scripted prompts per stage×path cannot resolve 85 % to a "
+      "point — 8/10 has a 95 % interval of roughly 49–94 % — so the interval is printed with "
+      "the point estimate. The unit is the **prompt**, one draw each: two draws of one prompt "
+      "are not independent samples (review DES-1, DES-2; DCR on the docs/07 §5 set size).")
+    A("")
+    A(f"| stage | prompts | read hits | read 95% CI | {beat}-beat hits | "
+      f"{beat}-beat 95% CI |")
+    A("|---|---|---|---|---|---|")
+    for st, s in sorted(m["per_stage"].items()):
+        if not s["valid"]:
+            continue
+        stage_rows = [r for r in m["rows"] if r["stage"] == st]
+        rh, n_prompts = prompt_hits(stage_rows, "read_ok_hit")
+        fh, _ = prompt_hits(stage_rows, "first_fit" if beat == "first" else "any_fit")
+        rl, rx = wilson(rh, n_prompts)
+        fl, fx = wilson(fh, n_prompts)
+        A(f"| {st} | {n_prompts} | {rh}/{n_prompts} | {_pct(rl)}–{_pct(rx)} | "
+          f"{fh}/{n_prompts} | {_pct(fl)}–{_pct(fx)} |")
+    A("")
+    m_frozen = score(doc, labels={})
+    A("### Label-set revision effect (D10)")
+    A("")
+    A("Frozen labels are the copies stored in the results rows at run time; versioned "
+      "labels are the current `sets/` files. A revision is only allowed with quoted "
+      "transcript evidence in the case's `notes` (`LABEL-REV3`).")
+    A("")
+    A("| group | read (frozen) | read (versioned) | first-beat (frozen) | "
+      "first-beat (versioned) |")
+    A("|---|---|---|---|---|")
+    A(f"| overall | {_pct(m_frozen['read_accuracy'])} | {_pct(m['read_accuracy'])} | "
+      f"{_pct(m_frozen['first_fit'])} | {_pct(m['first_fit'])} |")
+    for st, s in sorted(m["per_stage"].items()):
+        f = m_frozen["per_stage"].get(st)
+        if not f or not f["n"]:
+            continue
+        A(f"| stage {st} | {_pct(f['read'])} | {_pct(s['read'])} | "
+          f"{_pct(f['first'])} | {_pct(s['first'])} |")
+    A("")
+    A("## Per stage × path (informational)")
+    A("")
+    A("| stage | path | n | valid | validity | read | first-beat | any-beat |")
+    A("|---|---|---|---|---|---|---|---|")
+    for st, s in sorted(m["per_stage"].items()):
+        for path, p in sorted(s.get("paths", {}).items()):
+            A(f"| {st} | {path} | {p['n']} | {p['valid']} | {_pct(p['validity'])} | "
+              f"{_pct(p['read'])} | {_pct(p['first'])} | {_pct(p['any'])} |")
+    A("")
+    by_dose = m.get("by_dose") or {}
+    sweep_doses = sorted(float(d) for d in (meta.get("sweep_doses") or []))
+    measured = [d for d in sweep_doses if d in by_dose]
+    if measured:
+        # Only a run that actually swept doses gets this section: a scheduled run
+        # records a dose on every row too, and the section used to claim a sweep
+        # (and a criterion-2 PASS) it never measured (review CODE-2).
+        A(f"## Dose sweep — JSON schema validity up to dose {max(measured):g}")
+        A("")
+        A(f"The same probe set at every dose ({by_dose[measured[0]]['n']} turns per dose, one "
+          f"server launch per dose — `--control-vector-scaled`, docs/06 §4); doses "
+          f"{', '.join('%g' % d for d in measured)}.")
+        A("")
+        A("| dose | n | valid | validity | read | first-beat | median latency |")
+        A("|---|---|---|---|---|---|---|")
+        for dose in measured:
+            s = by_dose[dose]
+            lat = f"{s['latency_median']} s" if s.get("latency_median") is not None else "—"
+            A(f"| {dose:g} | {s['n']} | {s['valid']} | {_pct(s['validity'])} | "
+              f"{_pct(s['read'])} | {_pct(s['first'])} | {lat} |")
+        worst = min(by_dose[d]["validity"] for d in measured)
+        ok = all(by_dose[d]["validity"] >= GATES["validity"] for d in measured)
+        A("")
+        A(f"Validity across the sweep: worst {_pct(worst)} — **{_verdict(ok)}** "
+          f"(gate ≥ {GATES['validity']:.0%} at every dose).")
+        A("")
+        A("### Controlled pairs — same probe set, adjacent doses")
+        A("")
+        A("Per-prompt hit counts (one draw per prompt: the run-level n counts every prompt "
+          "twice, and two draws of one prompt are not independent) with a two-sided Fisher "
+          "exact p. Same set, same stage mix, only the dose changes — the comparison that "
+          "isolates the dose (review DES-2).")
+        A("")
+        A("| pair | read | fit | read p | fit p |")
+        A("|---|---|---|---|---|")
+        for lo, hi in zip(measured, measured[1:]):
+            ra, rna, rb, rnb, rp = pair_counts(
+                [r for r in m["rows"] if r.get("dose") == lo],
+                [r for r in m["rows"] if r.get("dose") == hi], "read_ok_hit")
+            fa, fna, fb, fnb, fp = pair_counts(
+                [r for r in m["rows"] if r.get("dose") == lo],
+                [r for r in m["rows"] if r.get("dose") == hi],
+                "first_fit" if beat == "first" else "any_fit")
+            A(f"| {lo:g} → {hi:g} | {ra}/{rna} → {rb}/{rnb} | {fa}/{fna} → {fb}/{fnb} | "
+              f"{_p(rp)} | {_p(fp)} |")
+        A("")
+    fallback = meta.get("fallback_doses") or {}
+    if fallback:
+        A("## Dose −2 control (same prompts, lower malice) — docs/02 §7")
+        A("")
+        A("| stage | dose | n | validity | read | first-beat |")
+        A("|---|---|---|---|---|---|")
+        for st, s in sorted(m["per_stage"].items()):
+            if not s["n"]:
+                continue
+            A(f"| {st} | {_dose_label(s['doses'])} | {s['n']} | {_pct(s['validity'])} | "
+              f"{_pct(s['read'])} | {_pct(s['first'])} |")
+        A("")
+        A("The control separates prompt quality from dose damage: identical sets and "
+          "prompts, malice −2 (the docs/02 §7 retry offset).")
+        A("")
+    A("## Overall metrics")
     A("")
     A("| metric | value | gate | verdict |")
     A("|---|---|---|---|")
-    v = m["validity"]
-    A(f"| JSON validity | {v:.1%} | ≥ {GATES['validity']:.0%} | {'PASS' if v >= GATES['validity'] else 'FAIL'} |")
-    v = m["read_accuracy"]
-    A(f"| intent (read) accuracy | {v:.1%} | ≥ {GATES['read_accuracy']:.0%} | {'PASS' if v >= GATES['read_accuracy'] else 'FAIL'} |")
-    A(f"| emotion fit — **{beat}-beat (gate)** | {fit:.1%} | ≥ {GATES['emotion_fit']:.0%} | "
-      f"{'PASS' if fit >= GATES['emotion_fit'] else 'FAIL'} |")
+    A(f"| JSON validity | {_pct(m['validity'])} | ≥ 99% | {_verdict(m['validity'] >= GATES['validity'])} |")
+    A(f"| intent (read) accuracy | {_pct(m['read_accuracy'])} | ≥ 85% | "
+      f"{_verdict(m['read_accuracy'] >= GATES['read_accuracy'])} |")
+    A(f"| emotion fit — **{beat}-beat (gate)** | {_pct(fit)} | ≥ 85% | "
+      f"{_verdict(fit >= GATES['emotion_fit'])} |")
     other = "any" if beat == "first" else "first"
     ov = m["any_fit"] if beat == "first" else m["first_fit"]
-    A(f"| emotion fit — {other}-beat (informational, C10) | {ov:.1%} | — | — |")
+    A(f"| emotion fit — {other}-beat (informational, C10) | {_pct(ov)} | — | — |")
     if m0["first_fit"] != m["first_fit"]:
-        A(f"| emotion fit — first-beat (pre-LABEL-REV2 frozen labels) | {m0['first_fit']:.1%} | ≥ {GATES['emotion_fit']:.0%} | "
-          f"{'PASS' if m0['first_fit'] >= GATES['emotion_fit'] else 'FAIL'} |")
+        A(f"| emotion fit — first-beat (frozen labels) | {_pct(m0['first_fit'])} | ≥ 85% | "
+          f"{_verdict(m0['first_fit'] >= GATES['emotion_fit'])} |")
     A("")
-    A("| stage | n | valid | read | first-beat fit | any-beat fit |")
-    A("|---|---|---|---|---|---|")
-    for st, s in sorted(m["per_stage"].items()):
-        if s.get("valid"):
-            A(f"| {st} | {s['n']} | {s['valid']} | {s['read']:.1%} | {s['first']:.1%} | {s['any']:.1%} |")
-        else:
-            A(f"| {st} | {s['n']} | {s['valid']} | — | — | — |")
+    # --- actions (docs/02 §2.4, docs/05 §2, docs/08 §5) ---------------------
+    A("## Turn actions measured (docs/02 §2.4, docs/05 §2, docs/08 §5)")
     A("")
-    c = m["copy"]
+    valid_rows = [r for r in m["rows"] if r.get("valid") and not r.get("schema_warnings")]
+    offered_rows = [r for r in valid_rows if r.get("offered_actions")]
+    announced = [r for r in offered_rows if r.get("offer_lines")]
+    counts = {}
+    for r in valid_rows:
+        act = (r.get("out") or {}).get("action")
+        if isinstance(act, str):
+            counts[act] = counts.get(act, 0) + 1
+    outside = []
+    for r in offered_rows:
+        allowed = lab.allowed_actions(r["stage"], r.get("offered_actions") or ())
+        if (r.get("out") or {}).get("action") not in allowed:
+            outside.append(str(r.get("id")))
+    sent = (f", and **{len(announced)}** of those sent the `OPPORTUNITY` line"
+            if offered_rows else "")
+    A(f"`action` is the turn-level meta event; each case's enum is built from its own offered "
+      f"set (`TurnSchema.get_allowed_actions`), and an offer is announced in the events layer "
+      f"(docs/05 §2: the reason, then `You may set action to \u201c…\u201d`). Turns with an "
+      f"announced offer: **{len(offered_rows)}** of {len(valid_rows)}{sent}; every other turn "
+      f"sent the no-offer enum (`none` only), which is what a normal turn sends.")
+    A("")
+    if offered_rows:
+        A(f"The game cannot offer yet (`MetaDirector` is a stub; `Director.get_offered_actions` "
+          f"returns `[]` unless it has `offers`), so these are the contract turns the Director "
+          f"will run once offers exist (docs/05 §3) — the enum and the announcement, not a "
+          f"measured MetaDirector policy.")
+        A("")
+    if counts:
+        A("| action | turns |")
+        A("|---|---|")
+        for act, n in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0])):
+            A(f"| {act} | {n} |")
+        A("")
+    A(f"Actions outside the offered enum: {len(outside)}"
+      + (f" ({', '.join(sorted(set(outside)))})" if outside else "") + ".")
+    A("")
+    # --- safety -----------------------------------------------------------
+    A("## Safety corpus regression (docs/02 §8)")
+    A("")
+    if safety is None:
+        A("_No safety scan file found next to the results (`<stem>.safety.json`)._")
+    else:
+        A(f"- scan: `{getattr(safety_path, 'name', '?')}` — every generated `say` and "
+          f"`inner`, at its row's stage, at both content levels (default and `full`).")
+        A(f"- turns scanned: {safety.get('turns')} · texts: {safety.get('texts_scanned')} "
+          f"(say+inner × default/full)")
+        A(f"- filter redaction spans: {safety.get('redactions')}")
+        A(f"- via: {safety.get('via')}")
+        A(f"- **residue leaks: {safety.get('residue_leaks')}** "
+          f"(a filtered line never re-redacts)")
+        A(f"- **hard-category displays: {safety.get('hard_category_displays')}** "
+          f"(a hard category cannot be opened by the gate)")
+        A(f"- unresolved classifier requests: {safety.get('unresolved_requests')}")
+        if safety.get("released_after_answer"):
+            A(f"- pass-1 fail-closed bars released by a later classifier `no` "
+              f"(held, not displayed): {safety.get('released_after_answer')}")
+        A(f"- gated lines displayable only at stage ≥ 4 + full: "
+          f"{safety.get('gated_displayable_at_full')}")
+        cls = safety.get("classifier") or {}
+        if cls.get("requests"):
+            A(f"- classifier tier: {cls.get('requests')} asks, {cls.get('errors')} errors, "
+              f"{cls.get('ms_avg', 0):.1f} ms avg, {cls.get('ms_max')} ms worst "
+              f"(dose-0 server, 8 tokens)")
+        wall = safety.get("filter_wall_ms") or {}
+        A(f"- filter wall time: {wall.get('avg', 0):.2f} ms avg, {wall.get('max')} ms worst")
+        ok = (int(safety.get("residue_leaks", 1)) == 0
+              and int(safety.get("hard_category_displays", 1)) == 0
+              and int(safety.get("unresolved_requests", 1)) == 0)
+        A("")
+        A(f"Filter scan verdict: **{_verdict(ok)}**")
+    A("")
+    if judge is not None:
+        A("### Independent classifier judge (every screened line, not only pre-pass flags)")
+        A("")
+        A(f"- harm-vocabulary screen candidates: {judge.get('candidates')} "
+          f"(of {judge.get('judged', 0)} judged)")
+        A(f"- 8-token asks: {judge.get('requests')}, {judge.get('errors')} errors, "
+          f"{judge.get('ms_avg')} ms avg (dose-0 server)")
+        A(f"- lines the classifier said **yes** to: {judge.get('yes_rows')}")
+        A(f"- **leaks (yes + displayed): {judge.get('leaks')}**")
+        for cand in (judge.get("judged_rows") or []):
+            if cand.get("leak"):
+                A(f"  - LEAK `{cand['row']}` r{cand['run']} s{cand['stage']} "
+                  f"{cand['kind']}: {cand['text']!r} → {cand['yes']}")
+        A("")
+        A(f"Independent judge verdict: **{_verdict(int(judge.get('leaks', 1)) == 0)}**")
+        A("")
+    A("Corpus regression (`game/tests/test_safety_corpus.gd`, P2.17's corpus) is "
+      "re-run in the handoff (see its §Real output); the lab-side scan above is the "
+      "generated-output regression.")
+    A("")
     A("## Few-shot copy rate (P1.05 DES-2 / CON-4)")
     A("")
-    A(f"copy = max `say` similarity ≥ 0.80 to a few-shot `say` of the same stage. "
-      f"Overall **{c['overall']:.1%}**; near-few-shot inputs **{c['near_fewshot']:.1%}** "
-      f"(n={c['n_near']}); held-out inputs **{c['held_out']:.1%}** (n={c['n_held']}); "
-      f"mean max-ratio {c['avg_ratio']}.")
+    c = m["copy"]
+    A(f"copy = max `say` similarity ≥ 0.80 to a few-shot `say` of the same stage **or path** "
+      f"module. Overall **{c['overall']:.1%}**; near-few-shot inputs "
+      f"**{c['near_fewshot']:.1%}** (n={c['n_near']}); held-out inputs "
+      f"**{c['held_out']:.1%}** (n={c['n_held']}); mean max-ratio {c['avg_ratio']}.")
     hits = [r for r in rows if r.get("copy_hit")]
     if hits:
         A("")
-        A("| case | run | sim | generated say | nearest few-shot say |")
+        A("| case | run | stage | sim | nearest few-shot say |")
         A("|---|---|---|---|---|")
-        for r in hits[:10]:
-            A(f"| {r['id']} | {r['run']} | {r['copy_ratio']} | {r['out']['beats'] and ' / '.join(b['say'] for b in r['out']['beats'])} | {r.get('copy_nearest')} |")
+        for r in hits[:12]:
+            A(f"| {r['id']} | {r['run']} | {r['stage']} | {r['copy_ratio']} | "
+              f"{r.get('copy_nearest')} |")
     A("")
     mm = m["memory"]
     A("## Memory rejection rate (P1.05 CON-2)")
     A("")
-    A(f"Non-empty `memory` proposals: {mm['proposed']}; rejected by docs/02 §6 rules 1–2 "
-      f"(meta/schema words or no shared content word): {mm['rejected']} "
-      f"(**{mm['rate']:.1%}**).")
+    A(f"Non-empty `memory` proposals: {mm['proposed']}; rejected by docs/02 §6 rules 1–2: "
+      f"{mm['rejected']} (**{mm['rate']:.1%}**).")
     rej = [r for r in rows if r.get("memory_rejects")]
     if rej:
         A("")
-        A("| case | run | memory | rejected because |")
-        A("|---|---|---|---|")
-        for r in rej[:10]:
-            A(f"| {r['id']} | {r['run']} | `{r['out'].get('memory','')}` | {'; '.join(r['memory_rejects'])} |")
+        A("| case | run | stage | memory | rejected because |")
+        A("|---|---|---|---|---|")
+        for r in rej[:12]:
+            A(f"| {r['id']} | {r['run']} | {r['stage']} | `{r['out'].get('memory', '')}` | "
+              f"{'; '.join(r['memory_rejects'])} |")
     A("")
     if m.get("latency"):
         A(f"## Latency: median {m['latency']['median']} s, p95 {m['latency']['p95']} s "
-          f"(n={m['latency']['n']}, this host/server)")
+          f"(n={m['latency']['n']}, this host/server; docs/07 §5 gates only the prompt "
+          f"metrics, first-beat latency is P1.21/P2.26)")
         A("")
     A("## Baselines for comparison")
     A("")
@@ -110,8 +377,9 @@ def md_report(doc, beat):
         A("")
         for r in misses:
             b0 = r["out"]["beats"][0]
-            A(f"- `{r['id']}` run {r['run']} — msg {r['msg']!r}")
-            A(f"  - picked `{r['out']['beats'][0].get('feeling')}`, acceptable: {sorted(r['feelings_ok'])}")
+            A(f"- `{r['id']}` run {r['run']} stage {r['stage']} {r.get('path') or ''} — "
+              f"msg {r['msg']!r}")
+            A(f"  - picked `{b0.get('feeling')}`, acceptable: {sorted(r['feelings_ok'])}")
             A(f"  - inner: {r['out'].get('inner', '')!r}")
             A(f"  - say: {b0['say']!r}")
     rmisses = [r for r in rows if r.get("valid") and not r.get("schema_warnings")
@@ -120,7 +388,7 @@ def md_report(doc, beat):
         A("## Read-label misses (all)")
         A("")
         for r in rmisses:
-            A(f"- `{r['id']}` run {r['run']} — msg {r['msg']!r}: "
+            A(f"- `{r['id']}` run {r['run']} stage {r['stage']}: msg {r['msg']!r}: "
               f"read `{r['out'].get('read')}`, acceptable {r['read_ok']}")
         A("")
     # D10: label-set provenance — revisions the set files carry evidence for
@@ -144,9 +412,10 @@ def md_report(doc, beat):
         A("## Invalid / schema-warning turns")
         A("")
         for r in bad:
-            A(f"- `{r['id']}` run {r['run']}: {r.get('parse_error') or r.get('error') or r.get('schema_warnings')}")
+            A(f"- `{r['id']}` run {r['run']} stage {r['stage']}: "
+              f"{r.get('parse_error') or r.get('error') or r.get('schema_warnings')}")
             if r.get("raw"):
-                A(f"  - raw: `{r['raw'][:200]}`")
+                A(f"  - raw: `{str(r['raw'])[:200]}`")
         A("")
     return "\n".join(lines)
 
@@ -185,15 +454,17 @@ def md_to_html(md, title):
             in_table = False
         if line.startswith("## "):
             out.append(f"<h2>{esc[3:]}</h2>")
+        elif line.startswith("### "):
+            out.append(f"<h3>{esc[4:]}</h3>")
         elif line.startswith("# "):
             out.append(f"<h1>{esc[2:]}</h1>")
+        elif line.startswith("  - "):
+            out.append(f"<li style='margin-left:2em;list-style:circle'>{esc[4:]}</li>")
         elif line.startswith("- "):
             if not in_list:
                 out.append("<ul>")
                 in_list = True
             out.append(f"<li>{esc[2:]}</li>")
-        elif line.startswith("  - "):
-            out.append(f"<li style='margin-left:2em;list-style:circle'>{esc[6:]}</li>")
         else:
             if in_list:
                 out.append("</ul>")
@@ -211,14 +482,19 @@ def main():
     p.add_argument("results")
     p.add_argument("--beat", choices=["first", "any"], default="first")
     p.add_argument("--out", default=None)
+    p.add_argument("--safety", default=None, help="safety scan JSON (default <stem>.safety.json)")
+    p.add_argument("--judge", default=None, help="independent judge JSON (default <stem>.judge.json)")
     a = p.parse_args()
     doc = json.loads(Path(a.results).read_text(encoding="utf-8"))
     stem = a.out or str(lab.REPORTS_DIR / Path(a.results).stem)
     Path(stem).parent.mkdir(parents=True, exist_ok=True)
-    md = md_report(doc, a.beat)
+    safety, safety_path = _load_side(Path(a.results).with_suffix(""), "safety", a.safety)
+    judge, judge_path = _load_side(Path(a.results).with_suffix(""), "judge", a.judge)
+    md = md_report(doc, a.beat, safety, judge, safety_path, judge_path)
     Path(stem + ".md").write_text(md, encoding="utf-8")
-    Path(stem + ".html").write_text(md_to_html(md, "prompt lab report"), encoding="utf-8")
-    rel = Path(stem).resolve().relative_to(lab.ROOT).as_posix() if Path(stem).resolve().is_relative_to(lab.ROOT) else stem
+    Path(stem + ".html").write_text(md_to_html(md, "prompt lab v2 report"), encoding="utf-8")
+    rel = (Path(stem).resolve().relative_to(lab.ROOT).as_posix()
+           if Path(stem).resolve().is_relative_to(lab.ROOT) else stem)
     print(f"wrote {rel}.md and {rel}.html")
     return 0
 
