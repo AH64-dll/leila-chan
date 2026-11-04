@@ -23,7 +23,7 @@ Work in the main tree at `/run/media/amrhares/New Volume/lila`, on the `main` br
 | P1.05 | done | NAR | swe2 | production/reviews/P1.05-design-r1.md, production/reviews/P1.05-content-r1.md |
 | P1.06 | done | SYS | deepseek | production/reviews/P1.06-code-r1.md, production/reviews/P1.06-design-r1.md |
 | P1.07 | done | SYS | gemini-3.8-flash | production/reviews/P1.07-code-r1.md, production/reviews/P1.07-design-r1.md |
-| P1.08 | done | SYS | deepseek | production/reviews/P1.08-code-r2.md, production/reviews/P1.08-design-r2.md |
+| P1.08 | done | SYS | deepseek | production/reviews/P1.08-code-r4.md, production/reviews/P1.08-design-r4.md |
 | P1.09 | done | SYS | deepseek | production/reviews/P1.09-code-r2.md, production/reviews/P1.09-design-r2.md |
 | P1.10 | done | ART | swe2 | production/reviews/P1.10-code-r2.md, production/reviews/P1.10-design-r2.md |
 | P1.11 | done | ART | gemini-3.8-flash | production/reviews/P1.11-code-r1.md, production/reviews/P1.11-design-r1.md |
@@ -47,6 +47,7 @@ Work in the main tree at `/run/media/amrhares/New Volume/lila`, on the `main` br
 | P1.29 | done | SYS | deepseek | production/reviews/P1.29-code-r2.md |
 | P1.30 | done | REL | claude | production/reviews/P1.30-code-r1.md |
 | P1.31 | done | SYS | commandcode | production/reviews/P1.31-code-r1.md |
+| P1.32 | done | SYS | commandcode | production/reviews/P1.32-code-r1.md |
 
 ## Output
 
