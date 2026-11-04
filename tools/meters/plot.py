@@ -8,9 +8,15 @@ plain text and diffable, and the PNG is a convenience render of the same file.
     python3 tools/meters/plot.py production/handoffs/media/P2.01/meters_curve.csv \
         production/handoffs/media/P2.01/meters_curve.svg
 
-Panel 1: Instability with the docs/01 §2 ratchet floor (peak - 15) and the peak,
-over the docs/01 §3 stage bands. Panel 2: Affection, Trust (mapped from its
--50..+50 range), Fixation and Lucidity.
+Axis meanings: the x axis is turns; the Instability panel's y axis is the meter
+value. The docs/01 §3 stage bands are instability ranges, so they shade that
+panel's y axis (a horizontal stripe per band, labelled with its range), and the
+strip above it is the stage the CSV is actually in on each turn. Stage
+crossings are marked with their turn and in-game day, read from the CSV.
+
+Panel 1: Instability with the docs/01 §2 ratchet floor (peak - 15) and the peak.
+Panel 2: Affection, Trust (mapped from its -50..+50 range), Fixation and
+Lucidity.
 """
 
 from __future__ import annotations
@@ -36,9 +42,11 @@ BG = "#fbfaf7"
 INK = "#2b2b2b"
 GRID = "#d9d5cc"
 
+## docs/01 §3, verbatim: (lo, hi, name, fill). The numbers are Instability
+## values, never turns — the Instability panel's y axis carries them.
 STAGES = [
     (0, 14, "S0 Honeymoon", "#eaf6ef"),
-    (15, 29, "S1 Hairline", "#f3f7e6"),
+    (15, 29, "S1 Hairline Cracks", "#f3f7e6"),
     (30, 49, "S2 Leaks", "#fbf3dd"),
     (50, 69, "S3 Fracture", "#fbe7dc"),
     (70, 89, "S4 Collapse", "#f8dcdc"),
@@ -116,28 +124,69 @@ def y_for(value: float, top: float, height: float, lo: float = 0.0, hi: float = 
     return top + height - (value - lo) / (hi - lo) * height
 
 
-def draw_stage_bands(svg: Svg, rows: list[dict], x, top: float, height: float) -> None:
-    turns = [num(r, "turn") for r in rows]
-    for lo, hi, _label, fill in STAGES:
-        xs = x(lo)
-        xe = x(min(hi, max(turns)))
-        if xe <= xs:
-            continue
-        svg.rect(xs, top, xe - xs, height, fill)
-        svg.line(xs, top, xs, top + height, "#c9c3b6", 0.8)
+def draw_stage_bands(svg: Svg, top: float, height: float) -> None:
+    """docs/01 §3 bands shade the Instability axis: one horizontal stripe per range.
+
+    The band edges are meter values, so each stripe spans the full turn width and
+    the curve crossing a stripe edge is exactly the stage change the CSV records.
+    """
+    for index, (lo, hi, label, fill) in enumerate(STAGES):
+        # The doc table's bands are integer ranges (0-14, 15-29, ...), so the
+        # next band's floor is this band's ceiling on the continuous axis.
+        ceiling = STAGES[index + 1][0] if index + 1 < len(STAGES) else hi
+        y_hi = y_for(ceiling, top, height)
+        y_lo = y_for(lo, top, height)
+        svg.rect(LEFT, y_hi, RIGHT - LEFT, y_lo - y_hi, fill)
+        if lo > 0:
+            svg.line(LEFT, y_lo, RIGHT, y_lo, "#d5cdbe", 0.9)
+        svg.text(
+            RIGHT - 8, (y_hi + y_lo) / 2 + 4, f"{label} ({lo}-{hi})", 10, "end", "#9a9186"
+        )
+
+
+def stage_runs(rows: list[dict]) -> list[tuple[int, int, int]]:
+    """Contiguous (first_turn, last_turn, stage) runs, read from the CSV's stage column."""
+    runs: list[tuple[int, int, int]] = []
+    for row in rows:
+        turn, stage = int(num(row, "turn")), int(num(row, "stage"))
+        if runs and runs[-1][2] == stage:
+            runs[-1] = (runs[-1][0], turn, stage)
+        else:
+            runs.append((turn, turn, stage))
+    return runs
+
+
+def stage_crossings(rows: list[dict]) -> list[tuple[int, int, int]]:
+    """Turns where the CSV stage changes: (turn, day, new_stage)."""
+    crossings: list[tuple[int, int, int]] = []
+    previous = int(num(rows[0], "stage"))
+    for row in rows[1:]:
+        stage = int(num(row, "stage"))
+        if stage != previous:
+            crossings.append((int(num(row, "turn")), int(num(row, "day")), stage))
+            previous = stage
+    return crossings
 
 
 def draw_stage_strip(svg: Svg, rows: list[dict], x) -> None:
-    """docs/01 section 3 bands as a labelled strip so the lines never cross a label."""
-    turns = [num(r, "turn") for r in rows]
-    for lo, hi, label, fill in STAGES:
-        xs = x(lo)
-        xe = x(min(hi, max(turns)))
+    """The stage the run is actually in per turn, so the strip answers "when".
+
+    Each segment is one contiguous run of the CSV's `stage` column, labelled with
+    the docs/01 §3 name; the in-game day ticks under it are turn-based too.
+    """
+    for start, end, stage in stage_runs(rows):
+        xs = max(LEFT, x(start - 0.5))
+        xe = min(RIGHT, x(end + 0.5))
         if xe <= xs:
             continue
+        _lo, _hi, label, fill = STAGES[stage]
         svg.rect(xs, STRIP_TOP, xe - xs, STRIP_HEIGHT, fill)
         svg.line(xs, STRIP_TOP, xs, STRIP_TOP + STRIP_HEIGHT, "#b8b1a4", 0.8)
-        svg.text((xs + xe) / 2, STRIP_TOP + 13, label, 10, "middle", "#6f675b")
+        if xe - xs >= 84:
+            svg.text((xs + xe) / 2, STRIP_TOP + 14, label, 9, "middle", "#5d564b")
+        elif xe - xs >= 34:
+            svg.text((xs + xe) / 2, STRIP_TOP + 14, f"S{stage}", 9, "middle", "#5d564b")
+    svg.line(RIGHT, STRIP_TOP, RIGHT, STRIP_TOP + STRIP_HEIGHT, "#b8b1a4", 0.8)
     seen: set[int] = set()
     for row in rows:
         day = int(num(row, "day"))
@@ -145,8 +194,8 @@ def draw_stage_strip(svg: Svg, rows: list[dict], x) -> None:
             continue
         seen.add(day)
         px = x(num(row, "turn"))
-        svg.line(px, STRIP_TOP + 16, px, STRIP_TOP + STRIP_HEIGHT, "#c9c3b6", 0.8)
-        svg.text(px + 3, STRIP_TOP + 27, f"D{day}", 10, "start", "#8a8377")
+        svg.line(px, STRIP_TOP + 18, px, STRIP_TOP + STRIP_HEIGHT, "#c9c3b6", 0.8)
+        svg.text(px + 3, STRIP_TOP + 28, f"D{day}", 9, "start", "#8a8377")
 
 
 def draw_day_lines(svg: Svg, rows: list[dict], x, top: float, bottom: float) -> None:
@@ -196,13 +245,19 @@ def plot(rows: list[dict], out: Path) -> None:
     svg.text(
         LEFT, 74,
         "Seeded player model (game/tools/meters_sim.gd, seed 20261104): 14 days, "
-        "warm -> provocative -> cold reads.  Stage strip: docs/01 section 3 bands.",
+        "warm -> provocative -> cold reads.  Bands + strip: docs/01 section 3.",
         12, "start", "#6f675b",
     )
-    draw_stage_bands(svg, rows, x, TOP1, HEIGHT1)
+    draw_stage_bands(svg, TOP1, HEIGHT1)
     draw_stage_strip(svg, rows, x)
     draw_day_lines(svg, rows, x, TOP1, TOP2 + HEIGHT2)
     draw_axes(svg, rows, x, TOP1, HEIGHT1, 0, 100, [0, 20, 40, 60, 80, 100])
+
+    crossings = stage_crossings(rows)
+    for turn, _day, stage in crossings:
+        px = x(turn)
+        svg.line(px, TOP1, px, TOP1 + HEIGHT1, "#b09a5f", 0.9, "3 3")
+        svg.text(px + 3, TOP1 + HEIGHT1 - 6, f"S{stage}", 9, "start", "#8a7434")
 
     for key, color, width, dash in (
         ("instability", "#c21f3a", 2.6, ""),
@@ -262,6 +317,14 @@ def plot(rows: list[dict], out: Path) -> None:
     svg.text((LEFT + RIGHT) / 2, TOP2 + HEIGHT2 + 42, "turn (100 turns / 14 in-game days)",
              12, "middle", "#6f675b")
 
+    if crossings:
+        svg.text(
+            LEFT, HEIGHT - 36,
+            "stage crossings (instability -> stage): "
+            + " - ".join(f"S{stage} turn {turn}/day {day}" for turn, day, stage in crossings),
+            11, "start", "#6f675b",
+        )
+
     last_row = rows[-1]
     svg.text(
         LEFT, HEIGHT - 12,
@@ -301,6 +364,8 @@ def main(argv: list[str]) -> int:
     for row in rows:
         if num(row, "instability") < num(row, "instability_floor") - 1e-6:
             raise SystemExit(f"plot: ratchet violated at turn {row['turn']}")
+        if not 0 <= int(num(row, "stage")) < len(STAGES):
+            raise SystemExit(f"plot: stage out of range at turn {row['turn']}")
     plot(rows, target)
     print(f"plot: wrote {target} ({len(rows)} turns)")
     to_png(target)
