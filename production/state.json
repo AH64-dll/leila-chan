@@ -3256,7 +3256,7 @@
       "finished": "2026-11-04T21:46:38+02:00"
     },
     "P3.03": {
-      "status": "in_review",
+      "status": "done",
       "agent": "swe2",
       "round": 1,
       "reviews": [
@@ -3280,7 +3280,8 @@
         }
       ],
       "started": "2026-11-04T19:22:51+02:00",
-      "handoff": "production/handoffs/P3.03.md"
+      "handoff": "production/handoffs/P3.03.md",
+      "finished": "2026-11-04T22:07:35+02:00"
     },
     "P3.09": {
       "status": "in_progress",
@@ -8121,6 +8122,12 @@
       "event": "review:design:approved",
       "ref": "P3.03",
       "note": "production/reviews/P3.03-design-r1.md"
+    },
+    {
+      "ts": "2026-11-04T22:07:35+02:00",
+      "event": "in_review->done",
+      "ref": "P3.03",
+      "note": ""
     }
   ]
 }
