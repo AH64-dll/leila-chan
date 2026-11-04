@@ -54,6 +54,30 @@
 			"meta": "",
 			"stage_min": 0,
 			"line": "EVENT: The player sent the same message again ({count} times in the last few messages)."
+		},
+		"save_gone": {
+			"trigger": "T19",
+			"meta": "M08",
+			"stage_min": 3,
+			"line": "EVENT: The player's previous save is gone. A new run has begun."
+		},
+		"settings_changed": {
+			"trigger": "T20",
+			"meta": "",
+			"stage_min": 1,
+			"line": "EVENT: The player changed a setting ({setting})."
+		},
+		"audio_mute": {
+			"trigger": "T21",
+			"meta": "",
+			"stage_min": 1,
+			"line": "EVENT: The player muted the audio. You can only type in ALL CAPS until it comes back."
+		},
+		"audio_unmuted": {
+			"trigger": "T21",
+			"meta": "",
+			"stage_min": 1,
+			"line": "EVENT: The player unmuted the audio. The caps can come off."
 		}
 	}
 }

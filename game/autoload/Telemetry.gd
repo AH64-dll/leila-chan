@@ -33,6 +33,10 @@ const IDLE_KIND := "idle"
 const RESIZE_KIND := "window_resized"
 const SCREENSHOT_KIND := "screenshot"
 const REPEAT_KIND := "message_repeated"
+const SAVE_GONE_KIND := "save_gone"
+const SETTINGS_KIND := "settings_changed"
+const MUTE_KIND := "audio_mute"
+const UNMUTE_KIND := "audio_unmuted"
 
 ## docs/01 §5 T31: "Take a screenshot (F12 / in-game camera)". Print Screen is
 ## the same intent on keyboards that have no F12 row.
@@ -108,6 +112,35 @@ const FALLBACK_EVENTS := {
 		"line":
 		"EVENT: The player sent the same message again ({count} times in the last few messages).",
 	},
+	"save_gone":
+	{
+		"trigger": "T19",
+		"meta": "M08",
+		"stage_min": 3,
+		"line": "EVENT: The player's previous save is gone. A new run has begun.",
+	},
+	"settings_changed":
+	{
+		"trigger": "T20",
+		"meta": "",
+		"stage_min": 1,
+		"line": "EVENT: The player changed a setting ({setting}).",
+	},
+	"audio_mute":
+	{
+		"trigger": "T21",
+		"meta": "",
+		"stage_min": 1,
+		"line":
+		"EVENT: The player muted the audio. You can only type in ALL CAPS until it comes back.",
+	},
+	"audio_unmuted":
+	{
+		"trigger": "T21",
+		"meta": "",
+		"stage_min": 1,
+		"line": "EVENT: The player unmuted the audio. The caps can come off.",
+	},
 }
 
 var _events: Dictionary = {}
@@ -154,7 +187,7 @@ func _input(event: InputEvent) -> void:
 		if key.pressed and not key.echo:
 			note_activity()
 			if _is_screenshot_key(key):
-				note_screenshot()
+				_note_screenshot()
 		return
 	var button := event as InputEventMouseButton
 	if button != null and button.pressed:
@@ -200,15 +233,6 @@ func load_catalog() -> bool:
 ## The merged catalogue (fallback + data), for the F3 overlay and tests.
 func catalog() -> Dictionary:
 	return _events.duplicate(true)
-
-
-## The known event kinds in catalogue order (the F3 overlay builds its buttons
-## from this, so a data-added event is testable without touching the overlay).
-func catalog_kinds() -> Array[String]:
-	var kinds: Array[String] = []
-	for kind: Variant in _events:
-		kinds.append(str(kind))
-	return kinds
 
 
 ## One limit from data/telemetry.json with the documented default.
@@ -422,10 +446,11 @@ func note_resized(current: Vector2i) -> bool:
 	return true
 
 
-## docs/01 T31: an in-game screenshot key was pressed. Print Screen and F12
+## docs/01 §5 T31: an in-game screenshot key was pressed. Print Screen and F12
 ## both count; the cooldown keeps a held key or a rapid double-tap to one
-## event. The in-game camera can call this directly.
-func note_screenshot() -> void:
+## event. Private because it is one detector behind `_input`: the F3 overlay
+## fires the kind through `debug_fire`, and the camera UI should call that too.
+func _note_screenshot() -> void:
 	if not _date_active:
 		return
 	var now := _now_ms()
@@ -435,6 +460,28 @@ func note_screenshot() -> void:
 	_last_screenshot_ms = now
 	_screenshots += 1
 	_record(SCREENSHOT_KIND, {"count": _screenshots})
+
+
+## docs/01 §5 T19–T21: the player's own act outside the chat box. One sink
+## because the three share the whole shape — a kind the catalogue documents, a
+## docs/05 gate and one line in data/telemetry.json — and only the data differs:
+##   save_gone        {kind, slot?}   a run ended by hand (New Game / wipe)
+##   settings_changed {setting}       a setting the player wrote
+##   audio_mute       {muted: true}   the master bus went silent
+##   audio_unmuted    {muted: false}  …and the caps can come off
+## `save_gone` is the one that outlives a date: it describes the run about to
+## start, so the date gate skips it (the T19 stage-3 gate still applies). Volume
+## 0 is not a mute; only an explicit toggle counts, and the caller says which
+## kind. The F3 overlay fires every kind through `debug_fire`.
+func note_player_action(kind: String, data: Dictionary = {}) -> void:
+	if not [SAVE_GONE_KIND, SETTINGS_KIND, MUTE_KIND, UNMUTE_KIND].has(kind):
+		push_warning("Telemetry: '%s' is not a player action; ignored" % kind)
+		return
+	if kind != SAVE_GONE_KIND and not _date_active:
+		return
+	if kind == SETTINGS_KIND and str(data.get("setting", "")).strip_edges().is_empty():
+		return
+	_record(kind, data)
 
 
 ## ── Turn consumption ─────────────────────────────────────────────────────
@@ -508,6 +555,14 @@ func debug_fire(kind: String) -> bool:
 			_record(SCREENSHOT_KIND, {"count": _screenshots})
 		REPEAT_KIND:
 			_record(REPEAT_KIND, {"count": 2, "chars": 0})
+		SAVE_GONE_KIND:
+			_record(SAVE_GONE_KIND, {"kind": "debug"})
+		SETTINGS_KIND:
+			_record(SETTINGS_KIND, {"setting": "debug"})
+		MUTE_KIND:
+			_record(MUTE_KIND, {"muted": true})
+		UNMUTE_KIND:
+			_record(UNMUTE_KIND, {"muted": false})
 		_:
 			return false
 	return true

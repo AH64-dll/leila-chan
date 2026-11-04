@@ -70,9 +70,22 @@ GUARD_CLOCK_KEYS = {
     "flag_set",
     "flag_absent",
 }
-GUARD_KEYS = GUARD_CLOCK_KEYS | {"counter_gte", "contradicts_memory"}
+GUARD_CLOCK_KEYS |= {"absence_hours_lte"}  # P3.07 T17's reunion window bound
+GUARD_KEYS = GUARD_CLOCK_KEYS | {
+    "counter_gte",
+    "contradicts_memory",
+    "mentions_memory",
+    "name_mention",
+    "text_match",
+}
 DETECTOR_LETTERS = {"keyword": "K", "model": "M", "event": "E", "clock": "C"}
-LINE_TOKENS = {"count", "ordinal", "stage", "day", "turn", "fact"}
+LINE_TOKENS = {"count", "ordinal", "stage", "day", "turn", "fact", "name"}
+GUARD_ROW_KEYS = {
+    "contradicts_memory": {"negations", "min_shared_words"},
+    "mentions_memory": {"min_shared_words"},
+    "name_mention": {"pattern", "exclude", "ignore_case"},
+    "text_match": {"any", "all", "ignore_case"},
+}
 # The row fields the loader reads. A misspelt field would be dropped silently,
 # so an unknown key is a contract failure, not data (P2.10 r2 CODE-5).
 ROW_KEYS = {
@@ -274,6 +287,38 @@ def test_rows_match_the_bible_detection_column() -> None:
         )
 
 
+def test_new_guard_blocks_are_well_formed() -> None:
+    # P3.07 guards: mentions_memory (T22) and name_mention (T26) get the same
+    # sub-key discipline the contradicts_memory block already has — a typo'd
+    # key must fail here, not drop silently.
+    for trigger_id, row in TRIGGER_ROWS.items():
+        guard = row.get("guard", {})
+        assert set(guard) <= GUARD_KEYS, f"{trigger_id} uses unknown guard keys {set(guard) - GUARD_KEYS}"
+        for key, allowed in GUARD_ROW_KEYS.items():
+            if key in guard:
+                assert set(guard[key]) <= allowed, (
+                    f"{trigger_id} guard.{key} has unknown keys {set(guard[key]) - allowed}"
+                )
+    mention = TRIGGER_ROWS["T22"]["guard"]["mentions_memory"]
+    assert mention["min_shared_words"] >= 2, "a gift is not remembered on one shared word"
+    naming = TRIGGER_ROWS["T26"]["guard"]["name_mention"]
+    assert re.search(naming["pattern"], "my name is Ren").group(1) == "Ren"
+    for bad in ("call me Leila", "call me baby", "call me later", "call me when you get home"):
+        match = re.search(naming["pattern"], bad, re.I)
+        assert match.group(1).lower() in naming["exclude"], f"{bad!r} must be excluded"
+    # T28/T30's text guard is a keyword-shaped matcher: every branch must
+    # compile, and the documented examples must take it.
+    for trigger_id, sample in (("T28", "thank you for tonight"), ("T30", "your mother, what was she like?")):
+        spec = TRIGGER_ROWS[trigger_id]["guard"]["text_match"]
+        patterns = spec.get("any", []) + spec.get("all", [])
+        assert patterns, f"{trigger_id} text_match has no pattern"
+        for pattern in patterns:
+            re.compile(pattern)
+        assert any(re.search(p, sample, re.I if spec.get("ignore_case", True) else 0) for p in patterns), (
+            f"{trigger_id} text_match misses {sample!r}"
+        )
+
+
 def test_effects_use_the_game_vocabulary() -> None:
     for trigger_id, row in TRIGGER_ROWS.items():
         effects = row.get("effects", {})
@@ -289,6 +334,15 @@ def test_effects_use_the_game_vocabulary() -> None:
             assert isinstance(value, int)
         for flag, value in effects.get("flags", {}).items():
             assert flag.strip()
+            # P3.07 T21 "until unmuted": an event row's flag may follow the
+            # event's own data instead of a constant — {"from_event": "muted"}
+            # is mute -> true / unmute -> false, one row for the whole span.
+            if isinstance(value, dict):
+                assert set(value) == {"from_event"}, (
+                    f"{trigger_id} flag {flag!r} has unknown keys {sorted(value)}"
+                )
+                assert isinstance(value["from_event"], str) and value["from_event"].strip()
+                continue
             assert isinstance(value, (bool, int, float, str)), (
                 f"{trigger_id} sets non-scalar flag {flag!r}"
             )
@@ -344,6 +398,16 @@ def test_t01_t15_rows_are_the_shipped_catalogue() -> None:
         assert row["detect"] or row.get("guard"), f"{trigger_id} has no evidence"
 
 
+def test_t16_t32_rows_are_the_shipped_catalogue() -> None:
+    # P3.07's whole acceptance criterion in one place: all seventeen exist.
+    covered = {f"T{n:02d}" for n in range(16, 33)}
+    assert covered <= set(TRIGGER_ROWS), "P3.07 ships T16–T32"
+    for trigger_id in sorted(covered):
+        row = TRIGGER_ROWS[trigger_id]
+        assert row["name"].strip(), f"{trigger_id} has no name"
+        assert row["detect"] or row.get("guard"), f"{trigger_id} has no evidence"
+
+
 def test_documented_effects_land() -> None:
     # docs/01 §5's numbers are the acceptance criterion, so the ones the bible
     # states are pinned exactly; the unnumbered rows only have to point the way
@@ -387,6 +451,25 @@ def test_documented_effects_land() -> None:
     # P2.12's seam: the two §4 formula counters the brief names are fed here.
     assert "broken_promises" in TRIGGER_ROWS["T13"]["effects"]["profile"]
     assert TRIGGER_ROWS["T15"]["guard"]["counter_gte"] == {"ignored_questions": 1}
+    # docs/01 §5 T16/T18's stated numbers (P3.07): the night window is 2–4 AM
+    # with Instability +3, and the 7-day return is the big spike.
+    assert TRIGGER_ROWS["T16"]["effects"]["meters"]["instability"] == 3
+    assert TRIGGER_ROWS["T16"]["detect"]["clock"] == {"hour_from": 2, "hour_to": 4}
+    assert TRIGGER_ROWS["T17"]["detect"]["clock"]["absence_hours_gte"] == 24
+    assert TRIGGER_ROWS["T18"]["detect"]["clock"]["absence_hours_gte"] == 168
+    assert TRIGGER_ROWS["T18"]["effects"]["meters"]["instability"] > 3
+    # T26's name is confirmed ONCE and then persists through the save shadow.
+    assert TRIGGER_ROWS["T26"]["behavior"] == "once"
+    assert TRIGGER_ROWS["T26"]["observe"]["name_confirmed"] is True
+    # T17's reunion window ends where T18's 7 days begin, and 168 h belongs to
+    # the week row alone (strict upper bound on the day row).
+    assert TRIGGER_ROWS["T17"]["detect"]["clock"]["absence_hours_lt"] == 168
+    assert "absence_hours_lt" not in TRIGGER_ROWS["T18"]["detect"]["clock"]
+    # T19 "Stage 3+ only" is the row's gate, and the telemetry line's gate.
+    assert TRIGGER_ROWS["T19"]["stage_min"] == 3
+    # T21 "until unmuted": the ALL-CAPS flag follows the event's own data.
+    assert TRIGGER_ROWS["T21"]["effects"]["flags"]["audio_muted"] == {"from_event": "muted"}
+    assert set(TRIGGER_ROWS["T21"]["detect"]["event"]) == {"audio_mute", "audio_unmuted"}
 
 
 def test_t03_t04_are_one_clock_pair() -> None:

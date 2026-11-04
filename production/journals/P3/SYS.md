@@ -22,3 +22,26 @@
 - Next SYS on this seam: P3.14 consumes `SaveSystem.shadow_first_name()`/`shadow_memories()`;
   P3.09 (M08) drops a kept memory on Day 1. `wipe()` still only clears slots — Reset Everything is
   `wipe_everything`.
+
+## P3.07 — triggers T16–T32 (round 1, 2026-11-04, agent: deepseek)
+
+- Built T16–T32 as data rows plus the vocabulary they needed: `absence_hours_lt` (T17's reunion window
+  ends where T18's 168 h begins), guards `mentions_memory` (T22, via `MemoryRules.shared_fact`),
+  `name_mention` (T26: capture pattern + endearment excludes -> `GameState.player_name`), `text_match`
+  (T28/T30: a precondition only, never a detection letter) and `{"from_event": key}` flag values
+  (T21: one row serves mute and unmute, the flag follows `data.muted`).
+- Convention: a model-only row authors DOUBLE the intended effect (docs/02 §1.2 halves the firing) —
+  the same thing P2.10 did for T14. A guard is a precondition, not evidence, so the row's docs/01 §5
+  letter stays M. Event state (`from_event`) is written on EVERY matching event; the row's caps decide
+  only what she says, so a same-turn mute→unmute still clears the caps flag.
+- `TriggerEngine` hit gdlint's 1000-line cap: the loader/parser moved to `game/llm/TriggerTable.gd`
+  (class_name + statics) as P2.10's note asked; the engine delegates `clear_cache`/`default_table`/
+  `parse_document`. Telemetry hit the 20-public-method cap: the three T19–T21 notes became one
+  `note_player_action(kind, data)`, `catalog_kinds()` is gone (use `catalog()`), `note_screenshot()` private.
+- GOTCHA: the trigger dedupe is per ctx turn, so `begin_turn` (turn+1) and `close_turn` (turn) must
+  share an index — increment `GameState.turn` before `close_turn` in tests, as the Director does at
+  close. T17/T18's absence latch is consumed by the submit only (`_context(true, true)`), so an engine
+  event that lands first cannot eat the reunion.
+- Next SYS here: nothing reads `GameState.flags.audio_muted` turn-to-turn yet. The EVENT line carries
+  docs/01 §5 T21's instruction for the turn it lands on; a prompt layer that keeps her in caps until
+  the unmute is still open (P3.13/P3.09 territory).

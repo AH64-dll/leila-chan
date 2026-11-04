@@ -63,7 +63,7 @@ func test_shipped_catalogue_is_the_engine_table() -> void:
 				. append_failure_message("trigger %s is missing '%s'" % [str(id), key])
 				. is_true()
 			)
-		assert_bool(TriggerEngine.BEHAVIORS.has(String(row["behavior"]))).is_true()
+		assert_bool(TriggerTable.BEHAVIORS.has(String(row["behavior"]))).is_true()
 
 
 func test_keyword_detection_fires_with_full_strength() -> void:

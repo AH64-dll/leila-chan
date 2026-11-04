@@ -50,6 +50,11 @@ func reset_everything() -> Dictionary:
 func set_photosensitive(enabled: bool) -> void:
 	_apply_photosensitive(enabled)
 	save_settings()
+	# docs/01 §5 T20 "why did you make me quieter?": any player-written setting
+	# is an engine event; Telemetry queues the line for the next turn.
+	var telemetry := get_node_or_null("/root/Telemetry")
+	if telemetry != null and telemetry.has_method("note_player_action"):
+		telemetry.call("note_player_action", "settings_changed", {"setting": "photosensitive"})
 
 
 ## Flips the accommodation and returns its new value (the Title row's label

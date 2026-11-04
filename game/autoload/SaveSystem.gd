@@ -103,7 +103,12 @@ func begin_new_game(player_name: String) -> Dictionary:
 		memories = _dict(Memory.to_dict()).get("entries", [])
 	record = shadow.seal_run(record, GameState.player_name, had_run, memories)
 	record = shadow.record_name(record, player_name)
-	return shadow.store(record)
+	var written := shadow.store(record)
+	if had_run:
+		# docs/01 §5 T19: the run that just ended was this save's whole world;
+		# the next run's stage-3+ Leila is the one who gets to mention it.
+		_note_save_gone({"kind": "new_game"})
+	return written
 
 
 ## The shadow record, healed (blank when no file exists yet). `{ok:false}`
@@ -151,7 +156,18 @@ func wipe_everything(keep: Array = []) -> Dictionary:
 		elif DirAccess.dir_exists_absolute(path):
 			_recurse_wipe(path, kept, tally)
 	var errors: Array = tally["errors"]
-	return {"ok": errors.is_empty(), "removed": int(tally["removed"]), "errors": errors}
+	var result := {"ok": errors.is_empty(), "removed": int(tally["removed"]), "errors": errors}
+	if bool(result["ok"]) and int(result["removed"]) > 0:
+		_note_save_gone({"kind": "wipe"})
+	return result
+
+
+## docs/01 §5 T19 relay: Telemetry owns the engine event; a missing autoload
+## (tests) degrades to silence, never a crash.
+func _note_save_gone(data: Dictionary) -> void:
+	var telemetry := get_node_or_null("/root/Telemetry")
+	if telemetry != null and telemetry.has_method("note_player_action"):
+		telemetry.call("note_player_action", "save_gone", data)
 
 
 func _ready() -> void:
@@ -220,6 +236,13 @@ func load_from_slot(slot: Variant) -> Dictionary:
 	_pending_scene = _scene_block(payload.get("scene"))
 	_pending_log = entries.duplicate(true)
 	_flush_pending_log()
+	# docs/01 §5 T17/T18 "return after 24h+ / 7d+": the run being resumed ended
+	# at `saved_at`; Triggers turns it into `absence_hours` (one reading per
+	# load, so the reunion fires on the turn after this load and then stands
+	# down). A fresh save (saved_at ≈ now) reads as ~0 h — no false reunion.
+	var triggers := get_node_or_null("/root/Triggers")
+	if triggers != null and triggers.has_method("set_last_seen"):
+		triggers.call("set_last_seen", _int(payload.get("saved_at"), 0))
 	return {
 		"ok": true,
 		"error": "",
@@ -238,7 +261,10 @@ func load_latest() -> Dictionary:
 
 
 func delete_slot(slot: Variant) -> bool:
-	return slots.erase(slot)
+	var erased := slots.erase(slot)
+	if erased:
+		_note_save_gone({"slot": str(slot), "kind": "delete"})
+	return erased
 
 
 func list_slots() -> Array[Dictionary]:

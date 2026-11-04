@@ -175,7 +175,7 @@ func _build_ui() -> void:
 	telemetry_grid.add_theme_constant_override("v_separation", 2)
 	root_vbox.add_child(telemetry_grid)
 	if Telemetry != null:
-		for kind: String in Telemetry.catalog_kinds():
+		for kind: String in Telemetry.catalog():
 			_add_telemetry_button(telemetry_grid, kind)
 	else:
 		var missing_btn := Button.new()

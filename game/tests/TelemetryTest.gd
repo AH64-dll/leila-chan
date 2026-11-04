@@ -112,6 +112,12 @@ func test_catalogue_matches_the_docs() -> void:
 		"window_resized": ["T32", 2, "M19"],
 		"screenshot": ["T31", 0, ""],
 		"message_repeated": ["T12", 0, ""],
+		# P3.07: the save/settings/audio detectors T19–T21 (mute and unmute are
+		# two kinds because the instruction differs, so T21 owns both).
+		"save_gone": ["T19", 3, "M08"],
+		"settings_changed": ["T20", 1, ""],
+		"audio_mute": ["T21", 1, ""],
+		"audio_unmuted": ["T21", 1, ""],
 	}
 	for kind: String in expected:
 		var row: Dictionary = events[kind]
@@ -119,7 +125,7 @@ func test_catalogue_matches_the_docs() -> void:
 		assert_int(int(row["stage_min"])).is_equal(int(expected[kind][1]))
 		assert_str(str(row["meta"])).is_equal(str(expected[kind][2]))
 	var catalog := Telemetry.catalog()
-	assert_array(Telemetry.catalog_kinds()).contains_exactly_in_any_order(expected.keys())
+	assert_array(Telemetry.catalog().keys()).contains_exactly_in_any_order(expected.keys())
 	for kind: String in expected:
 		assert_bool(catalog.has(kind)).is_true()
 		assert_str(str((catalog[kind] as Dictionary)["line"])).starts_with("EVENT: ")
@@ -138,7 +144,7 @@ func test_each_detector_emits_an_event_consumed_by_triggers() -> void:
 	Telemetry.note_turn_open(true)
 	Telemetry.note_focus_lost()
 	Telemetry.note_close_requested()
-	Telemetry.note_screenshot()
+	Telemetry._note_screenshot()
 	var origin := get_tree().root.size
 	Telemetry.note_resized(origin + Vector2i(64, 0))
 	Telemetry.note_turn_open(false)
@@ -350,7 +356,7 @@ func test_date_scope_blocks_stray_events() -> void:
 	Telemetry.set_date_active(false)
 	assert_bool(Telemetry.note_draft_deleted(MARKER)).is_false()
 	assert_bool(Telemetry.note_player_message("hello")).is_false()
-	Telemetry.note_screenshot()
+	Telemetry._note_screenshot()
 	Telemetry.note_resized(get_tree().root.size + Vector2i(64, 64))
 	assert_int(Triggers.received_events.size()).is_zero()
 
@@ -430,10 +436,12 @@ func test_f3_overlay_fires_every_event() -> void:
 	overlay.toggle()
 	assert_bool(overlay.get_telemetry_text().contains("Pending:")).is_true()
 
-	for kind: String in Telemetry.catalog_kinds():
+	for kind: String in Telemetry.catalog():
 		assert_bool(overlay.fire_telemetry(kind)).append_failure_message(kind)
 	var state := Telemetry.state()
-	assert_int((state["pending"] as Array).size()).is_equal(7)
+	# Firing every catalogue kind leaves one pending line per kind: the overlay
+	# covers the data file, not a hard-coded list.
+	assert_int((state["pending"] as Array).size()).is_equal(Telemetry.catalog().size())
 	assert_bool(overlay.get_telemetry_text().contains("draft_deleted[T08]")).is_true()
 
 

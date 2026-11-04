@@ -9,9 +9,10 @@ extends RefCounted
 ## Split out of the Triggers autoload the way the meter math was split into
 ## Meters (P2.01) and the stage machine into Stages (P2.02): this class owns the
 ## matching, the caps and the effect arithmetic; Triggers owns the GameState
-## writes and the prompt lines. Everything here is pure except the table load —
-## the caller injects the turn, day, stage, hour, absence and flags — so a
-## transcript replays identically.
+## writes and the prompt lines, and TriggerTable (P3.07) owns the data
+## vocabulary — the loader, the parser and the healing rules. Everything here is
+## pure except the table load — the caller injects the turn, day, stage, hour,
+## absence and flags — so a transcript replays identically.
 ##
 ## Data is the whole story (docs/07 §2): res://data/triggers.json holds the
 ## strength weights, the defaults and one row per trigger. Adding a trigger is a
@@ -37,40 +38,13 @@ extends RefCounted
 ## A row with no detector at all is a guard row — the game's own check is its
 ## evidence, so it fires at full strength (T13, T15; P2.10 DCR-1/DCR-2).
 
-const TABLE_PATH := "res://data/triggers.json"
-const VERSION := 1
-const MAX_STAGE := 5
 ## Fired results kept for the F3 overlay and the transcript; state, not a log.
 const MAX_HISTORY := 16
-const BEHAVIORS: Array[String] = ["once", "repeatable", "escalating"]
-## docs/01 §5 "C clock / OS": every condition a clock detector may carry.
-const CLOCK_KEYS: Array[String] = [
-	"day_gte", "day_lte", "day_eq", "turn_gte", "hour_from", "hour_to", "absence_hours_gte"
-]
-const CLOCK_FLAG_KEYS: Array[String] = ["flag_set", "flag_absent"]
 ## The firing label -> strength-table key (docs/02 §1.2). A label missing here is
 ## full strength, which is what a guard firing gets on purpose.
 const AGREEMENT_STRENGTH_KEYS := {
 	"model": "model", "both": "agreement", "keyword": "keyword", "event": "engine", "clock": "clock"
 }
-
-## docs/02 §1.2 as code: the detector weights, the defaults every row falls back
-## to, and the engine's own identity. The data file is authoritative; this is
-## the in-code fallback so a missing or unusable file still plays her triggers.
-const DOCS_TABLE := {
-	"strength": {"agreement": 1.0, "keyword": 1.0, "model": 0.5, "engine": 1.0, "clock": 1.0},
-	"defaults":
-	{
-		"requires": "any",
-		"behavior": "repeatable",
-		"cooldown_turns": 3,
-		"stage_min": 0,
-		"stage_max": 5,
-		"escalate": {"axis": "step", "max_steps": 3, "step_scale": 0.5},
-	},
-}
-
-static var _file_cache: Dictionary = {}
 
 ## A row's `observe` writes, collected on its evidence: no count, no cooldown, no line.
 var observed_flags: Dictionary = {}
@@ -87,15 +61,18 @@ var _regex_cache: Dictionary = {}
 
 ## Test hook: drop the loaded file table so the next call re-reads the data file.
 static func clear_cache() -> void:
-	_file_cache = {}
+	TriggerTable.clear_cache()
 
 
 ## The merged table the file declares (defaults overlaid with triggers.json).
 ## READ-ONLY: it is shared, and the detectors run on every submit.
 static func default_table() -> Dictionary:
-	if _file_cache.is_empty():
-		_file_cache = _load_file()
-	return _file_cache
+	return TriggerTable.default_table()
+
+
+## The data vocabulary in one call (tests and mods author against it).
+static func parse_document(parsed: Variant, origin := TriggerTable.TABLE_PATH) -> Dictionary:
+	return TriggerTable.parse_document(parsed, origin)
 
 
 ## Installs a canonical table (the parse_document() shape) — how the autoload
@@ -296,7 +273,7 @@ func to_dict() -> Dictionary:
 			"last_turn": int(state.get("last_turn", 0)),
 		}
 	return {
-		"version": VERSION,
+		"version": TriggerTable.VERSION,
 		"triggers": triggers,
 		"path_scores": _path_scores.duplicate(),
 	}
@@ -310,10 +287,13 @@ func from_dict(data: Variant) -> bool:
 	var document: Dictionary = data
 	if not document.has("triggers") and not document.has("path_scores"):
 		return false
-	var version := _int(document.get("version"), VERSION)
-	if version != VERSION:
+	var version := TriggerTable.int_value(document.get("version"), TriggerTable.VERSION)
+	if version != TriggerTable.VERSION:
 		push_warning(
-			"TriggerEngine: trigger state v%d (expected v%d) — best effort" % [version, VERSION]
+			(
+				"TriggerEngine: trigger state v%d (expected v%d) — best effort"
+				% [version, TriggerTable.VERSION]
+			)
 		)
 	reset()
 	var triggers: Variant = document.get("triggers")
@@ -324,13 +304,13 @@ func from_dict(data: Variant) -> bool:
 				continue
 			var state: Dictionary = stored
 			_state[str(id)] = {
-				"count": maxi(0, _int(state.get("count"), 0)),
-				"last_turn": _int(state.get("last_turn"), 0),
+				"count": maxi(0, TriggerTable.int_value(state.get("count"), 0)),
+				"last_turn": TriggerTable.int_value(state.get("last_turn"), 0),
 			}
 	var points: Variant = document.get("path_scores")
 	if points is Dictionary:
 		for name: Variant in points:
-			_path_scores[str(name)] = _int(points[name], 0)
+			_path_scores[str(name)] = TriggerTable.int_value(points[name], 0)
 	return true
 
 
@@ -351,7 +331,7 @@ func _turn_begin(ctx: Dictionary) -> void:
 ## Stage gate, behaviour cap and cooldown — the three docs/01 §5 caps that make
 ## her "not feel like a keyword machine".
 func _eligible(id: String, rec: Dictionary, ctx: Dictionary) -> bool:
-	var stage := clampi(int(ctx.get("stage", 0)), 0, MAX_STAGE)
+	var stage := clampi(int(ctx.get("stage", 0)), 0, TriggerTable.MAX_STAGE)
 	if stage < int(rec["stage_min"]) or stage > int(rec["stage_max"]):
 		return false
 	var state: Dictionary = _state.get(id, {})
@@ -380,6 +360,7 @@ func _fire(id: String, rec: Dictionary, ctx: Dictionary, agreement: String) -> D
 	var step := int(state.get("count", 0)) + 1
 	var strength := _base_strength(agreement) * _escalation(rec, step, ctx)
 	var effects := _scaled_effects(rec["effects"], strength)
+	var details := _guard_values(rec, ctx)
 	var result := {
 		"id": id,
 		"name": String(rec["name"]),
@@ -387,7 +368,8 @@ func _fire(id: String, rec: Dictionary, ctx: Dictionary, agreement: String) -> D
 		"strength": strength,
 		"agreement": agreement,
 		"effects": effects,
-		"line": _line_for(rec, step, ctx, _guard_values(rec, ctx)),
+		"player_name": str(details.get("name", "")),
+		"line": _line_for(rec, step, ctx, details),
 	}
 	_state[id] = {"count": step, "last_turn": int(ctx.get("turn", 0))}
 	_fired[id] = true
@@ -433,7 +415,7 @@ func _escalation_step(rec: Dictionary, step: int, ctx: Dictionary) -> int:
 		return step
 	var spec: Dictionary = rec["escalate"]
 	if String(spec["axis"]) == "stage":
-		var stage := clampi(int(ctx.get("stage", 0)), 0, MAX_STAGE)
+		var stage := clampi(int(ctx.get("stage", 0)), 0, TriggerTable.MAX_STAGE)
 		return clampi(stage - int(rec["stage_min"]) + 1, 1, int(spec["max_steps"]))
 	return mini(step, int(spec["max_steps"]))
 
@@ -491,6 +473,7 @@ static func _render(template: String, step: int, ctx: Dictionary, details := {})
 	line = line.replace("{turn}", str(int(ctx.get("turn", 0))))
 	if details is Dictionary:
 		line = line.replace("{fact}", str((details as Dictionary).get("fact", "")))
+		line = line.replace("{name}", str((details as Dictionary).get("name", "")))
 	return line.strip_edges()
 
 
@@ -569,9 +552,18 @@ func _clock_matches(spec: Dictionary, ctx: Dictionary) -> bool:
 		matches = matches and day == int(spec["day_eq"])
 	if spec.has("turn_gte"):
 		matches = matches and int(ctx.get("turn", 0)) >= int(spec["turn_gte"])
-	if spec.has("absence_hours_gte"):
+	if (
+		spec.has("absence_hours_gte")
+		or spec.has("absence_hours_lte")
+		or spec.has("absence_hours_lt")
+	):
 		var absent := float(ctx.get("absence_hours", 0.0))
-		matches = matches and absent >= float(spec["absence_hours_gte"])
+		if spec.has("absence_hours_gte"):
+			matches = matches and absent >= float(spec["absence_hours_gte"])
+		if spec.has("absence_hours_lte"):
+			matches = matches and absent <= float(spec["absence_hours_lte"])
+		if spec.has("absence_hours_lt"):
+			matches = matches and absent < float(spec["absence_hours_lt"])
 	if spec.has("flag_set"):
 		matches = matches and bool(flags.get(str(spec["flag_set"]), false))
 	if spec.has("flag_absent"):
@@ -600,19 +592,45 @@ func _guard_matches(rec: Dictionary, ctx: Dictionary) -> bool:
 		return true
 	if guard.has("clock") and not _clock_matches(guard["clock"], ctx):
 		return false
-	var floors: Dictionary = guard.get("counter_gte", {})
-	if not floors.is_empty():
-		var raw_delta: Variant = ctx.get("profile_delta")
-		var delta: Dictionary = raw_delta if raw_delta is Dictionary else {}
-		for name: Variant in floors:
-			if int(delta.get(str(name), 0)) < int(floors[name]):
-				return false
-	if (
-		guard.has("contradicts_memory")
-		and _contradiction(ctx, guard["contradicts_memory"]).is_empty()
-	):
+	if not _counters_reached(guard, ctx):
 		return false
+	# The evidence guards: each answers "did the game see the thing this guard
+	# is about?". They are OR-ed into one negative so the function stays inside
+	# gdlint's return budget without nesting six ifs.
+	var missing := (
+		(
+			guard.has("contradicts_memory")
+			and _contradiction(ctx, guard["contradicts_memory"]).is_empty()
+		)
+		or (
+			guard.has("mentions_memory")
+			and _memory_mention(ctx, guard["mentions_memory"]).is_empty()
+		)
+		or (guard.has("name_mention") and _player_name(ctx, guard["name_mention"]).is_empty())
+		or (guard.has("text_match") and not _text_hit(ctx, guard["text_match"]))
+	)
+	return not missing
+
+
+## docs/01 §5 T15's `counter_gte`: the profile counters the game bumped this
+## closed turn must reach the row's floors.
+func _counters_reached(guard: Dictionary, ctx: Dictionary) -> bool:
+	var floors: Dictionary = guard.get("counter_gte", {})
+	if floors.is_empty():
+		return true
+	var raw_delta: Variant = ctx.get("profile_delta")
+	var delta: Dictionary = raw_delta if raw_delta is Dictionary else {}
+	for name: Variant in floors:
+		if int(delta.get(str(name), 0)) < int(floors[name]):
+			return false
 	return true
+
+
+## A `text_match` guard is a pattern set the message must satisfy — the same
+## matcher a keyword detector uses. It is not a detector: the row's docs/01 §5
+## letter stays the model's, and this only keeps a broad `read` label honest.
+func _text_hit(ctx: Dictionary, spec: Dictionary) -> bool:
+	return _keyword_matches(spec, str(ctx.get("text", "")))
 
 
 ## docs/01 §5 T13 "contradict a remembered fact": the message denies something
@@ -626,17 +644,55 @@ func _contradiction(ctx: Dictionary, spec: Dictionary) -> Dictionary:
 	return MemoryRules.contradiction(str(ctx.get("text", "")), facts, spec)
 
 
-## The values a guard contributes to the line template ({fact}).
+## docs/01 §5 T22 "a gift she already got": the message repeats a fact she
+## still remembers. Shares the memory gate's content-word floor with T13 but
+## has no denial side — saying "another music box" IS the evidence.
+func _memory_mention(ctx: Dictionary, spec: Dictionary) -> Dictionary:
+	var facts: Variant = ctx.get("memory_facts")
+	if not facts is Array:
+		return {}
+	return MemoryRules.shared_fact(str(ctx.get("text", "")), facts, spec)
+
+
+## docs/01 §5 T26 "mention your real name": the row's data regex captures it;
+## the exclude list keeps "call me Leila" and "my name is your love" out. The
+## guard's own pattern (not the keyword detector) decides, so the same
+## compiled regex both proves the mention and produces the name `_fire`
+## carries to the GameState write.
+func _player_name(ctx: Dictionary, spec: Dictionary) -> String:
+	var pattern := str(spec.get("pattern", ""))
+	if pattern.is_empty():
+		return ""
+	var hit := _search(pattern, str(ctx.get("text", "")), bool(spec.get("ignore_case", true)))
+	if hit == null:
+		return ""
+	var name := hit.get_string(1).strip_edges().trim_suffix(".").trim_suffix("!")
+	if name.length() < 2:
+		return ""
+	var excludes: Array = spec.get("exclude", [])
+	for word: Variant in excludes:
+		if name.to_lower() == str(word).to_lower():
+			return ""
+	return name.left(1).to_upper() + name.substr(1)
+
+
+## The values a guard contributes to the line template ({fact}, {name}).
 func _guard_values(rec: Dictionary, ctx: Dictionary) -> Dictionary:
 	var guard: Dictionary = rec["guard"]
-	if not guard.has("contradicts_memory"):
-		return {}
-	var hit := _contradiction(ctx, guard["contradicts_memory"])
-	if hit.is_empty():
-		return {}
-	# docs/01 §5 T13 "your earlier message exactly": the quote is the player's line.
-	var quoted := String(hit.get("source", ""))
-	return {"fact": quoted if not quoted.is_empty() else String(hit.get("fact", ""))}
+	var out := {}
+	if guard.has("name_mention"):
+		out["name"] = _player_name(ctx, guard["name_mention"])
+	if guard.has("mentions_memory"):
+		var repeat := _memory_mention(ctx, guard["mentions_memory"])
+		if not repeat.is_empty():
+			out["fact"] = String(repeat.get("fact", ""))
+	if guard.has("contradicts_memory"):
+		var hit := _contradiction(ctx, guard["contradicts_memory"])
+		if not hit.is_empty():
+			# docs/01 §5 T13 "your earlier message exactly": the player's line.
+			var quoted := String(hit.get("source", ""))
+			out["fact"] = quoted if not quoted.is_empty() else String(hit.get("fact", ""))
+	return out
 
 
 ## `requires: "all"`: every declared non-model detector must have matched this
@@ -673,328 +729,3 @@ func _sources_label(sources: Dictionary) -> String:
 
 func _catalogue() -> Dictionary:
 	return table()["triggers"]
-
-
-## ── Loading ───────────────────────────────────────────────────────────────
-
-
-static func _load_file() -> Dictionary:
-	if not FileAccess.file_exists(TABLE_PATH):
-		push_warning("TriggerEngine: %s missing; using the docs defaults" % TABLE_PATH)
-		return parse_document({})
-	return parse_document(JSON.parse_string(FileAccess.get_file_as_string(TABLE_PATH)))
-
-
-## Parses a trigger document into the canonical table — data-driven on purpose:
-## a test (or a mod) hands it a synthetic document and proves the loader decides
-## the catalogue, not a hard-coded copy. Unusable input keeps the documented
-## default it belongs to, so a broken file still plays.
-static func parse_document(parsed: Variant, origin := TABLE_PATH) -> Dictionary:
-	var out := _docs_table()
-	if not parsed is Dictionary:
-		push_warning("TriggerEngine: %s is not a JSON object; using the defaults" % origin)
-		return out
-	var document: Dictionary = parsed
-	_merge_strength(out["strength"], document.get("strength"))
-	_merge_defaults(out["defaults"], document.get("defaults"))
-	var rows: Variant = document.get("triggers")
-	if not rows is Dictionary:
-		return out
-	for key: Variant in rows:
-		var id := str(key).strip_edges()
-		if id.is_empty():
-			continue
-		var record := _parse_row(rows[key], out["defaults"])
-		if record.is_empty():
-			push_warning("TriggerEngine: trigger '%s' is unusable and was skipped" % id)
-			continue
-		out["triggers"][id] = record
-	return out
-
-
-static func _parse_row(raw: Variant, defaults: Dictionary) -> Dictionary:
-	if not raw is Dictionary:
-		return {}
-	var row: Dictionary = raw
-	var detect := _parse_detect(row.get("detect"))
-	var guard := _parse_guard(row.get("guard"))
-	if detect.is_empty() and guard.is_empty():
-		return {}
-	var behavior := str(row.get("behavior", defaults["behavior"]))
-	if not BEHAVIORS.has(behavior):
-		behavior = String(defaults["behavior"])
-	var requires := "all" if str(row.get("requires", defaults["requires"])) == "all" else "any"
-	var escalate: Dictionary = (defaults["escalate"] as Dictionary).duplicate()
-	var raw_escalate: Variant = row.get("escalate")
-	if raw_escalate is Dictionary:
-		var spec: Dictionary = raw_escalate
-		if spec.has("max_steps"):
-			escalate["max_steps"] = clampi(_int(spec["max_steps"], 3), 1, 100)
-		if spec.has("step_scale"):
-			escalate["step_scale"] = maxf(0.0, _float(spec["step_scale"], 0.5))
-		if spec.has("axis"):
-			escalate["axis"] = _parse_axis(spec["axis"])
-	var raw_min := _int(row.get("stage_min", defaults["stage_min"]), -1)
-	var raw_max := _int(row.get("stage_max", defaults["stage_max"]), -1)
-	var stage_min := int(defaults["stage_min"])
-	var stage_max := int(defaults["stage_max"])
-	if raw_min >= 0 and raw_min <= MAX_STAGE:
-		stage_min = raw_min
-	if raw_max >= 0 and raw_max <= MAX_STAGE:
-		stage_max = raw_max
-	if stage_max < stage_min:
-		stage_min = int(defaults["stage_min"])
-		stage_max = int(defaults["stage_max"])
-	var raw_cooldown := _int(row.get("cooldown_turns", defaults["cooldown_turns"]), -1)
-	var cooldown := int(defaults["cooldown_turns"])
-	if raw_cooldown >= 0:
-		cooldown = raw_cooldown
-	var name := str(row.get("name", "")).strip_edges()
-	if name.is_empty():
-		name = "unnamed"
-	return {
-		"name": name,
-		"detect": detect,
-		"guard": guard,
-		"requires": requires,
-		"behavior": behavior,
-		"escalate": escalate,
-		"cooldown_turns": cooldown,
-		"stage_min": stage_min,
-		"stage_max": stage_max,
-		"observe": _parse_effects({"flags": row.get("observe")})["flags"],
-		"effects": _parse_effects(row.get("effects")),
-		"line": _parse_line(row.get("line")),
-	}
-
-
-static func _parse_detect(raw: Variant) -> Dictionary:
-	var out := {}
-	if not raw is Dictionary:
-		return out
-	var spec: Dictionary = raw
-	var keyword := _parse_keyword(spec.get("keyword"))
-	if not keyword.is_empty():
-		out["keyword"] = keyword
-	var labels := _parse_strings(spec.get("model"))
-	if not labels.is_empty():
-		out["model"] = labels
-	var kinds := _parse_strings(spec.get("event"))
-	if not kinds.is_empty():
-		out["event"] = kinds
-	var clock := _parse_clock(spec.get("clock"))
-	if not clock.is_empty():
-		out["clock"] = clock
-	return out
-
-
-static func _parse_keyword(raw: Variant) -> Dictionary:
-	var any_patterns: Array[String] = []
-	var all_patterns: Array[String] = []
-	var ignore_case := true
-	if raw is Array:
-		any_patterns = _parse_strings(raw)
-	elif raw is Dictionary:
-		var spec: Dictionary = raw
-		any_patterns = _parse_strings(spec.get("any"))
-		all_patterns = _parse_strings(spec.get("all"))
-		ignore_case = bool(spec.get("ignore_case", true))
-	if any_patterns.is_empty() and all_patterns.is_empty():
-		return {}
-	return {"any": any_patterns, "all": all_patterns, "ignore_case": ignore_case}
-
-
-static func _parse_clock(raw: Variant) -> Dictionary:
-	var out := {}
-	if not raw is Dictionary:
-		return out
-	var spec: Dictionary = raw
-	for key: String in CLOCK_KEYS:
-		if not spec.has(key):
-			continue
-		var value := _int(spec[key], -1000000)
-		if value != -1000000:
-			out[key] = value
-	for key: String in CLOCK_FLAG_KEYS:
-		var flag := str(spec.get(key, "")).strip_edges()
-		if not flag.is_empty():
-			out[key] = flag
-	return out
-
-
-## docs/01 §5 T08 "escalates with stage": the escalation axis is the firing
-## count (`step`, the default) or the stage since stage_min (`stage`). An
-## unknown value heals to the default rather than skipping the row.
-static func _parse_axis(raw: Variant) -> String:
-	return "stage" if str(raw).strip_edges() == "stage" else "step"
-
-
-## A row's guard: conditions that must also hold but that are NOT detectors.
-static func _parse_guard(raw: Variant) -> Dictionary:
-	var out := {}
-	if not raw is Dictionary:
-		return out
-	var spec: Dictionary = raw
-	var clock := _parse_clock(spec)
-	if not clock.is_empty():
-		out["clock"] = clock
-	var counters: Variant = spec.get("counter_gte")
-	if counters is Dictionary:
-		var floors := {}
-		for name: Variant in counters:
-			var key := str(name).strip_edges()
-			var value := _int(counters[name], 0)
-			if not key.is_empty() and value > 0:
-				floors[key] = value
-		if not floors.is_empty():
-			out["counter_gte"] = floors
-	var contradiction: Variant = spec.get("contradicts_memory")
-	if contradiction is Dictionary:
-		out["contradicts_memory"] = _parse_contradiction(contradiction)
-	elif contradiction is bool and bool(contradiction):
-		out["contradicts_memory"] = _parse_contradiction({})
-	return out
-
-
-## docs/01 §5 T13: the cues and the shared-word floor are data; omitted keys
-## keep MemoryRules' defaults.
-static func _parse_contradiction(raw: Dictionary) -> Dictionary:
-	var out := {}
-	var negations := _parse_strings(raw.get("negations"))
-	if not negations.is_empty():
-		out["negations"] = negations
-	var shared := _int(raw.get("min_shared_words"), 0)
-	if shared > 0:
-		out["min_shared_words"] = shared
-	return out
-
-
-static func _parse_effects(raw: Variant) -> Dictionary:
-	var out := {"meters": {}, "profile": {}, "path": {}, "flags": {}}
-	if not raw is Dictionary:
-		return out
-	var spec: Dictionary = raw
-	for group: String in ["meters", "profile", "path"]:
-		var values: Variant = spec.get(group)
-		if not values is Dictionary:
-			continue
-		var table_values: Dictionary = values
-		for name: Variant in table_values:
-			var key := str(name).strip_edges()
-			if key.is_empty():
-				continue
-			if group == "meters":
-				var value := _float(table_values[name], 0.0)
-				if not is_zero_approx(value):
-					out[group][key] = value
-			else:
-				var points := _int(table_values[name], 0)
-				if points != 0:
-					out[group][key] = points
-	var flags: Variant = spec.get("flags")
-	if flags is Dictionary:
-		var table_flags: Dictionary = flags
-		for name: Variant in table_flags:
-			var key := str(name).strip_edges()
-			var value: Variant = table_flags[name]
-			if key.is_empty():
-				continue
-			if value is bool or value is int or value is float or value is String:
-				out["flags"][key] = value
-			else:
-				push_warning("TriggerEngine: flag '%s' is not a scalar; ignored" % key)
-	return out
-
-
-static func _parse_line(raw: Variant) -> Variant:
-	if raw is String:
-		return (raw as String).strip_edges()
-	var out: Array[String] = []
-	if raw is Array:
-		for item: Variant in raw:
-			var line := str(item).strip_edges()
-			if not line.is_empty():
-				out.append(line)
-	return out
-
-
-static func _parse_strings(raw: Variant) -> Array[String]:
-	var out: Array[String] = []
-	if not raw is Array:
-		return out
-	for item: Variant in raw:
-		if not item is String:
-			continue
-		var value := (item as String).strip_edges()
-		if not value.is_empty() and not out.has(value):
-			out.append(value)
-	return out
-
-
-static func _merge_strength(target: Dictionary, source: Variant) -> void:
-	if not source is Dictionary:
-		return
-	var given: Dictionary = source
-	for key: String in target.keys():
-		if not given.has(key):
-			continue
-		var value := _float(given[key], -1.0)
-		if value >= 0.0:
-			target[key] = value
-
-
-static func _merge_defaults(target: Dictionary, source: Variant) -> void:
-	if not source is Dictionary:
-		return
-	var given: Dictionary = source
-	target["requires"] = "all" if str(given.get("requires", target["requires"])) == "all" else "any"
-	var behavior := str(given.get("behavior", target["behavior"]))
-	if BEHAVIORS.has(behavior):
-		target["behavior"] = behavior
-	if given.has("cooldown_turns"):
-		target["cooldown_turns"] = maxi(
-			0, _int(given["cooldown_turns"], int(target["cooldown_turns"]))
-		)
-	if given.has("stage_min"):
-		target["stage_min"] = clampi(_int(given["stage_min"], 0), 0, MAX_STAGE)
-	if given.has("stage_max"):
-		target["stage_max"] = clampi(_int(given["stage_max"], MAX_STAGE), 0, MAX_STAGE)
-	var escalate: Variant = given.get("escalate")
-	if escalate is Dictionary:
-		var spec: Dictionary = escalate
-		if spec.has("max_steps"):
-			target["escalate"]["max_steps"] = clampi(_int(spec["max_steps"], 3), 1, 100)
-		if spec.has("step_scale"):
-			target["escalate"]["step_scale"] = maxf(0.0, _float(spec["step_scale"], 0.5))
-		if spec.has("axis"):
-			target["escalate"]["axis"] = _parse_axis(spec["axis"])
-
-
-## A fresh copy of the docs table in the canonical shape: typed scalars and an
-## empty catalogue (rows are data, never code).
-static func _docs_table() -> Dictionary:
-	var out: Dictionary = DOCS_TABLE.duplicate(true)
-	out["version"] = VERSION
-	out["triggers"] = {}
-	var escalate: Dictionary = out["defaults"]["escalate"]
-	escalate["max_steps"] = int(escalate["max_steps"])
-	escalate["step_scale"] = float(escalate["step_scale"])
-	return out
-
-
-static func _float(value: Variant, fallback: float) -> float:
-	if value is int:
-		return float(value)
-	if value is float:
-		return value if is_finite(value) else fallback
-	return fallback
-
-
-static func _int(value: Variant, fallback: int) -> int:
-	if value is int:
-		return value
-	if value is float:
-		return int(value) if is_finite(value) else fallback
-	if value is String:
-		return int(value) if (value as String).is_valid_int() else fallback
-	return fallback
