@@ -38,6 +38,9 @@ const MANUAL_SLOT_COUNT := SaveSlots.MANUAL_SLOTS
 ## save stores the id verbatim.
 const SCENE_DATE := "date"
 const SCENE_NIGHT := "night"
+## P3.16: a save taken on the ending screen resumes there (Title's Continue reads
+## the loaded scene id), so a finished run cannot reload into a date that is over.
+const SCENE_ENDING := "ending"
 ## docs/02 §6 rule 1 reads the last three player messages.
 const PLAYER_WINDOW := 3
 

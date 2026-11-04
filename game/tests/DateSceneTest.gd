@@ -345,3 +345,25 @@ func _without_hesitation(text: String) -> String:
 	while out.contains("  "):
 		out = out.replace("  ", " ")
 	return out.strip_edges()
+
+
+## P3.16 / docs/01 §7: E14 "Static" is the one ending a turn close can reach —
+## Instability 100 before Day 7 — and the date must end the run there instead of
+## walking into the night.
+func test_an_early_burnout_ends_the_date_into_the_ending() -> void:
+	_date.scene_change_enabled = false
+	(
+		assert_bool(
+			GameState.from_dict(
+				{"day": 6, "path": "SPLIT", "instability": 100.0, "instability_peak": 100.0}
+			)
+		)
+		. is_true()
+	)
+	var reached: Array = []
+	_date.ending_reached.connect(func(decision: Dictionary) -> void: reached.append(decision))
+	_date._on_turn_displayed()
+	await get_tree().process_frame
+	assert_int(reached.size()).is_equal(1)
+	assert_str(String(reached[0].get("id", ""))).is_equal("E14")
+	assert_bool(_date._date_over).is_true()
