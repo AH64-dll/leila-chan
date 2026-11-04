@@ -177,9 +177,11 @@ func register_character(node: Node) -> void:
 	character_node = node
 
 
-## The ChatUI seam (docs/07 §3.4) stays UNSET: this Director scans every say
-## chunk through Safety itself before handing it over, so installing a
-## `text_filter` here would scan the same text twice (review CODE-1).
+## The ChatUI seam (docs/07 §3.4). The scene that instantiates the ChatUI owns
+## the registration: `Date._ready()` registers it and `Date._exit_tree()` clears
+## it (P1 gate-r3 F1 / P2.23). Installing a `text_filter` here would scan the
+## same text twice — the Director scans every say chunk through Safety itself
+## before handing it over (review CODE-1).
 func register_chat_ui(node: Node) -> void:
 	chat_ui_node = node
 
