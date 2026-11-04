@@ -3174,7 +3174,7 @@
       "started": "2026-11-04T18:40:40+02:00"
     },
     "P3.17": {
-      "status": "in_review",
+      "status": "done",
       "agent": "deepseek",
       "round": 2,
       "reviews": [
@@ -3234,7 +3234,8 @@
         }
       ],
       "started": "2026-11-04T19:03:52+02:00",
-      "handoff": "production/handoffs/P3.17.md"
+      "handoff": "production/handoffs/P3.17.md",
+      "finished": "2026-11-04T21:46:38+02:00"
     },
     "P3.03": {
       "status": "in_progress",
@@ -7966,6 +7967,12 @@
       "event": "review:safety:approved",
       "ref": "P3.17",
       "note": "production/reviews/P3.17-safety-r2.md"
+    },
+    {
+      "ts": "2026-11-04T21:46:38+02:00",
+      "event": "in_review->done",
+      "ref": "P3.17",
+      "note": ""
     }
   ]
 }
