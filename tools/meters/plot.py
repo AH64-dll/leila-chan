@@ -118,7 +118,7 @@ def y_for(value: float, top: float, height: float, lo: float = 0.0, hi: float = 
 
 def draw_stage_bands(svg: Svg, rows: list[dict], x, top: float, height: float) -> None:
     turns = [num(r, "turn") for r in rows]
-    for lo, hi, label, fill in STAGES:
+    for lo, hi, _label, fill in STAGES:
         xs = x(lo)
         xe = x(min(hi, max(turns)))
         if xe <= xs:
@@ -238,19 +238,19 @@ def plot(rows: list[dict], out: Path) -> None:
     )
     draw_axes(svg, rows, x, TOP2, HEIGHT2, 0, 100, [0, 25, 50, 75, 100])
     series = (
-        ("affection", "#d6538a", ""),
-        ("trust", "#3d6fc4", ""),
-        ("fixation", "#7b4fa8", ""),
-        ("lucidity", "#2f9e6f", ""),
+        ("affection", "#d6538a"),
+        ("trust", "#3d6fc4"),
+        ("fixation", "#7b4fa8"),
+        ("lucidity", "#2f9e6f"),
     )
-    for key, color, dash in series:
+    for key, color in series:
         points = []
         for row in rows:
             value = num(row, key)
             if key == "trust":
                 value += 50.0  # -50..50 -> 0..100 so the shared axis is honest
             points.append((x(num(row, "turn")), y_for(value, TOP2, HEIGHT2)))
-        svg.polyline(points, color, 2.0, dash)
+        svg.polyline(points, color, 2.0)
 
     step = 10 if last - first >= 50 else 5
     tick = int(first)
