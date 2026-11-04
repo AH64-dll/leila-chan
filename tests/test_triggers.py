@@ -386,7 +386,7 @@ def test_accessibility_accommodations_are_never_triggers() -> None:
     assert {"photosensitive", "reduced_motion", "text_speed", "volume"} <= keys
     # The calmer content ceiling is the accommodation; the full ceiling is a
     # preference and may still reach T20.
-    assert "_heal_content_level(value) == CALMER_CONTENT" in settings
+    assert "_heal_content_level(value) == CONTENT_CALMER" in settings
     # No trigger row may watch an accommodation key by name.
     for trigger_id, row in TRIGGER_ROWS.items():
         for key in keys:
