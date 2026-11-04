@@ -118,6 +118,26 @@
    "cooldown_turns": 0
   }
  },
+ "stage_fx": {
+  "0": {
+   "desaturation": 0.0
+  },
+  "1": {
+   "desaturation": 0.0
+  },
+  "2": {
+   "desaturation": 0.0
+  },
+  "3": {
+   "desaturation": 0.45
+  },
+  "4": {
+   "desaturation": 0.6
+  },
+  "5": {
+   "desaturation": 0.75
+  }
+ },
  "feelings": {
   "joy": {
    "valence": 3,

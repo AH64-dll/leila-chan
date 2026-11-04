@@ -264,6 +264,7 @@ func test_title_scene_navigation_and_esc() -> void:
 
 	assert_object(title.new_game_button).is_not_null()
 	assert_object(title.continue_button).is_not_null()
+	assert_object(title.photosensitive_button).is_not_null()
 	assert_object(title.settings_button).is_not_null()
 	assert_object(title.quit_button).is_not_null()
 
@@ -279,6 +280,73 @@ func test_title_scene_navigation_and_esc() -> void:
 	title._unhandled_key_input(ev)
 
 	assert_bool(bool(spy["quit"])).is_true()
+
+
+## SAF-1 (P2.15 round 2): the photosensitive accommodation must be reachable by
+## a player, and before any date can strobe. Title is the only pre-play surface,
+## so its accessibility row is the entry point: a keyboard-reachable Button that
+## flips the flag, lands it on the FX host at once and persists it.
+func test_title_screen_exposes_the_photosensitive_toggle() -> void:
+	const TMP := "user://scene_flow_settings_test.cfg"
+	if FileAccess.file_exists(TMP):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(TMP))
+	var previous_path := Settings.settings_path
+	Settings.settings_path = TMP
+	Settings.photosensitive = false
+	FX.photosensitive = false
+
+	var title: Control = auto_free(TitleScene.instantiate())
+	title.scene_change_enabled = false
+	add_child(title)
+	await get_tree().process_frame
+
+	var row: Button = title.photosensitive_button
+	assert_object(row).is_not_null()
+	assert_str(row.text).is_equal("Photosensitive mode: Off")
+	assert_int(row.focus_mode).is_equal(Control.FOCUS_ALL)
+	# in the Tab/arrow chain, not a mouse-only extra
+	var next: Node = title.continue_button.get_node_or_null(title.continue_button.focus_next)
+	assert_object(next).is_same(row)
+
+	row.pressed.emit()  # Enter/Space on the focused row
+
+	assert_bool(Settings.photosensitive).is_true()
+	assert_bool(FX.photosensitive).is_true()  # live, not queued for the next cue
+	assert_str(row.text).is_equal("Photosensitive mode: On")
+	assert_bool(FileAccess.file_exists(TMP)).is_true()  # and it survives the session
+
+	Settings.settings_path = previous_path
+	Settings.photosensitive = false
+	FX.photosensitive = false
+	if FileAccess.file_exists(TMP):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(TMP))
+
+
+## SAF-1 (P2.15 round 2), the property that matters: the choice made on the
+## title screen reaches the scene that draws the strobe. A date installed after
+## the accommodation is on must start in the dim pattern, not the 4-flash one.
+func test_photosensitive_chosen_on_the_title_reaches_the_date_host() -> void:
+	const TMP := "user://scene_flow_settings_test2.cfg"
+	if FileAccess.file_exists(TMP):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(TMP))
+	var previous_path := Settings.settings_path
+	Settings.settings_path = TMP
+	Settings.set_photosensitive(true)  # exactly what pressing the Title row does
+
+	var date: Node = auto_free(DateScene.instantiate())
+	add_child(date)
+	await get_tree().process_frame
+
+	assert_bool(date.photosensitive).is_true()
+	assert_bool(date.character.photosensitive).is_true()  # the host heard it
+	assert_array(date.character.flicker_pattern()).is_equal(date.character.FX_FLICKER_DIM_STEPS)
+
+	# clear the flag *before* restoring the path: set_photosensitive saves, and
+	# the write must land on the temp file, not the player's user://settings.cfg
+	Settings.set_photosensitive(false)
+	Settings.settings_path = previous_path
+	if FileAccess.file_exists(TMP):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(TMP))
 
 
 func test_boot_scene_initialization() -> void:

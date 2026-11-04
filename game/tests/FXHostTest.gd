@@ -36,7 +36,6 @@ var _char  # untyped so private hooks (_fx_root/_glow/_cam_tween/...) resolve
 var _cam: Camera2D
 var _fx_root: Node2D
 var _glow: TextureRect
-var _glitch: ColorRect
 var _fakes: Array = []  # spawned FakeHosts; freed in after_test (orphan-proof)
 
 
@@ -57,7 +56,6 @@ func before_test() -> void:
 	_cam = _char.get_node("Camera2D")
 	_fx_root = _char.get_node("MotionRoot/LeanRoot/FX")
 	_glow = _char.get_node("ScreenFX/BlushGlow")
-	_glitch = _char.get_node("ScreenFX/GlitchSplit")
 
 
 func after_test() -> void:
@@ -214,8 +212,13 @@ func test_trigger_routes_through_character_host() -> void:
 
 
 ## P1.10 contract: twitch_fired flips the chromatic split on for 1-2 frames.
+## P2.15 moved the split onto the single stage pass (a second screen-sampling
+## rect would erase the stage effects), so the contract is a uniform + the
+## pass being shown for exactly those frames.
 func test_twitch_fires_chromatic_split() -> void:
 	_char._on_twitch_fired()
-	assert_bool(_glitch.visible).is_true()
+	assert_float(float(_char._stage_mat.get_shader_parameter("split"))).is_equal_approx(1.0, 0.0001)
+	assert_bool(_char._stage_fx.visible).is_true()
 	await _wait_seconds(0.08)
-	assert_bool(_glitch.visible).is_false()
+	assert_float(float(_char._stage_mat.get_shader_parameter("split"))).is_equal_approx(0.0, 0.0001)
+	assert_bool(_char._stage_fx.visible).is_false()
