@@ -3222,6 +3222,15 @@
           "report": "production/reviews/P3.17-design-r2.md",
           "ts": "2026-11-04T21:34:37+02:00",
           "declared": "gemini-flash"
+        },
+        {
+          "kind": "safety",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "gemini-flash",
+          "report": "production/reviews/P3.17-safety-r2.md",
+          "ts": "2026-11-04T21:46:38+02:00",
+          "declared": "gemini-flash"
         }
       ],
       "started": "2026-11-04T19:03:52+02:00",
@@ -7951,6 +7960,12 @@
       "event": "review:design:approved",
       "ref": "P3.17",
       "note": "production/reviews/P3.17-design-r2.md"
+    },
+    {
+      "ts": "2026-11-04T21:46:38+02:00",
+      "event": "review:safety:approved",
+      "ref": "P3.17",
+      "note": "production/reviews/P3.17-safety-r2.md"
     }
   ]
 }
