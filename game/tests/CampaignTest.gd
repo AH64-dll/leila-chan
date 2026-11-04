@@ -166,3 +166,23 @@ func test_shipped_date_is_available_on_day_one() -> void:
 	var d02: Dictionary = ScenarioLoaderScript.load_scenario(D02_PATH)
 	assert_bool(ScenarioLoaderScript.is_available(d02, 1, 0, "")).is_true()
 	assert_bool(ScenarioLoaderScript.is_available(d02, 15, 0, "")).is_false()
+
+
+## The campaign's own state lives in GameState.flags (docs/07 §3.5), so a save
+## taken at night must resume the same day, the same played list and the same
+## queued date — the checklist's "save/load round-trip covers any new state".
+func test_campaign_state_survives_the_snapshot() -> void:
+	var s: Variant = _state()
+	var pool := [_row("A", [1, 14], [0, 5], "any"), _row("B", [1, 14], [0, 5], "any")]
+	s.set_flag(&"next_scenario", "res://data/scenarios/B.json")
+	assert_str(String(CampaignScript.new(s).begin_day(pool)["id"])).is_equal("B")
+	var restored: Variant = _state()
+	assert_bool(restored.from_dict(s.to_dict())).is_true()
+	var replay: Variant = CampaignScript.new(restored)
+	assert_array(replay.played_ids()).has_size(1)
+	assert_str(String(replay.played_ids()[0])).is_equal("B")
+	# The played list survives, so the reloaded campaign does not replay B; the
+	# consumed queue stays consumed (no stale next-day date).
+	var next: Dictionary = replay.next_scenario(pool)
+	assert_str(String(next["id"])).is_equal("A")
+	assert_bool(restored.flags.has("next_scenario")).is_true()
