@@ -3410,6 +3410,14 @@
       "handoff": "production/handoffs/P2.22.md",
       "agent_declared": "swe-2",
       "finished": "2026-11-04T21:50:43+02:00"
+    },
+    "P3.04": {
+      "status": "in_review",
+      "agent": "swe2",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-05T01:18:04+02:00",
+      "handoff": "production/handoffs/P3.04.md"
     }
   },
   "history": [
@@ -8283,6 +8291,24 @@
       "ts": "2026-11-04T23:44:36+02:00",
       "event": "in_review->changes_requested",
       "ref": "P3.11",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T01:18:04+02:00",
+      "event": "todo->in_progress",
+      "ref": "P3.04",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T01:18:04+02:00",
+      "event": "agent",
+      "ref": "P3.04",
+      "note": "adopted from handoff: swe2"
+    },
+    {
+      "ts": "2026-11-05T01:18:04+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P3.04",
       "note": ""
     }
   ]
