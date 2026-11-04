@@ -22,3 +22,22 @@
 - Next SYS on this seam: P3.14 consumes `SaveSystem.shadow_first_name()`/`shadow_memories()`;
   P3.09 (M08) drops a kept memory on Day 1. `wipe()` still only clears slots — Reset Everything is
   `wipe_everything`.
+
+## P3.12 — shadow save + Reset Everything (round 2, 2026-11-04, agent: swe-2)
+
+- S1 (CODE-1/DES-1/SAF-1) was one bug in three mirrors: `_recurse_wipe` trimmed the root with
+  `trim_suffix("/")`, so the shipped `user_root = "user://"` became `user:/`, `DirAccess.open` returned
+  null and the recursion returned silently — `Settings.reset_everything()` said `{ok: true, removed: 0}`
+  while the shadow, slots, letters and diary lived on. Round 1's journal GOTCHA was half wrong: the trailing
+  slash never reaches `remove_absolute` (only `path_join`ed children do), so the trim was unnecessary.
+- `SaveSystem.wipe_root()` now drops exactly one separator per pass and never the scheme (`user://` stays,
+  `user:///` → `user://`, not `user:`), and an unopenable directory goes into `errors` instead of a silent
+  success. `DEFAULT_USER_ROOT` is a const so a test can pin the shipped value.
+- Probed with the real autoloads on the shipped default, isolated via `XDG_DATA_HOME=<scratch>`: before
+  `{ok:true, removed:0}` with `.leila/shadow.json` intact; after `{ok:true, removed:7}`, only
+  `user://settings.cfg` left. That is the probe round 1's test hid by swapping in a scratch `user_root`.
+- `ShadowSaveTest` (10 cases) pins `wipe_root` on `DEFAULT_USER_ROOT` and wipes the default root for real:
+  probe in the real `user://.leila/`, every pre-existing file in `keep` so CI never erases real data.
+- CODE-2: `_heal` re-applies both caps (newest `RUN_LIMIT` runs, first `shadow.limit` memories).
+  DES-2 retargeted `wipe()`; DES-3 fixed the `memories` sentence (code + docs/07 §3.5); SAF-3 cites
+  docs/05 M28 / docs/02 §8. DCR queued: docs/09 line 74 says OS-username "opt-out" — docs/02 §8/M28 say opt-in.

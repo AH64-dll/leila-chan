@@ -40,6 +40,9 @@ func before_test() -> void:
 
 func after_test() -> void:
 	_remove_tree(TEST_ROOT)
+	# The shipped-root test writes its probe into the real tree; a failing run
+	# must not leave it behind.
+	DirAccess.remove_absolute(SaveSystem.DEFAULT_USER_ROOT.path_join(".leila/wipe_probe.txt"))
 	SaveSystem.save_dir = _previous_dir
 	SaveSystem.shadow_path = _previous_shadow
 	SaveSystem.user_root = _previous_root
@@ -168,6 +171,78 @@ func test_reset_everything_deletes_shadow_and_slots_but_keeps_settings() -> void
 	assert_bool(SaveSystem.shadow.erase()).is_false()
 
 
+## S1 (round 2): the wipe root keeps its scheme. The shipped `user://` used to be
+## trimmed to `user:/`, which `DirAccess.open` refuses — so `_recurse_wipe`
+## returned at once and "Reset Everything" deleted nothing while reporting
+## success. Pinned on the default value itself, not on a scratch tree.
+func test_wipe_root_preserves_the_shipped_scheme() -> void:
+	assert_str(SaveSystem.DEFAULT_USER_ROOT).is_equal("user://")
+	var root := SaveSystem.wipe_root(SaveSystem.DEFAULT_USER_ROOT)
+	assert_str(root).is_equal("user://")
+	# Both halves of the old failure and of the fix: `user:/` cannot be opened,
+	# the normalized default can.
+	assert_bool(DirAccess.open("user://".trim_suffix("/")) == null).is_true()
+	assert_bool(DirAccess.open(root) != null).is_true()
+	# A scratch root is still normalized for the recursion's joined children,
+	# one separator at a time — `user:///` must never collapse to `user:`.
+	assert_str(SaveSystem.wipe_root(TEST_ROOT)).is_equal("user://shadow_test")
+	assert_str(SaveSystem.wipe_root("user://a//")).is_equal("user://a")
+	assert_str(SaveSystem.wipe_root("user:///")).is_equal("user://")
+
+
+## Acceptance 2 in the configuration a player actually runs (S1, round 2): with
+## `user_root` left at the shipped default, a file under the REAL
+## `user://.leila/` is removed. Every file already under the root goes into
+## `keep`, so the removal is proven without erasing the player's (or another
+## suite's) data; the literal `Settings.reset_everything()` probe, where only
+## settings.cfg survives, is recorded in the round-2 handoff, run against a
+## throwaway user dir.
+func test_reset_wipes_under_the_shipped_default_root() -> void:
+	SaveSystem.user_root = SaveSystem.DEFAULT_USER_ROOT
+	var keep := _files_under(SaveSystem.DEFAULT_USER_ROOT)
+	var probe := SaveSystem.DEFAULT_USER_ROOT.path_join(".leila/wipe_probe.txt")
+	_write_raw(probe, "probe")
+	assert_bool(FileAccess.file_exists(probe)).is_true()
+	assert_bool(keep.has(probe)).is_false()
+
+	var result := SaveSystem.wipe_everything(keep)
+
+	assert_bool(bool(result["ok"])).is_true()
+	assert_bool(FileAccess.file_exists(probe)).is_false()
+	# The keep guard held: a file that was already there is untouched.
+	if not keep.is_empty():
+		assert_bool(FileAccess.file_exists(String(keep[0]))).is_true()
+	assert_int(int(result["removed"])).is_greater_equal(1)
+	assert_bool(DirAccess.dir_exists_absolute(SaveSystem.DEFAULT_USER_ROOT)).is_true()
+
+
+## CODE-2 (round 2): the read side re-applies the documented caps, so a
+## hand-edited shadow.json cannot hand a future prompt ten thousand memories or
+## an unbounded run history. `store` is the only writer, so it is also the
+## hand-editor (the envelope checksum cannot be forged from the outside).
+func test_hand_edited_shadow_is_capped_on_read() -> void:
+	var runs: Array = []
+	for i: int in range(ShadowStore.RUN_LIMIT + 6):
+		runs.append("run_%d" % i)
+	var memories: Array = []
+	for i: int in range(10000):
+		memories.append("fact %d" % i)
+	var written := SaveSystem.shadow.store(
+		{"first_name": "Ren", "names": ["Ren"], "runs": runs, "memories": memories}
+	)
+	assert_bool(bool(written["ok"])).is_true()
+
+	var healed := SaveSystem.shadow_data()
+
+	var kept_runs := healed["runs"] as Array
+	assert_int(kept_runs.size()).is_equal(ShadowStore.RUN_LIMIT)
+	# The newest survive and the oldest fall off — the end `seal_run` trims.
+	assert_str(String(kept_runs[0])).is_equal("run_6")
+	assert_str(String(kept_runs[ShadowStore.RUN_LIMIT - 1])).is_equal("run_13")
+	assert_int(MemoryRules.shadow_memory_limit()).is_equal(3)
+	assert_array(SaveSystem.shadow_memories()).is_equal(["fact 0", "fact 1", "fact 2"])
+
+
 # ------------------------------------------------------------------ fixtures
 
 
@@ -200,6 +275,29 @@ func _write_raw(path: String, text: String) -> void:
 		return
 	file.store_string(text)
 	file.close()
+
+
+## Every file under `root`, in the exact-path shape `_recurse_wipe`'s `keep`
+## matches — `<root>.path_join(...)`. Hidden entries included: `.leila/` is the
+## directory the shipped-root test is about.
+func _files_under(root: String) -> Array:
+	var out: Array = []
+	var normalized := SaveSystem.wipe_root(root)
+	var dir := DirAccess.open(normalized)
+	if dir == null:
+		return out
+	dir.set_include_hidden(true)
+	dir.list_dir_begin()
+	var entry := dir.get_next()
+	while not entry.is_empty():
+		var child := normalized.path_join(entry)
+		if dir.current_is_dir():
+			out.append_array(_files_under(child))
+		else:
+			out.append(child)
+		entry = dir.get_next()
+	dir.list_dir_end()
+	return out
 
 
 func _remove_tree(path: String) -> void:

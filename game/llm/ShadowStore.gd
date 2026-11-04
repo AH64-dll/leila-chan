@@ -22,19 +22,19 @@ extends RefCounted
 ##                                 Game, oldest first. `runs.size()` is "how
 ##                                 many times you have restarted her".
 ##       "memories":   ["<string>",…], up to `memory.json → shadow.limit` facts
-##                                 from the run just ended, kept only when the
-##                                 run had reached the meta gate (docs/05 M08,
-##                                 stage 3+). Chosen by the memory model's own
-##                                 importance, ties keep the newest — the facts
-##                                 she quoted most, not the newest noise.
+##                                 from the most recent run that reached the meta
+##                                 gate (docs/05 M08, stage 3+). Chosen by the
+##                                 memory model's own importance, ties keep the
+##                                 newest — the facts she quoted most, not the
+##                                 newest noise.
 ##     }
 ##   }
 ## Never in this file: conversation logs or transcripts, deletions or drafts
-## (docs/09 "deleted drafts never leave memory"), the OS username (docs/09,
-## opt-in only — a typed name is stored, but nothing reads it from the OS),
-## telemetry, device identifiers, IP or network data. The content is plain
-## JSON the player can open and verify; "Reset Everything" removes the whole
-## `user://` tree except `settings.cfg`, including this file.
+## (docs/09 "deleted drafts never leave memory"), the OS username (docs/05 M28,
+## docs/02 §8 — opt-in only; a typed name is stored, but nothing reads it from
+## the OS), telemetry, device identifiers, IP or network data. The content is
+## plain JSON the player can open and verify; "Reset Everything" removes the
+## whole `user://` tree except `settings.cfg`, including this file.
 ##
 ## Bytes are the P2.20 envelope: same canonical-JSON sha256 and atomic
 ## tmp+rename write as a save slot, under the `leila.shadow` format tag so a
@@ -184,7 +184,10 @@ func _kept_memories(entries: Array) -> Array:
 
 
 ## A corrupt/hand-edited payload heals to the blank shape plus whatever keys
-## parse: the four lists are string-filtered, never trusted.
+## parse: the four lists are string-filtered, never trusted — and both documented
+## caps are re-applied (`runs` keeps the most recent RUN_LIMIT, `memories` the
+## first `shadow.limit`), so a hand-written file with 10 000 facts reads back as
+## the handful a real run would seal (P3.12 round 2, CODE-2/SAF-2).
 func _heal(value: Variant) -> Dictionary:
 	var record := blank()
 	if not value is Dictionary:
@@ -192,13 +195,14 @@ func _heal(value: Variant) -> Dictionary:
 	var payload := value as Dictionary
 	record["first_name"] = _string(payload.get("first_name"))
 	record["names"] = _strings(payload.get("names"))
-	record["runs"] = _strings(payload.get("runs"))
+	var runs := _strings(payload.get("runs"))
+	record["runs"] = runs.slice(maxi(0, runs.size() - RUN_LIMIT))
 	var memories: Array = []
 	for item: Variant in _array(payload.get("memories")):
 		var text := _string(item)
 		if not text.is_empty():
 			memories.append(text)
-	record["memories"] = memories
+	record["memories"] = memories.slice(0, maxi(0, MemoryRules.shadow_memory_limit()))
 	return record
 
 

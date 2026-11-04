@@ -44,6 +44,10 @@ extends Node
 ## wipe that deletes all of `user://` except the settings file (docs/07 §3.5).
 
 const MANUAL_SLOT_COUNT := SaveSlots.MANUAL_SLOTS
+## The wipe root a player runs (docs/07 §3.5: all of `user://`). A constant
+## because the scheme must never be normalized away — `user://` trimmed to
+## `user:/` is a directory `DirAccess` cannot open (P3.12 round 2, CODE-1).
+const DEFAULT_USER_ROOT := "user://"
 ## The scene id the Date writes with its autosave. The Night writes its own id
 ## with the next day's scenario, so Continue can land on that day (P2.19); the
 ## save stores the id verbatim.
@@ -73,8 +77,9 @@ var shadow_path: String:
 		shadow.path = value
 
 ## Test seam for `wipe_everything`: the root it deletes under. Default is the
-## whole of `user://` (docs/07 §3.5).
-var user_root := "user://"
+## whole of `user://` (docs/07 §3.5); tests that cannot touch real data point it
+## at a scratch tree, and one test pins the shipped value itself.
+var user_root := DEFAULT_USER_ROOT
 
 ## The log seam (see the class note) and the log/scene waiting for a scene.
 var _clock := Callable()
@@ -137,11 +142,12 @@ func wipe_everything(keep: Array = []) -> Dictionary:
 	for item: Variant in keep:
 		kept[_string(item)] = true
 	var tally := {"removed": 0, "errors": []}
-	_recurse_wipe(user_root, kept, tally)
+	var root := wipe_root(user_root)
+	_recurse_wipe(root, kept, tally)
 	# Seam paths outside user_root (tests point shadow_path at a scratch file
 	# inside user_root, but defend anyway): a configured file is wiped too.
 	for path: String in [slots.dir_path, shadow.path]:
-		if kept.has(path) or path.begins_with(user_root):
+		if kept.has(path) or path.begins_with(root):
 			continue
 		if FileAccess.file_exists(path):
 			if DirAccess.remove_absolute(path) == OK:
@@ -289,8 +295,10 @@ func consume_pending_scene() -> Dictionary:
 	return scene
 
 
-## Settings → "Reset Everything" (docs/07 §3.5) keeps settings and wipes the
-## saves. Returns how many slot files were removed.
+## Slot-only helper: deletes every save slot (and the autosave) and returns how
+## many were removed. Settings → "Reset Everything" is `wipe_everything` (via
+## `Settings.reset_everything`), which also removes the shadow save, letters,
+## diary and the rest of `user://` — this function leaves all of that behind.
 func wipe() -> int:
 	var removed := 0
 	for row: Dictionary in slots.summaries():
@@ -490,15 +498,32 @@ static func _array(value: Variant) -> Array:
 	return []
 
 
+## The wipe root, normalized without eating the URL scheme. `user://` must stay
+## `user://`: trimming its trailing slash yields `user:/`, which `DirAccess.open`
+## refuses, so the recursion returned at once and "Reset Everything" left the
+## shadow save, slots, letters and diary on disk while reporting success
+## (P3.12 round 2, CODE-1/DES-1/SAF-1). Only separators *after* the scheme are
+## dropped — the recursion joins the root with entries and only ever hands the
+## joined children to `DirAccess.remove_absolute`, so the root itself never
+## needs to end in a separator.
+static func wipe_root(dir_path: String) -> String:
+	var root := dir_path
+	# Exactly one separator per pass: `trim_suffix("/")` would eat `user:///`
+	# down to `user:`, and a failed open is the very failure being fixed.
+	while root.length() > 1 and root.ends_with("/") and not root.ends_with("://"):
+		root = root.substr(0, root.length() - 1)
+	return root
+
+
 ## Recursive erase: files under `dir_path` are removed unless `keep` names the
 ## exact path; directories are emptied then removed. `tally` ({removed, errors})
-## is a Dictionary so the recursion shares one counter.
+## is a Dictionary so the recursion shares one counter. A directory that cannot
+## be opened is reported in `errors`, never a silent success (CODE-1).
 func _recurse_wipe(dir_path: String, keep: Dictionary, tally: Dictionary) -> void:
-	# A trailing "/" makes DirAccess.remove_absolute refuse the root itself —
-	# normalize before recursing or the tree would leak.
-	var root := dir_path.trim_suffix("/")
+	var root := wipe_root(dir_path)
 	var dir := DirAccess.open(root)
 	if dir == null:
+		(tally["errors"] as Array).append(root)
 		return
 	# `.leila/` is hidden; the wipe cannot miss the shadow dir.
 	dir.set_include_hidden(true)
