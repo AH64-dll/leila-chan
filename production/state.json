@@ -2070,9 +2070,9 @@
       "finished": "2026-11-04T06:47:50+02:00"
     },
     "P2.17": {
-      "status": "changes_requested",
+      "status": "in_review",
       "agent": "commandcode",
-      "round": 4,
+      "round": 5,
       "reviews": [
         {
           "kind": "safety",
@@ -2135,6 +2135,15 @@
           "reviewer": "deepseek",
           "report": "production/reviews/P2.17-safety-r4.md",
           "ts": "2026-11-04T09:17:53+02:00",
+          "declared": "deepseek"
+        },
+        {
+          "kind": "safety",
+          "verdict": "approved",
+          "round": 5,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P2.17-safety-r5.md",
+          "ts": "2026-11-04T09:42:25+02:00",
           "declared": "deepseek"
         }
       ],
@@ -5356,6 +5365,24 @@
       "event": "in_review->done",
       "ref": "P2.25",
       "note": ""
+    },
+    {
+      "ts": "2026-11-04T09:26:35+02:00",
+      "event": "changes_requested->in_progress",
+      "ref": "P2.17",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T09:26:35+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P2.17",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T09:42:25+02:00",
+      "event": "review:safety:approved",
+      "ref": "P2.17",
+      "note": "production/reviews/P2.17-safety-r5.md"
     }
   ]
 }
