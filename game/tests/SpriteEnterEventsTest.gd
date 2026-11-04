@@ -42,7 +42,7 @@ func after_test() -> void:
 	Director.reset()
 	Director.last_sprite_enter = {}
 	FX.reset()
-	_char.queue_free()
+	_char.free()
 
 
 ## YANDERE love at T3 is 24: heartbeat cue, hearts fx (the one entry effect FX v1
