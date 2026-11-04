@@ -37,7 +37,9 @@ Every agent on the project follows this protocol, whether it is SWE-2, DeepSeek,
 ## 3. Git and worktrees
 - Each task gets a worktree `D:/lila-wt/<TASK_ID>` on branch `task/<TASK_ID>`, created by the producer. Some tasks run in the main tree; the brief says when.
 - Local-only artifacts live **only** in the main tree: `D:/lila/models/`, `D:/lila/tools/llama/`, `D:/lila/assets/audio/_raw/`. Refer to them by absolute path (or the `LEILA_MODEL` and `LEILA_LLAMA_DIR` env vars once P0.03 defines them). Never copy them into a worktree or into `game/`.
-- Do not rebase or force-push. Do not touch other tasks' branches. The producer merges.
+- Do not rebase or force-push. Do not touch other tasks' branches. The producer merges, and every merge into `main`
+  runs `python tools/merge_check.py task/$T` before it and `--post HEAD` after it: a merge must never replace a file
+  one side changed with the other side's stale copy (P1.16; `production/MERGE_CHECK.md`).
 
 ## 4. Reviewing a task (reviewer)
 1. You judge; you do not fix. The only file you write is your review report.
