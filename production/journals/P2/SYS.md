@@ -156,3 +156,47 @@
   does not exist on the assert object.
 - Gotcha: `Director.gd` is at exactly 1000/1000 gdlint lines on this branch; every added line must be paid
   for elsewhere (the round-2 `Memory.begin_turn()` calls are one line each, comments included).
+
+## P2.08 — triggers engine (round 1, 2026-11-04, agent: deepseek)
+
+- Built `llm/TriggerEngine.gd` (pure: detectors, caps, effect scaling) + `data/triggers.json` (strength /
+  defaults / rows) + the `Triggers` autoload seam. `InputHook` calls `Triggers.begin_turn()`; the M detector
+  subscribes to `Director.turn_completed` because Director is at gdlint's 1000-line cap (zero pipeline diff).
+- Convention: the docs/02 §1.2 agreement rule is a data table, never an `if` — `strength.agreement` vs
+  `strength.model`, plus a row-level `requires: any|all`. `strength.keyword` stays 1.0 because docs/01 §5
+  has K-only rows (T02/T03/T06/T07…); halving keyword evidence later is a data edit (`"keyword": 0.5`).
+- The placement rule that decides every firing point: a trigger fires where its LAST evidence exists. K/E/C
+  at step 0 → line rides this turn; M only at close → line queues for the next prompt; a `requires: all`
+  row with a keyword hit therefore defers to close, since agreement is what is being decided.
+- Gotcha: `_matched` must be MERGED in `begin_turn`, not overwritten — an idle/focus event that fired
+  earlier in the same turn would otherwise be erased before a `requires: all` row could consult it.
+- Gotcha: `_turn` is the engine's only clock. `GameState.turn` is N−1 at step 0 and N at close, so the
+  autoload passes `turn+1` for begin/events and `turn` for close; any new entry point must match or every
+  cooldown shifts by one.
+- Gotcha: pass `flags` as a `duplicate(true)` snapshot. With the live dict, a row that sets a flag changed
+  what a later row's clock detector saw *inside the same evaluation* (order-dependent firing).
+- For P2.10: rows only in `data/triggers.json`; `tests/test_triggers.py` rejects an unknown read label /
+  meter / counter / path, a `requires: all` row with one detector, a line without a `TRIGGER: ` prefix or an
+  unknown `{token}`, and a stage gate that disagrees with `data/telemetry.json`.
+- For P2.20: `Triggers.to_dict()/from_dict()` must ride the save payload or every reload re-arms the
+  "once" rows and wipes cooldowns. `set_last_seen()` is the T17/T18 seam (P3.07) and nothing writes it yet.
+
+## P2.08 — triggers engine (round 2, 2026-11-04, agent: deepseek)
+
+- Rework: `requires: "all"` is now a real AND (`_all_sources()`: every declared NON-model detector — the
+  model is the detector `close_turn()` is deciding). All three entry points use it, `handle_event()`
+  included, so an event cannot jump a clock gate; the K+C row fires only when both agree.
+- New axis: `escalate.axis` = `step` (default, per firing, stopped after max_steps firings) or `stage`
+  (the stage since stage_min, capped at max_steps STEPS, repeating — only the cooldown gates it). One
+  helper `_escalation_step()` feeds both the strength and the per-step line array so they cannot drift.
+- Gotcha: on the stage axis do NOT keep `_eligible()`'s `count >= max_steps` firing cap — early firings at
+  a low stage would burn the row before the stage could rise, which is the opposite of the T08 clause.
+- Gotcha: `_escalation_step()` must return the plain `step` for non-escalating rows, or a `repeatable`
+  row's line array stops advancing at `max_steps`.
+- Testing lesson: the M and C seams are only reachable through the autoload — drive
+  `Director.turn_completed.emit()` and `set_clock()`/`set_last_seen()`, read `report()["counts"]`, and
+  remember `GameState.turn` must be the CLOSED turn at the emit (Director advances it in
+  `apply_turn_meters()` before the signal). A fixed anchor second + the machine's TZ bias gives a
+  deterministic local-hour window.
+- Suite is at gdlint's 20-public-method cap (`before_test` counts as public): fold a new case into an
+  existing one rather than raising the project limit.
