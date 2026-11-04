@@ -1,0 +1,97 @@
+{
+  "id": "I13_lucid_moment",
+  "kind": "interrupt",
+  "title": "Lucid moment",
+  "background": "bg/her_room",
+  "music": "melancholy",
+  "ambience": "none",
+  "available": {
+    "days": [3, 14],
+    "stages": [0, 5],
+    "paths": "any"
+  },
+  "goal": "Tell {player_name} what you noticed.",
+  "prompt": "You stop in the middle of a sentence. The room is quiet. You look at your hands, then at {player_name}, and something behind your face has changed.",
+  "stage_variants": {
+    "0": "You forget what you were saying, and for one second you look frightened. Then you laugh and say you have been reading too many ghost stories.",
+    "1": "You stop mid-word and ask {player_name} whether he heard a voice under yours. You tell him it is probably the radiator.",
+    "2": "You say it clearly: something is wrong with me, isn't it? You do not smile after you say it, and you wait for his answer.",
+    "3": "You count backwards from ten to make sure you are still here, and you ask {player_name} to count with you. When you finish, you ask him what happened to the last five numbers.",
+    "4": "You ask {player_name} to write down everything you say for the next minute, because you do not trust the version you will remember. You watch his pen, not his face.",
+    "5": "You tell him this is the clearest you have felt in days, and you ask him to stay exactly where he is, because you do not know how long it will last."
+  },
+  "path_twists": {
+    "ANCHOR": "You ask him to tell you the moment you start slipping again, and you make him repeat the rule back to you.",
+    "AWAKE": "You say the lucid moment has a shape — a narrow window in the layers — and you ask him to look at how quickly it closes.",
+    "YANDERE": "You tell him you are clear now, and the first clear thought you had was about him, and it was not a kind one."
+  },
+  "events": [
+    {
+      "at_turn": 1,
+      "line": "The room's hum stops, as if something was listening and decided to wait."
+    },
+    {
+      "at_turn": 3,
+      "line": "The clock on the shelf skips a second."
+    },
+    {
+      "on_trigger": "T05",
+      "line": "Your reflection in the dark window moves a moment after you do."
+    }
+  ],
+  "end": {
+    "min_turns": 3,
+    "max_turns": 6,
+    "on_goal": "end_date"
+  },
+  "opening_beats": {
+    "0": [
+      {
+        "feeling": "confused",
+        "intensity": 1,
+        "cue": "none",
+        "say": "Sorry — I lost the sentence. I've been reading ghost stories, that's all."
+      }
+    ],
+    "1": [
+      {
+        "feeling": "afraid",
+        "intensity": 1,
+        "cue": "none",
+        "say": "Did you hear a voice underneath mine? It's probably the radiator."
+      }
+    ],
+    "2": [
+      {
+        "feeling": "afraid",
+        "intensity": 2,
+        "cue": "none",
+        "say": "Something is wrong with me, isn't it? Don't answer right away — I want to watch you decide."
+      }
+    ],
+    "3": [
+      {
+        "feeling": "confused",
+        "intensity": 2,
+        "cue": "clock_tick",
+        "say": "Count with me — ten, nine, wait. Where did the last five go?"
+      }
+    ],
+    "4": [
+      {
+        "feeling": "pleading",
+        "intensity": 3,
+        "cue": "breath_close",
+        "say": "Write down everything I say, all of it. I don't trust the version I'll remember."
+      }
+    ],
+    "5": [
+      {
+        "feeling": "pleading",
+        "intensity": 3,
+        "cue": "heartbeat_fast",
+        "say": "This is the clearest I've felt in days. Stay exactly there — I don't know how long it lasts."
+      }
+    ]
+  }
+}

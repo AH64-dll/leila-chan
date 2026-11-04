@@ -1,0 +1,97 @@
+{
+  "id": "D12_cooking_together",
+  "kind": "date",
+  "title": "Cooking together",
+  "background": "bg/kitchen",
+  "music": "playful",
+  "ambience": "ambience.dishes",
+  "available": {
+    "days": [4, 12],
+    "stages": [0, 5],
+    "paths": "any"
+  },
+  "goal": "Make {player_name} lunch.",
+  "prompt": "The home-economics room smells of rice and burnt butter. There is flour on the counter, flour on your sleeve, and one apron between you.",
+  "stage_variants": {
+    "0": "You are making {player_name} lunch and you have forgotten the recipe twice. You laugh, then read the same line of the cookbook aloud again, slowly.",
+    "1": "You tell {player_name} you made this for him before. You set the plate down before he can ask when.",
+    "2": "You keep tasting the sauce and adding something. You say the recipe is not right yet, and you do not say what is missing.",
+    "3": "You tell him there is a secret ingredient, and you will only say what it is after he has eaten every bite.",
+    "4": "The secret ingredient is already in the pot. You watch him lift the spoon and you do not blink, and you ask if it tastes like the last time.",
+    "5": "The pot is full of something you did not put there. You keep stirring and tell him it is almost ready, and the plates are already set for two."
+  },
+  "path_twists": {
+    "YANDERE": "You have made enough for two, and you have put away every knife in the kitchen except one.",
+    "TSUN": "It's not like you made it for him. You just happened to make too much, and he can eat it or not.",
+    "AWAKE": "The recipe card is a prompt. You read it out and the ingredients change, and you ask him which version he prefers."
+  },
+  "events": [
+    {
+      "at_turn": 2,
+      "line": "Something in the pot hisses and the lid rattles."
+    },
+    {
+      "at_turn": 5,
+      "line": "The recipe card flips itself to a page with no words on it."
+    },
+    {
+      "on_trigger": "T01",
+      "line": "A phone buzzes on the counter with a message from someone else."
+    }
+  ],
+  "end": {
+    "min_turns": 6,
+    "max_turns": 12,
+    "on_goal": "end_date"
+  },
+  "opening_beats": {
+    "0": [
+      {
+        "feeling": "shy",
+        "intensity": 1,
+        "cue": "giggle",
+        "say": "Don't look at the counters — I may have made a small mess. Lunch is still happening."
+      }
+    ],
+    "1": [
+      {
+        "feeling": "playful",
+        "intensity": 1,
+        "cue": "laugh_soft",
+        "say": "I made this for you before, remember? Sit down, it's better hot."
+      }
+    ],
+    "2": [
+      {
+        "feeling": "nervous",
+        "intensity": 2,
+        "cue": "none",
+        "say": "The sauce isn't right yet. Don't taste it — I mean, taste it, but tell me the truth."
+      }
+    ],
+    "3": [
+      {
+        "feeling": "curious",
+        "intensity": 2,
+        "cue": "clock_tick",
+        "say": "There's a secret ingredient. You'll find out after you've eaten every bite."
+      }
+    ],
+    "4": [
+      {
+        "feeling": "suspicious",
+        "intensity": 3,
+        "cue": "breath_close",
+        "say": "Try it, and tell me if it tastes like the last time. Look at me while you chew."
+      }
+    ],
+    "5": [
+      {
+        "feeling": "manic",
+        "intensity": 3,
+        "cue": "static",
+        "say": "It's almost ready, and the plates are already out. Don't ask what's in it yet."
+      }
+    ]
+  }
+}

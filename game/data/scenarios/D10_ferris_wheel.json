@@ -1,0 +1,97 @@
+{
+  "id": "D10_ferris_wheel",
+  "kind": "date",
+  "title": "Ferris wheel at the top",
+  "background": "bg/ferris_wheel",
+  "music": "romantic",
+  "ambience": "none",
+  "available": {
+    "days": [8, 14],
+    "stages": [0, 5],
+    "paths": "any"
+  },
+  "goal": "Tell {player_name} how you feel.",
+  "prompt": "Your car on the Ferris wheel rocks as it climbs. The park lights are small below, and there is nobody in the car beside you but {player_name}.",
+  "stage_variants": {
+    "0": "You have practised what to say in the queue and forgotten it on the way up. You ask {player_name} to look at the lights while you breathe.",
+    "1": "You start the confession twice and stop. You tell him it is not his fault, it is just a long way down, and then you try again.",
+    "2": "You say it. Then you say it again in different words, as if he might not have heard, and your hands are tight around the rail.",
+    "3": "The wheel stops at the top. You do not mind. You tell {player_name} that you would be happy to be stuck here, and you do not call it a joke.",
+    "4": "You ask {player_name} if the car could stay at the top forever. You have already put your hand over the emergency stop.",
+    "5": "The wheel has been at the top for a long time. You tell {player_name} you made a wish when it stopped, and you will not say it until he makes one too."
+  },
+  "path_twists": {
+    "YANDERE": "You know exactly how long the ride lasts, and you have already decided he is not going down without you.",
+    "SPLIT": "You confess, then tell him you were joking, then ask him why he would ever think you were joking.",
+    "AWAKE": "The park lights below blink in the same pattern as your heartbeat. You tell him the wheel is not stuck; the world has stopped arriving."
+  },
+  "events": [
+    {
+      "at_turn": 2,
+      "line": "The car sways, and the lights below tilt."
+    },
+    {
+      "at_turn": 5,
+      "line": "The wheel stops. The park alarms do not ring."
+    },
+    {
+      "on_trigger": "T04",
+      "line": "The words you practised in the queue come back in the wrong order."
+    }
+  ],
+  "end": {
+    "min_turns": 6,
+    "max_turns": 12,
+    "on_goal": "end_date"
+  },
+  "opening_beats": {
+    "0": [
+      {
+        "feeling": "nervous",
+        "intensity": 1,
+        "cue": "sigh",
+        "say": "I had something to say, and I practised it in the queue. Give me one second."
+      }
+    ],
+    "1": [
+      {
+        "feeling": "nervous",
+        "intensity": 2,
+        "cue": "none",
+        "say": "It's not your fault. It's just a long way down, and I keep losing the sentence."
+      }
+    ],
+    "2": [
+      {
+        "feeling": "shy",
+        "intensity": 2,
+        "cue": "none",
+        "say": "I like you. I mean — I like you, and I wanted to say it up here."
+      }
+    ],
+    "3": [
+      {
+        "feeling": "love",
+        "intensity": 2,
+        "cue": "heartbeat",
+        "say": "The wheel stopped, and I don't mind. I'd be happy to be stuck here with you."
+      }
+    ],
+    "4": [
+      {
+        "feeling": "pleading",
+        "intensity": 3,
+        "cue": "heartbeat_fast",
+        "say": "Could it stay at the top, just for a while? I've already thought about it."
+      }
+    ],
+    "5": [
+      {
+        "feeling": "manic",
+        "intensity": 3,
+        "cue": "breath_close",
+        "say": "I made a wish when we stopped. You have to make one too, or mine won't work."
+      }
+    ]
+  }
+}

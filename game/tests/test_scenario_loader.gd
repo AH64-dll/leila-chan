@@ -244,4 +244,7 @@ func test_every_shipped_scenario_validates_and_has_stage_variants() -> void:
 		)
 		var twists: Dictionary = scenario["path_twists"]
 		assert_int(twists.size()).override_failure_message(file_name).is_greater_equal(2)
-	assert_int(checked).is_greater_equal(7)
+	# P2.18 shipped 7 (D01, D02, D03, D04, D06, D11, I01); P3.15 shipped the
+	# other 14 the P3 scenario target names (D05, D07-D10, D12, I02, I03, I05,
+	# I08, I13, I15 and the two path set-pieces), so the floor is 21 files.
+	assert_int(checked).is_greater_equal(21)

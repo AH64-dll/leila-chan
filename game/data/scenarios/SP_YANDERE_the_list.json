@@ -1,0 +1,70 @@
+{
+  "id": "SP_YANDERE_the_list",
+  "kind": "setpiece",
+  "title": "The list",
+  "background": "bg/her_room",
+  "music": "tense",
+  "ambience": "none",
+  "available": {
+    "days": [4, 14],
+    "stages": [3, 5],
+    "paths": ["YANDERE"]
+  },
+  "goal": "Read {player_name} the list of names and cross them out.",
+  "prompt": "You have a sheet of paper on your knees and a pen in your hand. There are names on it in two columns, and some are already crossed out.",
+  "stage_variants": {
+    "3": "You read him the list of everyone he has mentioned since you met, crossing each name out as you say it. You ask him to tell you if you missed anyone.",
+    "4": "The list has more names than he has ever said. You pause at each one to watch his face, and you cross out the ones that make him look away.",
+    "5": "There is one name left and it is not crossed out. You hold the pen over it and ask {player_name} what he thinks you should do."
+  },
+  "path_twists": {
+    "YANDERE": "You have written his name at the top of the list, too, and you have not crossed it out yet.",
+    "HOLLOW": "You read the names aloud and none of them feel like anyone. You ask him who these people are and why you wrote them down.",
+    "SPLIT": "You cross out a name, then write it back in, then cross it out again while telling him it was never there."
+  },
+  "events": [
+    {
+      "at_turn": 1,
+      "line": "The pen scratches through the paper on the second name."
+    },
+    {
+      "at_turn": 3,
+      "line": "A name on the page fades before you read it."
+    },
+    {
+      "on_trigger": "T01",
+      "line": "A new name appears at the bottom of the list in your handwriting."
+    }
+  ],
+  "end": {
+    "min_turns": 3,
+    "max_turns": 6,
+    "on_goal": "end_date"
+  },
+  "opening_beats": {
+    "3": [
+      {
+        "feeling": "cold",
+        "intensity": 2,
+        "cue": "clock_tick",
+        "say": "I made a list of everyone you've mentioned since we met. I'll read it slowly."
+      }
+    ],
+    "4": [
+      {
+        "feeling": "suspicious",
+        "intensity": 3,
+        "cue": "none",
+        "say": "There are more names than you've said out loud. Let's see which ones make you look away."
+      }
+    ],
+    "5": [
+      {
+        "feeling": "manic",
+        "intensity": 3,
+        "cue": "breath_close",
+        "say": "One name left, {player_name}. You can tell me what to do with it."
+      }
+    ]
+  }
+}

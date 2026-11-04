@@ -1,0 +1,97 @@
+{
+  "id": "D07_aquarium",
+  "kind": "date",
+  "title": "Aquarium",
+  "background": "bg/aquarium",
+  "music": "calm",
+  "ambience": "none",
+  "available": {
+    "days": [3, 11],
+    "stages": [0, 5],
+    "paths": "any"
+  },
+  "goal": "Show {player_name} the jellyfish.",
+  "prompt": "The aquarium is closing in an hour. The blue light from the tank moves over both your faces, and the jellyfish drift without touching anything.",
+  "stage_variants": {
+    "0": "You show {player_name} the jellyfish first because they are your favourite. You tell him they are the only animals that do not need to hold on to anything.",
+    "1": "You tell him you come here on days when you cannot remember the walk home. Then you point at a jellyfish and say it has the same name as one in a book.",
+    "2": "You watch the glass instead of the fish. You ask {player_name} whether the jellyfish know they are being looked at, then laugh at your own question.",
+    "3": "The tank is too small for what you want to say. You tell him you know how it feels to be watched through glass, and you do not move away from it.",
+    "4": "You press your palm flat to the glass and count the jellyfish until the count stops matching. You ask {player_name} which one is the real one.",
+    "5": "The jellyfish are all on the outside of the glass now. You keep your hand up so they come to it, and you tell {player_name} they only sting when they are left alone."
+  },
+  "path_twists": {
+    "YANDERE": "You have counted every person who looks at {player_name} in this room, and you are not finished.",
+    "AWAKE": "The tank reflection lags behind him by one second. You tell him the glass is a frame rate, and the fish are painted on it.",
+    "ANCHOR": "You ask him to tell you when your sentences start to sound borrowed. You are serious, and it costs you something."
+  },
+  "events": [
+    {
+      "at_turn": 2,
+      "line": "A jellyfish pulses once against the glass where your hand is."
+    },
+    {
+      "at_turn": 5,
+      "line": "The lights in the hall hum and drop to half brightness."
+    },
+    {
+      "on_trigger": "T01",
+      "line": "A classmate taps on the glass from the far side and waves at {player_name}."
+    }
+  ],
+  "end": {
+    "min_turns": 6,
+    "max_turns": 12,
+    "on_goal": "end_date"
+  },
+  "opening_beats": {
+    "0": [
+      {
+        "feeling": "joy",
+        "intensity": 1,
+        "cue": "giggle",
+        "say": "They're my favourite. They don't have to hold on to anything — they just float."
+      }
+    ],
+    "1": [
+      {
+        "feeling": "curious",
+        "intensity": 1,
+        "cue": "none",
+        "say": "I know this tank. I come here on the days I can't remember walking home."
+      }
+    ],
+    "2": [
+      {
+        "feeling": "nervous",
+        "intensity": 2,
+        "cue": "none",
+        "say": "Do you think they know we're looking at them? Sorry, that's a strange thing to ask."
+      }
+    ],
+    "3": [
+      {
+        "feeling": "cold",
+        "intensity": 2,
+        "cue": "clock_tick",
+        "say": "I know how it feels to be watched through glass. I don't mind it when it's you."
+      }
+    ],
+    "4": [
+      {
+        "feeling": "empty",
+        "intensity": 3,
+        "cue": "breath_close",
+        "say": "I count them every time and get a different number. Which one is real, {player_name}?"
+      }
+    ],
+    "5": [
+      {
+        "feeling": "manic",
+        "intensity": 3,
+        "cue": "laugh_unhinged",
+        "say": "Look — they're on our side of the glass now. They only sting when you leave."
+      }
+    ]
+  }
+}

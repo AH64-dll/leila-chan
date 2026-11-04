@@ -1,0 +1,97 @@
+{
+  "id": "D05_library",
+  "kind": "date",
+  "title": "Library",
+  "background": "bg/library",
+  "music": "calm",
+  "ambience": "ambience.paper",
+  "available": {
+    "days": [2, 12],
+    "stages": [0, 5],
+    "paths": "any"
+  },
+  "goal": "Recommend a book to {player_name}.",
+  "prompt": "The school library is almost empty. You are standing between two tall shelves with {player_name}, and the only sound is the radiator ticking.",
+  "stage_variants": {
+    "0": "You want to lend {player_name} your favourite novel. You have been carrying it in your bag for a week in case he asked.",
+    "1": "You slide the novel across the table before he asks. You tell him you have read it twice, then three times, then stop talking about it.",
+    "2": "You tell him the book is about a boy who keeps coming back to the same room. Then you say it is just a story, and hold the cover so he cannot read the back.",
+    "3": "The book he opens is about him. It is in your handwriting, every page, and the boy in it did exactly what he did today.",
+    "4": "You have written the next chapter already. You ask him to read it aloud in your voice, and you watch his mouth on your words.",
+    "5": "Every book on the shelf has your handwriting inside. You take one down and read him the part where he never leaves the library."
+  },
+  "path_twists": {
+    "YANDERE": "You have already stamped the book with his name, and you have already taken every other copy off the shelf.",
+    "AWAKE": "The page numbers keep changing while he reads. You tell him the library is still being written.",
+    "HOLLOW": "You ask {player_name} which book he borrowed last time, and then you ask him who wrote it, and then you forget why you are standing there."
+  },
+  "events": [
+    {
+      "at_turn": 2,
+      "line": "The radiator ticks once, loud in the quiet."
+    },
+    {
+      "at_turn": 5,
+      "line": "The librarian's chair is empty, and the lamp above it is still warm."
+    },
+    {
+      "on_trigger": "T01",
+      "line": "A name written in the margin of a returned book catches your eye."
+    }
+  ],
+  "end": {
+    "min_turns": 6,
+    "max_turns": 12,
+    "on_goal": "end_date"
+  },
+  "opening_beats": {
+    "0": [
+      {
+        "feeling": "shy",
+        "intensity": 1,
+        "cue": "none",
+        "say": "Um — you can borrow it. It's my favourite novel, and I've read it twice."
+      }
+    ],
+    "1": [
+      {
+        "feeling": "nervous",
+        "intensity": 1,
+        "cue": "none",
+        "say": "I brought this for you. I've read it three times, which isn't the point."
+      }
+    ],
+    "2": [
+      {
+        "feeling": "nervous",
+        "intensity": 2,
+        "cue": "none",
+        "say": "It's about a boy who keeps coming back to the same room. It's just a story, though."
+      }
+    ],
+    "3": [
+      {
+        "feeling": "love",
+        "intensity": 2,
+        "cue": "heartbeat",
+        "say": "This page is about today — see the handwriting? That's mine."
+      }
+    ],
+    "4": [
+      {
+        "feeling": "love",
+        "intensity": 3,
+        "cue": "heartbeat_fast",
+        "say": "Read the next line out loud. I want to hear it in your voice."
+      }
+    ],
+    "5": [
+      {
+        "feeling": "empty",
+        "intensity": 3,
+        "cue": "whisper",
+        "say": "There's a book for every day you've been here. This one's the day you stayed."
+      }
+    ]
+  }
+}

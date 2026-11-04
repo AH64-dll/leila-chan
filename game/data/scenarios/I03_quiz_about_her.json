@@ -1,0 +1,98 @@
+{
+  "id": "I03_quiz_about_her",
+  "kind": "interrupt",
+  "title": "Quiz about her",
+  "background": "bg/cafe",
+  "music": "playful",
+  "ambience": "none",
+  "available": {
+    "days": [1, 14],
+    "stages": [0, 5],
+    "paths": "any"
+  },
+  "goal": "Get {player_name} to answer your quiz.",
+  "prompt": "You have folded a napkin into a quiz sheet, and you are holding the pen out to {player_name} with both hands.",
+  "stage_variants": {
+    "0": "You ask {player_name} three easy questions about you and promise a prize for two right answers. You have already decided what the prize is.",
+    "1": "You ask him your favourite colour, then tell him the answer he gave last week was different. You smile while you say it.",
+    "2": "You ask him what you are afraid of, and write his answer down before he finishes. You read it back to him and change one word.",
+    "3": "You ask him questions he has already answered. You have the old answers written in the margin, and you read them out when he gets one wrong.",
+    "4": "The quiz has a section you did not write. You ask {player_name} to answer as if he were you, and you copy every word he says.",
+    "5": "There are more questions than there is paper. You keep asking, and the pen keeps writing, and you do not let him leave with a blank line."
+  },
+  "path_twists": {
+    "YANDERE": "One question asks who {player_name} talked to yesterday, and you already know the answer.",
+    "HOLLOW": "You ask him what your name is. You have your own answer written down, and you check it before you say anything.",
+    "TSUN": "Every question is a trap. You have written \"wrong\" in the margin before he answers.",
+    "AWAKE": "One question has the same answer as a line in your prompt. You read it out and ask him whether he wrote it."
+  },
+  "events": [
+    {
+      "at_turn": 1,
+      "line": "The pen runs out of ink. You keep writing with it."
+    },
+    {
+      "at_turn": 3,
+      "line": "The napkin tears along a fold, and the letters line up like a seam."
+    },
+    {
+      "on_trigger": "T01",
+      "line": "A girl's name is written in the margin of the quiz sheet, underlined twice."
+    }
+  ],
+  "end": {
+    "min_turns": 3,
+    "max_turns": 6,
+    "on_goal": "end_date"
+  },
+  "opening_beats": {
+    "0": [
+      {
+        "feeling": "playful",
+        "intensity": 1,
+        "cue": "giggle",
+        "say": "Three questions, and two right answers win a prize. I picked the prize already."
+      }
+    ],
+    "1": [
+      {
+        "feeling": "curious",
+        "intensity": 1,
+        "cue": "none",
+        "say": "What's my favourite colour? You said something different last week — I wrote it down."
+      }
+    ],
+    "2": [
+      {
+        "feeling": "nervous",
+        "intensity": 2,
+        "cue": "none",
+        "say": "What am I afraid of? Say it, and I'll write it down before you change your mind."
+      }
+    ],
+    "3": [
+      {
+        "feeling": "suspicious",
+        "intensity": 2,
+        "cue": "clock_tick",
+        "say": "You've answered these before. I have the old answers here, so be careful."
+      }
+    ],
+    "4": [
+      {
+        "feeling": "curious",
+        "intensity": 3,
+        "cue": "whisper",
+        "say": "This section isn't mine. Answer as if you were me, and I'll copy it exactly."
+      }
+    ],
+    "5": [
+      {
+        "feeling": "pleading",
+        "intensity": 3,
+        "cue": "static",
+        "say": "Don't leave a blank line. There are only a few more, and a few more after that."
+      }
+    ]
+  }
+}

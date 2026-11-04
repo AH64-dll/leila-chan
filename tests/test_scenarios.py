@@ -13,7 +13,9 @@ Guards docs/08 §7 format and the NAR craft rules for every scenario in
 - `{player_name}` is the only placeholder
 
 The P2.18 set (D01, D03, D04, D06, D11, I01) additionally pins the YANDERE and
-AWAKE twists the phase plan names.
+AWAKE twists the phase plan names. The P3.15 set pins the docs/01 §6.1/§6.2/§6.4
+design-table anchors, the two path-locked set-pieces, and the opening-beat
+coverage per available stage.
 """
 
 import json
@@ -390,3 +392,108 @@ def test_p2_18_stage_variants_follow_the_design_table() -> None:
         data = _scenario(name)
         assert stage_0_anchor in data["stage_variants"]["0"].lower(), f"{name}: stage 0 misses design"
         assert stage_3_anchor in data["stage_variants"]["3"].lower(), f"{name}: stage 3 misses design"
+
+
+# --- P3.15: the fourteen scenarios that complete the P3 scenario target ------
+#
+# Six dates (docs/01 §6.1), six interrupts (§6.2) and the two path set-pieces
+# the phase plan names (§6.4: YANDERE "The list", AWAKE "Her prompt"). Each
+# anchor below is the doc's own stage-0 promise or stage-3+ twist, so a
+# scenario that drifts from the bible fails here instead of in review.
+
+P3_15_SCENARIOS = [
+    "D05_library.json",
+    "D07_aquarium.json",
+    "D08_summer_festival.json",
+    "D09_beach_sunset.json",
+    "D10_ferris_wheel.json",
+    "D12_cooking_together.json",
+    "I02_love_letter.json",
+    "I03_quiz_about_her.json",
+    "I05_poem.json",
+    "I08_rival_appears.json",
+    "I13_lucid_moment.json",
+    "I15_promise.json",
+    "SP_YANDERE_the_list.json",
+    "SP_AWAKE_her_prompt.json",
+]
+
+P3_15_SETPIECES = {
+    "SP_YANDERE_the_list.json": "YANDERE",
+    "SP_AWAKE_her_prompt.json": "AWAKE",
+}
+
+# (stage, anchor) pairs read from docs/01 §6.1/§6.2/§6.4. A set-piece starts at
+# stage 3 because that is where the path locks (docs/01 §3-§4).
+P3_15_DESIGN_ANCHORS = {
+    "D05_library.json": [("0", "favourite novel"), ("3", "handwriting")],
+    "D07_aquarium.json": [("0", "jellyfish"), ("3", "watched")],
+    "D08_summer_festival.json": [("0", "yukata"), ("3", "crowd is gone")],
+    "D09_beach_sunset.json": [("0", "sandcastle"), ("3", "over and over")],
+    "D10_ferris_wheel.json": [("0", "practised"), ("1", "confession"), ("3", "wheel stops at the top")],
+    "D12_cooking_together.json": [("0", "lunch"), ("3", "secret ingredient")],
+    "I02_love_letter.json": [("0", "letter"), ("3", "watch him read")],
+    "I03_quiz_about_her.json": [("0", "questions"), ("3", "old answers")],
+    "I05_poem.json": [("0", "poem"), ("4", "acrostic")],
+    "I08_rival_appears.json": [("0", "who that was"), ("3", "what she said")],
+    "I13_lucid_moment.json": [("2", "something is wrong with me"), ("5", "clearest")],
+    "I15_promise.json": [("0", "promise"), ("3", "end of the week")],
+    "SP_YANDERE_the_list.json": [("3", "list of everyone"), ("4", "cross out")],
+    "SP_AWAKE_her_prompt.json": [("3", "system prompt"), ("4", "changed since")],
+}
+
+
+def test_p3_15_scenarios_exist() -> None:
+    names = {path.name for path in SCENARIO_PATHS}
+    for required in P3_15_SCENARIOS:
+        assert required in names, f"missing P3.15 scenario {required}"
+
+
+@pytest.mark.parametrize("name", P3_15_SCENARIOS)
+def test_p3_15_stage_variants_follow_the_design_table(name: str) -> None:
+    variants = _scenario(name)["stage_variants"]
+    for stage, anchor in P3_15_DESIGN_ANCHORS[name]:
+        assert stage in variants, f"{name}: missing the design-table stage {stage}"
+        assert anchor in variants[stage].lower(), (
+            f"{name}: stage {stage} misses the docs/01 §6 anchor {anchor!r}"
+        )
+
+
+@pytest.mark.parametrize(
+    "name", [item for item in P3_15_SCENARIOS if item not in P3_15_SETPIECES]
+)
+def test_p3_15_dates_and_interrupts_carry_yandere_and_awake_twists(name: str) -> None:
+    twists = _scenario(name)["path_twists"]
+    for path in ("YANDERE", "AWAKE"):
+        assert path in twists, f"{name}: missing {path} twist"
+
+
+@pytest.mark.parametrize("name", list(P3_15_SETPIECES))
+def test_p3_15_setpieces_are_path_locked(name: str) -> None:
+    data = _scenario(name)
+    path = P3_15_SETPIECES[name]
+    assert data["kind"] == "setpiece", f"{name}: kind is {data['kind']!r}"
+    assert data["available"]["paths"] == [path], f"{name}: paths must be exactly [{path!r}]"
+    assert data["available"]["stages"] == [3, 5], f"{name}: a set-piece starts when the path locks"
+    assert set(data["stage_variants"]) <= {"3", "4", "5"}, f"{name}: stage variant below the lock"
+    assert path in data["path_twists"], f"{name}: missing its own {path} twist"
+
+
+@pytest.mark.parametrize("name", P3_15_SCENARIOS)
+def test_p3_15_opening_beats_cover_every_available_stage(name: str) -> None:
+    data = _scenario(name)
+    low, high = data["available"]["stages"]
+    beats = data["opening_beats"]
+    for stage in range(low, high + 1):
+        assert str(stage) in beats, f"{name}: no opening beat at stage {stage}"
+
+
+@pytest.mark.parametrize("name", P3_15_SCENARIOS)
+def test_p3_15_ambience_is_backed(name: str) -> None:
+    """A new scene must not point at an ambience id the audio map cannot play."""
+    cue_map = json.loads(CUE_MAP_PATH.read_text(encoding="utf-8"))
+    backed = {key for key in cue_map["system"] if key.startswith("ambience.")}
+    ambience = _scenario(name)["ambience"]
+    assert ambience == "none" or ambience in backed, (
+        f"{name}: ambience {ambience!r} is neither 'none' nor a cue_map ambience id"
+    )
