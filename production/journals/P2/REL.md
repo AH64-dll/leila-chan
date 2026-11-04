@@ -20,3 +20,16 @@
   audited — the check independently finds the E34a handoff deletions in `50752b7` and `84fee93`).
 - CI cannot run this: `actions/checkout` is shallow and both audits need the merge base plus both parents. It is a
   producer/local gate; if it ever becomes a CI gate, fetch both parents and use `--post`.
+
+## P2.25 — round 2 (2026-11-04, agent: commandcode)
+
+- Fixed the five round-1 findings: both-sides deletion is now `BOTH-DELETED` (reported, never blocking), so the pre
+  check and `--post` cannot disagree about a merge git resolves by itself; delete-vs-edit now says which copy
+  survives; `--allow` and the git-missing/timeout → exit 2 contract are tested (20 cases, was 14).
+- Convention worth keeping: a finding that only means "look at this" must not block, and anything that blocks must
+  be reproducible by `--post` on the same merge — otherwise the gate teaches people to ignore it. That rule is why
+  delete/delete passes and why `--allow` exists only after a resolution.
+- All git execution goes through one `_run_git()` guard. Never call `subprocess.run(["git", …])` directly in a gate:
+  a missing binary or a hang must land on the documented exit 2, not a traceback that reads like lost work.
+- Gotcha: `--post HEAD` is only valid while `HEAD` *is* the merge, and the journal/handoff commit moves it. Cite the
+  merge id (`--post 3da2d24`) in evidence, or the reviewer re-runs the command and gets "not a merge commit" (exit 2).
