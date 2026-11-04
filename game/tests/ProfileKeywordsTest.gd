@@ -18,6 +18,10 @@ func test_control_rule_matches_whole_words() -> void:
 	assert_bool(ProfileKeywordsScript.classify("Come here.").has(&"control")).is_true()
 	# Punctuation and case do not matter.
 	assert_bool(ProfileKeywordsScript.classify("  BE QUIET!! ").has(&"control")).is_true()
+	# CODE-3: "you will", "you must" and "i said" are ordinary sentences, not
+	# orders, so they are no longer phrases.
+	for line: String in ["You will love this movie.", "You must be tired.", "I said I'm sorry."]:
+		assert_bool(ProfileKeywordsScript.classify(line).has(&"control")).is_false()
 
 
 func test_apathy_phrases_and_short_replies() -> void:
@@ -31,6 +35,37 @@ func test_apathy_phrases_and_short_replies() -> void:
 		assert_bool(ProfileKeywordsScript.classify(line).has(&"apathy")).is_false()
 	assert_bool(ProfileKeywordsScript.classify("why?").has(&"apathy")).is_false()
 	assert_bool(ProfileKeywordsScript.classify("I love you").has(&"apathy")).is_false()
+	# CODE-1: a phrase inside a longer, engaged line is not a dismissal — the
+	# message must BE the dismissal ("I don't care." above, not this).
+	for line: String in [
+		"I don't care about her, I care about you.",
+		"I'm not sure what you mean.",
+		"That's fine, I understand.",
+		"Cool, let's go.",
+	]:
+		assert_bool(ProfileKeywordsScript.classify(line).has(&"apathy")).is_false()
+	# CODE-2: exemptions match whole words — 'sorry' does cover "I'm sorry", and
+	# 'no'/'hi' no longer exempt "nothing"/"him" by prefix.
+	for line: String in ["I'm sorry.", "so sorry"]:
+		assert_bool(ProfileKeywordsScript.classify(line).has(&"apathy")).is_false()
+	assert_bool(ProfileKeywordsScript.classify("nothing").has(&"apathy")).is_true()
+	assert_bool(ProfileKeywordsScript.classify("him").has(&"apathy")).is_true()
+
+
+func test_caring_question_is_never_a_dismissal() -> void:
+	# CODE-1 / DES-1: a question asks, whatever word it contains, so a caring
+	# question is neither apathy nor ignoring her — even though her last turn was
+	# a direct question.
+	var question := "Do you love me?"
+	for line: String in [
+		"Whatever, do you love me?",  # a retained dismissal phrase, inside a question
+		"Do you care? I don't know.",  # and another one
+		"Are you sure you're okay?",  # the round-1 false positive
+		"Is that fine with you?",  # ditto, from the dropped single-word stems
+	]:
+		var bumps: Dictionary = ProfileKeywordsScript.classify(line, "", question)
+		assert_bool(bumps.has(&"apathy")).is_false()
+		assert_bool(bumps.has(&"ignored_questions")).is_false()
 
 
 func test_flattery_rejected_needs_both_sides() -> void:
@@ -60,6 +95,13 @@ func test_ignored_question_rule() -> void:
 		assert_bool(ProfileKeywordsScript.classify("Whatever.", "", "").has(&"ignored_questions"))
 		. is_false()
 	)
+	# DES-1: a terse answer to her question is an answer, not a dismissal — the
+	# apathy half cannot fire either, or answering would score HOLLOW twice.
+	var answered: Dictionary = ProfileKeywordsScript.classify("At work", "", question)
+	assert_bool(answered.has(&"apathy")).is_false()
+	assert_bool(answered.has(&"ignored_questions")).is_false()
+	# Without a pending question the same terse line is a short reply (§4.4).
+	assert_bool(ProfileKeywordsScript.classify("At work").has(&"apathy")).is_true()
 
 
 func test_question_in_and_reply_text() -> void:
@@ -118,6 +160,7 @@ func test_shipped_data_covers_every_keyword_counter() -> void:
 	for phrase: Variant in rules["control"]["phrases"]:
 		assert_str(str(phrase)).is_not_empty()
 	assert_int(int(rules["apathy"]["short_reply_words"])).is_equal(2)
+	assert_int(int(rules["apathy"]["dismissal_max_words"])).is_equal(6)
 	assert_bool(rules["flattery_rejected"]["rejection"].is_empty()).is_false()
 	# A previously shipped counter must still classify after the loader runs.
 	assert_bool(ProfileKeywordsScript.classify("Whatever.").has(&"apathy")).is_true()

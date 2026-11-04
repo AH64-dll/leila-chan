@@ -337,6 +337,22 @@ func test_keyword_rules_feed_the_scores() -> void:
 	assert_float(float(s.path_scores["TSUN"])).is_equal_approx(2.0, EPS)
 
 
+func test_caring_lines_do_not_score_hollow() -> void:
+	# DES-1 regression at the path level: a caring question, a reassurance and a
+	# terse answer to her question must leave HOLLOW at zero — no score, no
+	# evidence stamp — so a warm player can neither be assigned nor lock HOLLOW.
+	var s: Variant = _state()
+	s.set_meter(&"instability", 30.0)
+	_turn(s, &"question", "Are you sure you're okay?")
+	_turn(s, &"affection", "I don't care about her, I care about you.", "Where were you?")
+	_turn(s, &"", "At work")
+	assert_int(_counter(s, &"apathy")).is_zero()
+	assert_int(_counter(s, &"ignored_questions")).is_zero()
+	assert_float(float(s.path_scores["HOLLOW"])).is_equal_approx(0.0, EPS)
+	assert_bool(s.path_evidence.has("HOLLOW")).is_false()
+	assert_str(String(s.path)).is_not_equal("HOLLOW")
+
+
 func test_broken_promises_feeds_split() -> void:
 	# docs/01 §4: SPLIT = 3·inconsistency + leaving_talk + 4·broken_promises. The
 	# promise counter is engine-fed (docs/01 §5 I15); the formula reads it.

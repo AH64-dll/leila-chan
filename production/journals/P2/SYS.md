@@ -177,3 +177,23 @@
   method count; the read block replacement (4 lines → 3) paid for the replay's `_current_player_input`.
 - Next SYS on this seam: P2.19 gets assign/lock free via `_refresh_stage`; P2.20 must save
   `path_scores`/`path_evidence`/`path_runner_up`/`last_question`; P2.10 bumps T15/I15 counters.
+
+## P2.12 — fracture paths (round 2, 2026-11-04, agent: deepseek)
+
+- Reworked the keyword half only: `_is_apathy()` now runs the `?` check first, gates a dismissal phrase on
+  `dismissal_max_words` (new data cap, 6 — a dismissal is the *message*), and takes `awaiting_answer` so a
+  terse reply to her pending question is an answer. Exemptions go through `_has_any()`, so "I'm sorry" is
+  exempt and "nothing"/"him" are not.
+- Convention: every keyword predicate answers "is this the *message's* behaviour?" — the r1 bug was scoring
+  a word inside an engaged sentence. If a future counter needs sub-message structure, put the phrasing in the
+  data file, not in a bigger predicate.
+- Convention: `ignored_questions` is now nested under the dismissal in `classify()` — T15 can only fire when
+  the apathy rule fired *and* a question was pending, which keeps the two counters from drifting apart.
+- Gotcha: `tests/test_paths.py::test_keyword_rules_are_string_lists` walks every key in a rule block and
+  treats non-`short_reply_words` values as phrase lists — a new integer knob there fails the pytest suite,
+  not gdUnit. Add the key to that test when you add a cap.
+- Gotcha: a short line can be a dismissal or an answer; only `last_question` tells them apart, and
+  `GameState.apply_turn_profile` passes the *previous* turn's question, so a test must ask in turn N-1 to
+  exercise the answer path.
+- Next SYS on this seam: `dismissal_max_words` is the tuning knob (raise it if engaged lines slip through;
+  add a phrase if dismissals are missed). "Whatever, I love you." still scores apathy by design.

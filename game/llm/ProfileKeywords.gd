@@ -23,7 +23,13 @@ const TABLE_PATH := "res://data/profile_keywords.json"
 ## in the data file (docs/07 §2), so the fallback is silence, not a second copy.
 const EMPTY_TABLE := {
 	"control": {"phrases": []},
-	"apathy": {"phrases": [], "short_reply_words": 0, "short_reply_exempt": []},
+	"apathy":
+	{
+		"phrases": [],
+		"dismissal_max_words": 0,
+		"short_reply_words": 0,
+		"short_reply_exempt": [],
+	},
 	"flattery_rejected": {"flattery": [], "rejection": []},
 }
 
@@ -84,17 +90,20 @@ static func classify(player_text: String, reply_text := "", last_question := "")
 	if _has_any(text, control["phrases"]):
 		bumps[&"control"] = 1
 	var apathy: Dictionary = rules["apathy"]
-	var dismissive := _is_apathy(player_text, text, apathy)
+	var question := _normalise(last_question)
+	var dismissive := _is_apathy(player_text, text, apathy, not question.is_empty())
 	if dismissive:
 		bumps[&"apathy"] = 1
+		# docs/01 §5 T15 needs a *pending* question and a dismissal; a dismissal
+		# with nothing asked is the apathy counter's business alone.
+		if not question.is_empty():
+			bumps[&"ignored_questions"] = 1
 	var rejected: Dictionary = rules["flattery_rejected"]
 	if (
 		_has_any(text, rejected["flattery"])
 		and _has_any(_normalise(reply_text), rejected["rejection"])
 	):
 		bumps[&"flattery_rejected"] = 1
-	if dismissive and not _normalise(last_question).is_empty():
-		bumps[&"ignored_questions"] = 1
 	return bumps
 
 
@@ -125,23 +134,31 @@ static func question_in(turn_data: Dictionary) -> String:
 	return found.left(200)
 
 
-## docs/01 §4.4: "short replies" count as apathy. A reply at or under the word
-## cap that asks nothing and is not an exempt courtesy/answer is dismissive; a
-## phrase match wins over the exemption (an explicit "whatever" is never warm).
-static func _is_apathy(raw_text: String, text: String, rule: Dictionary) -> bool:
-	if _has_any(text, rule["phrases"]):
-		return true
-	var cap := int(rule.get("short_reply_words", 0))
-	if cap <= 0 or raw_text.contains("?"):
+## docs/01 §4.4: "short replies" count as apathy. Three narrowings keep a warm
+## player out of it, because the data contract is "a dismissive phrase, or a
+## short reply" — the *message* is the behaviour, never a word inside a message:
+## - a question asks, so it is never a dismissal ("Are you sure you're okay?");
+## - a dismissal phrase scores only when the whole line is short enough to *be*
+##   the dismissal ("I don't care." yes, "I don't care about her, I care about
+##   you." no), and a phrase match wins over the exemption (an explicit
+##   "whatever" is never warm);
+## - a terse reply to her direct question is an answer, not a dismissal (docs/01
+##   §5 T15 counts ignoring her, and answering is not ignoring).
+static func _is_apathy(
+	raw_text: String, text: String, rule: Dictionary, awaiting_answer: bool
+) -> bool:
+	if raw_text.contains("?"):
 		return false
 	var words := text.split(" ", false)
-	if words.size() > cap:
+	var phrase_cap := int(rule.get("dismissal_max_words", 0))
+	if phrase_cap > 0 and words.size() <= phrase_cap and _has_any(text, rule["phrases"]):
+		return true
+	if awaiting_answer:
 		return false
-	for exempt: Variant in rule["short_reply_exempt"]:
-		var phrase := _normalise(str(exempt))
-		if not phrase.is_empty() and text.begins_with(phrase):
-			return false
-	return true
+	var cap := int(rule.get("short_reply_words", 0))
+	if cap <= 0 or words.size() > cap:
+		return false
+	return not _has_any(text, rule["short_reply_exempt"])
 
 
 ## Whole-word phrase match on already-normalised text.
@@ -188,8 +205,9 @@ static func parse_document(parsed: Variant) -> Dictionary:
 	var apathy_source: Variant = document.get("apathy")
 	var apathy := _parse_block(apathy_source, ["phrases", "short_reply_exempt"])
 	if not apathy.is_empty():
-		var word_cap: Variant = (apathy_source as Dictionary).get("short_reply_words")
-		apathy["short_reply_words"] = _parse_word_cap(word_cap)
+		var block: Dictionary = apathy_source
+		apathy["dismissal_max_words"] = _parse_word_cap(block.get("dismissal_max_words"), 12)
+		apathy["short_reply_words"] = _parse_word_cap(block.get("short_reply_words"), 6)
 		out["apathy"] = apathy
 	var flattery := _parse_block(document.get("flattery_rejected"), ["flattery", "rejection"])
 	if not flattery.is_empty():
@@ -225,11 +243,11 @@ static func _parse_strings(value: Variant) -> Array[String]:
 	return out
 
 
-## The short-reply word cap: a small non-negative integer, 0 = rule disabled.
-static func _parse_word_cap(value: Variant) -> int:
+## A word cap: a small non-negative integer, 0 = that rule is off.
+static func _parse_word_cap(value: Variant, maximum: int) -> int:
 	if not (value is int or value is float):
 		return 0
 	var number := float(value)
-	if not is_finite(number) or number != floor(number) or number < 0.0 or number > 6.0:
+	if not is_finite(number) or number != floor(number) or number < 0.0 or number > float(maximum):
 		return 0
 	return int(number)

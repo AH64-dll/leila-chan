@@ -191,11 +191,17 @@ def test_keyword_rules_are_string_lists() -> None:
             if key == "short_reply_words":
                 assert isinstance(value, int) and 1 <= value <= 3
                 continue
+            if key == "dismissal_max_words":
+                assert isinstance(value, int) and 1 <= value <= 12
+                continue
             assert isinstance(value, list) and value, f"{counter}.{key} is empty"
             assert all(isinstance(item, str) and item.strip() for item in value), (
                 f"{counter}.{key} holds a non-string or blank phrase"
             )
     assert KEYWORDS["apathy"]["short_reply_exempt"], "no courtesy is exempt from apathy"
+    assert KEYWORDS["apathy"]["dismissal_max_words"] > KEYWORDS["apathy"]["short_reply_words"], (
+        "a dismissal is the message and a short reply is only part of one"
+    )
     assert KEYWORDS["flattery_rejected"]["rejection"], "no rejection marker"
 
 
