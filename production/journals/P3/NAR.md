@@ -43,3 +43,15 @@
   the *sentence a path's module makes likely*, not only a sweep line — the new test pins stage-2 blocking, the
   stage-4-full opening, the negation guard, and that plain sadness/fear stays clean.
 
+
+## P3.05 — round 3: the evidence run (DES-1)
+
+- A signature-move contract on a 4B model fails two ways: the model never says it, or it says it and the
+  regex cannot hear it. The v3 run split them cleanly — TSUN indifference/sabotage were *sampling*
+  misses (probes that put the move's cadence in `history` produced the lines inside three waves), while
+  AWAKE's prompt recital was a *teaching* miss: she quoted a fabricated page a hundred turns over but
+  never said "my prompt says", because the cue was a bare imperative. A move's surface form belongs in
+  the module, pinned as a contract cue — the next draw after the fix produced it twelve times.
+- `run.py`'s resume contract made this cheap: appending cases re-runs only the new ids, and bumping
+  `--runs` re-draws only the ids that need it — a probe wave costs ~10 s/turn × new rows, not the whole
+  file.
