@@ -353,3 +353,25 @@
 - Gotcha for the suite: the old case drained at both `take_pending_events()` calls before consuming, so its `not_contains` ran against an empty queue and could never fail. The case now consumes with the line still queued, and separately re-holds, then resets — both assertions fail without the erase (l. 274 and 281), which is the only evidence that a test pins a fix.
 - CODE-10: `Triggers._context()`'s flags comment said a fire must not change what a later row's clock detector sees — the opposite of the `observe` contract it now documents. It says the copy isolates *fired effects*, `observe` is the one deliberate same-turn write, and catalogue order (T03 → T04) is what stands T04 down inside one `begin_turn()`. `TriggerEngine._observe()`'s inline note names that order; the file stays at 1000/1000 gdlint lines.
 - Gate green: 791 cases / 65 suites (the merged main added P2.19/P2.25/P2.26 suites), 496 pytest. No data or docs change this round: docs/05 §2's "only on turns with an offer" was already the contract, the code was the thing that disagreed.
+
+## P2.22A — Date wiring: self-start, submit bridge, scene layer (round 1, 2026-11-04, agent: commandcode)
+
+- The P2.22 playtest proved the rule the hard way: a harness that installs a production seam hides that the
+  seam is missing. `Date.start_date()`, `ChatUI.player_turn_sent → Director.submit_player_input` and
+  `Director.scene_info` were all driven by `tools/full_run_driver.gd`; the shipped scene drove none of them.
+- Convention now: the scene starts itself (`auto_start` defaults true; `change_scene_to_file` cannot set an
+  export, so "wait for a caller" means "never"). `auto_start = false` is the *tools/suites* opt-out and must be
+  set before the node enters the tree — every Date host in `game/tests/` now says so out loud.
+- Convention: the Date owns `Director.scene_info`'s value (it is the only node that knows the scenario, stage,
+  turn and path) and installs it *before* the submit, because the Director reads it while building the prompt.
+  Cleared on `date_ended` and in `_exit_tree`; `Director.reset()` clears it too, so a New Game cannot inherit a
+  finished date. The constructor's hard-coded café is gone — empty means "no date in progress", not a lie.
+- Turn number for the scene layer is the Date's `_current_turn` (1-based after the submit), the same number
+  `ScenarioLoader.evaluate_turn_end` and `scenario_playthrough.gd` use for `events[].at_turn`.
+- Gotcha for future suites: GDScript lambdas capture locals **by value**, so a signal counter must be an
+  Array/Dictionary (`starts.append(1)`), never `starts += 1`. Cost me one red run.
+- Gotcha: a suite that (rightly) still calls `Date.start_date()` itself must set `auto_start = false` first, or
+  the deferred self-start and the explicit call both run — the turn counter resets and the greeting replays.
+- Convention: the Date's `_current_turn` names a *played* turn, so it advances only when the Director accepts
+  the line. A Safety refusal is not a turn (docs/02 §4 step 0) — counting it spent an `events[].at_turn` and
+  walked `max_turns` down. The same number feeds `resolve_scene`, `evaluate_turn_end` and the saved scene turn.

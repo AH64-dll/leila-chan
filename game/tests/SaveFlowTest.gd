@@ -120,18 +120,22 @@ func test_loaded_log_is_restored_into_the_chat_log_and_history() -> void:
 	)
 	_date = DatePacked.instantiate()
 	get_tree().root.add_child(_date)
-	await get_tree().process_frame
+	# P2.22 S1-2: Continue's Date starts itself on the next idle frame. The resume
+	# facts land in `_ready`, so they are readable before that start — and must
+	# survive it.
+	assert_bool(_date._resumed).is_true()
 	var entries: Array = _date.chat_ui.chat_log.get_entries()
 	assert_int(entries.size()).is_equal(2)
 	assert_str(String(entries[0]["text"])).is_equal("I kept your seat.")
 	assert_str(String(entries[1]["speaker_key"])).is_equal("player")
-	# A log with entries carries the greeting: the resumed date skips replaying it.
-	assert_bool(_date._resumed).is_true()
 	# the scene the load named was consumed, and its turn counter restored
 	assert_dict(SaveSystem.pending_scene()).is_empty()
-	_date.start_date()
-	assert_int(_date._current_turn).is_equal(3)
+
+	await get_tree().process_frame  # the date starts itself here
+	# A log with entries carries the greeting: the resumed date skips replaying it.
 	assert_bool(_date.is_opening_finished()).is_true()
+	assert_int(_date._current_turn).is_equal(3)
+	assert_int(_date.chat_ui.chat_log.entry_count()).is_equal(2)
 
 
 ## CODE-2: the scene-entry autosave lands before her opening beats reach the
@@ -143,21 +147,18 @@ func test_resume_plays_the_greeting_when_the_saved_log_is_empty() -> void:
 	assert_bool(bool(SaveSystem.load_from_slot(1)["ok"])).is_true()
 
 	_date = DatePacked.instantiate()
-	get_tree().root.add_child(_date)
-	await get_tree().process_frame
-	assert_int(_date.chat_ui.chat_log.entry_count()).is_equal(0)
-	_date.set_reduced_motion(true)  # instant reveal: no typewriter wall-clock wait
 	var finished := [false]
 	_date.opening_beats_finished.connect(func() -> void: finished[0] = true)
-
-	_date.start_date()
+	get_tree().root.add_child(_date)
+	_date.set_reduced_motion(true)  # instant reveal: no typewriter wall-clock wait
+	# P2.22 S1-2: the scene starts itself now, so CODE-2 is asserted through that
+	# start — an empty saved log must not suppress the greeting.
 	assert_bool(_date._resumed).is_false()
-	assert_bool(finished[0]).is_false()  # the greeting started, it was not skipped
-	assert_bool(_date._opening_in_progress).is_true()
+	assert_bool(finished[0]).is_false()  # nothing has played yet
 
 	await _await_until(func() -> bool: return finished[0])
 	assert_bool(finished[0]).is_true()
-	assert_int(_date.chat_ui.chat_log.entry_count()).is_equal(1)
+	assert_int(_date.chat_ui.chat_log.entry_count()).is_equal(1)  # the greeting played
 
 
 ## CODE-1: the per-turn autosave must survive the Director's in-flight window. A
@@ -180,10 +181,9 @@ func test_completed_director_turn_autosaves_after_the_in_flight_window() -> void
 	_backend = GatedBackendScript.new()
 	_backend.chunks = PackedStringArray([TURN_JSON])
 	LLM.set_backend(_backend)
-	# The session node wires this in the running game; the Date only emits it.
-	_date.chat_ui.player_turn_sent.connect(
-		func(text: String) -> void: Director.submit_player_input(text)
-	)
+	# P2.22 S1-1: the Date is the bridge now (Date._on_player_turn_sent), so this
+	# suite must not submit a second time — the reply's autosave is what is under
+	# test here, not the wiring.
 	var busy_at_close := [false]
 	_date.chat_ui.turn_displayed.connect(func() -> void: busy_at_close[0] = Director.is_busy())
 	var line := "Good evening, Leila."

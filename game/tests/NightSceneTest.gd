@@ -188,6 +188,7 @@ func test_date_opens_the_scenario_the_night_queued() -> void:
 	GameState.set_flag(&"next_scenario", NEXT_SCENARIO)
 	var date: Node2D = auto_free(DatePacked.instantiate())
 	date.scene_change_enabled = false
+	date.auto_start = false  # P2.22 S1-2: this test asserts the hand-off, not a date
 	add_child(date)
 	await get_tree().process_frame
 	assert_str(String(date.scenario_path)).is_equal(NEXT_SCENARIO)

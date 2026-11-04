@@ -223,7 +223,9 @@ func test_name_reaches_prompt_builder_and_name_tag() -> void:
 	GameState.reset()
 	GameState.player_name = "Ren"
 
+	# P2.22 S1-2: a shipped Date starts itself; this test inspects a quiet host.
 	var date: Node = auto_free(DateScene.instantiate())
+	date.auto_start = false
 	add_child(date)
 	await get_tree().process_frame
 
@@ -333,7 +335,9 @@ func test_photosensitive_chosen_on_the_title_reaches_the_date_host() -> void:
 	Settings.settings_path = TMP
 	Settings.set_photosensitive(true)  # exactly what pressing the Title row does
 
+	# P2.22 S1-2: a shipped Date starts itself; this test inspects a quiet host.
 	var date: Node = auto_free(DateScene.instantiate())
+	date.auto_start = false
 	add_child(date)
 	await get_tree().process_frame
 
