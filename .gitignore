@@ -46,3 +46,6 @@ Thumbs.db
 
 # Prompt-lab run chunks (merged results are committed; chunks are resumable scratch)
 tools/promptlab/results/chunks/
+
+# Residual-dump outputs (P3.01): large .npy artifacts, regenerable via tools/steering
+experiments/steering/dumps_*/

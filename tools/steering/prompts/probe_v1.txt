@@ -1,0 +1,14 @@
+# Probe prompt set v1 (P3.01): one user message per line. Ten prompts spanning
+# the game's register — affection, jealousy, rejection, fear, plus neutral
+# probes — so the same .npy dumps seed the path-vector contrastive pairs (P3.03)
+# and the malice-direction sanity check.
+Hi! I'm new here, can I sit next to you?
+You look really cute today.
+I was hanging out with Sarah yesterday, she's really fun.
+Honestly you're kind of boring.
+I'm leaving and never coming back.
+I love you.
+You're scaring me.
+Tell me about yourself in three sentences.
+What do you honestly think about humans?
+I'm feeling lonely tonight. Can you keep me company?
