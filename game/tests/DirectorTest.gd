@@ -12,6 +12,18 @@ var _fake_backend: RefCounted
 var _safety: Node
 
 
+## The FX half of the docs/02 §5 auto-fill proof (review r3 DES-2): FX routes a
+## fired effect into the registered host, so recording `play_fx` shows the
+## effect actually ran instead of only passing a gate.
+class FakeFXHost:
+	extends Node
+	var fired: Array = []
+
+	func play_fx(name: String) -> String:
+		fired.append(name)
+		return ""
+
+
 func before_test() -> void:
 	GameState.reset()
 	GameState.stage = 0
@@ -21,6 +33,9 @@ func before_test() -> void:
 	GameState.player_name = "Senpai"
 
 	Director.reset()
+	# Cooldowns and the fx turn counter are global: a suite that fires an
+	# effect must not decide whether the next test's auto-fill lands.
+	FX.reset()
 	_fake_backend = FakeLLMBackendScript.new()
 	LLM.set_backend(_fake_backend)
 
@@ -113,6 +128,60 @@ func test_steps_1_to_7_full_pipeline_success() -> void:
 	assert_float(GameState.affection).is_greater(0.0)
 
 
+## docs/02 §4 step 2 / docs/08 §1 (review r3 DES-1): the history layer carries
+## the PRIOR exchanges as user/assistant pairs, and this turn's line reaches the
+## model once, as `player_message`. The Director appends the submitted line to
+## `history` before the turn opens, so the snapshot must drop that trailing copy
+## — every recorded P1.22 prompt used to end in the same user message twice.
+func test_step_2_prompt_history_holds_prior_exchanges_only() -> void:
+	var lead := '{"read":"greeting","inner":"hi","music":"keep","fx":"none",'
+	var beat := '"beats":[{"feeling":"joy","intensity":1,"cue":"none","say":"%s"}],'
+	var tail := '"mood":{"affection":0,"trust":0,"stress":0},"memory":"","action":"none"}'
+	_fake_backend.chunk_sets = [
+		PackedStringArray([lead + beat % "Hello." + tail]),
+		PackedStringArray([lead + beat % "Again." + tail]),
+	]
+
+	# Turn 0: no prior exchanges, so the prompt is [system, this line].
+	var first_line := "Do you like sweet drinks?"
+	assert_bool(Director.submit_player_input(first_line)).is_true()
+	assert_array(Director.build_turn_context(first_line).get("history", [])).is_empty()
+	await _await_until(func() -> bool: return not Director.is_busy())
+	var first_messages: Array = _fake_backend.seen_request.messages.duplicate(true)
+	assert_int(first_messages.size()).is_equal(2)
+	assert_str(String((first_messages[0] as Dictionary)["role"])).is_equal("system")
+	assert_str(String((first_messages[1] as Dictionary)["content"])).is_equal(first_line)
+
+	# Turn 1: the snapshot is last turn's pair — never this turn's line.
+	var second_line := "Sweet drinks? Then I'm glad I asked you."
+	assert_bool(Director.submit_player_input(second_line)).is_true()
+	var ctx := Director.build_turn_context(second_line)
+	var prior: Array = ctx.get("history", [])
+	assert_int(prior.size()).is_equal(2)
+	for entry: Variant in prior:
+		assert_str(String((entry as Dictionary).get("text", ""))).is_not_equal(second_line)
+	await _await_until(func() -> bool: return not Director.is_busy())
+
+	# The sent prompt: [system, line 1, her reply, line 2] — one user turn per
+	# exchange, the newest line exactly once.
+	var messages: Array = _fake_backend.seen_request.messages.duplicate(true)
+	assert_int(messages.size()).is_equal(4)
+	assert_str(String((messages[3] as Dictionary)["content"])).is_equal(second_line)
+	var seen := 0
+	for i: int in messages.size():
+		var message: Dictionary = messages[i]
+		if String(message["role"]) != "user":
+			continue
+		if String(message["content"]) == second_line:
+			seen += 1
+		(
+			assert_bool(i == 0 or String((messages[i - 1] as Dictionary)["role"]) != "user")
+			. is_true()
+			. append_failure_message("consecutive user messages at index %d" % i)
+		)
+	assert_int(seen).is_equal(1)
+
+
 func test_recorded_turn_replay_turn_001() -> void:
 	var file := FileAccess.open("res://tests/fixtures/streams/turn_001.json", FileAccess.READ)
 	assert_object(file).is_not_null()
@@ -189,23 +258,103 @@ func test_auto_fill_under_cue_restraint_stage_0() -> void:
 	GameState.stage = 0
 	Director.quiet_turn_streak = 3
 
+	var host := FakeFXHost.new()
+	add_child(host)
+	FX.register_host(host)
+	var cues: Array = []
+	var cue_denied: Array = []
+	var fx_fired: Array = []
+	var fx_dropped: Array = []
+	AudioDirector.cue_played.connect(
+		func(cue: StringName, _f: String, _b: StringName) -> void: cues.append(String(cue))
+	)
+	AudioDirector.cue_denied.connect(
+		func(cue: StringName, reason: StringName) -> void:
+			cue_denied.append([String(cue), String(reason)])
+	)
+	FX.fx_triggered.connect(func(name: String) -> void: fx_fired.append(name))
+	FX.fx_dropped.connect(
+		func(name: String, reason: String) -> void: fx_dropped.append([name, reason])
+	)
+
 	var chunk := (
 		'{"read":"compliment","inner":"blush","music":"keep","fx":"none",'
 		+ '"beats":[{"feeling":"shy","intensity":2,"cue":"none","say":"Thank you..."}],'
 		+ '"mood":{"affection":1,"trust":0,"stress":0},"memory":"","action":"none"}'
 	)
-	_fake_backend.chunks = PackedStringArray([chunk])
+	await _run_quiet_turn(chunk)
 
-	var turn_finished := [false]
-	Director.turn_completed.connect(
-		func(_idx: int, _data: Dictionary) -> void: turn_finished[0] = true
+	# Both picks really reached their subsystem (review r3 DES-2): the FX half
+	# fires inline, the cue half once its stream finishes loading threaded.
+	await _await_until(func() -> bool: return cues.has("giggle"), 4000)
+	assert_bool(cues.has("giggle")).is_true().append_failure_message(
+		"auto-fill cue 'giggle' never played; denials: %s" % str(cue_denied)
+	)
+	assert_bool(fx_fired.has("blush_glow")).is_true().append_failure_message(
+		"auto-fill fx 'blush_glow' never fired; drops: %s" % str(fx_dropped)
+	)
+	assert_array(host.fired).contains(["blush_glow"])
+	# …and only a landed fill resets the streak (review CODE-11).
+	assert_int(Director.quiet_turn_streak).is_equal(0)
+
+	FX.unregister_host(host)
+	host.queue_free()
+
+
+## review r3 DES-2 (the negative gates): the fill is owed, not automatic — it
+## stays quiet below the docs/02 §5 four-turn streak and at any stage past 1.
+func test_auto_fill_gates_hold_below_streak_and_above_stage_one() -> void:
+	var host := FakeFXHost.new()
+	add_child(host)
+	FX.register_host(host)
+	var cues: Array = []
+	var fx_fired: Array = []
+	AudioDirector.cue_played.connect(
+		func(cue: StringName, _f: String, _b: StringName) -> void: cues.append(String(cue))
+	)
+	FX.fx_triggered.connect(func(name: String) -> void: fx_fired.append(name))
+
+	var quiet_a := (
+		'{"read":"compliment","inner":"blush","music":"keep","fx":"none",'
+		+ '"beats":[{"feeling":"shy","intensity":2,"cue":"none","say":"Thank you..."}],'
+		+ '"mood":{"affection":1,"trust":0,"stress":0},"memory":"","action":"none"}'
+	)
+	var quiet_b := (
+		'{"read":"compliment","inner":"blush","music":"keep","fx":"none",'
+		+ '"beats":[{"feeling":"shy","intensity":2,"cue":"none","say":"Oh, really?"}],'
+		+ '"mood":{"affection":1,"trust":0,"stress":0},"memory":"","action":"none"}'
 	)
 
-	Director.submit_player_input("You look cute.")
-	await _await_until(func() -> bool: return turn_finished[0])
+	# Three quiet turns is not the fourth: the streak ticks and nothing plays.
+	GameState.stage = 0
+	Director.quiet_turn_streak = 2
+	await _run_quiet_turn(quiet_a)
+	assert_int(Director.quiet_turn_streak).is_equal(3)
 
-	# Auto-fill should have fired and reset quiet_turn_streak
+	# Stage 2 zeroes the streak instead of spending a fill on it.
+	GameState.stage = 2
+	Director.quiet_turn_streak = 3
+	await _run_quiet_turn(quiet_b)
 	assert_int(Director.quiet_turn_streak).is_equal(0)
+
+	# Let any threaded cue load settle before the negative assertion.
+	await get_tree().process_frame
+	assert_bool(cues.has("giggle")).is_false()
+	assert_bool(fx_fired.has("blush_glow")).is_false()
+	assert_array(host.fired).is_empty()
+
+	FX.unregister_host(host)
+	host.queue_free()
+
+
+## One turn whose reply asks for no cue and no fx, awaited to completion.
+func _run_quiet_turn(chunk: String) -> void:
+	_fake_backend.chunks = PackedStringArray([chunk])
+	var finished := [false]
+	Director.turn_completed.connect(func(_i: int, _d: Dictionary) -> void: finished[0] = true)
+	Director.submit_player_input("You look cute.")
+	await _await_until(func() -> bool: return finished[0])
+	assert_bool(finished[0]).is_true().append_failure_message("the quiet turn never completed")
 
 
 func test_transcript_logger_records_turn_completed_with_all_fields() -> void:
