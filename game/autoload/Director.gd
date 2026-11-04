@@ -43,6 +43,11 @@ var last_dose: Dictionary = {}
 var last_offered_actions: Array = []
 var last_read: String = ""
 var last_inner: String = ""
+## docs/01 §2 ledger of the last completed turn: turn index, the slow burn that
+## landed, the mood deltas that landed, instability/floor/stage after the turn.
+## Written by GameState.apply_turn_meters(); dev tooling reads it (DirectorTest
+## asserts the wiring, the P2.19 night screen can show it).
+var last_meter_ledger: Dictionary = {}
 
 var transcript_logger: TranscriptLogger = null
 var _overlay: CanvasLayer = null
@@ -121,6 +126,7 @@ func reset() -> void:
 	last_offered_actions.clear()
 	last_read = ""
 	last_inner = ""
+	last_meter_ledger.clear()
 	if transcript_logger != null and transcript_logger.is_enabled():
 		transcript_logger.end_session()
 	_init_transcript_logger()
@@ -715,16 +721,12 @@ func _close_turn_success(turn_data: Dictionary) -> void:
 	last_read = str(turn_data.get("read", ""))
 	last_inner = str(turn_data.get("inner", ""))
 
-	# Step 7: Apply to GameState. The advance comes FIRST: the per-turn mood
-	# budget inside GameState._apply_mood_meter() is keyed on GameState.turn, so
-	# the state of a turn lands under that turn's index and the next turn opens
-	# with a cleared budget (P1.04/P1.29 handoff call order, review CODE-12).
-	GameState.advance_turn()
-	GameState.apply_slow_burn()
-
-	# Apply mood
-	if turn_data.has("mood") and turn_data["mood"] is Dictionary:
-		GameState.apply_mood(turn_data["mood"])
+	# Step 7: Apply to GameState (docs/02 §4 step 7). One call owns the
+	# docs/01 §2 per-turn meter math, and it advances the turn index BEFORE the
+	# slow burn and the mood budget — the budget is keyed on GameState.turn
+	# (P1.04/P1.29 handoff order, review CODE-12), so a caller cannot reorder
+	# the three steps. The ledger is kept for the F3 overlay + the meters sim.
+	last_meter_ledger = GameState.apply_turn_meters(turn_data)
 
 	# Apply read
 	if turn_data.has("read"):

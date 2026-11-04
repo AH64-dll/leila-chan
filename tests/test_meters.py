@@ -1,0 +1,167 @@
+"""P2.01 — pin the meters formula data and the committed 100-turn curve.
+
+The GDScript suite (game/tests/MetersTest.gd) proves the behaviour of
+GameState/Meters; this file guards the two artifacts a reviewer reads without a
+Godot build: the tuning table and production/handoffs/media/P2.01/meters_curve.*
+"""
+
+import csv
+import importlib.util
+import json
+import re
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+METERS = json.loads((ROOT / "game" / "data" / "meters.json").read_text(encoding="utf-8"))
+CURVE = ROOT / "production" / "handoffs" / "media" / "P2.01" / "meters_curve.csv"
+PLOT_SCRIPT = ROOT / "tools" / "meters" / "plot.py"
+
+# docs/01_GAME_DESIGN.md §2 and docs/02_DIRECTOR_PROTOCOL.md §1.1, verbatim.
+DOC_RATCHET_DROP = 15.0
+DOC_SLOW_BURN = {"base": 0.35, "per_fixation": 0.15, "per_lucidity": 0.2}
+DOC_DAILY_BURN = 3.0
+DOC_MOOD_LIMIT = 3.0
+DOC_MOOD_SCALE = {"affection": 1.5, "trust": 2.0, "stress": 0.6}
+DOC_TURN_CAPS = {"affection": 5.0, "instability": 3.0}
+
+
+def test_meters_table_shape() -> None:
+    assert set(METERS) == {"version", "doc", "ratchet_drop", "slow_burn", "daily_burn", "mood"}
+    assert set(METERS["slow_burn"]) == set(DOC_SLOW_BURN)
+    assert set(METERS["mood"]) == {"limit", "scale", "turn_caps"}
+    assert set(METERS["mood"]["scale"]) == set(DOC_MOOD_SCALE)
+    assert set(METERS["mood"]["turn_caps"]) == set(DOC_TURN_CAPS)
+
+
+def test_meters_table_matches_docs() -> None:
+    assert METERS["ratchet_drop"] == DOC_RATCHET_DROP
+    assert METERS["daily_burn"] == DOC_DAILY_BURN
+    assert METERS["slow_burn"] == DOC_SLOW_BURN
+    assert METERS["mood"]["limit"] == DOC_MOOD_LIMIT
+    assert METERS["mood"]["scale"] == DOC_MOOD_SCALE
+    assert METERS["mood"]["turn_caps"] == DOC_TURN_CAPS
+
+
+def _curve_rows() -> list[dict[str, str]]:
+    with CURVE.open(newline="", encoding="utf-8") as handle:
+        return list(csv.DictReader(handle))
+
+
+def test_curve_is_a_100_turn_campaign() -> None:
+    rows = _curve_rows()
+    assert len(rows) == 100
+    assert [int(row["turn"]) for row in rows] == list(range(1, 101))
+    assert sorted({int(row["day"]) for row in rows}) == list(range(1, 15))
+    assert rows[-1]["read"]
+
+
+def test_curve_ratchet_and_ranges_hold_every_turn() -> None:
+    rows = _curve_rows()
+    previous_peak = 0.0
+    previous_stage = 0
+    for row in rows:
+        instability = float(row["instability"])
+        floor = float(row["instability_floor"])
+        peak = float(row["instability_peak"])
+        assert instability >= floor - 1e-6, f"ratchet violated at turn {row['turn']}"
+        assert abs(floor - max(0.0, peak - DOC_RATCHET_DROP)) < 1e-3
+        assert 0.0 <= instability <= 100.0
+        assert 0.0 <= float(row["affection"]) <= 100.0
+        assert -50.0 <= float(row["trust"]) <= 50.0
+        assert 0.0 <= float(row["fixation"]) <= 100.0
+        assert 0.0 <= float(row["lucidity"]) <= 100.0
+        assert peak >= previous_peak - 1e-6, f"peak fell at turn {row['turn']}"
+        stage = int(row["stage"])
+        assert stage >= previous_stage, f"stage regressed at turn {row['turn']}"
+        assert 0 <= stage <= 5
+        previous_peak = peak
+        previous_stage = stage
+
+
+def test_curve_burns_match_docs() -> None:
+    rows = _curve_rows()
+    for row in rows:
+        expected = (
+            DOC_SLOW_BURN["base"]
+            + DOC_SLOW_BURN["per_fixation"] * float(row["fixation"]) / 100.0
+            - DOC_SLOW_BURN["per_lucidity"] * float(row["lucidity"]) / 100.0
+        )
+        # slow_burn is the delta that landed: the formula, clipped only by the
+        # 100 ceiling the meter was at when the burn ran (instability_pre).
+        landed = min(expected, 100.0 - float(row["instability_pre"]))
+        assert abs(float(row["slow_burn"]) - landed) < 2e-3
+
+
+def test_curve_plot_artifacts_exist() -> None:
+    svg = CURVE.with_suffix(".svg")
+    png = CURVE.with_suffix(".png")
+    assert svg.exists() and svg.stat().st_size > 4000
+    assert "<svg" in svg.read_text(encoding="utf-8")
+    assert png.exists() and png.stat().st_size > 4000
+
+
+# docs/01_GAME_DESIGN.md §3 thresholds, verbatim (0-14, 15-29, 30-49, 50-69,
+# 70-89, 90-100): on the continuous Instability axis each band runs from its
+# floor to the next band's floor.
+DOC_STAGE_EDGES = [(0, 15), (15, 30), (30, 50), (50, 70), (70, 90), (90, 100)]
+
+
+def _load_plot():
+    spec = importlib.util.spec_from_file_location("meters_plot", PLOT_SCRIPT)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _svg_rects(text: str) -> list[tuple[float, float, float, float]]:
+    found = re.findall(
+        r'<rect x="([0-9.]+)" y="([0-9.]+)" width="([0-9.]+)" height="([0-9.]+)"', text
+    )
+    return [(float(x), float(y), float(w), float(h)) for x, y, w, h in found]
+
+
+def _stage_runs(rows: list[dict[str, str]]) -> list[tuple[int, int, int]]:
+    runs: list[tuple[int, int, int]] = []
+    for row in rows:
+        turn, stage = int(row["turn"]), int(row["stage"])
+        if runs and runs[-1][2] == stage:
+            runs[-1] = (runs[-1][0], turn, stage)
+        else:
+            runs.append((turn, turn, stage))
+    return runs
+
+
+def test_plot_puts_the_stage_bands_on_the_instability_axis(tmp_path: Path) -> None:
+    """docs/01 §3 bands are Instability values, never turns (P2.01 DES-1).
+
+    The Instability panel's y axis is the meter, so each band is a full-width
+    stripe whose height is the band's share of 0-100; and the strip above it
+    spans the turns the CSV is actually in that stage.
+    """
+    plot = _load_plot()
+    out = tmp_path / "meters_curve.svg"
+    plot.plot(_curve_rows(), out)
+    rects = _svg_rects(out.read_text(encoding="utf-8"))
+
+    bands = sorted(
+        (r for r in rects if r[0] == plot.LEFT and r[2] == plot.RIGHT - plot.LEFT),
+        key=lambda rect: -rect[1],
+    )
+    assert len(bands) == len(DOC_STAGE_EDGES), "one full-width y stripe per doc band"
+    for (x, y, width, height), (lo, hi) in zip(bands, DOC_STAGE_EDGES):
+        assert x == plot.LEFT and width == plot.RIGHT - plot.LEFT
+        assert abs(y - plot.y_for(hi, plot.TOP1, plot.HEIGHT1)) < 0.2, f"band {lo}-{hi} top"
+        assert abs(height - (hi - lo) / 100.0 * plot.HEIGHT1) < 0.2, f"band {lo}-{hi} height"
+
+    strip = [r for r in rects if r[1] == plot.STRIP_TOP and r[3] == plot.STRIP_HEIGHT]
+    runs = _stage_runs(_curve_rows())
+    assert len(strip) == len(runs), "one strip segment per CSV stage run"
+    for (_x, _y, width, _h), (first, last, _stage) in zip(strip, runs):
+        left = max(plot.LEFT, plot.x_for(first - 0.5, 1.0, 100.0))
+        right = min(plot.RIGHT, plot.x_for(last + 0.5, 1.0, 100.0))
+        assert abs(width - (right - left)) < 0.2, f"strip run {first}-{last} width"
+
+    caption = [line for line in out.read_text(encoding="utf-8").splitlines() if "turn 79/day 11" in line]
+    assert caption, "the plot must annotate the stage crossings with their turn and day"
+    assert "S5" in caption[0]

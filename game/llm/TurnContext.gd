@@ -123,7 +123,9 @@ static func _prior_history(history: Array, player_text: String) -> Array:
 
 
 ## docs/02 §4 step 1 "meters": the raw GameState values, so a prompt layer or a
-## debug panel never reaches into GameState itself.
+## debug panel never reaches into GameState itself. The ratchet pair and the
+## current per-turn slow burn ride along (P2.01) so the F3 overlay and the night
+## screen can show what the docs/01 §2 math is doing without recomputing it.
 static func meters() -> Dictionary:
 	return {
 		"affection": GameState.affection,
@@ -131,4 +133,7 @@ static func meters() -> Dictionary:
 		"instability": GameState.instability,
 		"fixation": GameState.fixation,
 		"lucidity": GameState.lucidity,
+		"instability_peak": GameState.instability_peak,
+		"instability_floor": GameState.instability_floor,
+		"slow_burn": Meters.slow_burn(GameState.fixation, GameState.lucidity),
 	}

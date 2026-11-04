@@ -126,6 +126,13 @@ func test_steps_1_to_7_full_pipeline_success() -> void:
 	assert_int(Director.history.size()).is_equal(2)
 	assert_int(GameState.turn).is_equal(1)
 	assert_float(GameState.affection).is_greater(0.0)
+	# P2.01: step 7 runs the whole docs/01 §2 meter pipeline through one GameState
+	# call and the Director keeps the ledger — slow burn landed, and the mood's
+	# affection int scaled ×1.5 (docs/02 §1.1).
+	var ledger: Dictionary = Director.last_meter_ledger
+	assert_int(int(ledger.get("turn", -1))).is_equal(1)
+	assert_float(float(ledger.get("slow_burn", 0.0))).is_greater(0.0)
+	assert_float(float(ledger["mood"][&"affection"])).is_equal_approx(3.0, 0.0001)
 
 
 ## docs/02 §4 step 2 / docs/08 §1 (review r3 DES-1): the history layer carries
