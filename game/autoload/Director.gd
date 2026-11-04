@@ -110,6 +110,8 @@ func _sync_stage() -> void:
 	if FX != null and FX.has_method("set_stage"):
 		FX.set_stage(int(GameState.stage))
 	_safety.set_filter(Safety)
+	if not _safety.hold_released.is_connected(_emit_say_chunk):
+		_safety.hold_released.connect(_emit_say_chunk)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -409,13 +411,9 @@ func _start_turn(player_text: String) -> bool:
 	var sampling_dict := TurnContext.request_sampling(stage)
 
 	# docs/06 §3: Steering owns the dose schedule (P2.04), so the request carries
-	# per-vector scales ({"malice": 4.5, "path_mix": 3.0}; path_mix is the
-	# interim path-weight key). The docs/02 §9 dose column
-	# is only the last-resort fallback when the autoload is absent; the P1.09
-	# retry observable still holds (`DirectorFallbackTest`: stage-1 malice 2.5
-	# plus the -2.0 retry reaches the request). The transmission gap
-	# (LlamaServerBackend ignores request.dose — control vectors are a server
-	# launch flag, docs/06 §4) is P2.03's restart work.
+	# per-vector scales ({"malice": 4.5, "path_mix": 3.0}; path_mix is the interim
+	# key). The docs/02 §9 column is only the fallback when the autoload is absent
+	# (P1.09's retry observable holds); the transport ignores dose until P2.03.
 	var dose_dict := {}
 	if Steering != null and Steering.has_method("dose_for"):
 		dose_dict = Steering.dose_for(ctx)
@@ -480,7 +478,7 @@ func _process_stream_event(event: Dictionary) -> void:
 			# One scan per beat: Safety holds the streaming state (docs/02 §8).
 			# `beat` marks a streamed-beat scan, so the filter can tell it from
 			# a whole-text scan (the transcript redactor uses filter_text).
-			_safety.begin_beat({"stage": int(GameState.stage), "beat": true})
+			_safety.begin_beat({"stage": int(GameState.stage), "beat": true, "beat_index": b_idx})
 			beat_started.emit(b_idx)
 			if chat_ui_node != null and chat_ui_node.has_method("begin_beat"):
 				chat_ui_node.begin_beat(b_idx)
@@ -499,9 +497,7 @@ func _process_stream_event(event: Dictionary) -> void:
 			# only the scanned text is displayed (docs/02 §4 step 5, §8).
 			_streamed_say_text += raw_say
 			var filtered_say := _safety.feed(raw_say)
-			beat_say_chunk.emit(b_idx, filtered_say)
-			if chat_ui_node != null and chat_ui_node.has_method("say_chunk"):
-				chat_ui_node.say_chunk(b_idx, filtered_say)
+			_emit_say_chunk(b_idx, filtered_say)
 
 		"error":
 			# docs/02 §7: the partial `say` already streamed stays on screen —
@@ -555,11 +551,18 @@ func _on_beat_field_received(beat_index: int, field_name: String, value: Variant
 
 func _flush_say_tail(beat_index: int) -> void:
 	var tail := _safety.finish()
-	if tail.is_empty():
+	if not tail.is_empty():
+		_emit_say_chunk(beat_index, tail)
+
+
+## One say emission: the signal and the chat UI's typewriter. Also the sink for a
+## late verdict (`Safety.hold_released`); a turn that already ended drops it.
+func _emit_say_chunk(beat_index: int, text: String) -> void:
+	if text.is_empty() or not _turn_in_flight:
 		return
-	beat_say_chunk.emit(beat_index, tail)
+	beat_say_chunk.emit(beat_index, text)
 	if chat_ui_node != null and chat_ui_node.has_method("say_chunk"):
-		chat_ui_node.say_chunk(beat_index, tail)
+		chat_ui_node.say_chunk(beat_index, text)
 
 
 ## docs/03 §3: resolve the beat exactly once. `SpriteResolver` is stateful (the
@@ -872,11 +875,9 @@ func _abort_turn(error_code: String, error_message: String) -> void:
 	turn_failed.emit(_turn_index, error_code, error_message)
 
 
-## One teardown for every exit: the stream, parser and turn-scoped state must not
-## survive into the next turn (a later cancel() would act on a terminal stream, and
-## a stale `_current_turn_data` would leak; review CODE-9). The player's unanswered
-## line stays in `history`/`last_player_inputs` (the typed docs/02 §6 rule-1
-## window); AudioDirector/FX keep their per-turn counters (the turn did open).
+## One teardown for every exit: stream, parser and turn state must not survive into the next
+## turn (CODE-9: cancel() would hit a terminal stream; `_current_turn_data` would leak). The
+## unanswered line stays in `history`/`last_player_inputs`; AudioDirector/FX keep their counters.
 func _teardown_turn() -> void:
 	_turn_in_flight = false
 	_active_stream = null

@@ -537,3 +537,32 @@ func _prompt_contains(messages: Array, needle: String) -> bool:
 		if String((message as Dictionary).get("content", "")).contains(needle):
 			return true
 	return false
+
+
+## SAF-7: the classifier's late verdict is Safety's `hold_released`; the
+## Director must route the resolved text to the beat that owned it, and drop a
+## release that arrives after its turn ended (those bars went out at the
+## boundary). No other suite exercises this path.
+func test_late_verdict_routes_to_its_beat_and_drops_after_the_turn() -> void:
+	var chat := FakeChatUI.new()
+	add_child(chat)
+	Director.register_chat_ui(chat)
+	var chunks: Array = []
+	Director.beat_say_chunk.connect(
+		func(idx: int, chunk: String) -> void: chunks.append([idx, chunk])
+	)
+	Director._turn_in_flight = true
+	Director._safety.hold_released.emit(2, "released tail")
+	assert_int(chunks.size()).is_equal(1)
+	assert_int(int(chunks[0][0])).is_equal(2)
+	assert_str(String(chunks[0][1])).is_equal("released tail")
+	assert_int(chat.chunks.size()).is_equal(1)
+	assert_int(int(chat.chunks[0][0])).is_equal(2)
+
+	Director._turn_in_flight = false
+	Director._safety.hold_released.emit(3, "late tail")
+	assert_int(chunks.size()).is_equal(1).append_failure_message(
+		"a release after the turn ended must not reach the transcript"
+	)
+	assert_int(chat.chunks.size()).is_equal(1)
+	chat.queue_free()

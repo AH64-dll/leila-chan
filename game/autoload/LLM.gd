@@ -30,6 +30,17 @@ func get_backend() -> LLMBackend:
 	return _backend
 
 
+## The installed backend's launch configuration, when it publishes one (the
+## prototype llama-server transport does). Boot reads it to keep the safety
+## classifier off a server that carries control vectors (SAF-3/SAF-12); an empty
+## dictionary means "no configuration known", which is not the same as dose 0.
+func get_backend_config() -> Dictionary:
+	if _backend == null:
+		return {}
+	var raw: Variant = _backend.get("config")
+	return (raw as Dictionary).duplicate(true) if raw is Dictionary else {}
+
+
 func last_metrics() -> Dictionary:
 	if _backend != null and _backend.has_method("last_metrics"):
 		return _backend.last_metrics()

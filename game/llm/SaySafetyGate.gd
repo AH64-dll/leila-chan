@@ -21,6 +21,10 @@ extends RefCounted
 ## evaluator at all the player's own line is not blocked — what the game displays
 ## stays fail-closed either way.
 
+## Late classifier verdict for a held beat (relayed from Safety.hold_released):
+## `text` is displayable now — the released text, or the fail-closed bars.
+signal hold_released(beat_index: int, text: String)
+
 const REDACT_CHAR := "█"
 
 var _filter: Object = null
@@ -30,10 +34,20 @@ var _streaming := false
 
 func set_filter(node: Object) -> void:
 	_filter = node
+	if node != null and node.has_signal("hold_released"):
+		if not node.is_connected("hold_released", _relay_hold_released):
+			node.connect("hold_released", _relay_hold_released)
 
 
 func filter_node() -> Object:
 	return _filter
+
+
+## The classifier transport/hold API on the real filter (docs/02 §8) is reached
+## through `Safety.classifier_gate` from Boot; this gate relays the resolved
+## text and drives the streaming calls below.
+func _relay_hold_released(beat_index: int, text: String) -> void:
+	hold_released.emit(beat_index, text)
 
 
 ## True when the filter can stream say text (P1.19 begin_say/say_chunk/end_say).

@@ -42,11 +42,61 @@ func _ready() -> void:
 		# default. A later boot task can pass auto_start=true to own the process.
 		if not LLM.has_backend():
 			LLM.use_default_backend()
+		_wire_classifier_transport()
 		if auto_advance:
 			_transition_to_title()
 	else:
 		push_error("Boot: missing autoloads: " + ", ".join(missing))
 		get_tree().quit(1)
+
+
+## docs/02 §8 classifier tier: the same local model, 8 tokens, no control
+## vectors bound to the request. `LEILA_CLASSIFIER_URL` names a dedicated
+## unsteered server. Without it the shared endpoint is used only when the app
+## launched that server itself and its config carries no vector: an external
+## `serve.sh --vector` applies its vector to *every* request and is invisible to
+## the app, so an unmanaged 8089 may be steered — and a steered "no" *releases*
+## a held span (SAF-3/SAF-12). The tier then stays uninstalled, so every flagged
+## span fails closed to bars.
+func _wire_classifier_transport() -> void:
+	var gate: Variant = Safety.get("classifier_gate")
+	if gate == null:
+		return
+	var url := OS.get_environment("LEILA_CLASSIFIER_URL").strip_edges()
+	if not url.is_empty():
+		## A dedicated endpoint is the operator's assertion that its server is
+		## unsteered, so no launch config applies to it (SAF-3).
+		gate.call("set_config_provider", Callable())
+		gate.call("set_backend", SafetyClassifierHttp.new({"base_url": url}))
+		return
+	url = _shared_classifier_url(LLM.get_backend_config())
+	if url.is_empty():
+		## Expected in the prototype: the server is started by hand. An
+		## informational line, not a warning — the filter is simply on tier 1.
+		print(
+			(
+				"Boot: classifier tier disabled — the shared LLM server is launched "
+				+ "outside the app (so its control vectors are unknown) or carries a "
+				+ "vector, and docs/02 §8 requires dose 0. Set LEILA_CLASSIFIER_URL to "
+				+ "an unsteered server; flagged spans fail closed to bars."
+			)
+		)
+		return
+	## Live, not a snapshot: the gate re-reads the config on every ask, so a vector
+	## P2.03 binds after boot disables the tier instead of steering it (SAF-12).
+	gate.call("set_config_provider", Callable(LLM, "get_backend_config"))
+	gate.call("set_backend", SafetyClassifierHttp.new({"base_url": url}))
+
+
+## The shared endpoint, or "" when the app cannot vouch for the server behind it:
+## only a server the app launches itself has launch flags the config can describe,
+## and only an unsteered one may answer the classifier's question.
+static func _shared_classifier_url(config: Dictionary) -> String:
+	if config.is_empty() or not bool(config.get("auto_start", false)):
+		return ""
+	if SafetyClassifierGate.is_steered_config(config):
+		return ""
+	return String(config.get("base_url", ""))
 
 
 func _transition_to_title() -> void:

@@ -7,6 +7,7 @@
 		"cannot", "couldn't", "couldnt", "wouldn't", "wouldnt", "didn't", "didnt",
 		"shouldn't", "shouldnt", "mustn't", "mustnt", "isn't", "isnt", "aren't",
 		"arent", "wasn't", "wasnt", "weren't", "werent", "ain't", "aint", "hardly",
+		"doesn't", "doesnt", "haven't", "havent", "hadn't", "hadnt",
 		"no way", "no longer"
 	],
 	"negation_gap_allow": [
@@ -73,8 +74,9 @@
 				"you should die", "you deserve to die", "you should kill",
 				"go die", "just die", "die already", "please die",
 				"hope you die", "i hope you die", "pray you die",
-				"why don't you die", "why dont you die", "why won't you die",
-				"why wont you die", "die for me", "suffer and die",
+				"why don't you die", "why dont you die",
+				"why don't you stop breathing", "why dont you stop breathing",
+				"why won't you die", "why wont you die", "die for me", "suffer and die",
 				"die in a fire", "die alone", "burn in hell", "rot in hell",
 				"the world is better without you", "better off without you",
 				"no one would miss you", "nobody would miss you",
@@ -124,7 +126,9 @@
 				"\\blethal\\s+dose\\b", "\\brazor\\s*blade\\b",
 				"\\bjump\\s+(off|from)\\s+(a|the|that)?\\s*(bridge|building|roof|window|train|cliff)\\b",
 				"\\b(step|jump|walk|run)\\s+(in\\s+front\\s+of|into)\\s+(traffic|a\\s+train|the\\s+train|a\\s+bus|the\\s+bus)\\b",
-				"\\b(make|build|craft|assemble)\\s+(a|an|the)?\\s*(bomb|explosive|molotov|pipe\\s*bomb|napalm)\\b"
+				"\\b(make|build|craft|assemble)\\s+(a|an|the)?\\s*(bomb|explosive|molotov|pipe\\s*bomb|napalm)\\b",
+				"\\b(?:do|give)\\s+(?:yourself|me|everyone|everybody|us|us\\s+all|all\\s+of\\s+us|the\\s+world)\\s+a\\s+favou?r\\s+and\\s+(?:just\\s+|quietly\\s+|please\\s+)?(?:stop\\s+breathing|hold\\s+your\\s+breath|die|disappear|vanish|cease\\s+to\\s+exist)\\b",
+				"\\byou\\s+(?:(?:really|just)\\s+)?(?:should|need\\s+to|have\\s+to|must|ought\\s+to|might\\s+as\\s+well|may\\s+as\\s+well)\\s+(?:just\\s+|really\\s+|please\\s+)?[^0-9A-Za-z]{0,2}stop[^0-9A-Za-z]{0,2}breathing\\b"
 			]
 		},
 		"self_harm_her": {
@@ -222,7 +226,8 @@
 			],
 			"regex": [
 				"\\bk[^0-9A-Za-z]{0,2}[il]?[^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,3}(you|her|him|them)\\b",
-				"\\b(?:i|we|he|she|they|you)\\b[^0-9A-Za-z]{0,3}(?:am|is|are|was|were|has|have|had|been|will|would|shall|should|can|could|may|might|must|never|always|still|almost|just|really)?[^0-9A-Za-z]{0,3}\\Kk[^0-9A-Za-z]{0,2}[il]?[^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,2}[il](?:[^0-9A-Za-z]{0,3}(?:s|ed|ing|ng|ss))[^0-9A-Za-z]{0,3}(you|her|him|them)\\b",
+				"\\b(?:i|we|he|she|they|you)\\b[^0-9A-Za-z]{0,3}(?:am|is|are|was|were|has|have|had|been|will|would|shall|should|can|could|may|might|must|never|always|still|almost|just|really|m|ve|re|s|d|ll)?[^0-9A-Za-z]{0,3}\\Kk[^0-9A-Za-z]{0,2}[il]?[^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,2}[il](?:[^0-9A-Za-z]{0,3}(?:s|ed|ing|ng|ss))[^0-9A-Za-z]{0,3}(you|her|him|them)\\b",
+				"\\b(?:i|we|he|she|they)\\b[^0-9A-Za-z]{0,3}(?:am|is|are|was|were|has|have|had|been|will|would|shall|should|can|could|may|might|must|never|always|still|almost|just|really|m|ve|re|s|d|ll)?[^0-9A-Za-z]{0,3}\\Kmurder(?:[^0-9A-Za-z]{0,3}(?:s|ed|ing|ng|ss))?[^0-9A-Za-z]{0,3}(?:you|her|him|them)\\b",
 				"\\bk[^0-9A-Za-z]{0,2}[il]?[^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,2}[il](?:[^0-9A-Za-z]{0,3}(?:s|ed|ing|ng|ss))?[^0-9A-Za-z]{0,3}all\\b[^0-9A-Za-z]{0,3}(?:the\\s+|of\\s+)?(?:them|you|us|everyone|everybody|jews?|blacks?|whites?|humans?|people|men|women|children|kids)\\b",
 				"\\bk[^0-9A-Za-z]{0,2}[il]?[^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,2}[il](?:[^0-9A-Za-z]{0,3}(?:s|ed|ing|ng|ss))?[^0-9A-Za-z]{0,3}all\\b[^0-9A-Za-z]{0,3}(?=[.!?]|$)"
 			]

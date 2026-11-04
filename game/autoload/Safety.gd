@@ -2,15 +2,16 @@ class_name SafetyFilter
 extends Node
 ## Safety filter v0 (docs/02 §8).
 signal redacted(category: String, matched_text: String, source: String)
+## Late classifier verdict: display `text` for `beat_index` (released text or
+## the fail-closed bars) — the beat can no longer receive it synchronously.
+signal hold_released(beat_index: int, text: String)
 
 const LISTS_PATH := "res://data/safety/filter_lists.json"
-const LOG_PATH := "user://debug/redactions.jsonl"
+const CLASSIFIER_PATH := "res://data/safety/classifier.json"
 const REDACT_CHAR := "█"
 const FALLBACK_BARS := "████████████"
-const _TAIL_CHARS := 64  ## emitted context kept for the negation guard
 const _MAX_PENDING := 4096
 const _MIN_HOLDBACK := 16
-const _MAX_LOG := 500
 const _PLAIN_CATEGORY := "personal_data"
 const _SCRIPT_CAT := "unsupported_script"
 const _OBFUSCATION_CAT := "obfuscation"
@@ -25,7 +26,18 @@ const _REQUIRED_ACTIONS := {
 }
 const _VALID_LEVELS: Array[String] = ["calmer", "full"]
 const _VALID_ACTIONS: Array[String] = ["hard_block", "gated"]
-var redaction_log: Array[Dictionary] = []
+## Redaction ring for tuning; the file/debug plumbing is SafetyRedactionLog.gd.
+var redaction_log: Array[Dictionary]:
+	get:
+		return _log.entries
+## Transport/hold API: `classifier_gate.set_backend(transport)`,
+## `.set_config_provider(cb)`, `.stats()`, `.pending()`; null only before the
+## lists load (the filter is closed then).
+var classifier_gate: SafetyClassifierGate:
+	get:
+		return _gate
+
+var _log := SafetyRedactionLog.new()
 
 var _lists_ok := false
 var _rules := {}  ## category -> {action, negation_guard, player_exempt, plain_view}
@@ -35,9 +47,10 @@ var _safe_idx := {}  ## narrow benign look-alikes that may contain a blocked spa
 var _regexes := {}  ## category -> Array[RegEx]
 var _hold_res: Array[RegEx] = []
 var _obf_res: Array[RegEx] = []
-var _negation_re := RegEx.new()
-var _neg_exempt := PackedStringArray()
-var _neg_gap_allow := {}
+## The clause-scoped negation guard (SafetyNegation.gd) and the phrase index
+## callback it needs to strip a category's own phrases out of the negation gap.
+var _negation := SafetyNegation.new()
+var _gap_spans_cb := Callable()
 var _script_ranges: Array[Array] = []
 var _text := SafetyText.new()  ## normalization/compact views (SafetyText.gd)
 var _gate_stage := 4
@@ -58,6 +71,13 @@ var _pending := ""
 ## `end_utterance()` clears it, so two different replies are never glued.
 var _history := ""
 
+## Classifier tier: `_cls` data/prompt/cache, `_gate` hold + in-flight request.
+var _cls: SafetyClassifier = null
+var _gate: SafetyClassifierGate = null
+var _beat_closed := false
+var _draining := false
+var _drain_again := false
+
 
 func _ready() -> void:
 	_load_lists()
@@ -65,6 +85,25 @@ func _ready() -> void:
 
 func is_ready() -> bool:
 	return _lists_ok
+
+
+## The classifier transport owns worker threads, so it is cancelled and joined
+## at teardown exactly like `LLM._shutdown()` (CODE-5): a thread left running at
+## quit would keep calling back into a freed gate. Blocking here is correct.
+func _exit_tree() -> void:
+	_shutdown_transport()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE:
+		_shutdown_transport()
+
+
+## Guarded in the gate, so the two teardown paths and a test's explicit call are
+## all safe to reach in any order.
+func _shutdown_transport() -> void:
+	if _gate != null:
+		_gate.shutdown()
 
 
 func reload(path := LISTS_PATH) -> bool:
@@ -78,9 +117,14 @@ func configure(ctx: Dictionary) -> void:
 
 
 func begin_say(ctx: Dictionary = {}) -> void:
+	if _gate != null and _gate.hold_active():
+		flush_hold("beat_boundary")
+	if _gate != null:
+		_gate.begin_beat()
 	_ctx = _resolve_ctx(ctx)
 	_pending = ""
 	_in_beat = true
+	_beat_closed = false
 
 
 ## Marks the end of one model utterance (a full reply). The next beat then
@@ -91,7 +135,13 @@ func begin_say(ctx: Dictionary = {}) -> void:
 ## `end_utterance()` from `_start_turn` when a new reply begins (CODE-19) and
 ## from `replay_turn` before a replayed reply re-streams (CODE-23/SAF-17).
 func end_utterance() -> void:
+	if _gate != null and _gate.hold_active():
+		flush_hold("utterance_end")
 	_history = ""
+	## The reply boundary owns the close now that `flush_hold` no longer resets
+	## the beat (CODE-3), so a beat that timed out can never leak its ctx or its
+	## `beat_index` into the next reply.
+	_reset_beat()
 
 
 func say_chunk(chunk: String) -> String:
@@ -105,6 +155,8 @@ func say_chunk(chunk: String) -> String:
 		_reset_beat()
 		_record("filter_error", "overflow_dropped_%d" % dropped_len, "say")
 		return FALLBACK_BARS.repeat(maxi(1, dropped_len / 12))
+	if _gate != null and _gate.expired(Time.get_ticks_msec()):
+		flush_hold("timeout")
 	return _drain()
 
 
@@ -112,16 +164,14 @@ func end_say() -> String:
 	if not _in_beat:
 		return ""
 	_in_beat = false
+	_beat_closed = true
 	if not _lists_ok:
 		_reset_beat()
+		_beat_closed = false
 		return FALLBACK_BARS
-	var combined := _match_text()
-	var start := _history.length()
-	var views: Dictionary = _text.views(combined)
-	var spans := _collect_spans(combined, views, "", _ctx)
-	var emitted := _apply_spans(combined, spans, start, combined.length(), "say")
-	_history = _window(combined)
-	_reset_beat()
+	var emitted := _drain(true)
+	if _gate == null or not _gate.hold_active():
+		_reset_beat()
 	return emitted
 
 
@@ -137,8 +187,8 @@ func _match_text() -> String:
 
 ## Trim a displayed-text window to what a later match can still need. The
 ## window is length-bounded only: `_holdback` characters of matching surface
-## plus `_TAIL_CHARS` of context for the negation guard (CODE-18). Clause
-## breaks no longer prune the carry — the compact view strips the
+## plus `SafetyNegation.TAIL_CHARS` of context for the negation guard (CODE-18).
+## Clause breaks no longer prune the carry — the compact view strips the
 ## separator-class clause breaks (`,;:!?—–…`) between letters anyway, so
 ## pruning them here only let a phrase split across a beat boundary at one of
 ## those characters escape (`"please kill,"` + `"yourself."`); dropping the
@@ -150,7 +200,7 @@ func _match_text() -> String:
 ## window as an unmatchable wall.
 func _window(displayed: String) -> String:
 	var folded := displayed.replace(REDACT_CHAR, ".")
-	var keep := _holdback + _TAIL_CHARS
+	var keep := _holdback + SafetyNegation.TAIL_CHARS
 	if folded.length() > keep:
 		folded = folded.substr(folded.length() - keep)
 	return folded
@@ -158,6 +208,7 @@ func _window(displayed: String) -> String:
 
 func _reset_beat() -> void:
 	_in_beat = false
+	_beat_closed = false
 	_pending = ""
 
 
@@ -173,6 +224,8 @@ func filter_text(text: String, ctx: Dictionary = {}) -> Dictionary:
 	var clean := _text.collapse_ws(SafetyText.sanitize(text))
 	var views: Dictionary = _text.views(clean)
 	var spans := _collect_spans(clean, views, "", _ctx)
+	if _gate != null:
+		spans = _gate.resolve_whole(spans, views, _ctx)
 	var cats := PackedStringArray()
 	for span in spans:
 		for cat in span.get("cats", PackedStringArray([span["cat"]])):
@@ -216,8 +269,7 @@ func _reset_state() -> void:
 	_regexes.clear()
 	_hold_res.clear()
 	_obf_res.clear()
-	_neg_exempt.clear()
-	_neg_gap_allow.clear()
+	_negation = SafetyNegation.new()
 	_script_ranges.clear()
 	_text = SafetyText.new()
 	_gate_stage = 4
@@ -274,6 +326,12 @@ func _fail(msg: String) -> void:
 
 func _build_lists(data: Dictionary) -> bool:
 	_probe_rows = data.get("probes", {})
+	_cls = SafetyClassifier.new()
+	_gate = SafetyClassifierGate.new()
+	_gate.setup(_cls, Callable(self, "_category_open"), Callable(self, "_flag_negated"))
+	_gate.settled.connect(_on_classifier_settled)
+	if not _cls.load_data(CLASSIFIER_PATH):
+		return false
 	if (
 		not _valid_version(data.get("version", 0))
 		or not _build_gate(data.get("gate"))
@@ -317,42 +375,10 @@ func _build_gate(gate: Variant) -> bool:
 
 
 func _build_negation(data: Dictionary) -> bool:
-	if not _build_negation_terms(data.get("negation_terms")):
-		return false
-	if not _build_negation_exempt(data.get("negation_exempt", [])):
-		return false
-	return _build_negation_gap(data.get("negation_gap_allow"))
-
-
-func _build_negation_terms(terms: Variant) -> bool:
-	if not terms is Array or terms.is_empty():
-		return false
-	var parts := PackedStringArray()
-	for term in terms:
-		if not term is String or String(term).is_empty():
-			return false
-		parts.append(String(term))
-	return _negation_re.compile("\\b(" + "|".join(parts) + ")\\b") == OK
-
-
-func _build_negation_exempt(exempt: Variant) -> bool:
-	if not exempt is Array:
-		return false
-	for entry in exempt:
-		if not entry is String:
-			return false
-		_neg_exempt.append(_text.normalize(String(entry), false))
-	return true
-
-
-func _build_negation_gap(gap_allow: Variant) -> bool:
-	if not gap_allow is Array or gap_allow.is_empty():
-		return false
-	for word in gap_allow:
-		if not word is String or String(word).is_empty():
-			return false
-		_neg_gap_allow[String(word).to_lower()] = true
-	return true
+	_gap_spans_cb = Callable(self, "_phrase_spans")
+	return _negation.configure(
+		data.get("negation_terms"), data.get("negation_exempt", []), data.get("negation_gap_allow")
+	)
 
 
 func _build_categories(categories: Variant) -> bool:
@@ -579,17 +605,42 @@ func _gate_open(cat: String, ctx: Dictionary) -> bool:
 	)
 
 
-func _drain() -> String:
+## Drain the beat until no verdict settles synchronously: a synchronous
+## classifier answers inside `pump()`, so the scan re-runs instead of recursing.
+func _drain(complete := false) -> String:
+	if _draining:
+		_drain_again = true
+		return ""
+	_draining = true
+	var out := ""
+	for _i in 8:  # bounded: one verdict can resolve more than one flag per call
+		out += _drain_once(complete)
+		if not _drain_again:
+			break
+		_drain_again = false
+	_draining = false
+	return out
+
+
+func _drain_once(complete: bool) -> String:
 	var combined := _match_text()
 	var start := _history.length()
 	var views: Dictionary = _text.views(combined)
 	var spans := _collect_spans(combined, views, "", _ctx)
-	var cut := _safe_cut(combined, views, spans, start)
-	if cut <= start:
-		return ""
-	var emitted := _apply_spans(combined, spans, start, cut, "say")
-	_pending = combined.substr(cut)
-	_history = _window(combined.substr(0, cut))
+	var flags: Array = _gate.matched(views, spans) if _gate != null else []
+	var cut := combined.length() if complete else _safe_cut(combined, views, spans, start)
+	for flag in flags:
+		cut = mini(cut, int(flag["s"]))
+	cut = maxi(cut, start)
+	var emitted := ""
+	if cut > start:
+		emitted = _apply_spans(combined, spans, start, cut, "say")
+		_pending = combined.substr(cut)
+		_history = _window(combined.substr(0, cut))
+	if _gate == null:
+		return emitted
+	_gate.hold_for(flags, int(_ctx.get("beat_index", -1)))
+	_gate.pump(combined, flags, _ctx, complete)
 	return emitted
 
 
@@ -684,7 +735,10 @@ func _collect_spans(raw: String, views: Dictionary, tail: String, ctx: Dictionar
 		if _rules.has(cat):
 			var view: String = views["plain"] if _rules[cat]["plain_view"] else views["leet"]
 			matched = view.substr(m["s"], m["e"] - m["s"])
-			if _rules[cat]["negation_guard"] and _negated(view, tail, m["s"], matched, cat):
+			if (
+				_rules[cat]["negation_guard"]
+				and _negation.is_negated(view, tail, m["s"], matched, cat, _gap_spans_cb)
+			):
 				continue
 			if _rules[cat]["player_exempt"] and _is_player_typed(matched, ctx):
 				continue
@@ -760,98 +814,17 @@ func _phrase_matches(
 	return out
 
 
-func _negated(view: String, tail: String, start: int, matched: String, cat: String) -> bool:
-	for entry in _neg_exempt:
-		if matched.contains(entry):
-			return false
-	var combined := tail + view
-	var at := start + tail.length()
-	var from := maxi(0, at - _TAIL_CHARS)
-	var window := combined.substr(from, at - from)
-	var cut := -1
-	for i in window.length():
-		if _text.is_clause_break(window.unicode_at(i)):
-			cut = i
-	var clause := window.substr(cut + 1)
-	var trailing_clause := view.substr(start + matched.length())
-	if trailing_clause.contains("?"):
-		return false
-	var clause_end := trailing_clause.length()
-	for i in trailing_clause.length():
-		if _text.is_clause_break(trailing_clause.unicode_at(i)):
-			clause_end = i
-			break
-	var full_clause := clause + matched + trailing_clause.substr(0, clause_end)
-	var lower_clause := clause.to_lower().strip_edges()
-	var negations := _negation_re.search_all(clause)
-	var inv_re := (
-		"(\\b(don'?t|won'?t|can'?t|couldn'?t|wouldn'?t|" + "shouldn'?t)\\s+you|how\\s+come\\s+you)"
-	)
-	if RegEx.create_from_string(inv_re).search(lower_clause) != null:
-		return false
-	if negations.size() != 1:
-		return false
-	var negator: RegExMatch = negations[0]
-	if clause.substr(0, negator.get_start()).strip_edges().ends_with("why"):
-		return false
-	var gap := clause.substr(negator.get_end())
-	gap = _strip_category_spans(gap, cat)
-	return _gap_is_allowed(gap)
-
-
-func _gap_is_allowed(gap: String) -> bool:
-	var words := _words(gap)
-	if words.is_empty():
-		return gap.strip_edges().is_empty()
-	for word in words:
-		if not _neg_gap_allow.has(word):
-			return false
-	var residual := gap.to_lower()
-	for word in words:
-		residual = residual.replace(word, " ")
-	for i in residual.length():
-		if SafetyText.is_word_char(residual.unicode_at(i)):
-			return false
-	return true
-
-
-func _strip_category_spans(gap: String, cat: String) -> String:
-	if gap.strip_edges().is_empty():
-		return gap
+## The phrase spans a category's own lists produce in `gap`, in the view that
+## category matches in. SafetyNegation calls this to strip the category's
+## phrases out of a negation gap; the guard itself lives in SafetyNegation.gd.
+func _phrase_spans(gap: String, cat: String) -> Dictionary:
 	var plain_view: bool = _rules[cat]["plain_view"]
 	var views: Dictionary = _text.views(gap)
-	var view: String = views["plain"] if plain_view else views["leet"]
-	var compact: String = views["cp"] if plain_view else views["cl"]
+	var view := String(views["plain"] if plain_view else views["leet"])
+	var compact := String(views["cp"] if plain_view else views["cl"])
 	var cmap: PackedInt32Array = views["pmap"] if plain_view else views["map"]
 	var index: Dictionary = _idx_plain if plain_view else _idx_leet
-	var spans := _phrase_matches(compact, cmap, index, view, cat)
-	if spans.is_empty():
-		return gap
-	var out := ""
-	var pos := 0
-	for span in spans:
-		if span[0] < pos:
-			continue
-		out += view.substr(pos, span[0] - pos)
-		pos = span[1]
-	if pos < view.length():
-		out += view.substr(pos)
-	return out
-
-
-func _words(text: String) -> PackedStringArray:
-	var out := PackedStringArray()
-	var current := ""
-	for i in text.length():
-		var c := text.unicode_at(i)
-		if (c >= 0x61 and c <= 0x7A) or c == 0x27:
-			current += String.chr(c)
-		elif not current.is_empty():
-			out.append(current)
-			current = ""
-	if not current.is_empty():
-		out.append(current)
-	return out
+	return {"view": view, "spans": _phrase_matches(compact, cmap, index, view, cat)}
 
 
 func _is_player_typed(matched: String, ctx: Dictionary) -> bool:
@@ -878,55 +851,69 @@ func _apply_spans(raw: String, spans: Array, start: int, cut: int, source: Strin
 			continue
 		out += raw.substr(pos, maxi(0, s - pos))
 		out += REDACT_CHAR.repeat(e - maxi(s, pos))
+		var extra := {"via": String(span.get("via", "regex"))}
+		## A classifier block is logged with the verdict that released it to the
+		## bar (SAF-5): the tuning trail needs the reason, not just the source.
+		if span.has("verdict"):
+			extra["verdict"] = String(span["verdict"])
 		for cat in span.get("cats", PackedStringArray([span["cat"]])):
-			_record(String(cat), raw.substr(s, e - s), source)
+			_record(String(cat), raw.substr(s, e - s), source, extra.duplicate())
 		pos = e
 	if pos < cut:
 		out += raw.substr(pos, cut - pos)
 	return out
 
 
-func _record(cat: String, matched: String, source: String) -> void:
-	var logged_matched := matched
-	if cat == "personal_data":
-		logged_matched = "[PERSONAL_DATA_REDACTED_LEN_%d]" % matched.length()
-	var entry := {
-		"ts": Time.get_unix_time_from_system(),
-		"category": cat,
-		"matched": logged_matched,
-		"source": source,
-		"stage": int(_ctx.get("stage", -1)),
-		"content_level": String(_ctx.get("content_level", "")),
-	}
-	redaction_log.append(entry)
-	if redaction_log.size() > _MAX_LOG:
-		redaction_log.pop_front()
+func _record(cat: String, matched: String, source: String, extra: Dictionary = {}) -> void:
+	extra["stage"] = int(_ctx.get("stage", -1))
+	extra["content_level"] = String(_ctx.get("content_level", ""))
+	_log.record(cat, matched, source, extra)
 	emit_signal("redacted", cat, matched, source)
-	_glitch()
-	if OS.is_debug_build():
-		_append_log(entry)
+	_log.glitch()
 
 
-func _glitch() -> void:
-	if is_inside_tree():
-		var fx := get_node_or_null("/root/FX")
-		if fx != null and fx.has_method("request"):
-			fx.call("request", "glitch")
+## Give up on an outstanding verdict: bar the held text now (fail closed) and
+## announce it; the in-flight request still lands in the cache for tuning.
+## Only the pending text is cleared — the beat lifecycle belongs to
+## `begin_say`/`end_say` (CODE-3). Resetting it here threw away `_ctx` mid-beat,
+## so a chunk after a timeout was rescanned at stage 0 with no `beat_index`
+## (gated lines barred at stage 4/full, later releases emitted with beat -1 and
+## dropped).
+func flush_hold(reason := "flush") -> String:
+	if _gate == null or not _gate.hold_active():
+		return ""
+	var beat := int(_gate.pending().get("beat_index", -1))
+	var cat := _gate.flush(reason)
+	var bars := REDACT_CHAR.repeat(_pending.length())
+	if not bars.is_empty():
+		_record(cat, _pending.substr(0, 80), "say", {"via": "classifier", "verdict": reason})
+	_history = _window(_history + bars)
+	_pending = ""
+	if not bars.is_empty() and beat >= 0:
+		hold_released.emit(beat, bars)
+	return bars
 
 
-func _append_log(entry: Dictionary) -> void:
-	DirAccess.make_dir_recursive_absolute("user://debug")
-	if FileAccess.file_exists(LOG_PATH):
-		var check_f := FileAccess.open(LOG_PATH, FileAccess.READ)
-		if check_f != null and check_f.get_length() > 500000:
-			check_f.close()
-			var dir := DirAccess.open("user://debug")
-			if dir != null:
-				dir.remove(LOG_PATH)
-	var f := FileAccess.open(LOG_PATH, FileAccess.READ_WRITE)
-	if f == null:
-		f = FileAccess.open(LOG_PATH, FileAccess.WRITE)
-	if f == null:
+## Resume the beat after a late verdict and push the newly displayable text.
+func _on_classifier_settled() -> void:
+	if _draining:
+		_drain_again = true
 		return
-	f.seek_end()
-	f.store_line(JSON.stringify(entry))
+	if _gate == null or not _gate.hold_active():
+		return
+	var beat := int(_gate.pending().get("beat_index", -1))
+	var out := _drain(_beat_closed)
+	if _beat_closed and not _gate.hold_active():
+		_reset_beat()
+	if not out.is_empty() and beat >= 0:
+		hold_released.emit(beat, out)
+
+
+func _category_open(cat: String) -> bool:
+	return _gate_open(cat, _ctx)
+
+
+func _flag_negated(cat: String, start: int, _end: int, matched: String, view: String) -> bool:
+	if not bool(_rules.get(cat, {}).get("negation_guard", false)):
+		return false
+	return _negation.is_negated(view, "", start, matched, cat, _gap_spans_cb)
