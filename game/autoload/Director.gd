@@ -380,6 +380,7 @@ func _start_turn(player_text: String) -> bool:
 	var offered_actions := []
 	if MetaDirector != null and MetaDirector.has_method("offers"):
 		offered_actions = MetaDirector.offers(stage)
+	last_offered_actions = offered_actions.duplicate()  # the ctx's, not last turn's
 
 	var ctx := build_turn_context(player_text, _turn_events)
 
@@ -422,7 +423,6 @@ func _start_turn(player_text: String) -> bool:
 		for vector: Variant in dose_dict:
 			var name := str(vector)
 			dose_dict[name] = maxf(0.0, float(dose_dict[name]) + _dose_offset)
-	last_offered_actions = offered_actions.duplicate()
 	last_dose = dose_dict.duplicate()
 
 	_current_dose = dose_dict.duplicate(true)
@@ -792,9 +792,9 @@ func _close_turn_success(turn_data: Dictionary) -> void:
 
 ## docs/02 §5 auto-fill: after 4 turns with no cue/fx and a beat at intensity
 ## >= 2, the Director adds a mild one. Both picks are engine-owned, so they must
-## not be eaten by the model's cue budget: `play_system` is the un-budgeted
-## engine path (docs/04 §3), and the streak only resets when the mild fill
-## actually landed (review CODE-11).
+## not be eaten by the model's cue budget: `AudioDirector.play_engine_cue` is the
+## un-budgeted engine path (docs/04 §3), and the streak only resets when the mild
+## fill actually landed (review CODE-11).
 func _handle_auto_fill(turn_data: Dictionary, stage: int) -> void:
 	if stage > 1:
 		quiet_turn_streak = 0

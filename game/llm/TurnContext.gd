@@ -96,12 +96,30 @@ static func build(
 		"scene": scene,
 		"memories": memories.duplicate(),
 		"events": events.duplicate(),
-		"history": history.duplicate(true),
+		"history": _prior_history(history, player_text),
 		"player_message": player_text,
 		"offered_actions": offered_actions.duplicate(),
 		"offered": offered_values(stage, offered_actions),
 		"meters": meters(),
 	}
+
+
+## docs/08 §1: the history layer is the *prior* exchanges as user/assistant
+## pairs; this turn's line reaches the model as `player_message`. The Director
+## appends a submitted line to its own `history` before the turn opens (so the
+## next window has it), so the snapshot drops that trailing copy — otherwise the
+## prompt ends with the same user message twice (review r3 DES-1).
+static func _prior_history(history: Array, player_text: String) -> Array:
+	var text := player_text.strip_edges()
+	var kept: Array = history
+	if not text.is_empty() and not history.is_empty():
+		var tail: Variant = history[history.size() - 1]
+		if tail is Dictionary:
+			var entry := tail as Dictionary
+			var same_text := String(entry.get("text", entry.get("content", ""))).strip_edges()
+			if String(entry.get("role", "")) == "user" and same_text == text:
+				kept = history.slice(0, history.size() - 1)
+	return kept.duplicate(true)
 
 
 ## docs/02 §4 step 1 "meters": the raw GameState values, so a prompt layer or a
