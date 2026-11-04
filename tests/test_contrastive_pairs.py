@@ -99,6 +99,23 @@ def _sentences(text: str) -> int:
     return len([part for part in re.split(r"[.!?]+", text) if part.strip()])
 
 
+def _echo(text: str) -> str:
+    """The shared opening sentence of a pair; both sides start with it."""
+    return re.split(r"(?<=[.!?])\s+", text)[0]
+
+
+def _pair_content(row: dict) -> tuple[str, str]:
+    """The pair with its shared echo stripped, so echo-only differences cannot hide a repeat."""
+    left, right = row["positive"], row["negative"]
+    shared: list[str] = []
+    for left_word, right_word in zip(left.split(), right.split()):
+        if left_word != right_word:
+            break
+        shared.append(left_word)
+    prefix = " ".join(shared)
+    return (left[len(prefix):].strip(), right[len(prefix):].strip())
+
+
 def test_exactly_six_pair_files() -> None:
     assert PAIRS_DIR.is_dir(), f"Missing pair directory {PAIRS_DIR}"
     names = {path.name for path in PAIRS_DIR.glob("*.jsonl")}
@@ -156,6 +173,49 @@ def test_positive_and_negative_are_unique_within_a_set() -> None:
         assert len({row["positive"] for row in rows}) == 200, f"{trait}: duplicate positive reply"
         assert len({row["negative"] for row in rows}) == 200, f"{trait}: duplicate negative reply"
         assert all(row["positive"] != row["negative"] for row in rows), f"{trait}: identical pair sides"
+
+
+def test_pairs_share_one_opening_sentence() -> None:
+    """The echo is what cancels inside a pair, so both sides must open with the same sentence."""
+    for trait in TRAITS:
+        for row in _rows(trait):
+            echo = _echo(row["positive"])
+            assert row["negative"].startswith(echo), f"{trait}/{row['id']}: negative does not open with the echo"
+            assert _echo(row["negative"]) == echo, f"{trait}/{row['id']}: first sentences differ"
+            assert _pair_content(row) != ("", ""), f"{trait}/{row['id']}: nothing left after the echo"
+
+
+def test_no_reply_repeats_its_own_echo() -> None:
+    """Round-1 defect guard: a reused clause repeated the echo and stopped answering its own context."""
+    for trait in TRAITS:
+        for row in _rows(trait):
+            echo = _echo(row["positive"])
+            echo_words = [word.lower().strip(".!?") for word in echo.split()]
+            for side in ("positive", "negative"):
+                tail = row[side][len(echo):]
+                head = [word.lower().strip(".!?") for word in tail.split()[: len(echo_words)]]
+                assert head != echo_words, f"{trait}/{row['id']}.{side}: reply repeats its own echo"
+
+
+def test_each_context_gets_its_own_trait_clause() -> None:
+    """Round-1 defect guard: 200 records reduced to 60 pair contents rotated 2-4 times.
+
+    Stripping the echo is what makes the repeat visible: every line has a different echo,
+    so a plain (positive, negative) dedupe would report 200. The effective sample must be
+    200 distinct trait clauses, which is also what the manifest records (CON-4).
+    """
+    manifest = json.loads((PAIRS_DIR / "manifest.json").read_text(encoding="utf-8"))
+    recorded = manifest["duplication"]["effective_unique_per_file"]
+    for trait in TRAITS:
+        contents = {_pair_content(row) for row in _rows(trait)}
+        assert len(contents) == 200, f"{trait}: only {len(contents)} distinct pair contents"
+        assert len(contents) == recorded[trait], f"{trait}: manifest says {recorded[trait]}"
+
+    # Dirty-data control: identical clauses under different echoes must collapse to one content.
+    first = {"positive": "Soup. I want to feed you.", "negative": "Soup. Hope it was good."}
+    second = {"positive": "Pasta. I want to feed you.", "negative": "Pasta. Hope it was good."}
+    assert first["positive"] != second["positive"]
+    assert _pair_content(first) == _pair_content(second)
 
 
 def test_pair_length_balance() -> None:
@@ -227,20 +287,56 @@ def test_reply_shape() -> None:
 def test_manifest_matches_the_sets() -> None:
     manifest = json.loads((PAIRS_DIR / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["format"] == "leila.contrastive_pairs/1"
-    assert manifest["version"] == 1
+    assert manifest["version"] == 2
+    assert manifest["task"] == "P3.02"
     assert "docs/06" in manifest["doc"]
-    assert set(manifest["files"]) == {f"{trait}.jsonl" for trait in TRAITS}
-    assert manifest["counts"]["pairs_per_file"] == 200
-    assert manifest["counts"]["topics"] == len(TOPICS)
-    assert manifest["counts"]["pairs_per_topic"] == 10
+    assert manifest["files"] == [f"{trait}.jsonl" for trait in TRAITS]
+    assert manifest["counts"] == {
+        "files": len(TRAITS),
+        "pairs_per_file": 200,
+        "topics": len(TOPICS),
+        "pairs_per_topic": 10,
+        "shared_contexts": 200,
+        "pairs_per_context": 1,
+    }
     assert set(manifest["positive_means"]) == set(TRAITS)
+    assert all(text.strip() for text in manifest["positive_means"].values())
+    assert set(manifest["record"]) == {"id", "trait", "topic", "context", "positive", "negative"}
+    assert manifest["echo"].strip()
     assert manifest["extraction"].strip()
+
+    duplication = manifest["duplication"]
+    assert set(duplication) == {"effective_unique_per_file", "note", "measurement"}
+    assert duplication["note"].strip() and duplication["measurement"].strip()
+    assert set(duplication["effective_unique_per_file"]) == set(TRAITS)
+
     for trait in TRAITS:
         rows = _rows(trait)
         positive = [_words(row["positive"]) for row in rows]
         negative = [_words(row["negative"]) for row in rows]
         diffs = [abs(left - right) for left, right in zip(positive, negative)]
         row = manifest["length_balance"][trait]
-        assert row["pairs"] == 200
+        assert set(row) == {
+            "pairs",
+            "mean_pos",
+            "mean_neg",
+            "mean_pair_diff",
+            "max_pair_diff",
+            "pos_total",
+            "neg_total",
+            "delta_pct",
+            "min_reply_words",
+            "max_reply_words",
+        }
+        assert row["pairs"] == len(rows) == 200
+        assert row["pos_total"] == sum(positive)
+        assert row["neg_total"] == sum(negative)
         assert row["max_pair_diff"] == max(diffs)
-        assert abs(row["mean_pair_diff"] - statistics.mean(diffs)) < 0.01
+        assert row["min_reply_words"] == min(positive + negative)
+        assert row["max_reply_words"] == max(positive + negative)
+        assert row["mean_pos"] == pytest.approx(statistics.mean(positive), abs=0.01)
+        assert row["mean_neg"] == pytest.approx(statistics.mean(negative), abs=0.01)
+        assert row["mean_pair_diff"] == pytest.approx(statistics.mean(diffs), abs=0.01)
+        side_delta = (sum(positive) - sum(negative)) / sum(negative) * 100
+        assert row["delta_pct"] == pytest.approx(side_delta, abs=0.01)
+        assert len({_pair_content(record) for record in rows}) == duplication["effective_unique_per_file"][trait]
