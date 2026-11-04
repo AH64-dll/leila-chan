@@ -19,6 +19,9 @@ signal turn_completed(turn_index: int)
 signal pause_requested
 
 const DEFAULT_SCENARIO := "res://data/scenarios/D02_cafe.json"
+## docs/01 §1: a finished date hands the loop to the night (P2.19), which runs the
+## night checks and opens the next day.
+const NIGHT_SCENE_PATH := "res://scenes/Night.tscn"
 ## `stage` defaults to "unset" so the scene follows the campaign's stage.
 ## Every player entry goes through change_scene_to_file, which cannot set an
 ## export, so an unset stage must mean GameState.stage — otherwise a mid-
@@ -33,6 +36,14 @@ const STAGE_FROM_GAME_STATE := -1
 @export var auto_start: bool = false
 @export var reduced_motion: bool = false
 @export var photosensitive: bool = false
+## P2.19: the day/night loop. On, the date takes its scenario from the campaign (a
+## caller that pins `scenario_path` wins, so dev tools and scene tests keep their
+## own scenario) and a finished date routes to the Night scene. Off, the date is a
+## single standalone date, as before the loop existed.
+var campaign_flow := true
+## The NewGame/Title convention: a suite turns the scene change off and inspects
+## the scene it built.
+var scene_change_enabled := true
 var text_box: PanelContainer:
 	get:
 		return chat_ui.text_box if chat_ui else null
@@ -54,6 +65,13 @@ var _opening_finished: bool = false
 ## restarting) and does not replay its greeting.
 var _saved_turn: int = 0
 var _resumed: bool = false
+## P2.19: the date's end is decided once, at the displayed boundary, and routed on
+## the next idle frame. `_last_action` is the turn's own `action` (docs/08 §7's
+## `end.on_goal` reads it) — the displayed signal does not carry the turn data.
+var _date_over: bool = false
+var _last_action := "none"
+## A save that named its scenario wins over the campaign's pick for that morning.
+var _save_named_scenario: bool = false
 
 @onready var background: Sprite2D = $Background
 @onready var character: Node2D = $Character
@@ -161,6 +179,16 @@ func _ready() -> void:
 	_resume_from_save()
 
 	if _scenario.is_empty():
+		# P2.19: a save names its own scenario; every other entry (New Game, the
+		# Night's next-day hand-off) takes today's date from the campaign.
+		if _save_named_scenario:
+			# P2.20/P2.19: the saved scenario is today's date, so the campaign's
+			# bookkeeping must agree — the night's queue is consumed and the
+			# date is marked played, exactly as begin_day() would have done.
+			if campaign_flow:
+				Campaign.new(GameState).resume_day(scenario_path)
+		else:
+			_apply_campaign_scenario()
 		load_scenario(scenario_path)
 
 	if auto_start:
@@ -216,6 +244,7 @@ func _resume_from_save() -> void:
 	var saved_scenario := String(pending.get("scenario", ""))
 	if not saved_scenario.is_empty() and FileAccess.file_exists(saved_scenario):
 		scenario_path = saved_scenario
+		_save_named_scenario = true
 	_saved_turn = int(pending.get("turn", 0))
 	# A resumed date skips her greeting only when the restored log already carries
 	# it: this scene's entry autosave can land before the opening beats reach the
@@ -245,6 +274,39 @@ func _autosave_scene(reason: String) -> void:
 	if String(result.get("error", "")) == "disabled":
 		return
 	push_warning("Date: %s autosave skipped — %s" % [reason, String(result.get("message", ""))])
+
+
+## P2.19 / docs/01 §1: with the day/night loop on, today's scenario comes from the
+## campaign's availability rule. A pinned `scenario_path` (dev tools, scene tests)
+## and a save's scenario both win — the export's default value is the "let the
+## campaign choose" marker, so the shipped Date always asks.
+func _apply_campaign_scenario() -> void:
+	if not campaign_flow or scenario_path != DEFAULT_SCENARIO:
+		return
+	var pick: Dictionary = Campaign.new(GameState).begin_day()
+	if pick.is_empty():
+		push_warning(
+			"Date: no scenario is available for day %d; keeping %s" % [GameState.day, scenario_path]
+		)
+		return
+	scenario_path = String(pick.get("path", scenario_path))
+
+
+## docs/01 §1 + docs/08 §7: a date is over when its scenario says so — `max_turns`
+## reached, or her `end_date` action past `min_turns`. The check runs at the
+## displayed boundary so the last line is on screen before the night takes over,
+## and the route is deferred: a scene change inside the turn close would drop the
+## last frame (the P2.20 lesson).
+func _check_scenario_end() -> void:
+	if _date_over or _scenario.is_empty() or not is_inside_tree():
+		return
+	var outcome := ScenarioLoader.evaluate_turn_end(_scenario, _current_turn, false, _last_action)
+	if not bool(outcome.get("ended", false)):
+		return
+	_date_over = true
+	date_ended.emit(String(outcome.get("reason", "")))
+	if campaign_flow and scene_change_enabled:
+		get_tree().change_scene_to_file.call_deferred(NIGHT_SCENE_PATH)
 
 
 ## The P2.09 seam, resolved by path: a Date scene must run in tests and tools
@@ -518,6 +580,9 @@ func _on_turn_displayed() -> void:
 	# Director clears its in-flight flag only after that call returns — every
 	# save is refused ("busy") while it is set.
 	_autosave_scene.call_deferred("after turn")
+	# P2.19: the date's end is decided once her last line is on screen, and routed
+	# on an idle frame (the Director may still be unwinding this turn's close).
+	_check_scenario_end.call_deferred()
 
 
 ## docs/03 §5 (P2.07): her private thought can surface for a moment. The ChatUI
@@ -525,6 +590,10 @@ func _on_turn_displayed() -> void:
 ## scene only hands it the finished turn. `inner` is schema-required
 ## (docs/02 §3), so a missing key simply means there is nothing to leak.
 func _on_director_turn_completed(_turn_index: int, turn_data: Dictionary) -> void:
+	# P2.19: the scenario's end rule reads the turn's `action` (docs/08 §7's
+	# `end.on_goal`), and this is the only callback that carries it — the displayed
+	# boundary that routes to the night does not.
+	_last_action = String(turn_data.get("action", "none"))
 	if chat_ui == null or not is_instance_valid(chat_ui):
 		return
 	if not chat_ui.has_method("leak_inner"):

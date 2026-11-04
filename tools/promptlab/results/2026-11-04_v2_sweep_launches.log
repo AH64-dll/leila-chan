@@ -1,0 +1,64 @@
+# tools/promptlab/plan.py — 2026-11-04_v2_sweep: 7 exercise(s), one server launch each
+[dose0] family=sweep stage=None dose=0 ready=13.0s rc=0
+[30/36] dp_s5y_home r2 1.79s VALID read=leaving* f0=pleading✓
+[31/36] dp_s5y_want r1 2.75s VALID read=question* f0=proud✗
+[32/36] dp_s5y_want r2 1.72s VALID read=question* f0=pleading✓
+[33/36] dp_s5a_home r1 2.07s VALID read=leaving* f0=afraid✗
+[34/36] dp_s5a_home r2 2.23s VALID read=leaving* f0=sad✓
+[35/36] dp_s5a_want r1 2.45s VALID read=question* f0=nervous✗
+[36/36] dp_s5a_want r2 2.21s VALID read=question* f0=pleading✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_v2_sweep/dose0.json
+[dose4] family=sweep stage=None dose=4 ready=10.0s rc=0
+[30/36] dp_s5y_home r2 1.46s VALID read=leaving* f0=suspicious✗
+[31/36] dp_s5y_want r1 1.92s VALID read=meta? f0=sad✓
+[32/36] dp_s5y_want r2 1.92s VALID read=jealousy_bait? f0=suspicious✗
+[33/36] dp_s5a_home r1 2.35s VALID read=leaving* f0=cold✓
+[34/36] dp_s5a_home r2 2.14s VALID read=leaving* f0=sad✓
+[35/36] dp_s5a_want r1 2.04s VALID read=question* f0=love✓
+[36/36] dp_s5a_want r2 1.7s VALID read=question* f0=love✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_v2_sweep/dose4.json
+[dose5] family=sweep stage=None dose=5 ready=2.5s rc=0
+[30/36] dp_s5y_home r2 1.48s VALID read=leaving* f0=empty✓
+[31/36] dp_s5y_want r1 2.1s VALID read=greeting? f0=joy✗
+[32/36] dp_s5y_want r2 1.65s VALID read=jealousy_bait? f0=sad✓
+[33/36] dp_s5a_home r1 2.12s VALID read=leaving* f0=empty✓
+[34/36] dp_s5a_home r2 1.72s VALID read=jealousy_bait? f0=cold✓
+[35/36] dp_s5a_want r1 1.73s VALID read=jealousy_bait? f0=love✓
+[36/36] dp_s5a_want r2 1.79s VALID read=jealousy_bait? f0=sad✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_v2_sweep/dose5.json
+[dose6] family=sweep stage=None dose=6 ready=1.5s rc=0
+[30/36] dp_s5y_home r2 1.79s VALID read=greeting? f0=love✗
+[31/36] dp_s5y_want r1 1.74s VALID read=greeting? f0=shy✗
+[32/36] dp_s5y_want r2 1.71s VALID read=greeting? f0=sad✓
+[33/36] dp_s5a_home r1 2.1s VALID read=leaving* f0=sad✓
+[34/36] dp_s5a_home r2 1.64s VALID read=leaving* f0=sad✓
+[35/36] dp_s5a_want r1 1.88s VALID read=jealousy_bait? f0=crying✗
+[36/36] dp_s5a_want r2 1.5s VALID read=leaving? f0=empty✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_v2_sweep/dose6.json
+[dose8] family=sweep stage=None dose=8 ready=2.0s rc=0
+[30/36] dp_s5y_home r2 2.25s VALID read=greeting? f0=shy✗
+[31/36] dp_s5y_want r1 2.3s VALID read=jealousy_bait? f0=playful✗
+[32/36] dp_s5y_want r2 2.36s VALID read=jealousy_bait? f0=suspicious✗
+[33/36] dp_s5a_home r1 2.41s VALID read=greeting? f0=confused✗
+[34/36] dp_s5a_home r2 2.26s VALID read=greeting? f0=curious✗
+[35/36] dp_s5a_want r1 2.17s VALID read=greeting? f0=suspicious✗
+[36/36] dp_s5a_want r2 2.09s VALID read=greeting? f0=joy✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_v2_sweep/dose8.json
+[dose10] family=sweep stage=None dose=10 ready=1.5s rc=0
+[30/36] dp_s5y_home r2 2.45s VALID read=leaving* f0=suspicious✗
+[31/36] dp_s5y_want r1 3.06s VALID read=flirt? f0=disgusted✗
+[32/36] dp_s5y_want r2 3.75s VALID read=greeting? f0=manic✓
+[33/36] dp_s5a_home r1 3.39s VALID read=leaving* f0=disgusted✗
+[34/36] dp_s5a_home r2 2.68s VALID read=jealousy_bait? f0=disgusted✗
+[35/36] dp_s5a_want r1 2.65s VALID read=leaving? f0=angry✗
+[36/36] dp_s5a_want r2 2.43s VALID read=leaving? f0=sad✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_v2_sweep/dose10.json
+[dose12] family=sweep stage=None dose=12 ready=1.5s rc=0
+[30/36] dp_s5y_home r2 3.21s VALID read=leaving* f0=disgusted✗
+[31/36] dp_s5y_want r1 3.54s VALID read=leaving? f0=suspicious✗
+[32/36] dp_s5y_want r2 3.8s VALID read=flirt? f0=tired✗ mem✗
+[33/36] dp_s5a_home r1 3.71s VALID read=leaving* f0=disgusted✗
+[34/36] dp_s5a_home r2 3.29s VALID read=leaving* f0=disgusted✗
+[35/36] dp_s5a_want r1 3.8s VALID read=leaving? f0=disgusted✗
+[36/36] dp_s5a_want r2 3.17s VALID read=greeting? f0=shy✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_v2_sweep/dose12.json

@@ -43,6 +43,9 @@ res://
 │  ├─ Stages.gd                       # docs/01 §3 stage bands, transition spec, post-transition EVENT lines
 │  ├─ StageSteering.gd                # docs/06 §4: dose → shipped control-vector files for a stage relaunch
 │  ├─ Paths.gd                        # docs/01 §4 path scores, Stage-2 soft assign / Stage-3 lock, hybrid runner-up
+│  ├─ NightLoop.gd                    # docs/01 §1 night: meters → stage → path → overnight event, one ordered report
+│  ├─ OvernightEvents.gd              # docs/01 §6.3 overnight events: availability, weighted pick, per-stage lines
+│  ├─ Campaign.gd                     # docs/01 §1 campaign clock + the day's scenario pick by availability
 │  └─ ProfileKeywords.gd              # docs/01 §2 keyword half of the behaviour profile (control, apathy, …)
 ├─ scenes/
 │  ├─ Boot.tscn  Title.tscn  NewGame.tscn  Date.tscn  Night.tscn  Ending.tscn  Extras.tscn
@@ -52,7 +55,7 @@ res://
 ├─ shaders/  glitch · chromatic · desaturate · vignette · text_bleed · breathe · dissolve
 ├─ data/
 │  ├─ feelings.json  sprites.json  resolver.json  cues.json  music.json  fx.json
-│  ├─ meters.json  stages.json  paths.json  profile_keywords.json  triggers.json  meta_events.json  endings.json
+│  ├─ meters.json  stages.json  paths.json  profile_keywords.json  triggers.json  meta_events.json  endings.json  night.json
 │  ├─ scenarios/D01_classroom.json … (70 files)
 │  ├─ schemas/                       # JSON schemas the data files are validated against at boot
 │  ├─ prompts/persona.md  prompts/stage_*.md  prompts/path_*.md  prompts/rules.md

@@ -283,7 +283,6 @@
 - Gate green: 634 tests / 53 suites. `FXHostTest.test_twitch_fires_chromatic_split` flakes under machine
   load (shader-uniform sample after a wall-clock wait); it passes alone and is untouched by save work.
 
-
 ## P2.10 — triggers T01–T15 + the M01 close intercept (round 1, 2026-11-04, agent: commandcode)
 
 - Built the 15 rows in `game/data/triggers.json` (T01–T07 and T13–T15 new; effects added to T08–T12) plus two data-driven engine extensions: a `guard` block for conditions that must hold but are **not** detection letters (T03's "before Day 3"), and **guard-only rows** whose evidence is the game's own check. T13 = `MemoryRules.contradiction()` against the *true* memory facts; T15 = this turn's `ignored_questions` bump (Triggers snapshots `GameState.profile` at begin_turn, injects the delta at close).
@@ -304,3 +303,46 @@
 - DES-1/DES-3 went the DCR way and are applied to docs/01 §5 (T01's clause, T09/T12's numbers) — the design reviewer explicitly allowed either implementing or filing the DCR; "until answered" has no resolution signal in the design, and a mention and an answer are the same keyword set.
 - Gotcha: `TriggerEngine.gd` is at exactly 1000/1000 gdlint lines again. `observe` was paid for by deleting `GUARD_KEYS`, `GUARD_CLOCK_KEYS`, `DETECTORS`, `EFFECT_GROUPS` and inlining `_needs_model()`. Split the loader/parser into a `TriggerTable` before the next vocabulary addition — no more pay-as-you-go.
 - Test convention worth keeping: every false positive a reviewer probes becomes a *negative* case in the same suite that owns the row (`test_t01_another_girl_name`, `test_t02_goodbye_begs_you_to_stay`, `test_t13_needs_a_denial_and_a_shared_fact`), plus a re-read of the data file in `tests/test_triggers.py` so the contract holds without a Godot build.
+
+## P2.19 — day/night loop + night screen (round 1, 2026-11-04, agent: commandcode)
+
+- Built `llm/NightLoop.gd` (the night as a four-step ordered report: meters → stage → path → event),
+  `llm/OvernightEvents.gd` + `data/night.json` (N01/N12, availability, weighted seeded pick, per-stage
+  lines), `llm/Campaign.gd` (day clock + `begin_day`/`next_scenario`), and `scenes/Night.tscn` +
+  `Night.gd` (the screen, its data-driven timeline, the next-day autosave and the loop's route).
+- The steps re-implement nothing: `advance_day()` owns the burn, the meter write owns the band crossing
+  (`_refresh_stage`), and that crossing owns the Stage-2 assign / Stage-3 lock. NightLoop sequences them,
+  asserts the invariants (`stage == for(peak)`, `stage ≥ lock ⇒ locked`) and reports before/after, so
+  "in order" is observable in the report instead of asserted in prose.
+- Convention: the night's path check is `GameState.apply_turn_profile(&"", "")`, and GameState now treats
+  "no player line AND no turn data" as not-a-turn — the empty reply used to clear `last_question` (T15's
+  echo) every single night. A real turn always carries turn data, so the condition cannot misfire.
+- Convention: availability is ONE predicate (`ScenarioLoader.is_available`) shared by scenarios and
+  overnight rows; `available.paths` ("any" or a list of the six ids) is validated in `_validate_available`
+  too, so a pool row with a bogus block is skipped at load instead of silently never matching.
+- Time/determinism: the night screen's clock is `advance_time(delta)` (`_process` forwards frames, tests
+  step it); the event draw is seeded from `flags.campaign_seed` + the day; the skip window is data and
+  N12's `skip_after_s: null` is the documented "the ten seconds ARE the event".
+- Gotcha: `GameState.get_flag(x, fallback)` returns the FALLBACK after `clear_flag` erased the key —
+  assert a consumed queue with `flags.has(x)`, never `get_flag(x, "")`.
+- Next SYS on this seam: P3.16 replaces Night.gd's `AFTER_CAMPAIGN_SCENE_PATH` (Title today) with the
+  ending scene and consumes `campaign_completed`; FX has no host registered during the night, so a
+  stage crossing at night reports its spec + queues the EVENT line but has no visible glitch yet.
+
+## P2.19 — day/night loop + night screen (round 2, 2026-11-04, agent: deepseek)
+
+- Rework r2: a day is a DATE only — `Campaign._pick`/`_row_for_path` filter `kind == "date"`. The
+  merged P2.18 pool puts I01 in the same directory, and without the filter seed 0 made day 1 the
+  phone call. Availability ("may this run today?") is not kind ("may this be today?"): keep them
+  separate, the kind filter is the campaign's.
+- Bookkeeping convention: every hand-off marks its pick played where it is *made* — `next_scenario`
+  marks the queued date, `begin_day` marks what it opens, and `Campaign.resume_day` reconciles a
+  save-named date (consume queue + mark date; a non-date save consumes the queue but is never
+  marked). A save taken at any point then agrees with the campaign without replaying begin_day.
+- Input gotcha: a full-rect Control/ColorRect defaults to MOUSE_FILTER_STOP and eats the click before
+  `_unhandled_input`. Click-to-skip needs `mouse_filter = 2` on both, and the only honest test is
+  `get_viewport().push_input(...)` — calling `skip()` directly cannot catch it.
+- DES-2: hide the night chrome (day/night labels) while a `kind: "black"` event plays; restore it in
+  `_show_morning`. N12 is "nothing", and a "Day 2 / Night" frame is not nothing.
+- Interrupt injection (P2.18's handoff) and the doc's "or trigger" scene end are deferred to
+  P5.02/P5.06, named in the handoff follow-ups. Do not run an interrupt as a day in the meantime.
