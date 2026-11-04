@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "doc": "docs/06 §3 dose schedule: control-vector scales per stage (P2.04). `malice` is the tweet-malice vector scale and must equal the `dose` column of docs/02 §9 in game/data/sampling.json (SteeringTest enforces the match); `path` is this stage's path-vector weight, and the locked path picks the file (P3.03/P2.03). The [0, 12] clamp and the calmer-mode stage-3 cap are code rules in Steering.gd (docs/06 §5, docs/02 §8) and are deliberately not tunable here. Retune by blind-reading transcripts (docs/06 §3).",
+  "stages": {
+    "0": {"malice": 0.0, "path": 0.0},
+    "1": {"malice": 2.5, "path": 1.0},
+    "2": {"malice": 3.5, "path": 2.0},
+    "3": {"malice": 4.5, "path": 3.0},
+    "4": {"malice": 6.0, "path": 4.0},
+    "5": {"malice": 8.0, "path": 5.0}
+  }
+}

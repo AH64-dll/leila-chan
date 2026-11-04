@@ -215,9 +215,13 @@ func test_docs_02_section_7_empty_say_stage_under_3_retries_once() -> void:
 	var data: Dictionary = completed_box[0]
 	var beats: Array = data.get("beats", [])
 	assert_str(str((beats[0] as Dictionary).get("say", ""))).is_equal("Sorry, I drifted off.")
-	# Retry dose: stage-1 table base 2.5 + (-2.0) = 0.5.
-	assert_float(float(_fake_backend.seen_request.dose.get("base", -1.0))).is_equal_approx(
+	# Retry dose: stage-1 malice 2.5 + (-2.0) = 0.5, and the path scale is not
+	# cut (the offset lands once, on the dose scale — docs/02 §7).
+	assert_float(float(_fake_backend.seen_request.dose.get("malice", -1.0))).is_equal_approx(
 		0.5, 0.0001
+	)
+	assert_float(float(_fake_backend.seen_request.dose.get("path", -1.0))).is_equal_approx(
+		1.0, 0.0001
 	)
 
 
@@ -246,7 +250,7 @@ func test_docs_02_section_7_empty_say_retry_dose_never_negative() -> void:
 	await _await_until(func() -> bool: return not (completed_box[0] as Dictionary).is_empty())
 
 	assert_int(_fake_backend.calls).is_equal(2)
-	assert_bool(float(_fake_backend.seen_request.dose.get("base", 0.0)) >= 0.0).is_true()
+	assert_bool(float(_fake_backend.seen_request.dose.get("malice", -1.0)) >= 0.0).is_true()
 
 
 func test_docs_02_section_7_empty_say_stage_under_3_retries_only_once() -> void:
