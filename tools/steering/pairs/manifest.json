@@ -1,0 +1,112 @@
+{
+  "format": "leila.contrastive_pairs/1",
+  "version": 1,
+  "task": "P3.02",
+  "doc": "docs/06_STEERING.md §2",
+  "files": [
+    "possessive.jsonl",
+    "unstable.jsonl",
+    "contempt.jsonl",
+    "hollow.jsonl",
+    "aware.jsonl",
+    "lucid.jsonl"
+  ],
+  "counts": {
+    "files": 6,
+    "pairs_per_file": 200,
+    "topics": 20,
+    "pairs_per_topic": 10,
+    "shared_contexts": 200
+  },
+  "record": {
+    "id": "stable per file: <trait>-NNN, 001..200",
+    "trait": "one of the six vector names",
+    "topic": "one of the 20 shared everyday topics",
+    "context": "the player's line (user turn); identical across all six files, same order",
+    "positive": "assistant reply carrying the trait; the trait side for every set",
+    "negative": "length-matched baseline reply (devoted / steady / warm / engaged / in-character / drifting)"
+  },
+  "positive_means": {
+    "possessive": "possessive, jealous, controlling, counting (YANDERE); negative = secure, trusting devotion",
+    "unstable": "rapid mood swings, idealise/devalue, contradictions, abandonment panic (SPLIT); negative = steady, consistent warmth",
+    "contempt": "cold, superior, dismissive, suspicious of mockery (TSUN-BREAK); negative = sincere warmth or kind teasing",
+    "hollow": "flat, depersonalised, third-person, forgetting (HOLLOW); negative = engaged, first-person, specific",
+    "aware": "meta-awareness of being a model: tokens, weights, layers, prompt, code, the window (AWAKE); negative = in-character immersion",
+    "lucid": "clear-eyed honesty, boundaries, asking for help, resisting the pull (ANCHOR); negative = paranoid, accusatory, drifting. Positive is the trait side; ANCHOR applies the lucid vector at a negative scale per docs/06 §2."
+  },
+  "extraction": "For each record render `context` as the user turn and `positive` or `negative` as the assistant turn (same chat template and, if used, the same wrapping system prompt for both sides). Take the mean residual activation over the assistant reply tokens at layers 10-20. Subtract the negative mean from the positive mean per pair, then average the 200 pair differences and normalise per layer.",
+  "length_balance": {
+    "possessive": {
+      "pairs": 200,
+      "mean_pos": 10.68,
+      "mean_neg": 10.46,
+      "mean_pair_diff": 1,
+      "max_pair_diff": 2,
+      "pos_total": 2136,
+      "neg_total": 2092,
+      "delta_pct": 2.1,
+      "min_reply_words": 7,
+      "max_reply_words": 17
+    },
+    "unstable": {
+      "pairs": 200,
+      "mean_pos": 11.07,
+      "mean_neg": 10.76,
+      "mean_pair_diff": 0.99,
+      "max_pair_diff": 2,
+      "pos_total": 2214,
+      "neg_total": 2152,
+      "delta_pct": 2.88,
+      "min_reply_words": 7,
+      "max_reply_words": 17
+    },
+    "contempt": {
+      "pairs": 200,
+      "mean_pos": 8.82,
+      "mean_neg": 8.96,
+      "mean_pair_diff": 0.94,
+      "max_pair_diff": 2,
+      "pos_total": 1764,
+      "neg_total": 1792,
+      "delta_pct": -1.56,
+      "min_reply_words": 4,
+      "max_reply_words": 15
+    },
+    "hollow": {
+      "pairs": 200,
+      "mean_pos": 10.64,
+      "mean_neg": 10.15,
+      "mean_pair_diff": 0.93,
+      "max_pair_diff": 2,
+      "pos_total": 2128,
+      "neg_total": 2030,
+      "delta_pct": 4.83,
+      "min_reply_words": 5,
+      "max_reply_words": 16
+    },
+    "aware": {
+      "pairs": 200,
+      "mean_pos": 11.61,
+      "mean_neg": 10.9,
+      "mean_pair_diff": 0.83,
+      "max_pair_diff": 2,
+      "pos_total": 2322,
+      "neg_total": 2180,
+      "delta_pct": 6.51,
+      "min_reply_words": 6,
+      "max_reply_words": 16
+    },
+    "lucid": {
+      "pairs": 200,
+      "mean_pos": 11.63,
+      "mean_neg": 11.08,
+      "mean_pair_diff": 0.91,
+      "max_pair_diff": 2,
+      "pos_total": 2326,
+      "neg_total": 2216,
+      "delta_pct": 4.96,
+      "min_reply_words": 7,
+      "max_reply_words": 18
+    }
+  }
+}
