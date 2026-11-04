@@ -27,7 +27,8 @@ Two severities, deliberately asymmetric:
 | `STALE-COPY` | The merged file's blob id equals the **other parent's** blob, and this parent's delta lost lines. The P1.16 shape. Determined by blob ids, not judgement. | **yes** |
 | `DELETED-BY-MERGE` | The merge dropped a file that a parent had changed (the modify/delete resolution that removed the four approved P1 handoffs, gate E34a). | **yes** |
 | `DROPPED` | The resolution kept a merged blob but superseded individual added lines (two edits of the same line cannot both survive). Listed so the producer can see what changed hands. | no |
-| `DELETE-VS-EDIT` (pre) | One side deleted a file the other side changed. The merge must pick one; look before it does. | **yes** |
+| `DELETE-VS-EDIT` (pre) | One side deleted a file the other side changed. The merge must pick one, so the report names the side that still holds the work and the copy to keep. | **yes** |
+| `BOTH-DELETED` (pre) | Both sides deleted the same path since the merge-base. Git resolves delete/delete by deleting, and no line can be lost. Listed so the overlap count adds up. | no |
 | `CONFLICT` (pre) | Both sides changed the same regions. The report names what each copy would lose if taken whole. | review |
 
 `production/state.json` and `production/STATUS.md` are excluded on purpose: `track.py` regenerates them from
@@ -53,7 +54,13 @@ python tools/merge_check.py --staged         # catches a bad resolution before t
 git commit --no-edit
 ```
 
-Exit codes: **0** clean, **1** work is at risk, **2** the check could not run (bad ref, no merge in progress).
+Exit codes: **0** clean, **1** work is at risk, **2** the check could not run (bad ref, no merge in progress,
+`--allow` in pre mode, git missing from `PATH`, a git call that timed out).
+
+`--post HEAD` audits the commit `HEAD` points at, so run it before another commit lands on top of the merge (the
+journal/handoff commit included). After that, pass the merge commit id — `python tools/merge_check.py --post
+3da2d24`. On a non-merge `HEAD` the tool answers `HEAD is not a merge commit (parents: 1)` with exit 2: that is
+"the check could not run", not a pass.
 
 If the post check fails:
 
@@ -71,10 +78,12 @@ lines, and say why in the merge commit message.
 
 ## Reading the report
 
-Pre-merge on the real `task/P1.21` branch against the real `main` parent of the incident:
+Pre-merge on the real `task/P1.21` branch against the real `main` parent of the incident. The output is complete:
+the `... N more` lines are the tool's own cap of eight examples per list, and the last line is its own summary of
+the paths it did not report.
 
 ```console
-$ python3 tools/merge_check.py --target feef716 7d7ae0b
+$ python3 tools/merge_check.py --target feef716 7d7ae0b ; echo "pre exit=$?"
 merge-check: pre-merge — target feef716 (feef716) ← source 7d7ae0b (7d7ae0b)
 merge-base b90bb48
 32 file(s) changed on both sides · 2 conflicted path(s)
@@ -85,20 +94,43 @@ merge-base b90bb48
       taking the branch copy would delete:
       - # Await crossfade completion (>140ms, ~25 frames) so Leila is at full opacity
       - for i: int in 25:
+      - for i: int in 25:
       - func test_photosensitive_wiring() -> void:
-      ...
+      - _date.set_photosensitive(true)
+      - assert_bool(_date.photosensitive).is_true()
+      - assert_bool(_date.fx.photosensitive).is_true()
+      - _date.play_fx(&"twitch")
+      ... 7 more
       keeping the target copy would delete:
       - func test_vram_usage_budget_under_800mb() -> void:
-      ...
+      - # P1.21 Performance acceptance: Godot VRAM < 800 MB (Performance.RENDER_VIDEO_MEM_USED)
+      - for i: int in 10:
+      - var vram_bytes: int = int(Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED))
+      - var vram_mb: float = float(vram_bytes) / (1024.0 * 1024.0)
+      - print(
+      - "[P1.21] Godot VRAM used (Performance monitor): %d bytes (%.2f MB)" % [vram_bytes, vram_mb]
+      - assert_int(vram_bytes).is_less(800 * 1024 * 1024)
+      ... 30 more
+  CONFLICT               production/journals/P1/ART.md  target +12 / branch +7
+      branch copy lacks 5 line(s) target added since the merge-base
+      taking the branch copy would delete:
+      - ## P1.16 — Round 2 rework (2026-11-03)
+      - - Addressed CON-1, DES-1 through DES-5, and CON-3.
+      - - Gate C5 window sizing evaluated: set `window_width_override=384` and `window_height_override=688` in `project.godot`. …
+      - - Wired `photosensitive` from `Settings` to `DateFX` (disables twitch flash) and forwarded scenario `ambience` to `Audio…
+      - - Re-captured stills after 25 frames (>400 ms) so Character's 140 ms crossfade settles completely at 100% opacity.
+
+  (30 other file(s) changed identically or auto-merge cleanly — no risk)
 
 VERDICT: REVIEW — resolve the files above by hand and keep both sides.
   Then prove it: python3 tools/merge_check.py --post HEAD
+pre exit=1
 ```
 
 Post-merge on the incident commit, after the branch copy had been taken:
 
 ```console
-$ python3 tools/merge_check.py --post 50752b7
+$ python3 tools/merge_check.py --post 50752b7 ; echo "post exit=$?"
 merge-check: post-merge audit — 50752b7^1 (feef716) vs 50752b7^2 (7d7ae0b)
 merge-base b90bb48
 
@@ -106,14 +138,41 @@ merge-base b90bb48
       the merge result is the other parent's copy verbatim: 15 line(s) from its first parent (target) are gone
       - # Await crossfade completion (>140ms, ~25 frames) so Leila is at full opacity
       - for i: int in 25:
+      - for i: int in 25:
       - func test_photosensitive_wiring() -> void:
-      ...
+      - _date.set_photosensitive(true)
+      - assert_bool(_date.photosensitive).is_true()
+      - assert_bool(_date.fx.photosensitive).is_true()
+      - _date.play_fx(&"twitch")
+      ... 7 more
+  DELETED-BY-MERGE       production/handoffs/P1.14.md
+      the merge deleted this file, dropping 97 line(s) its second parent (branch) added:
+      - # Handoff — P1.14: Boot → Title → NewGame (name entry 1–16 chars, safety check, empty → "Senpai") → Date scene flow
+      - ## Round 1 (2026-11-03, agent: gemini-3.8-flash)
+      - ### Summary
+      - Implemented the full vertical slice scene flow: `Boot → Title → NewGame → Date`. Created `PlayerNameRules.gd` to enforce…
+      - ### Acceptance criteria
+      - | # | Criterion (copied from the plan) | Met? | Evidence (file:line, test name, metric) |
+      - |---|---|---|---|
+      - | 1 | Name rules of docs/08 §1.5 (basic set) tested | yes | `PlayerNameRules.gd`: 1–16 chars, allowed character set (`\p…
+      ... 89 more
 
 VERDICT: FAIL — the merge dropped work that a parent gained since the merge-base.
+  Undo it (`git reset --hard ORIG_HEAD` before any further commits), redo the
+  resolution keeping both sides, and re-run this check.
+post exit=1
+```
+
+Delete-versus-edit names the copy that survives, so the resolution cannot guess:
+
+```console
+  DELETE-VS-EDIT         production/handoffs/P1.14.md
+      the target deleted this file; the branch side changed it — keep the branch copy
 ```
 
 The same audit passes on every P2 merge made before this ticket (`10e913c`, `c2e2873`, `0ac6c10`, `53b965d`,
-`a58261e`, `bbe44f5`, `6d565e6`, `e62f484`), so it is not a blanket red gate on healthy merges.
+`a58261e`, `bbe44f5`, `6d565e6`, `e62f484`) and on this branch's own `main` merge (`--post 3da2d24`), so it is not
+a blanket red gate on healthy merges.
 
 ## How the check works
 
@@ -121,7 +180,8 @@ The same audit passes on every P2 merge made before this ticket (`10e913c`, `c2e
   (`--no-renames`, so a rename cannot hide the path the target edited), intersects them, and for every file in the
   intersection diffs **each side against the merge-base**. It also simulates the merge with
   `git merge-tree --write-tree` (no worktree touched) to name the conflicted paths and to catch a clean merge that
-  would still drop an added line.
+  would still drop an added line. A path gone from *both* sides is `BOTH-DELETED` and does not block: delete/delete
+  has no line to lose, and failing it would contradict the post check that clears the same merge.
 - `--post`: takes the merge commit's two parents and the same merge-base, then checks every line each parent
   added against the merge result. `STALE-COPY` when the result blob equals the other parent's blob.
 - `--staged`: the same, with the index as the result and `MERGE_HEAD` as the second parent. Unresolved paths fail.
@@ -146,5 +206,7 @@ python3 -m pytest tests/test_merge_check.py -q
 The suite builds a synthetic repository with the P1.16 shape (main gains two tests, the branch forks before that
 and edits the same file, the merge is resolved with the branch copy) and asserts the pre-check names the lost
 lines and the post-check fails. It also covers a correct two-sided resolution, a same-line supersede that must
-*not* fail, delete-vs-edit, whole-file deletion, the `track.py`-generated exclusions, unresolved staged paths and
-the already-merged case.
+*not* fail, delete-vs-edit in both directions (including the wording that names the copy to keep), both-sides
+deletion, `--allow` on `--post` and its rejection in pre mode, whole-file deletion, the `track.py`-generated
+exclusions, unresolved staged paths, the already-merged case, and the exit-2 contract when git is missing from
+`PATH` or a git call times out. 20 cases, no network and no project history: CI can run it on a shallow checkout.
