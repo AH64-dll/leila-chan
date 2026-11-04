@@ -181,7 +181,13 @@ func _ready() -> void:
 	if _scenario.is_empty():
 		# P2.19: a save names its own scenario; every other entry (New Game, the
 		# Night's next-day hand-off) takes today's date from the campaign.
-		if not _save_named_scenario:
+		if _save_named_scenario:
+			# P2.20/P2.19: the saved scenario is today's date, so the campaign's
+			# bookkeeping must agree — the night's queue is consumed and the
+			# date is marked played, exactly as begin_day() would have done.
+			if campaign_flow:
+				Campaign.new(GameState).resume_day(scenario_path)
+		else:
 			_apply_campaign_scenario()
 		load_scenario(scenario_path)
 

@@ -116,6 +116,11 @@ func test_next_scenario_queues_the_new_day() -> void:
 	var next: Dictionary = campaign.next_scenario(pool)
 	assert_str(String(next["id"])).is_equal("B")
 	assert_str(String(s.get_flag(&"next_scenario", ""))).is_equal("res://data/scenarios/B.json")
+	# The queued pick is already in the played set: a save taken at night carries
+	# both, so Continue cannot reopen the date the queue owns (CODE-2).
+	assert_array(campaign.played_ids()).has_size(2)
+	assert_str(String(campaign.played_ids()[0])).is_equal("A")
+	assert_str(String(campaign.played_ids()[1])).is_equal("B")
 
 
 func test_next_scenario_never_repeats_a_played_date() -> void:
@@ -126,6 +131,71 @@ func test_next_scenario_never_repeats_a_played_date() -> void:
 	campaign.begin_day(pool)
 	var next: Dictionary = campaign.next_scenario(pool)
 	assert_str(String(next["id"])).is_equal("B")
+	assert_array(campaign.played_ids()).has_size(2)
+	assert_str(String(campaign.played_ids()[1])).is_equal("B")
+
+
+## docs/01 §6.1/§6.2 + the P2.18 handoff: a day is a date scene and an interrupt
+## is an in-date event, so the day's pick never hands out an interrupt row — an
+## interrupt-only pool leaves the day empty rather than running one as the day.
+func test_day_pick_never_returns_an_interrupt() -> void:
+	var s: Variant = _state()
+	var interrupt := _scenario("I01", [1, 14], [0, 5], "any")
+	interrupt["kind"] = "interrupt"
+	var row := {"path": "res://data/scenarios/I01.json", "id": "I01", "scenario": interrupt}
+	var campaign: Variant = CampaignScript.new(s)
+	assert_dict(campaign.begin_day([row])).is_empty()
+	assert_dict(campaign.next_scenario([row])).is_empty()
+	assert_array(campaign.played_ids()).is_empty()
+
+
+## The merged pool ships six dates and the I01 interrupt in the same directory:
+## no seed may draw the interrupt as the day, and every seed still opens day 1.
+func test_shipped_campaign_never_opens_on_an_interrupt() -> void:
+	ScenarioLoaderScript.clear_pool_cache()
+	var pool: Array = ScenarioLoaderScript.pool()
+	var kinds := {}
+	for row: Dictionary in pool:
+		kinds[String(row["scenario"].get("kind", ""))] = true
+	assert_bool(kinds.has("interrupt")).is_true()
+	for seed_value: int in 64:
+		var s: Variant = _state()
+		s.set_flag(&"campaign_seed", seed_value)
+		var pick: Dictionary = CampaignScript.new(s).begin_day(pool)
+		assert_dict(pick).is_not_empty()
+		assert_str(String(pick.get("scenario", {}).get("kind", ""))).is_equal("date")
+
+
+## A stale queue that names an interrupt is not honoured as a day, and it is
+## consumed rather than shadowing the availability pick on every later morning.
+func test_begin_day_consumes_an_unusable_queue() -> void:
+	var s: Variant = _state()
+	var interrupt := _scenario("I01", [1, 14], [0, 5], "any")
+	interrupt["kind"] = "interrupt"
+	var row := {"path": "res://data/scenarios/I01.json", "id": "I01", "scenario": interrupt}
+	s.set_flag(&"next_scenario", "res://data/scenarios/I01.json")
+	var campaign: Variant = CampaignScript.new(s)
+	var pick: Dictionary = campaign.begin_day([row, _row("A", [1, 14], [0, 5], "any")])
+	assert_str(String(pick["id"])).is_equal("A")
+	assert_bool(s.flags.has("next_scenario")).is_false()
+
+
+## P2.20/P2.19: Continue lands on the Date with the save's own scenario. That
+## date is today's, so the campaign agrees: the night's queue is consumed and the
+## date is marked played (CODE-2's save-resume half).
+func test_resume_day_consumes_the_queue_and_marks_the_date_played() -> void:
+	var s: Variant = _state()
+	s.set_flag(&"next_scenario", D02_PATH)
+	CampaignScript.new(s).resume_day(D02_PATH)
+	assert_bool(s.flags.has("next_scenario")).is_false()
+	assert_array(CampaignScript.new(s).played_ids()).has_size(1)
+	assert_str(String(CampaignScript.new(s).played_ids()[0])).is_equal("D02_cafe")
+	# An interrupt save consumes the queue but never enters the played set.
+	s.set_flag(&"next_scenario", D02_PATH)
+	CampaignScript.new(s).resume_day("res://data/scenarios/I01_phone_call.json")
+	assert_bool(s.flags.has("next_scenario")).is_false()
+	assert_array(CampaignScript.new(s).played_ids()).has_size(1)
+	assert_str(String(CampaignScript.new(s).played_ids()[0])).is_equal("D02_cafe")
 
 
 func test_pick_is_deterministic_and_seed_driven() -> void:
@@ -182,7 +252,10 @@ func test_campaign_state_survives_the_snapshot() -> void:
 	assert_array(replay.played_ids()).has_size(1)
 	assert_str(String(replay.played_ids()[0])).is_equal("B")
 	# The played list survives, so the reloaded campaign does not replay B; the
-	# consumed queue stays consumed (no stale next-day date).
+	# queue the night wrote is consumed as the pick is made, and both picks are
+	# in the played set before any save can name them (CODE-2).
 	var next: Dictionary = replay.next_scenario(pool)
 	assert_str(String(next["id"])).is_equal("A")
+	assert_array(replay.played_ids()).has_size(2)
+	assert_str(String(replay.played_ids()[1])).is_equal("A")
 	assert_bool(restored.flags.has("next_scenario")).is_true()

@@ -90,6 +90,7 @@ func start_night() -> Dictionary:
 		overnight_started.emit(_event.duplicate(true))
 	_queue_next_day()
 	_phase = PHASE_EVENT
+	_apply_chrome()
 	if auto_advance:
 		set_process(true)
 	_reveal_due()
@@ -262,7 +263,21 @@ func _add_line(text: String, is_message: bool) -> void:
 
 
 func _show_morning() -> void:
+	# The black renderer hid the chrome for the "nothing" beat; the morning line
+	# is the new day speaking, so the labels come back with it.
+	day_label.visible = true
+	night_label.visible = true
 	_add_line(_morning, false)
+
+
+## docs/01 §6.3: N12 is "Nothing. A black screen for 10 seconds." The frame the
+## night normally shows would sentence an empty screen, so the chrome steps aside
+## for a black event and returns with the morning line. Every other renderer
+## keeps the day/night labels.
+func _apply_chrome() -> void:
+	var hidden := _phase == PHASE_EVENT and String(_event.get("kind", "")) == "black"
+	day_label.visible = not hidden
+	night_label.visible = not hidden
 
 
 ## The skip window is data; a null window means the wait is the event.

@@ -307,3 +307,21 @@
 - Next SYS on this seam: P3.16 replaces Night.gd's `AFTER_CAMPAIGN_SCENE_PATH` (Title today) with the
   ending scene and consumes `campaign_completed`; FX has no host registered during the night, so a
   stage crossing at night reports its spec + queues the EVENT line but has no visible glitch yet.
+
+## P2.19 — day/night loop + night screen (round 2, 2026-11-04, agent: deepseek)
+
+- Rework r2: a day is a DATE only — `Campaign._pick`/`_row_for_path` filter `kind == "date"`. The
+  merged P2.18 pool puts I01 in the same directory, and without the filter seed 0 made day 1 the
+  phone call. Availability ("may this run today?") is not kind ("may this be today?"): keep them
+  separate, the kind filter is the campaign's.
+- Bookkeeping convention: every hand-off marks its pick played where it is *made* — `next_scenario`
+  marks the queued date, `begin_day` marks what it opens, and `Campaign.resume_day` reconciles a
+  save-named date (consume queue + mark date; a non-date save consumes the queue but is never
+  marked). A save taken at any point then agrees with the campaign without replaying begin_day.
+- Input gotcha: a full-rect Control/ColorRect defaults to MOUSE_FILTER_STOP and eats the click before
+  `_unhandled_input`. Click-to-skip needs `mouse_filter = 2` on both, and the only honest test is
+  `get_viewport().push_input(...)` — calling `skip()` directly cannot catch it.
+- DES-2: hide the night chrome (day/night labels) while a `kind: "black"` event plays; restore it in
+  `_show_morning`. N12 is "nothing", and a "Day 2 / Night" frame is not nothing.
+- Interrupt injection (P2.18's handoff) and the doc's "or trigger" scene end are deferred to
+  P5.02/P5.06, named in the handoff follow-ups. Do not run an interrupt as a day in the meantime.

@@ -74,10 +74,13 @@ func begin_day(pool_rows: Array = []) -> Dictionary:
 	var pool: Array = pool_rows if not pool_rows.is_empty() else ScenarioLoader.pool()
 	var queued := String(_state.get_flag(FLAG_NEXT_SCENARIO, "")).strip_edges()
 	var picked := _row_for_path(pool, queued)
+	# The queue is a one-day hand-off: consumed the morning it is read, even if
+	# it names something that cannot run today (a stale or corrupt value must not
+	# shadow the availability pick forever).
+	if not queued.is_empty():
+		_state.clear_flag(FLAG_NEXT_SCENARIO)
 	if picked.is_empty():
 		picked = _pick(pool)
-	else:
-		_state.clear_flag(FLAG_NEXT_SCENARIO)
 	if picked.is_empty():
 		return {}
 	_note_played(StringName(String(picked.get("id", ""))))
@@ -87,6 +90,8 @@ func begin_day(pool_rows: Array = []) -> Dictionary:
 ## docs/01 §1: after the night's checks the loop queues the new day's date and
 ## returns it. Written into the flags so a save taken at night resumes the right
 ## scenario; {} when no scenario is available — the Date then keeps its default.
+## The pick is marked played as it is queued, so a save taken on the night screen
+## carries both facts and a Continue cannot replay the date this hand-off owns.
 func next_scenario(pool_rows: Array = []) -> Dictionary:
 	if _state == null:
 		return {}
@@ -94,6 +99,7 @@ func next_scenario(pool_rows: Array = []) -> Dictionary:
 	var picked := _pick(pool)
 	if picked.is_empty():
 		return {}
+	_note_played(StringName(String(picked.get("id", ""))))
 	_state.set_flag(FLAG_NEXT_SCENARIO, String(picked.get("path", "")))
 	return picked
 
@@ -102,12 +108,22 @@ func next_scenario(pool_rows: Array = []) -> Dictionary:
 ## path), minus what the campaign already played; a fully played pool falls back
 ## to the available set so a day is never left without a date. One candidate is
 ## drawn per (campaign seed, day), so the pick is deterministic and replayable.
+##
+## Only `kind: "date"` rows may be a day (docs/01 §6.1); an interrupt is a
+## random in-date event, not a date scene (docs/01 §6.2). The pool ships both,
+## so the filter lives here rather than in the availability predicate, which
+## answers "may this run today?", not "may this be today?".
 func _pick(pool: Array) -> Dictionary:
 	if _state == null:
 		return {}
-	var rows := ScenarioLoader.available_scenarios(
+	var available := ScenarioLoader.available_scenarios(
 		pool, day(), int(_state.stage), String(_state.path)
 	)
+	var rows: Array[Dictionary] = []
+	for row: Dictionary in available:
+		var scenario: Variant = row.get("scenario", row)
+		if scenario is Dictionary and String((scenario as Dictionary).get("kind", "")) == "date":
+			rows.append(row)
 	if rows.is_empty():
 		return {}
 	var played := played_ids()
@@ -120,13 +136,43 @@ func _pick(pool: Array) -> Dictionary:
 	return candidates[rng.randi_range(0, candidates.size() - 1)].duplicate(true)
 
 
+## The queued row for a path — only a date may be a day (docs/01 §6.1), so an
+## interrupt that somehow reached the queue is not honoured as the morning's date.
 func _row_for_path(pool: Array, path: String) -> Dictionary:
 	if path.is_empty():
 		return {}
 	for row: Variant in pool:
-		if row is Dictionary and String((row as Dictionary).get("path", "")) == path:
-			return (row as Dictionary).duplicate(true)
+		if not row is Dictionary:
+			continue
+		var entry: Dictionary = row
+		var scenario: Variant = entry.get("scenario", entry)
+		if not scenario is Dictionary:
+			continue
+		if String((scenario as Dictionary).get("kind", "")) != "date":
+			continue
+		if String(entry.get("path", "")) == path:
+			return entry.duplicate(true)
 	return {}
+
+
+## P2.20/P2.19: a save names the scenario it was taken in. Continuing from one —
+## the night's autosave carries the queued date — must leave the campaign's
+## bookkeeping in the shape a morning `begin_day()` would: the night's queue is
+## consumed and a date is marked played, so the resumed scene is not drawn again
+## as if it never happened. A path that names no scenario leaves the state alone;
+## the Date then keeps its own default.
+func resume_day(scenario_path: String) -> void:
+	if _state == null:
+		return
+	var path := scenario_path.strip_edges()
+	if path.is_empty():
+		return
+	var scenario := ScenarioLoader.load_scenario(path)
+	if scenario.is_empty():
+		return
+	_state.clear_flag(FLAG_NEXT_SCENARIO)
+	if String(scenario.get("kind", "")) == "date":
+		_note_played(StringName(String(scenario.get("id", ""))))
 
 
 ## Deterministic per (campaign seed, day): docs/01 §1's campaign is replayable, and
