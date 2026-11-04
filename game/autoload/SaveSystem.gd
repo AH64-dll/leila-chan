@@ -32,6 +32,17 @@ extends Node
 
 ## docs/07 §3.5 layout. The autosave is a slot; manual slots are 1..3 for v1
 ## (the P3.x save-menu task owns the UI and its slot count).
+##
+## The shadow save (docs/05 M08) is the one file a New Game does not wipe:
+## `user://.leila/shadow.json` keeps the first name ever typed, the names she
+## has seen, how many runs she has been through and a few memories of a run
+## that had already reached the meta gate. `ShadowStore` (game/llm) owns the
+## bytes and documents the file's full contents for privacy; this node owns
+## the moment it is written — `begin_new_game(player_name)`, called by the
+## New Game scene BEFORE GameState/Director reset, seals the run that just
+## ended — and `wipe_everything()`, the Settings → "Reset Everything" true
+## wipe that deletes all of `user://` except the settings file (docs/07 §3.5).
+
 const MANUAL_SLOT_COUNT := SaveSlots.MANUAL_SLOTS
 ## The scene id the Date writes with its autosave. The Night writes its own id
 ## with the next day's scenario, so Continue can land on that day (P2.19); the
@@ -52,6 +63,18 @@ var save_dir: String:
 		return slots.dir_path
 	set(value):
 		slots.dir_path = value
+## The shadow save (docs/05 M08): bytes + healing live in ShadowStore; this is
+## the game-side seam. `shadow_path` is the test seam.
+var shadow := ShadowStore.new()
+var shadow_path: String:
+	get:
+		return shadow.path
+	set(value):
+		shadow.path = value
+
+## Test seam for `wipe_everything`: the root it deletes under. Default is the
+## whole of `user://` (docs/07 §3.5).
+var user_root := "user://"
 
 ## The log seam (see the class note) and the log/scene waiting for a scene.
 var _clock := Callable()
@@ -60,6 +83,75 @@ var _log_source := Callable()
 var _log_sink := Callable()
 var _pending_log: Array = []
 var _pending_scene: Dictionary = {}
+
+
+## The moment M08 happens (see the class note): called by the New Game scene
+## before it resets GameState/Director, while the ended run's facts and name
+## are still live. Seals that run into the shadow save — the name list and, at
+## the meta gate (stage 3+), the memories she keeps — then records the new
+## name. Returns the ShadowStore write result.
+func begin_new_game(player_name: String) -> Dictionary:
+	var record := shadow.blank()
+	var read := shadow.load_shadow()
+	if bool(read["ok"]):
+		record = read["payload"]
+	var had_run := GameState.day > 1 or GameState.turn > 0 or GameState.stage > 0
+	var memories: Array = []
+	# docs/05 M08's gate: a few memories only survive a New Game from a run
+	# that had already deteriorated far enough for meta events.
+	if had_run and TurnSchema.is_meta_unlocked(GameState.stage):
+		memories = _dict(Memory.to_dict()).get("entries", [])
+	record = shadow.seal_run(record, GameState.player_name, had_run, memories)
+	record = shadow.record_name(record, player_name)
+	return shadow.store(record)
+
+
+## The shadow record, healed (blank when no file exists yet). `{ok:false}`
+## only when a present file is unreadable — callers may treat that as blank.
+func shadow_data() -> Dictionary:
+	var read := shadow.load_shadow()
+	if bool(read["ok"]):
+		return read["payload"]
+	return shadow.blank()
+
+
+## The memories she carries out of an ended run (M08 "she drops one of them
+## on Day 1"): [] before any stage-3+ run has been sealed.
+func shadow_memories() -> Array:
+	return _array(shadow_data().get("memories"))
+
+
+## The first name ever confirmed at the New Game screen ("" before any).
+func shadow_first_name() -> String:
+	return _string(shadow_data().get("first_name"))
+
+
+## Settings → "Reset Everything" (docs/07 §3.5): deletes ALL of `user://`
+## — every save slot, the shadow save, letters, diary, debug transcripts —
+## except the `keep` paths (`Settings.reset_everything` keeps settings.cfg).
+## The shadow store is also removed when it lives outside `user_root` (a
+## test seam), so the wipe is always complete for the configured files.
+## Returns {ok, removed, errors} — a locked file is reported, not thrown.
+func wipe_everything(keep: Array = []) -> Dictionary:
+	var kept := {}
+	for item: Variant in keep:
+		kept[_string(item)] = true
+	var tally := {"removed": 0, "errors": []}
+	_recurse_wipe(user_root, kept, tally)
+	# Seam paths outside user_root (tests point shadow_path at a scratch file
+	# inside user_root, but defend anyway): a configured file is wiped too.
+	for path: String in [slots.dir_path, shadow.path]:
+		if kept.has(path) or path.begins_with(user_root):
+			continue
+		if FileAccess.file_exists(path):
+			if DirAccess.remove_absolute(path) == OK:
+				tally["removed"] = int(tally["removed"]) + 1
+			else:
+				(tally["errors"] as Array).append(path)
+		elif DirAccess.dir_exists_absolute(path):
+			_recurse_wipe(path, kept, tally)
+	var errors: Array = tally["errors"]
+	return {"ok": errors.is_empty(), "removed": int(tally["removed"]), "errors": errors}
 
 
 func _ready() -> void:
@@ -390,3 +482,37 @@ static func _dict(value: Variant) -> Dictionary:
 	if value is Dictionary:
 		return value as Dictionary
 	return {}
+
+
+static func _array(value: Variant) -> Array:
+	if value is Array:
+		return value as Array
+	return []
+
+
+## Recursive erase: files under `dir_path` are removed unless `keep` names the
+## exact path; directories are emptied then removed. `tally` ({removed, errors})
+## is a Dictionary so the recursion shares one counter.
+func _recurse_wipe(dir_path: String, keep: Dictionary, tally: Dictionary) -> void:
+	# A trailing "/" makes DirAccess.remove_absolute refuse the root itself —
+	# normalize before recursing or the tree would leak.
+	var root := dir_path.trim_suffix("/")
+	var dir := DirAccess.open(root)
+	if dir == null:
+		return
+	# `.leila/` is hidden; the wipe cannot miss the shadow dir.
+	dir.set_include_hidden(true)
+	dir.list_dir_begin()
+	var entry := dir.get_next()
+	while not entry.is_empty():
+		var child := root.path_join(entry)
+		if dir.current_is_dir():
+			_recurse_wipe(child, keep, tally)
+			DirAccess.remove_absolute(child)
+		elif not keep.has(child):
+			if DirAccess.remove_absolute(child) == OK:
+				tally["removed"] = int(tally["removed"]) + 1
+			else:
+				(tally["errors"] as Array).append(child)
+		entry = dir.get_next()
+	dir.list_dir_end()

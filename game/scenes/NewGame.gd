@@ -85,6 +85,15 @@ func confirm_name() -> void:
 	# Apply game state updates (docs/08 §1.5)
 	var tree: SceneTree = Engine.get_main_loop() as SceneTree
 	if tree != null and tree.root != null:
+		# docs/05 M08: seal the ending run and record this name in the shadow
+		# save BEFORE the reset below erases the run's memories and name —
+		# this is the one write point, so the shadow only ever learns what a
+		# confirmed run and a typed name proved (P3.12).
+		if tree.root.has_node("SaveSystem"):
+			var saves: Node = tree.root.get_node("SaveSystem")
+			if saves.has_method("begin_new_game"):
+				saves.call("begin_new_game", resolved_name)
+
 		if tree.root.has_node("GameState"):
 			var gs: Node = tree.root.get_node("GameState")
 			if gs.has_method("reset"):
