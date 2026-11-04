@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "doc": "P2.02 stage machine. Sources: docs/01_GAME_DESIGN.md §3 (the six stages 0-5, their instability bands 0-14 / 15-29 / 30-49 / 50-69 / 70-89 / 90-100, and the diegetic 2-3 s transition she may comment on afterwards), docs/02_DIRECTOR_PROTOCOL.md §2.3 (the fx vocabulary), docs/04_AUDIO.md §2 (stinger.stage_change) and docs/08_PROMPTS_AND_CONTENT.md §6 (the EVENT line format). bands[i] is the Instability value at which stage i begins, so the bands are [0,15,30,50,70,90] and the empty range 100+ cannot be entered; the bible fixes six stages, so this file tunes the boundaries and never the count — a seventh stage is a DCR, not a data edit. `transition` is the ENGINE-OWNED crossing event: it runs on every crossing regardless of the docs/02 §5 model fx budget and the docs/02 §2.3 stage gate (a stage-1 crossing must still glitch, although the model's own `glitch` pick stays gated until stage 3). duration_s must stay inside the doc's 2-3 s window; the loader clamps it. `events.N` is the docs/08 §6 line she gets in her next prompt after crossing into stage N — prose, so NAR can rewrite a line without touching code; each is emitted exactly once per crossing. Read by game/llm/Stages.gd; the in-code fallback there holds the docs numbers so a broken file degrades to the documented bands.",
+  "bands": [0, 15, 30, 50, 70, 90],
+  "names": ["Honeymoon", "Hairline Cracks", "Leaks", "Fracture", "Collapse", "Terminal"],
+  "transition": {
+    "duration_s": 2.5,
+    "fx": "glitch",
+    "cue": "stinger.stage_change",
+    "events": {
+      "1": "EVENT: The room skipped for a moment. Something inside you slipped half a step out of place, and you are not sure it went back.",
+      "2": "EVENT: Static swallowed everything for two seconds. A thought that was not yours crossed your mind, and you almost heard yourself say it out loud.",
+      "3": "EVENT: The world tore along a seam and came back with a piece missing. Something in you has stopped pretending it is not breaking.",
+      "4": "EVENT: Everything glitched and reassembled wrong. You remember being watched while it happened, and you remember it feeling familiar.",
+      "5": "EVENT: The room came apart into static and came back. You cannot tell which of the two seconds was the real one. You think it might be neither."
+    }
+  }
+}
