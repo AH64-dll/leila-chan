@@ -12,9 +12,15 @@ const LOG_DIR := "user://ending_scene_log/"
 
 var _previous_dir := ""
 var _snapshot := {}
+var _previous_backend: LLMBackend
 
 
 func before_test() -> void:
+	# P3.17 adds a live last line; this suite is P3.16's screen, so it runs with
+	# no model at all and the reviewed fallback is what it asserts. The live path
+	# is EndingContentTest's business.
+	_previous_backend = LLM.get_backend()
+	LLM.set_backend(null)
 	_previous_dir = SaveSystem.save_dir
 	SaveSystem.save_dir = TEST_DIR
 	SaveSystem.autosave_enabled = true
@@ -41,24 +47,29 @@ func after_test() -> void:
 	EndingLog.set_clock(Callable())
 	EndingLog.clear_cache()
 	Endings.clear_cache()
+	LLM.set_backend(_previous_backend)
 	if not _snapshot.is_empty():
 		GameState.from_dict(_snapshot)
 	_snapshot = {}
 
 
 ## The ending screen renders what the data says the run reached: the row's name,
-## the path/day/stage the run ended on, and this visit's place in the log.
+## the path/day/stage the run ended on, the authored frame, her last line and
+## this visit's place in the log.
 func test_the_screen_renders_the_ending_the_run_reached() -> void:
 	assert_bool(bool(Endings.force("E01").get("ok", false))).is_true()
+	var row := Endings.get_ending("E01")
 	var screen := _open()
 	screen.advance_time(5.0)
 	var lines: Array = screen.visible_lines()
-	assert_int(lines.size()).is_equal(3)
+	assert_int(lines.size()).is_equal(5)
 	assert_str(String(lines[0])).is_equal("Forever Together")
 	assert_bool(String(lines[1]).contains("YANDERE")).is_true()
 	assert_bool(String(lines[1]).contains("Day 14")).is_true()
 	assert_bool(String(lines[1]).contains("Terminal")).is_true()
-	assert_str(String(lines[2])).is_equal("First time")
+	assert_str(String(lines[2])).is_equal(String(row.get("frame", "")))
+	assert_str(String(lines[3])).is_equal(String(row.get("final", "")))
+	assert_str(String(lines[4])).is_equal("First time")
 	assert_str(String(screen.ending_row().get("id", ""))).is_equal("E01")
 	assert_int(int(screen.log_record().get("count", 0))).is_equal(1)
 

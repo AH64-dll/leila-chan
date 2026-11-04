@@ -266,6 +266,14 @@ Horror is the product; real-world harm is not. Steering at dose ≥ 10 produced 
 Missing or invalid content settings keep gated categories closed. Fictional-threat
 permission never allows real-harm encouragement/instructions or overrides hard blocks.
 
+**One exception — the ending's last line (P3.17, D16).** Where a redaction would replace a single authored
+beat — the ending's last line — the reviewed fallback line is shown in place of bars. The filter still runs on
+the model's line first, and a refusal is total: the refused line is discarded whole (never trimmed and shown)
+and logged for tuning like any other redaction, so what the player reads is the hand-authored, safety-reviewed
+line for that ending, not model text. Bars stay the rule on every other surface. The player cannot tell the
+live line was refused — the fallback is the same beat in her voice — and that silence is the accepted trade of
+this exception.
+
 Implementation: phrase/regex lists + a tiny classifier pass (same model, dose 0, 8-token yes/no) only on beats
 flagged by the regex pre-pass. Redactions are logged for tuning. The settings menu has a content warning,
 a "calmer mode" (caps stage at 3), and the always-working panic key (Esc → safe pause).
@@ -285,3 +293,9 @@ a "calmer mode" (caps stage at 3), and the always-working panic key (Esc → saf
 
 Thinking mode always off (`enable_thinking=false`). The private `inner` field gives the model one line of
 "thinking" that measurably improved emotion choice (+7–21 points in testing) at almost no latency cost.
+
+**The ending's last line is not a turn** (P3.17). The one-shot that generates it (`endings.json`'s
+`final_line`) uses one fixed row for every ending — temperature 0.85, top_p 0.92, repeat_penalty 1.05, 96
+output tokens — not the run's stage row above. An ending is read once and has to land the row's `direction`,
+so this row buys adherence where a turn's rows buy variety. The values are data (`final_line.sampling`), so
+re-tuning them is a data edit, and `tests/test_ending_content.py` pins their range.

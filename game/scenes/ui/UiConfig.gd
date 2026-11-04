@@ -97,6 +97,7 @@ const DEFAULTS := {
 		"skip_hint": "Space or click to continue",
 		"skip_after_s": 1.5,
 		"line_interval_s": 0.9,
+		"final_hold_s": 4.0,
 	},
 	"extras":
 	{
