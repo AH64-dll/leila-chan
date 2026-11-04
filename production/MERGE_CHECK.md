@@ -163,10 +163,15 @@ VERDICT: FAIL — the merge dropped work that a parent gained since the merge-ba
 post exit=1
 ```
 
-Delete-versus-edit names the copy that survives, so the resolution cannot guess:
+Delete-versus-edit names the copy that survives, in both directions, so the resolution cannot guess (scratch
+repository, one file per direction):
 
 ```console
-  DELETE-VS-EDIT         production/handoffs/P1.14.md
+$ python3 tools/merge_check.py task/W          # the branch deleted it, the target still edits it
+  DELETE-VS-EDIT         note.md
+      the branch deleted this file; the target side changed it — keep the target copy
+$ python3 tools/merge_check.py task/Z          # the target deleted it, the branch still edits it
+  DELETE-VS-EDIT         note.md
       the target deleted this file; the branch side changed it — keep the branch copy
 ```
 
