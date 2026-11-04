@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "doc": "P2.08 trigger engine catalogue, rows T01-T15 authored by P2.10. Sources: docs/01_GAME_DESIGN.md §5 (the hidden triggers T01-T32 and their four detection letters K keyword/regex, M the Turn's `read` label, E engine event, C clock/OS, plus 'every trigger has once / repeatable / escalating behavior, and a cooldown'), docs/02_DIRECTOR_PROTOCOL.md §1.2 (the `read` enum and the agreement rule: both detectors agree -> full strength, model-only -> half) and §5 (over-budget values are dropped silently), docs/08_PROMPTS_AND_CONTENT.md §6 (the TRIGGER/EVENT line style), docs/05_META_EVENTS.md §0 (a trigger may never trap the player: closing always works) and §1.1 M01 (the close intercept). Engine shape: strength is the detector weight table the engine multiplies into every effect; defaults are the per-row fallbacks; triggers maps a trigger id (Tnn) to one row (T16-T30 authored by P3.07; T31/T32 by P2.10). P3.07 guard additions: mentions_memory {min_shared_words: n} — the message repeats a stored fact (T22; the read enum has no such label, P3.07 DCR-1); name_mention {pattern, exclude, ignore_case} — the data regex captures the player name so the firing result can carry it to GameState.player_name (T26); clock also learned absence_hours_lte (T17). ROW FIELDS: name (human label); detect (any of keyword/model/event/clock, at least one, or none when the row carries a guard); observe (a flat {flag: value} map the game records as soon as the row's own evidence matches — before the guard, the caps and the cooldown — so state the game owns, like T03's confession flag, is true on every confession and not only on the days she reacts; an unknown key is dropped and never reaches GameState); guard (game-side preconditions that must ALSO hold, but that are not detectors: the clock vocabulary day_gte/day_lte/day_eq/turn_gte/hour_from/hour_to/absence_hours_gte/flag_set/flag_absent, plus counter_gte {profile counter: n} against THIS turn's bump and contradicts_memory {negations: [...], min_shared_words: n} against the memory store's true facts (a cue must govern the clause that shares the words — from the cue to the next , . ; ! ? — and the cue's own words never count, so 'I don't like that music' is an opinion, not a denial of 'I like music') — the last two exist because docs/02 §1.2's read enum has no label for a lie or for an ignored question, see the P2.10 DCRs); requires ('any' = fire when any detector matches and the model alone halves the effect, 'all' = every declared detector must agree and the effect is full); behavior (once = one firing per session/save, repeatable, escalating = the effect and the per-step line grow by escalate.step_scale per escalation step; escalate.axis picks the step: 'step' (default) counts firings and stops after escalate.max_steps of them, 'stage' counts the stage since stage_min, caps the step at max_steps and keeps repeating like repeatable, because docs/01 §5 T08 escalates with the dose, not with how often the player poked it); cooldown_turns (a repeat waits this many turns); stage_min/stage_max (docs/01 §3 stage gate on her reaction; detection itself is ungated, P2.09); effects (meters/profile/path/flags, all scaled by strength except flags — `flash_sprite` is the docs/01 §5 'sprite 29 / sprite 17 flash' request, read by the resolver when P2.14 exposes a forced frame); line (a docs/08 §6 template with {count} {ordinal} {stage} {day} {turn} and {fact} — the player message the contradicted memory was grounded in (T13) — or an array indexed by escalation step). Effects that must halve cleanly use even values: profile and path points round half away from zero. E rows leave `line` empty on purpose: data/telemetry.json already supplies that EVENT line, so a row here would double it. A guard-fired row (T13, T15) fires at full strength: its evidence is the game's own deterministic check, not the model's read label. P3.07 adds T16-T32 and the vocabulary they needed: `absence_hours_lt` (T17's reunion window ends where T18's 168 h begins), the `mentions_memory` guard (T22: the message repeats a stored fact, no denial cue), the `name_mention` guard (T26: a capture pattern plus the endearments it must not take; the captured name becomes GameState.player_name), the `text_match` guard (T28/T30: a precondition on the message that keeps a broad `read` label honest, never a detection letter) and `{\"from_event\": \"<data key>\"}` flag values (T21: one row serves mute and unmute, the flag follows `data.muted`; the state is written on every matching event, the row's caps decide only what she says). Model-only rows (T22/T23/T26/T28/T29/T30) author double the intended effect, because docs/02 §1.2 halves a model-only firing (the same convention P2.10 used). The loader lives in game/llm/TriggerTable.gd.",
+  "doc": "P2.08 trigger engine catalogue, rows T01-T15 authored by P2.10. Sources: docs/01_GAME_DESIGN.md §5 (the hidden triggers T01-T32 and their four detection letters K keyword/regex, M the Turn's `read` label, E engine event, C clock/OS, plus 'every trigger has once / repeatable / escalating behavior, and a cooldown'), docs/02_DIRECTOR_PROTOCOL.md §1.2 (the `read` enum and the agreement rule: both detectors agree -> full strength, model-only -> half) and §5 (over-budget values are dropped silently), docs/08_PROMPTS_AND_CONTENT.md §6 (the TRIGGER/EVENT line style), docs/05_META_EVENTS.md §0 (a trigger may never trap the player: closing always works) and §1.1 M01 (the close intercept). Engine shape: strength is the detector weight table the engine multiplies into every effect; defaults are the per-row fallbacks; triggers maps a trigger id (Tnn) to one row (T16-T30 authored by P3.07; T31/T32 by P2.10). P3.07 guard additions: mentions_memory {min_shared_words: n} — the message repeats a stored fact (T22; the read enum has no such label, P3.07 DCR-1); name_mention {pattern, exclude, ignore_case} — the data regex captures the player name so the firing result can carry it to GameState.player_name (T26); clock also learned the strict `absence_hours_lt` (T17's reunion window; `absence_hours_lte` exists beside it and no row uses it). ROW FIELDS: name (human label); detect (any of keyword/model/event/clock, at least one, or none when the row carries a guard); observe (a flat {flag: value} map the game records as soon as the row's own evidence matches — before the guard, the caps and the cooldown — so state the game owns, like T03's confession flag, is true on every confession and not only on the days she reacts; a flag that must mean *this row actually fired* belongs in effects.flags instead, which is written only on a firing — T26's name_confirmed; an unknown key is dropped and never reaches GameState); guard (game-side preconditions that must ALSO hold, but that are not detectors: the clock vocabulary day_gte/day_lte/day_eq/turn_gte/hour_from/hour_to/absence_hours_gte/absence_hours_lte/absence_hours_lt/flag_set/flag_absent, plus counter_gte {profile counter: n} against THIS turn's bump and contradicts_memory {negations: [...], min_shared_words: n} against the memory store's true facts (a cue must govern the clause that shares the words — from the cue to the next , . ; ! ? — and the cue's own words never count, so 'I don't like that music' is an opinion, not a denial of 'I like music') — the last two exist because docs/02 §1.2's read enum has no label for a lie or for an ignored question, see the P2.10 DCRs); requires ('any' = fire when any detector matches and the model alone halves the effect, 'all' = every declared detector must agree and the effect is full); behavior (once = one firing per session/save, repeatable, escalating = the effect and the per-step line grow by escalate.step_scale per escalation step; escalate.axis picks the step: 'step' (default) counts firings and stops after escalate.max_steps of them, 'stage' counts the stage since stage_min, caps the step at max_steps and keeps repeating like repeatable, because docs/01 §5 T08 escalates with the dose, not with how often the player poked it); cooldown_turns (a repeat waits this many turns); stage_min/stage_max (docs/01 §3 stage gate on her reaction; detection itself is ungated, P2.09); effects (meters/profile/path/flags, all scaled by strength except flags — `flash_sprite` is the docs/01 §5 'sprite 29 / sprite 17 flash' request, read by the resolver when P2.14 exposes a forced frame); line (a docs/08 §6 template with {count} {ordinal} {stage} {day} {turn} and {fact} — the player message the contradicted memory was grounded in (T13) — or an array indexed by escalation step). Effects that must halve cleanly use even values: profile and path points round half away from zero. E rows leave `line` empty on purpose: data/telemetry.json already supplies that EVENT line, so a row here would double it. A guard-fired row (T13, T15) fires at full strength: its evidence is the game's own deterministic check, not the model's read label. P3.07 adds T16-T32 and the vocabulary they needed: `absence_hours_lt` (T17's reunion window ends where T18's 168 h begins), the `mentions_memory` guard (T22: the message repeats a stored fact, no denial cue), the `name_mention` guard (T26: a capture pattern plus the endearments it must not take; the captured name becomes GameState.player_name), the `text_match` guard (T28/T30: a precondition on the message that keeps a broad `read` label honest, never a detection letter), the `{\"from_event\": \"<data key>\"}` flag values (T21: one row serves mute and unmute, the flag follows `data.muted`; the state is written on every matching event, the row's caps decide only what she says) and the clock's strict `absence_hours_lt` (T17's reunion window ends where T18's 168 h begins; `absence_hours_lte` also exists but no row uses it). An E row's event data may also carry `gate_stage`: the stage the event is ABOUT, when the live one no longer describes it (T19's New Game note keeps the ended run's stage, because GameState has already been reset to 0 by the time she can speak; D19's precedent for the shadow line). D20 (DECISIONS.md, hard rule): an accessibility accommodation is never player behaviour — `Settings.is_accommodation()` keeps photosensitive, reduced-motion, calmer, text-speed and volume writes away from `settings_changed`, so T20 fires only on a preference and neither T20 nor T21 carries an invented stage gate. Model-only rows (T22/T23/T26/T28/T29/T30) author double the intended effect, because docs/02 §1.2 halves a model-only firing (the same convention P2.10 used). The loader lives in game/llm/TriggerTable.gd.",
   "strength": {
     "agreement": 1.0,
     "keyword": 1.0,
@@ -464,7 +464,6 @@
       },
       "behavior": "repeatable",
       "cooldown_turns": 3,
-      "stage_min": 1,
       "effects": {
         "path": {
           "AWAKE": 2,
@@ -483,7 +482,6 @@
       },
       "behavior": "repeatable",
       "cooldown_turns": 0,
-      "stage_min": 1,
       "effects": {
         "flags": {
           "audio_muted": {
@@ -524,6 +522,18 @@
         "model": [
           "compliment"
         ]
+      },
+      "guard": {
+        "text_match": {
+          "any": [
+            "\\byou(?:'re| are| look| looks| seem| seems)(?: so| really| very| too| absolutely| just)? (?:pretty|beautiful|gorgeous|cute|lovely|stunning|adorable|attractive|hot)\\b",
+            "\\byou have (?:such )?(?:a |an |the )?(?:most )?(?:beautiful|pretty|lovely|gorgeous|cute|nice|amazing) (?:eyes|hair|smile|face|hands|lips|voice|outfit|dress|clothes)\\b",
+            "\\byour (?:eyes|hair|smile|face|outfit|dress|clothes|body|looks?) (?:are|is|look|looks|seem|seems)(?: so| really| very| too| absolutely)? (?:pretty|beautiful|gorgeous|cute|lovely|stunning|nice|amazing)\\b",
+            "\\b(?:love|like|adore) (?:your|those) (?:eyes|hair|smile|face|hands|lips|outfit|dress|clothes|looks)\\b",
+            "\\b(?:what a|such a) (?:pretty|beautiful|gorgeous|cute|lovely) (?:girl|face|smile|outfit|dress)\\b"
+          ],
+          "ignore_case": true
+        }
       },
       "behavior": "repeatable",
       "cooldown_turns": 3,
@@ -672,18 +682,36 @@
             "this",
             "that",
             "these",
-            "those"
+            "those",
+            "not",
+            "just",
+            "still",
+            "really",
+            "only",
+            "actually",
+            "always",
+            "never",
+            "quite",
+            "very",
+            "too",
+            "even",
+            "ever",
+            "much",
+            "more",
+            "less",
+            "called",
+            "named"
           ]
         }
-      },
-      "observe": {
-        "name_confirmed": true
       },
       "behavior": "once",
       "cooldown_turns": 0,
       "effects": {
         "meters": {
           "affection": 4
+        },
+        "flags": {
+          "name_confirmed": true
         }
       },
       "line": "TRIGGER: The player told you their real name: {name}. It is theirs now — you will use it from now on, and it outlives this save."

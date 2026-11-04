@@ -89,7 +89,9 @@ var _pending_scene: Dictionary = {}
 ## before it resets GameState/Director, while the ended run's facts and name
 ## are still live. Seals that run into the shadow save — the name list and, at
 ## the meta gate (stage 3+), the memories she keeps — then records the new
-## name. Returns the ShadowStore write result.
+## name. Returns the ShadowStore write result plus what docs/01 §5 T19 needs to
+## announce the ended run after the reset: `had_run` and `ended_stage` (−1 when
+## there was no run to seal).
 func begin_new_game(player_name: String) -> Dictionary:
 	var record := shadow.blank()
 	var read := shadow.load_shadow()
@@ -104,10 +106,13 @@ func begin_new_game(player_name: String) -> Dictionary:
 	record = shadow.seal_run(record, GameState.player_name, had_run, memories)
 	record = shadow.record_name(record, player_name)
 	var written := shadow.store(record)
-	if had_run:
-		# docs/01 §5 T19: the run that just ended was this save's whole world;
-		# the next run's stage-3+ Leila is the one who gets to mention it.
-		_note_save_gone({"kind": "new_game"})
+	# docs/01 §5 T19 "Delete save / start New Game … Stage 3+ only": the caller
+	# announces this AFTER it has reset GameState and the Director, because a
+	# note raised here is exactly what that reset swallows (P3.07 r2 CODE-2).
+	# The ended run's stage travels in the result for D19's reason: the live
+	# stage is 0 by the time she may speak.
+	written["had_run"] = had_run
+	written["ended_stage"] = int(GameState.stage) if had_run else -1
 	return written
 
 
@@ -158,16 +163,32 @@ func wipe_everything(keep: Array = []) -> Dictionary:
 	var errors: Array = tally["errors"]
 	var result := {"ok": errors.is_empty(), "removed": int(tally["removed"]), "errors": errors}
 	if bool(result["ok"]) and int(result["removed"]) > 0:
-		_note_save_gone({"kind": "wipe"})
+		# Docs/01 §5 T19 covers the wipe too: the stage read here is the run
+		# being wiped, which is the one still live (CODE-2).
+		_note_save_gone({"kind": "wipe", "gate_stage": int(GameState.stage)})
 	return result
 
 
 ## docs/01 §5 T19 relay: Telemetry owns the engine event; a missing autoload
-## (tests) degrades to silence, never a crash.
+## (tests) degrades to silence, never a crash. `gate_stage` is the ended run's
+## stage — the live one is 0 by the time the new run's date can speak (CODE-2).
 func _note_save_gone(data: Dictionary) -> void:
 	var telemetry := get_node_or_null("/root/Telemetry")
 	if telemetry != null and telemetry.has_method("note_player_action"):
 		telemetry.call("note_player_action", "save_gone", data)
+
+
+## The stage a slot's run had reached, or the live stage when the file is
+## missing/unreadable: a deleted save's own stage is the one T19 is about.
+func _slot_stage(slot: Variant) -> int:
+	var read := slots.read(slot)
+	var payload: Variant = read.get("payload")
+	if not payload is Dictionary:
+		return int(GameState.stage)
+	var state: Variant = (payload as Dictionary).get("state")
+	if not state is Dictionary:
+		return int(GameState.stage)
+	return int((state as Dictionary).get("stage", 0))
 
 
 func _ready() -> void:
@@ -261,9 +282,13 @@ func load_latest() -> Dictionary:
 
 
 func delete_slot(slot: Variant) -> bool:
+	# docs/01 §5 T19 "Delete save … Stage 3+ only": the stage that gates her
+	# reaction is the DELETED run's, not whatever state the menu is showing
+	# (D19's precedent — gate on the stored stage). Read before the erase.
+	var ended_stage := _slot_stage(slot)
 	var erased := slots.erase(slot)
 	if erased:
-		_note_save_gone({"slot": str(slot), "kind": "delete"})
+		_note_save_gone({"slot": str(slot), "kind": "delete", "gate_stage": ended_stage})
 	return erased
 
 

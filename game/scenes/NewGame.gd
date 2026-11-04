@@ -84,6 +84,10 @@ func confirm_name() -> void:
 
 	# Apply game state updates (docs/08 §1.5)
 	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	# docs/01 §5 T19 "Delete save / start New Game … Stage 3+ only": the ended
+	# run's stage, carried out of `begin_new_game` because the live one is gone
+	# by the time she can speak. −1 = there was no run to remember.
+	var ended_stage := -1
 	if tree != null and tree.root != null:
 		# docs/05 M08: seal the ending run and record this name in the shadow
 		# save BEFORE the reset below erases the run's memories and name —
@@ -92,7 +96,9 @@ func confirm_name() -> void:
 		if tree.root.has_node("SaveSystem"):
 			var saves: Node = tree.root.get_node("SaveSystem")
 			if saves.has_method("begin_new_game"):
-				saves.call("begin_new_game", resolved_name)
+				var sealed: Variant = saves.call("begin_new_game", resolved_name)
+				if sealed is Dictionary and bool((sealed as Dictionary).get("had_run", false)):
+					ended_stage = int((sealed as Dictionary).get("ended_stage", -1))
 
 		if tree.root.has_node("GameState"):
 			var gs: Node = tree.root.get_node("GameState")
@@ -114,6 +120,18 @@ func confirm_name() -> void:
 			var director: Node = tree.root.get_node("Director")
 			if director.has_method("reset"):
 				director.call("reset")
+		# docs/01 §5 T19, AFTER the resets on purpose: this is the note the
+		# Director's reset used to swallow, and Telemetry now holds it for the
+		# new run's first turn instead of queueing it for a turn that never
+		# comes (P3.07 r2 CODE-2).
+		if ended_stage >= 0 and tree.root.has_node("Telemetry"):
+			var telemetry: Node = tree.root.get_node("Telemetry")
+			if telemetry.has_method("note_player_action"):
+				telemetry.call(
+					"note_player_action",
+					"save_gone",
+					{"kind": "new_game", "gate_stage": ended_stage}
+				)
 
 	if is_special_leila and feedback_label != null:
 		feedback_label.text = str(result.get("message", ""))

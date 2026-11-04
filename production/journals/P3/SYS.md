@@ -45,3 +45,25 @@
 - Next SYS here: nothing reads `GameState.flags.audio_muted` turn-to-turn yet. The EVENT line carries
   docs/01 §5 T21's instruction for the turn it lands on; a prompt layer that keeps her in caps until
   the unmute is still open (P3.13/P3.09 territory).
+
+## P3.07 — triggers T16–T32 (round 2, 2026-11-04, agent: deepseek)
+
+- CODE-1: a close_turn guard must never see the model's own output. `Triggers` now snapshots
+  `Memory.facts_with_sources()` at `begin_turn` (`_memory_baseline`) exactly like `_profile_baseline`,
+  so T22/T13 measure the message against what she ALREADY held; the Director stores `turn_data.memory`
+  before it emits `turn_completed`, so a live read made the first gift its own evidence.
+- CODE-2: an event about a transition has to be delivered AFTER it. `save_gone` is no longer queued
+  (`_pending` is cleared by New Game's reset and by `set_date_active(true)`); Telemetry keeps it in
+  `_run_ended` and `take_turn_events` delivers it on the new run's first turn. `NewGame.confirm_name`
+  is the writer (after its resets) and `begin_new_game` returns `ended_stage`; the row's stage gate
+  reads `data.gate_stage` (D19's precedent — the live stage is 0 by then).
+- CODE-3/CODE-4: `observe` means "the read label was seen", so a flag that means "this row fired"
+  belongs in `effects.flags`; T26's `name_confirmed` moved there and its exclude list gained the
+  function words the capture can land on ("my name is not important" -> Not).
+- D20: accessibility input is not player behaviour. `Settings.is_accommodation(key, value)` is the one
+  classifier and `set_preference()` the one write seam; `set_photosensitive` no longer emits
+  `settings_changed`, so no accommodation write can fire T20 or move a path weight. Removed the invented
+  `stage_min: 1` from T20/T21 — in the ROW, the data file AND `Telemetry.FALLBACK_EVENTS` (the merge
+  keeps a fallback key the data file omits; that bit the first test run).
+- GOTCHA: gdlint's `max-public-methods: 20` means every new Telemetry/Triggers public seam has to pay
+  for itself; `note_screenshot()` is public again for T31's release path and there is no budget left.

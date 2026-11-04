@@ -113,16 +113,18 @@ func test_catalogue_matches_the_docs() -> void:
 		"screenshot": ["T31", 0, ""],
 		"message_repeated": ["T12", 0, ""],
 		# P3.07: the save/settings/audio detectors T19–T21 (mute and unmute are
-		# two kinds because the instruction differs, so T21 owns both).
+		# two kinds because the instruction differs, so T21 owns both). T20/T21
+		# carry no stage gate: no doc states one, and D20 keeps every
+		# accessibility accommodation out of the trigger layer.
 		"save_gone": ["T19", 3, "M08"],
-		"settings_changed": ["T20", 1, ""],
-		"audio_mute": ["T21", 1, ""],
-		"audio_unmuted": ["T21", 1, ""],
+		"settings_changed": ["T20", 0, ""],
+		"audio_mute": ["T21", 0, ""],
+		"audio_unmuted": ["T21", 0, ""],
 	}
 	for kind: String in expected:
 		var row: Dictionary = events[kind]
 		assert_str(str(row["trigger"])).is_equal(str(expected[kind][0]))
-		assert_int(int(row["stage_min"])).is_equal(int(expected[kind][1]))
+		assert_int(int(row.get("stage_min", 0))).is_equal(int(expected[kind][1]))
 		assert_str(str(row["meta"])).is_equal(str(expected[kind][2]))
 	var catalog := Telemetry.catalog()
 	assert_array(Telemetry.catalog().keys()).contains_exactly_in_any_order(expected.keys())
@@ -144,7 +146,7 @@ func test_each_detector_emits_an_event_consumed_by_triggers() -> void:
 	Telemetry.note_turn_open(true)
 	Telemetry.note_focus_lost()
 	Telemetry.note_close_requested()
-	Telemetry._note_screenshot()
+	Telemetry.note_screenshot()
 	var origin := get_tree().root.size
 	Telemetry.note_resized(origin + Vector2i(64, 0))
 	Telemetry.note_turn_open(false)
@@ -356,7 +358,7 @@ func test_date_scope_blocks_stray_events() -> void:
 	Telemetry.set_date_active(false)
 	assert_bool(Telemetry.note_draft_deleted(MARKER)).is_false()
 	assert_bool(Telemetry.note_player_message("hello")).is_false()
-	Telemetry._note_screenshot()
+	Telemetry.note_screenshot()
 	Telemetry.note_resized(get_tree().root.size + Vector2i(64, 64))
 	assert_int(Triggers.received_events.size()).is_zero()
 

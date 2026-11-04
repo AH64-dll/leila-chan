@@ -42,6 +42,13 @@ var _last_player_text := ""
 ## This turn's profile counters at submit, so a guard can read what changed.
 var _profile_baseline: Dictionary = {}
 var _profile_baseline_open := false
+## The memory store at submit. A close_turn guard must read the facts she held
+## BEFORE the model's own reply was stored: Director._close_turn_success stores
+## `turn_data.memory` and only then emits `turn_completed` (P3.07 r2 CODE-1), so
+## a live read would make the fact the model just wrote about the gift its own
+## evidence and T22 would fire on the FIRST gift.
+var _memory_baseline: Array = []
+var _memory_baseline_open := false
 
 
 func _ready() -> void:
@@ -94,6 +101,11 @@ func begin_turn(input_text: String) -> Array[String]:
 	# bumped *this* turn (docs/01 §5 T15's `ignored_questions`).
 	_profile_baseline = GameState.profile.duplicate(true)
 	_profile_baseline_open = true
+	# Same idea for the memory store: the facts this message is measured
+	# against are the ones she already held, never the ones the model is about
+	# to write from it (T22's repeat gift, T13's contradiction).
+	_memory_baseline = _memory_facts()
+	_memory_baseline_open = true
 	# The return-after clock is read at the submit, which is the turn a player
 	# actually comes back on; an event that lands first must not eat it.
 	var ctx := _context(true, true)
@@ -117,9 +129,12 @@ func close_turn(read_label: String) -> Array[String]:
 	ctx["text"] = _last_player_text
 	var lines: Array[String] = []
 	var fired := _engine.close_turn(ctx)
-	# One close per turn: the delta belongs to the turn that just ended.
+	# One close per turn: the delta belongs to the turn that just ended, and the
+	# memory baseline stops being "before this turn" at the same moment.
 	_profile_baseline = {}
 	_profile_baseline_open = false
+	_memory_baseline = []
+	_memory_baseline_open = false
 	for result: Dictionary in fired:
 		var line := _apply(result, true)
 		if not line.is_empty():
@@ -143,6 +158,13 @@ func handle_engine_event(event: Dictionary) -> void:
 	# an unmute inside one turn, where the row's caps allow only one firing.
 	_apply_event_state(str(copy.get("event", "")), data)
 	var ctx := _context(true)
+	# docs/01 §5 T19 "Stage 3+ only" (D19's precedent: gate on the stored stage,
+	# not the live one): an event may be about a run whose stage GameState no
+	# longer holds — the run that just ended — so a row's gate reads the stage
+	# the event names. An absent key leaves the live stage in charge.
+	var gate := int(data.get("gate_stage", -1))
+	if gate >= 0:
+		ctx["stage"] = gate
 	ctx["event"] = copy
 	for result: Dictionary in _engine.handle_event(ctx):
 		_apply(result, true, data)
@@ -166,6 +188,8 @@ func clear_engine_events() -> void:
 	_absence_armed = false
 	_profile_baseline = {}
 	_profile_baseline_open = false
+	_memory_baseline = []
+	_memory_baseline_open = false
 	_engine.reset()
 
 
@@ -307,8 +331,10 @@ func _context(upcoming: bool, consume_absence := false) -> Dictionary:
 		# own clock row down inside one begin_turn().
 		"flags": GameState.flags.duplicate(true),
 		# docs/01 §5 T13: the *true* facts (corruption is what she reads, not
-		# what she knows), so a lie is measured against her real memory.
-		"memory_facts": _memory_facts(),
+		# what she knows), so a lie is measured against her real memory — and
+		# against the facts she held at submit, never against what the model
+		# writes about the same message (T22/T13, P3.07 r2 CODE-1).
+		"memory_facts": _memory_baseline if _memory_baseline_open else _memory_facts(),
 		# docs/01 §5 T15: what the game bumped during the closed turn. Empty at
 		# submit/handle_event — nothing has been applied yet.
 		"profile_delta": _profile_delta(upcoming),

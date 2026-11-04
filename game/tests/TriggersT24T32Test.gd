@@ -109,9 +109,18 @@ func test_t26_name_persists_across_saves() -> void:
 
 func test_t26_rejects_commands_and_endearments() -> void:
 	# The guard's exclude list is data: "call me later" is a command, not a
-	# name, and neither is her own name or an endearment.
+	# name, and neither is her own name or an endearment. CODE-4 added the
+	# function words, or the `once` row renames the player "Not" for good.
 	var turn := 0
-	for text: String in ["call me Leila", "call me later", "call me when you get home"]:
+	for text: String in [
+		"call me Leila",
+		"call me later",
+		"call me when you get home",
+		"my name is not important",
+		"my name is just a name",
+		"my name is still a secret",
+		"my name is really boring",
+	]:
 		GameState.turn = turn
 		Triggers.begin_turn(text)
 		GameState.turn = turn + 1
@@ -119,6 +128,32 @@ func test_t26_rejects_commands_and_endearments() -> void:
 		turn += 5
 	assert_int(_count("T26")).is_equal(0)
 	assert_str(GameState.player_name).is_equal("Senpai")
+	assert_bool(bool(GameState.flags.get("name_confirmed", false))).is_false()
+
+
+## CODE-3: `name_confirmed` means "she learned the name", so it belongs to the
+## row's effects (a firing), not to `observe` (the read label alone). Any
+## greeting used to set it, which would have skipped P3.14's name offer on the
+## first small-talk turn.
+func test_t26_name_confirmed_only_when_the_row_fires() -> void:
+	Triggers.begin_turn("hi, how are you?")
+	GameState.turn = 1
+	Triggers.close_turn("greeting")
+	assert_bool(bool(GameState.flags.get("name_confirmed", false))).is_false()
+	assert_str(GameState.player_name).is_equal("Senpai")
+	# A greeting that only mentions a name-shaped thing is still not a capture.
+	GameState.turn = 2
+	Triggers.begin_turn("call me later")
+	GameState.turn = 3
+	assert_array(Triggers.close_turn("greeting")).is_empty()
+	assert_bool(bool(GameState.flags.get("name_confirmed", false))).is_false()
+	# A real introduction is the firing that writes it.
+	GameState.turn = 4
+	Triggers.begin_turn("my name is Ren")
+	GameState.turn = 5
+	assert_array(Triggers.close_turn("small_talk")).has_size(1)
+	assert_bool(bool(GameState.flags.get("name_confirmed", false))).is_true()
+	assert_str(GameState.player_name).is_equal("Ren")
 
 
 func test_t27_reset_words() -> void:
@@ -187,10 +222,14 @@ func test_t30_her_past_escalates_its_answers() -> void:
 
 func test_t31_screenshot() -> void:
 	# docs/01 §5 T31 "Take a screenshot (F12 / in-game camera)": Telemetry's own
-	# detector, the same one the F12 handler calls.
+	# detector, and `note_screenshot()` is the public seam both paths call —
+	# the camera UI needs it in release builds, where `debug_fire` refuses
+	# (CODE-6).
 	Telemetry.set_date_active(true)
-	Telemetry._note_screenshot()
+	assert_bool(Telemetry.note_screenshot()).is_true()
 	assert_int(_count("T31")).is_equal(1)
+	# The cooldown keeps a held key or a rapid double-tap to one event.
+	assert_bool(Telemetry.note_screenshot()).is_false()
 	var spoken := Telemetry.take_turn_events(0)
 	assert_array(spoken["lines"]).contains("EVENT: The player took a screenshot of you.")
 

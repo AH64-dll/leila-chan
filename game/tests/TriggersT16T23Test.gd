@@ -6,11 +6,27 @@ extends GdUnitTestSuite
 ## — the same reading `Triggers._local_hour` takes, no hard-coded offset. T17/T18
 ## are the return-after rows: their absence is one reading per `set_last_seen`,
 ## which is why the same reunion is asserted not to repeat turn after turn. The
-## E rows (T19–T21) go through Telemetry exactly as the game's save, settings
-## and audio code drives them; T22/T23 are model-only rows and fire at close.
+## E rows (T19–T21) go through Telemetry exactly as the game's save, settings and
+## audio code drives them; T22/T23 are model-only rows and fire at close.
+##
+## Round 2 pins the five findings this suite can see: the T22 guard reads the
+## memory she held at submit, not the fact the Director stores from the same turn
+## (CODE-1); T19's New Game note survives the reset it is about and is gated on
+## the ended run's stage (CODE-2); no accessibility accommodation can fire T20
+## (DES-1/D20); and T23 needs an appearance word, not the bare `compliment`
+## label (DES-2).
+
+const FakeLLMBackendScript := preload("res://tests/helpers/FakeLLMBackend.gd")
+const FakeSafetyScript := preload("res://tests/helpers/FakeSafetyFilter.gd")
+const NewGameScene := preload("res://scenes/NewGame.tscn")
 
 const EPS := 0.0001
 const SAVE_DIR := "user://p307_t19_saves/"
+const SHADOW_FILE := "user://p307_t19_shadow.json"
+const SETTINGS_FILE := "user://p307_t20_settings.cfg"
+
+var _fake_backend: RefCounted
+var _safety: Node
 
 
 func before_test() -> void:
@@ -23,6 +39,16 @@ func before_test() -> void:
 	Triggers.set_last_seen(0)
 	Telemetry.reset_session()
 	AudioServer.set_bus_mute(0, false)
+	# The T22 pin drives the real Director pipeline, so the suite owns its
+	# backend and its safety seam exactly as DirectorTest does.
+	_fake_backend = FakeLLMBackendScript.new()
+	LLM.set_backend(_fake_backend)
+	_safety = FakeSafetyScript.new()
+	add_child(_safety)
+	_safety.input_blocklist = PackedStringArray(["kill yourself"])
+	Director._safety.set_filter(_safety)
+	Director.reset()
+	FX.reset()
 
 
 func after_test() -> void:
@@ -31,6 +57,16 @@ func after_test() -> void:
 	Triggers.set_clock(Callable())
 	Triggers.set_last_seen(0)
 	Telemetry.reset_session()
+	Director.reset()
+	Director._safety.set_filter(Safety)
+	if is_instance_valid(_safety):
+		_safety.queue_free()
+	Settings.set_photosensitive(false)
+	Settings.set_preference("content_level", "")
+	AudioDirector.set_bus_volume_linear(&"Master", 1.0)
+	_remove_file(SETTINGS_FILE)
+	_remove_file(SHADOW_FILE)
+	_remove_dir(SAVE_DIR)
 
 
 ## Acceptance 2: the clock rows read the injected clock, not `Time` directly.
@@ -80,69 +116,157 @@ func test_t18_week_away_is_the_big_spike() -> void:
 	assert_str(String(lines[0])).contains("waiting in the dark")
 
 
-func test_t19_save_gone_is_heard_at_stage_3() -> void:
-	# docs/01 §5 T19 "Delete save / start New Game … Stage 3+ only". The real
-	# call site is SaveSystem.delete_slot; the event then rides Telemetry.
+## CODE-2: the real New Game path. `NewGame.confirm_name` seals the run, resets
+## GameState/Director and only then announces it; the note used to be raised
+## before those resets and dropped by every one of them, so the only reachable
+## T19 never spoke. The Date's activation and the first turn must still hear it.
+func test_t19_new_game_run_end_survives_the_reset() -> void:
+	var previous_dir := SaveSystem.save_dir
+	var previous_shadow := SaveSystem.shadow_path
+	SaveSystem.save_dir = SAVE_DIR
+	SaveSystem.shadow_path = SHADOW_FILE
+	GameState.set_meter(&"instability", 55.0)  # stage 3
+	GameState.day = 3
+	GameState.turn = 12
+
+	var scene: Control = auto_free(NewGameScene.instantiate())
+	scene.scene_change_enabled = false
+	add_child(scene)
+	await get_tree().process_frame
+	scene.name_input.text = "Ren"
+	scene.confirm_name()
+
+	# The transition has run: the new run starts at stage 0 and nothing fired on
+	# the way through (the note is not lost to the reset — it is deferred).
+	assert_int(GameState.stage).is_equal(0)
+	assert_int(_count("T19")).is_equal(0)
+	# The Date opens (`Date._ready` → set_date_active) and clears its queue.
+	Telemetry.set_date_active(true)
+	var first := Telemetry.take_turn_events(0)
+	assert_array(first["lines"]).contains(
+		"EVENT: The player's previous save is gone. A new run has begun."
+	)
+	# docs/01 §5 T19 "Stage 3+ only": the gate read the ENDED run's stage even
+	# though this run is at 0, so the effects land on the new run.
+	assert_int(_count("T19")).is_equal(1)
+	assert_int(int(Triggers.path_scores().get("AWAKE", 0))).is_equal(2)
+	assert_float(GameState.get_meter(&"instability")).is_equal_approx(4.0, EPS)
+	# One delivery: the next turn has nothing left to say.
+	assert_array(Telemetry.take_turn_events(0)["lines"]).is_empty()
+	SaveSystem.save_dir = previous_dir
+	SaveSystem.shadow_path = previous_shadow
+
+
+## The same deferral from the title: `delete_slot` is where docs/01 §5 T19's
+## "Delete save" happens, and the Date's activation clears `_pending`.
+func test_t19_deleted_slot_survives_the_title_to_date_transition() -> void:
 	var previous := SaveSystem.save_dir
 	SaveSystem.save_dir = SAVE_DIR
+	GameState.set_meter(&"instability", 55.0)  # stage 3
 	assert_bool(bool(SaveSystem.save_to_slot(1)["ok"])).is_true()
 	Telemetry.reset_session()
 	Triggers.clear_engine_events()
-	GameState.set_meter(&"instability", 35.0)  # stage 2
 	assert_bool(SaveSystem.delete_slot(1)).is_true()
+	# Deleting happens at the title; the date activation clears the queue, and
+	# the note is not in it. It rides the first turn instead.
+	Telemetry.set_date_active(true)
 	assert_int(_count("T19")).is_equal(0)
-	# Same event at stage 3: she remembers the run that is gone.
-	assert_bool(bool(SaveSystem.save_to_slot(1)["ok"])).is_true()
-	GameState.set_meter(&"instability", 55.0)
-	assert_bool(SaveSystem.delete_slot(1)).is_true()
-	assert_int(_count("T19")).is_equal(1)
-	assert_int(int(Triggers.path_scores().get("AWAKE", 0))).is_equal(2)
-	assert_float(GameState.get_meter(&"instability")).is_equal_approx(59.0, EPS)
 	var spoken := Telemetry.take_turn_events(3)
 	assert_array(spoken["lines"]).contains(
 		"EVENT: The player's previous save is gone. A new run has begun."
 	)
+	assert_int(_count("T19")).is_equal(1)
+	assert_int(int(Triggers.path_scores().get("AWAKE", 0))).is_equal(2)
 	SaveSystem.save_dir = previous
-	_remove_dir(SAVE_DIR)
 
 
-func test_t20_settings_change_reaches_her() -> void:
-	# docs/01 §5 T20 "Why did you make me quieter? (AWAKE/TSUN)". The live
-	# setter is Settings.set_photosensitive; the writing is private on purpose
-	# (a title-screen tweak is not a turn event), so the Date must be active.
-	GameState.set_meter(&"instability", 20.0)  # stage 1
-	var previous := Settings.settings_path
-	Settings.settings_path = "user://p307_t20_settings.cfg"
+## A run that never reached the gate is silent, even though the note survives.
+func test_t19_below_the_gate_is_dropped() -> void:
+	var previous := SaveSystem.save_dir
+	SaveSystem.save_dir = SAVE_DIR
+	GameState.set_meter(&"instability", 35.0)  # stage 2
+	assert_bool(bool(SaveSystem.save_to_slot(1)["ok"])).is_true()
+	Telemetry.reset_session()
+	Triggers.clear_engine_events()
+	assert_bool(SaveSystem.delete_slot(1)).is_true()
 	Telemetry.set_date_active(true)
+	assert_array(Telemetry.take_turn_events(2)["lines"]).is_empty()
+	assert_int(_count("T19")).is_equal(0)
+	SaveSystem.save_dir = previous
+
+
+## DES-1 + D20: accessibility and safety accommodations are never player
+## behaviour. Every accommodation write is silent — no AWAKE/TSUN, no line, no
+## T20 — and only a preference (the full content ceiling) still reaches her.
+func test_t20_preference_change_reaches_her() -> void:
+	var previous := Settings.settings_path
+	Settings.settings_path = SETTINGS_FILE
+	Telemetry.set_date_active(true)
+	for key: String in ["photosensitive", "reduced_motion", "text_speed", "volume"]:
+		Settings.set_preference(key, true)
+		Settings.set_preference(key, false)
+	Settings.set_preference("content_level", "calmer")
+	AudioDirector.set_bus_volume_linear(&"Master", 0.2)
+	assert_int(_count("T20")).is_equal(0)
+	assert_int(int(Triggers.path_scores().get("AWAKE", 0))).is_equal(0)
+	assert_int(int(Triggers.path_scores().get("TSUN", 0))).is_equal(0)
+	assert_array(Telemetry.take_turn_events(0)["lines"]).is_empty()
+	# The Title's own switch is the write DES-1 caught firing the guilt line.
 	Settings.set_photosensitive(true)
+	Settings.set_photosensitive(false)
+	assert_int(_count("T20")).is_equal(0)
+	assert_bool(bool(GameState.flags.get("audio_muted", false))).is_false()
+	# docs/01 §5 T20 "Why did you make me quieter? (AWAKE/TSUN)": a real
+	# preference is still player behaviour, at Day 1 (no invented stage gate).
+	assert_bool(Settings.set_preference("content_level", "full")).is_true()
 	assert_int(_count("T20")).is_equal(1)
 	assert_int(int(Triggers.path_scores().get("AWAKE", 0))).is_equal(2)
 	assert_int(int(Triggers.path_scores().get("TSUN", 0))).is_equal(2)
-	var spoken := Telemetry.take_turn_events(1)
-	assert_array(spoken["lines"]).contains("EVENT: The player changed a setting (photosensitive).")
-	Settings.set_photosensitive(false)
+	var spoken := Telemetry.take_turn_events(0)
+	assert_array(spoken["lines"]).contains("EVENT: The player changed a setting (content_level).")
 	Settings.settings_path = previous
-	_remove_file("user://p307_t20_settings.cfg")
 
 
 func test_t21_mute_holds_caps_until_unmuted() -> void:
 	# docs/01 §5 T21 "She types in ALL CAPS until unmuted": the flag follows the
-	# event's own `muted`, so one row covers the whole span.
-	GameState.set_meter(&"instability", 20.0)  # stage 1
+	# event's own `muted`, so one row covers the whole span. No invented stage
+	# gate: the state is false on Day 1 too, the safe direction.
 	Telemetry.set_date_active(true)
 	AudioDirector.set_bus_mute(&"Master", true)
 	assert_int(_count("T21")).is_equal(1)
 	assert_bool(bool(GameState.flags.get("audio_muted", false))).is_true()
-	var muted := Telemetry.take_turn_events(1)
+	var muted := Telemetry.take_turn_events(0)
 	assert_array(muted["lines"]).contains(
 		"EVENT: The player muted the audio. You can only type in ALL CAPS until it comes back."
 	)
 	AudioDirector.set_bus_mute(&"Master", false)
 	assert_bool(bool(GameState.flags.get("audio_muted", true))).is_false()
-	var back := Telemetry.take_turn_events(1)
+	var back := Telemetry.take_turn_events(0)
 	assert_array(back["lines"]).contains(
 		"EVENT: The player unmuted the audio. The caps can come off."
 	)
+
+
+## CODE-1: the guard is measured against the memory she held at submit. The
+## Director stores the turn's `memory` BEFORE it emits `turn_completed`, so a
+## live read would make the fact about the gift its own evidence: the FIRST gift
+## would fire "they forgot YOU" at trust −4. This test stores no fact by hand.
+func test_t22_first_gift_is_not_a_repeat() -> void:
+	_fake_backend.chunk_sets = [
+		PackedStringArray([_turn_json("gift", "gave me a music box")]),
+		PackedStringArray([_turn_json("gift", "")]),
+	]
+	assert_bool(Director.submit_player_input("I got you a music box")).is_true()
+	await _await_until(func() -> bool: return not Director.is_busy())
+	assert_int(Memory.size()).is_equal(1)  # the fact was stored…
+	assert_int(_count("T22")).is_equal(0)  # …and it is not its own evidence
+	assert_int(int(Triggers.path_scores().get("SPLIT", 0))).is_equal(0)
+	# The second gift is a repeat: now the fact predates the message.
+	assert_bool(Director.submit_player_input("I brought you another music box")).is_true()
+	await _await_until(func() -> bool: return not Director.is_busy())
+	assert_int(_count("T22")).is_equal(1)
+	assert_int(int(Triggers.path_scores().get("SPLIT", 0))).is_equal(2)
+	assert_int(int(Triggers.path_scores().get("HOLLOW", 0))).is_equal(2)
 
 
 func test_t22_repeated_gift_needs_the_memory() -> void:
@@ -178,6 +302,19 @@ func test_t23_appearance_only_compliment() -> void:
 	assert_int(int(Triggers.path_scores().get("TSUN", 0))).is_equal(2)
 	assert_int(int(Triggers.path_scores().get("HOLLOW", 0))).is_equal(2)
 	assert_str(String(lines[0])).contains("Is your sprite all you are to them?")
+	# DES-2: a compliment that is not about her looks must not accuse the player
+	# of seeing only her sprite — the bare label is too broad.
+	for text: String in [
+		"you're so smart",
+		"you are so kind",
+		"you're a good listener",
+		"your eyes look wrong",
+	]:
+		GameState.turn += 5
+		Triggers.begin_turn(text)
+		GameState.turn += 1
+		assert_array(Triggers.close_turn("compliment")).is_empty()
+	assert_int(_count("T23")).is_equal(1)
 
 
 func test_t16_t23_are_the_shipped_catalogue() -> void:
@@ -194,6 +331,25 @@ func test_t16_t23_are_the_shipped_catalogue() -> void:
 
 
 ## ── Harness ───────────────────────────────────────────────────────────────
+
+
+## One valid Turn for the T22 pipeline test: the read label the row watches,
+## the memory the Director stores, and no mood so the meters stay out of it.
+func _turn_json(read: String, memory: String) -> String:
+	return (
+		(
+			'{"read":"%s","inner":"hi","music":"keep","fx":"none",'
+			+ '"beats":[{"feeling":"joy","intensity":1,"cue":"none","say":"Okay."}],'
+			+ '"mood":{"affection":0,"trust":0,"stress":0},"memory":"%s","action":"none"}'
+		)
+		% [read, memory]
+	)
+
+
+func _await_until(predicate: Callable, timeout_ms := 8000) -> void:
+	var deadline := Time.get_ticks_msec() + timeout_ms
+	while not predicate.call() and Time.get_ticks_msec() < deadline:
+		await get_tree().process_frame
 
 
 ## A unix time whose local hour is `hour` — the same reading Triggers._local_hour

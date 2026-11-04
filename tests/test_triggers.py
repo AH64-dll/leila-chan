@@ -67,10 +67,14 @@ GUARD_CLOCK_KEYS = {
     "hour_from",
     "hour_to",
     "absence_hours_gte",
+    "absence_hours_lte",
+    "absence_hours_lt",
     "flag_set",
     "flag_absent",
 }
-GUARD_CLOCK_KEYS |= {"absence_hours_lte"}  # P3.07 T17's reunion window bound
+# `absence_hours_lt` is the one P3.07 actually shipped (T17's strict 168 h
+# reunion bound); `absence_hours_lte` is part of the engine's vocabulary but no
+# row uses it, so both stay in the list the loader accepts.
 GUARD_KEYS = GUARD_CLOCK_KEYS | {
     "counter_gte",
     "contradicts_memory",
@@ -262,8 +266,9 @@ def test_event_rows_agree_with_the_telemetry_catalogue() -> None:
                 f"but {trigger_id} in data/triggers.json"
             )
             # Telemetry gates the EVENT line, the trigger row gates her
-            # reaction; the two docs/05 gates must be the same number.
-            assert _field(row, "stage_min") == spec["stage_min"], (
+            # reaction; the two docs/05 gates must be the same number. A gate
+            # no doc states is absent on both sides (T20/T21, DES-1/D20).
+            assert _field(row, "stage_min") == spec.get("stage_min", 0), (
                 f"{trigger_id} stage gate disagrees with data/telemetry.json"
             )
     assert event_rows == len(TELEMETRY["events"]), "every engine event has a trigger row"
@@ -303,12 +308,28 @@ def test_new_guard_blocks_are_well_formed() -> None:
     assert mention["min_shared_words"] >= 2, "a gift is not remembered on one shared word"
     naming = TRIGGER_ROWS["T26"]["guard"]["name_mention"]
     assert re.search(naming["pattern"], "my name is Ren").group(1) == "Ren"
-    for bad in ("call me Leila", "call me baby", "call me later", "call me when you get home"):
+    for bad in (
+        "call me Leila",
+        "call me baby",
+        "call me later",
+        "call me when you get home",
+        # CODE-4: the capture must not take a function word for a name, or the
+        # `once` row renames the player "Not" for the rest of the save.
+        "my name is not important",
+        "my name is just a name",
+        "my name is still a secret",
+        "my name is really boring",
+        "my name is only for friends",
+    ):
         match = re.search(naming["pattern"], bad, re.I)
         assert match.group(1).lower() in naming["exclude"], f"{bad!r} must be excluded"
-    # T28/T30's text guard is a keyword-shaped matcher: every branch must
+    # T23/T28/T30's text guard is a keyword-shaped matcher: every branch must
     # compile, and the documented examples must take it.
-    for trigger_id, sample in (("T28", "thank you for tonight"), ("T30", "your mother, what was she like?")):
+    for trigger_id, sample in (
+        ("T23", "you look so pretty tonight"),
+        ("T28", "thank you for tonight"),
+        ("T30", "your mother, what was she like?"),
+    ):
         spec = TRIGGER_ROWS[trigger_id]["guard"]["text_match"]
         patterns = spec.get("any", []) + spec.get("all", [])
         assert patterns, f"{trigger_id} text_match has no pattern"
@@ -317,6 +338,74 @@ def test_new_guard_blocks_are_well_formed() -> None:
         assert any(re.search(p, sample, re.I if spec.get("ignore_case", True) else 0) for p in patterns), (
             f"{trigger_id} text_match misses {sample!r}"
         )
+
+
+def test_t23_appearance_guard_keeps_a_compliment_honest() -> None:
+    # DES-2: docs/01 §5 T23 is "Compliment her appearance only", but the bare
+    # `compliment` read label also covers "you're so smart". The guard is a
+    # precondition on the message (never a detection letter), so the row stays
+    # an M row while a non-appearance compliment no longer earns an accusation.
+    spec = TRIGGER_ROWS["T23"]["guard"]["text_match"]
+    patterns = spec.get("any", []) + spec.get("all", [])
+    assert patterns, "T23 needs an appearance precondition"
+
+    def fires(text: str) -> bool:
+        return any(re.search(p, text, re.I if spec.get("ignore_case", True) else 0) for p in patterns)
+
+    for appearance in (
+        "you're so pretty",
+        "you look beautiful tonight",
+        "your eyes are gorgeous",
+        "I love your hair",
+        "you have such a nice smile",
+    ):
+        assert fires(appearance), f"T23 misses {appearance!r}"
+    for other in (
+        "you're so smart",
+        "you are so kind",
+        "you're a good listener",
+        "you're funny",
+        # T24's symptom report is not a compliment: the guard must not claim it.
+        "your eyes look wrong",
+        "your smile looks strange",
+    ):
+        assert not fires(other), f"T23 fires on {other!r}"
+    assert set(TRIGGER_ROWS["T23"]["detect"]) == {"model"}, "the guard adds no detection letter"
+
+
+def test_accessibility_accommodations_are_never_triggers() -> None:
+    # D20 (DECISIONS.md, hard rule): accessibility and safety accommodations must
+    # never be narratively punished — no trigger, no meta event, no path weight.
+    # Settings.is_accommodation() is the one classifier; this pins the policy
+    # list so a future setter cannot quietly emit settings_changed for one.
+    settings = (ROOT / "game" / "autoload" / "Settings.gd").read_text(encoding="utf-8")
+    listed = re.search(r"ACCOMMODATION_KEYS: Array\[String\] = \[([^\]]+)\]", settings)
+    assert listed, "Settings must keep the D20 accommodation list"
+    keys = {item.strip().strip('"') for item in listed.group(1).split(",") if item.strip()}
+    assert {"photosensitive", "reduced_motion", "text_speed", "volume"} <= keys
+    # The calmer content ceiling is the accommodation; the full ceiling is a
+    # preference and may still reach T20.
+    assert "_heal_content_level(value) == CALMER_CONTENT" in settings
+    # No trigger row may watch an accommodation key by name.
+    for trigger_id, row in TRIGGER_ROWS.items():
+        for key in keys:
+            assert key not in json.dumps(row), f"{trigger_id} reacts to the {key!r} accommodation"
+    # T20's only detector is the preference event, and T21 owns the mute pair:
+    # an accommodation write can therefore never reach another row.
+    assert TRIGGER_ROWS["T20"]["detect"] == {"event": ["settings_changed"]}
+    assert TELEMETRY["events"]["settings_changed"]["trigger"] == "T20"
+
+
+def test_t19_run_end_carries_the_ended_stage() -> None:
+    # CODE-2/D19: a New Game has reset GameState before she may speak, so the
+    # rows that are about the previous run must be gated on the stage the EVENT
+    # names. The data side of that contract is one documented key.
+    doc = TRIGGERS["doc"]
+    assert "gate_stage" in doc, "the row vocabulary must document gate_stage"
+    assert "gate_stage" in TELEMETRY["_doc"], "the event catalogue must document gate_stage"
+    telegraph = (ROOT / "game" / "autoload" / "Telemetry.gd").read_text(encoding="utf-8")
+    assert 'data.get("gate_stage", -1)' in telegraph or "data.get(\"gate_stage\"" in telegraph
+    assert "_deliver_run_ended" in telegraph and "_run_ended" in telegraph
 
 
 def test_effects_use_the_game_vocabulary() -> None:
@@ -459,14 +548,27 @@ def test_documented_effects_land() -> None:
     assert TRIGGER_ROWS["T18"]["detect"]["clock"]["absence_hours_gte"] == 168
     assert TRIGGER_ROWS["T18"]["effects"]["meters"]["instability"] > 3
     # T26's name is confirmed ONCE and then persists through the save shadow.
+    # CODE-3: the flag means "this row fired", so it is an effect — `observe`
+    # runs on the read label alone and would set it on any greeting.
     assert TRIGGER_ROWS["T26"]["behavior"] == "once"
-    assert TRIGGER_ROWS["T26"]["observe"]["name_confirmed"] is True
+    assert TRIGGER_ROWS["T26"]["effects"]["flags"]["name_confirmed"] is True
+    assert "observe" not in TRIGGER_ROWS["T26"], "a read label is not a confirmation"
     # T17's reunion window ends where T18's 7 days begin, and 168 h belongs to
     # the week row alone (strict upper bound on the day row).
     assert TRIGGER_ROWS["T17"]["detect"]["clock"]["absence_hours_lt"] == 168
     assert "absence_hours_lt" not in TRIGGER_ROWS["T18"]["detect"]["clock"]
     # T19 "Stage 3+ only" is the row's gate, and the telemetry line's gate.
     assert TRIGGER_ROWS["T19"]["stage_min"] == 3
+    assert TELEMETRY["events"]["save_gone"]["stage_min"] == 3
+    # DES-1/D20: no doc states a stage gate for T20/T21, so the invented
+    # `stage_min: 1` is gone from both the rows and their EVENT lines.
+    for trigger_id, kinds in (
+        ("T20", ["settings_changed"]),
+        ("T21", ["audio_mute", "audio_unmuted"]),
+    ):
+        assert "stage_min" not in TRIGGER_ROWS[trigger_id], f"{trigger_id} has an invented gate"
+        for kind in kinds:
+            assert "stage_min" not in TELEMETRY["events"][kind], f"{kind} has an invented gate"
     # T21 "until unmuted": the ALL-CAPS flag follows the event's own data.
     assert TRIGGER_ROWS["T21"]["effects"]["flags"]["audio_muted"] == {"from_event": "muted"}
     assert set(TRIGGER_ROWS["T21"]["detect"]["event"]) == {"audio_mute", "audio_unmuted"}

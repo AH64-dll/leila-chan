@@ -123,14 +123,12 @@ const FALLBACK_EVENTS := {
 	{
 		"trigger": "T20",
 		"meta": "",
-		"stage_min": 1,
 		"line": "EVENT: The player changed a setting ({setting}).",
 	},
 	"audio_mute":
 	{
 		"trigger": "T21",
 		"meta": "",
-		"stage_min": 1,
 		"line":
 		"EVENT: The player muted the audio. You can only type in ALL CAPS until it comes back.",
 	},
@@ -138,7 +136,6 @@ const FALLBACK_EVENTS := {
 	{
 		"trigger": "T21",
 		"meta": "",
-		"stage_min": 1,
 		"line": "EVENT: The player unmuted the audio. The caps can come off.",
 	},
 }
@@ -162,6 +159,12 @@ var _resize_origin := Vector2i.ZERO
 var _last_screenshot_ms := 0.0
 var _close_requests := 0
 var _screenshots := 0
+## docs/01 §5 T19: the run that ended by hand. It is the one event that cannot
+## be spoken where it happens — New Game resets GameState/Director right after
+## it and the Date's activation clears the pending queue — so it waits here for
+## the new run's first turn (`take_turn_events`), gated on the ENDED run's stage
+## (the live one is 0 by then). P3.07 r2 CODE-2.
+var _run_ended: Dictionary = {}
 
 
 func _ready() -> void:
@@ -187,7 +190,7 @@ func _input(event: InputEvent) -> void:
 		if key.pressed and not key.echo:
 			note_activity()
 			if _is_screenshot_key(key):
-				_note_screenshot()
+				note_screenshot()
 		return
 	var button := event as InputEventMouseButton
 	if button != null and button.pressed:
@@ -267,6 +270,10 @@ func state() -> Dictionary:
 	for kind: String in _pending_order:
 		if _pending.has(kind):
 			pending.append((_pending[kind] as Dictionary).duplicate(true))
+	# The run that ended by hand is pending too — it just cannot be spoken until
+	# the next run's first turn, so it is not in `_pending` (T19, CODE-2).
+	if not _run_ended.is_empty():
+		pending.append(_run_ended.duplicate(true))
 	return {
 		"date_active": _date_active,
 		"turn_open": _turn_open,
@@ -313,6 +320,7 @@ func reset_session() -> void:
 	_last_activity_ms = _now_ms()
 	_last_resize_emit_ms = 0.0
 	_last_screenshot_ms = 0.0
+	_run_ended = {}
 	_sync_window_size()
 
 
@@ -446,33 +454,40 @@ func note_resized(current: Vector2i) -> bool:
 	return true
 
 
-## docs/01 §5 T31: an in-game screenshot key was pressed. Print Screen and F12
-## both count; the cooldown keeps a held key or a rapid double-tap to one
-## event. Private because it is one detector behind `_input`: the F3 overlay
-## fires the kind through `debug_fire`, and the camera UI should call that too.
-func _note_screenshot() -> void:
+## docs/01 §5 T31: an in-game screenshot was taken. Print Screen and F12 reach
+## this through `_input`; the camera UI (docs/01 §5's "F12 / in-game camera")
+## calls the same public seam in release builds, where `debug_fire` refuses.
+## Returns true when an event was recorded (the cooldown keeps a held key or a
+## rapid double-tap to one event).
+func note_screenshot() -> bool:
 	if not _date_active:
-		return
+		return false
 	var now := _now_ms()
 	var cooldown := float(_limit("screenshot_cooldown_ms"))
 	if _last_screenshot_ms > 0.0 and now - _last_screenshot_ms < cooldown:
-		return
+		return false
 	_last_screenshot_ms = now
 	_screenshots += 1
 	_record(SCREENSHOT_KIND, {"count": _screenshots})
+	return true
 
 
 ## docs/01 §5 T19–T21: the player's own act outside the chat box. One sink
 ## because the three share the whole shape — a kind the catalogue documents, a
 ## docs/05 gate and one line in data/telemetry.json — and only the data differs:
-##   save_gone        {kind, slot?}   a run ended by hand (New Game / wipe)
-##   settings_changed {setting}       a setting the player wrote
+##   save_gone        {kind, slot?, gate_stage}  a run ended by hand (New Game,
+##                    delete-slot, wipe). `gate_stage` is the ENDED run's stage:
+##                    docs/01 §5 T19 is "Stage 3+ only", and by the time she may
+##                    speak the new run is at 0, so the row's gate reads this.
+##   settings_changed {setting}       a preference the player wrote (D20: never
+##                    an accessibility accommodation — Settings.is_accommodation)
 ##   audio_mute       {muted: true}   the master bus went silent
 ##   audio_unmuted    {muted: false}  …and the caps can come off
 ## `save_gone` is the one that outlives a date: it describes the run about to
-## start, so the date gate skips it (the T19 stage-3 gate still applies). Volume
-## 0 is not a mute; only an explicit toggle counts, and the caller says which
-## kind. The F3 overlay fires every kind through `debug_fire`.
+## start, so the date gate skips it and it waits in `_run_ended` for the next
+## run's first turn instead of being cleared with the pending queue (CODE-2).
+## Volume 0 is not a mute; only an explicit toggle counts, and the caller says
+## which kind. The F3 overlay fires every kind through `debug_fire`.
 func note_player_action(kind: String, data: Dictionary = {}) -> void:
 	if not [SAVE_GONE_KIND, SETTINGS_KIND, MUTE_KIND, UNMUTE_KIND].has(kind):
 		push_warning("Telemetry: '%s' is not a player action; ignored" % kind)
@@ -480,6 +495,10 @@ func note_player_action(kind: String, data: Dictionary = {}) -> void:
 	if kind != SAVE_GONE_KIND and not _date_active:
 		return
 	if kind == SETTINGS_KIND and str(data.get("setting", "")).strip_edges().is_empty():
+		return
+	if kind == SAVE_GONE_KIND:
+		# Deferred, not queued: the transition it is about drops `_pending`.
+		_run_ended = _build_event(kind, data)
 		return
 	_record(kind, data)
 
@@ -498,6 +517,14 @@ func take_turn_events(stage: int) -> Dictionary:
 	var lines: Array[String] = []
 	var private_terms: Array[String] = []
 	var drained: Array[Dictionary] = []
+	# docs/01 §5 T19 first: it is the oldest fact — the previous run ended before
+	# this date began — and its gate is the ENDED run's stage, not this one's.
+	var ended := _deliver_run_ended()
+	if not ended.is_empty():
+		drained.append(ended)
+		var ended_line := str(ended.get("line", "")).strip_edges()
+		if not ended_line.is_empty():
+			lines.append(ended_line)
 	for kind: String in _pending_order:
 		if not _pending.has(kind):
 			continue
@@ -556,7 +583,11 @@ func debug_fire(kind: String) -> bool:
 		REPEAT_KIND:
 			_record(REPEAT_KIND, {"count": 2, "chars": 0})
 		SAVE_GONE_KIND:
-			_record(SAVE_GONE_KIND, {"kind": "debug"})
+			# The deferred path, so a reviewer sees it the same way a real New
+			# Game does: pending (state()), spoken on the next drain.
+			note_player_action(
+				SAVE_GONE_KIND, {"kind": "debug", "gate_stage": int(GameState.stage)}
+			)
 		SETTINGS_KIND:
 			_record(SETTINGS_KIND, {"setting": "debug"})
 		MUTE_KIND:
@@ -575,6 +606,19 @@ func debug_fire(kind: String) -> bool:
 ## Triggers seam first (every detection, for caps/escalation), then the queue
 ## the next turn drains (one line per kind, newest facts win).
 func _record(kind: String, data: Dictionary) -> Dictionary:
+	var event := _build_event(kind, data)
+	_pending[kind] = event
+	if not _pending_order.has(kind):
+		_pending_order.append(kind)
+	_dispatch(event)
+	return event
+
+
+## The normalized shape {trigger, event, stage_min, line, data, seq, ts} without
+## queueing or emitting it: `_record` does both for a live detection, while
+## `note_player_action` keeps the save_gone event in `_run_ended` until the new
+## run's first turn can hear it.
+func _build_event(kind: String, data: Dictionary) -> Dictionary:
 	var fallback: Variant = _events.get(kind, {})
 	var spec: Dictionary = fallback if fallback is Dictionary else {}
 	if spec.is_empty():
@@ -589,13 +633,34 @@ func _record(kind: String, data: Dictionary) -> Dictionary:
 		"ts": int(_now_ms() / 1000.0),
 	}
 	_seq += 1
-	_pending[kind] = event
-	if not _pending_order.has(kind):
-		_pending_order.append(kind)
+	return event
+
+
+## Emits one normalized event: the Triggers seam (matching, caps, escalation)
+## and the `engine_event` signal the F3 overlay and the transcript listen to.
+func _dispatch(event: Dictionary) -> void:
 	engine_event.emit(event.duplicate(true))
 	var triggers: Node = get_node_or_null("/root/Triggers")
 	if triggers != null and triggers.has_method("handle_engine_event"):
 		triggers.call("handle_engine_event", event.duplicate(true))
+
+
+## docs/01 §5 T19: the run that ended by hand, delivered on the new run's first
+## turn. The gate is the ENDED run's stage (`data.gate_stage`) because a New
+## Game has already reset the live one; a run that never reached it is dropped
+## silently, like any other docs/05 gate. Returns the event, or {} when there is
+## nothing (left) to say.
+func _deliver_run_ended() -> Dictionary:
+	if _run_ended.is_empty():
+		return {}
+	var event := _run_ended
+	_run_ended = {}
+	var data: Dictionary = {}
+	if event.get("data") is Dictionary:
+		data = event["data"]
+	if int(data.get("gate_stage", -1)) < int(event.get("stage_min", 0)):
+		return {}
+	_dispatch(event)
 	return event
 
 
