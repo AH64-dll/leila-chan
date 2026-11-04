@@ -283,3 +283,27 @@
 - Gate green: 634 tests / 53 suites. `FXHostTest.test_twitch_fires_chromatic_split` flakes under machine
   load (shader-uniform sample after a wall-clock wait); it passes alone and is untouched by save work.
 
+## P2.19 — day/night loop + night screen (round 1, 2026-11-04, agent: commandcode)
+
+- Built `llm/NightLoop.gd` (the night as a four-step ordered report: meters → stage → path → event),
+  `llm/OvernightEvents.gd` + `data/night.json` (N01/N12, availability, weighted seeded pick, per-stage
+  lines), `llm/Campaign.gd` (day clock + `begin_day`/`next_scenario`), and `scenes/Night.tscn` +
+  `Night.gd` (the screen, its data-driven timeline, the next-day autosave and the loop's route).
+- The steps re-implement nothing: `advance_day()` owns the burn, the meter write owns the band crossing
+  (`_refresh_stage`), and that crossing owns the Stage-2 assign / Stage-3 lock. NightLoop sequences them,
+  asserts the invariants (`stage == for(peak)`, `stage ≥ lock ⇒ locked`) and reports before/after, so
+  "in order" is observable in the report instead of asserted in prose.
+- Convention: the night's path check is `GameState.apply_turn_profile(&"", "")`, and GameState now treats
+  "no player line AND no turn data" as not-a-turn — the empty reply used to clear `last_question` (T15's
+  echo) every single night. A real turn always carries turn data, so the condition cannot misfire.
+- Convention: availability is ONE predicate (`ScenarioLoader.is_available`) shared by scenarios and
+  overnight rows; `available.paths` ("any" or a list of the six ids) is validated in `_validate_available`
+  too, so a pool row with a bogus block is skipped at load instead of silently never matching.
+- Time/determinism: the night screen's clock is `advance_time(delta)` (`_process` forwards frames, tests
+  step it); the event draw is seeded from `flags.campaign_seed` + the day; the skip window is data and
+  N12's `skip_after_s: null` is the documented "the ten seconds ARE the event".
+- Gotcha: `GameState.get_flag(x, fallback)` returns the FALLBACK after `clear_flag` erased the key —
+  assert a consumed queue with `flags.has(x)`, never `get_flag(x, "")`.
+- Next SYS on this seam: P3.16 replaces Night.gd's `AFTER_CAMPAIGN_SCENE_PATH` (Title today) with the
+  ending scene and consumes `campaign_completed`; FX has no host registered during the night, so a
+  stage crossing at night reports its spec + queues the EVENT line but has no visible glitch yet.

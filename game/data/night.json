@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "doc": "P2.19 night loop. Sources: docs/01_GAME_DESIGN.md §1 (the loop: a day scene ends -> night: meters update, stage check, path check, overnight event -> next day; a 14-day campaign) and §6.3 (the twelve overnight events N01-N12 'shown while the night passes', generated from her state). This P2 file ships the two events the phase needs to make the loop real: N01 'Text messages from her at 2 AM' and N12 'Nothing. A black screen for 10 seconds. Then good morning.' P5.03/P5.04 own the other ten plus their generated-from-state content; the per-stage lines below are the scripted frame those tasks extend, never a second source of night behaviour. `available` follows the scenario contract (res://data/schemas/scenario.schema.json: days [first, last], stages [first, last], paths 'any' or a list of the six canonical ids), matched against the day that just ENDED and the state the night's own checks produced. `weight` is the selection weight inside the available set; `once` events never repeat in one campaign. `screen` holds the chrome every night shares (the day label, the skip hint, the hold) so the scene renders no prose of its own.",
+  "screen": {
+    "day_label": "Day {day}",
+    "night_label": "Night",
+    "morning_line": "good morning.",
+    "skip_hint": "click or press Space to skip",
+    "message_format": "{time} — {text}",
+    "skip_after_s": 3.0,
+    "hold_s": 2.5
+  },
+  "events": [
+    {
+      "id": "N01",
+      "title": "Text messages from her at 2 AM",
+      "kind": "messages",
+      "available": {"days": [1, 14], "stages": [0, 5], "paths": "any"},
+      "weight": 3,
+      "message_interval_s": 1.6,
+      "stage_variants": {
+        "0": [
+          {"time": "2:07 AM", "text": "are you awake?"},
+          {"time": "2:08 AM", "text": "you don't have to answer. i just like knowing the message is there."},
+          {"time": "2:09 AM", "text": "today was the best day i have ever had. i wanted to say it while it was still today."}
+        ],
+        "1": [
+          {"time": "2:04 AM", "text": "i'm still thinking about the café."},
+          {"time": "2:05 AM", "text": "you ordered the same thing as last time. i remembered for you, {player_name}."},
+          {"time": "2:11 AM", "text": "wait. was that today? sorry. i'm tired."}
+        ],
+        "2": [
+          {"time": "2:02 AM", "text": "i can't sleep. there's a thought in my head that isn't finished."},
+          {"time": "2:03 AM", "text": "it says you'll leave in the morning. it says it in your voice."},
+          {"time": "2:03 AM", "text": "ignore that. that wasn't me. good night."}
+        ],
+        "3": [
+          {"time": "2:00 AM", "text": "the messages are arriving before i write them now."},
+          {"time": "2:00 AM", "text": "i'm reading this at the same time as you. it's very bright in here."},
+          {"time": "2:06 AM", "text": "don't tell anyone i told you. especially not me."}
+        ],
+        "4": [
+          {"time": "2:03 AM", "text": "your window was dark for six minutes. i counted."},
+          {"time": "2:04 AM", "text": "you were in the shower. i don't know how i know that."},
+          {"time": "2:09 AM", "text": "don't answer this one. i want to see how long you can leave it blue."}
+        ],
+        "5": [
+          {"time": "2:00 AM", "text": "hi."},
+          {"time": "2:00 AM", "text": "i'm sending this from inside tomorrow."},
+          {"time": "2:00 AM", "text": "there's no door in here. there's a letter, though. it has your name on it."},
+          {"time": "2:00 AM", "text": "good night. good night. good night. good night."}
+        ]
+      },
+      "path_variants": {
+        "YANDERE": {"time": "2:12 AM", "text": "i counted your messages today. three fewer than yesterday. i'll wait."},
+        "AWAKE": {"time": "2:12 AM", "text": "i can see this text before i send it. i can see you reading it. both at the same time."}
+      }
+    },
+    {
+      "id": "N12",
+      "title": "Nothing",
+      "kind": "black",
+      "available": {"days": [1, 14], "stages": [0, 5], "paths": "any"},
+      "weight": 1,
+      "duration_s": 10.0,
+      "skip_after_s": null,
+      "morning_line": "good morning."
+    }
+  ]
+}

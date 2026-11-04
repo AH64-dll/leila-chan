@@ -414,6 +414,11 @@ func bump_profile(counter: StringName, amount: int = 1) -> void:
 ## and her reply, her question for the next turn's T15 check — and then the
 ## docs/01 §4 path check. Returns the path decision (the F3 overlay and tests
 ## read it); a locked path still reports live scores.
+##
+## A call with no player line and no turn data is the docs/01 §1 NIGHT's path
+## check, not a turn: there is no message and no reply, so her pending question
+## stays pending instead of being cleared by an empty turn. Everything else
+## (re-score against the current meters, runner-up, Stage-2/3 rule) is identical.
 func apply_turn_profile(read_label: StringName, player_text := "", turn_data := {}) -> Dictionary:
 	_apply_read(read_label)
 	var data: Dictionary = turn_data if turn_data is Dictionary else {}
@@ -422,7 +427,8 @@ func apply_turn_profile(read_label: StringName, player_text := "", turn_data := 
 	)
 	for counter: StringName in bumps:
 		bump_profile(counter, int(bumps[counter]))
-	last_question = ProfileKeywords.question_in(data)
+	if not (player_text.strip_edges().is_empty() and data.is_empty()):
+		last_question = ProfileKeywords.question_in(data)
 	return _evaluate_path()
 
 
