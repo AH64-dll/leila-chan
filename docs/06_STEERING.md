@@ -70,7 +70,10 @@ clamped to [0, 12] on every scale; >12 only in the scripted collapse (M40)
 blind-read pilots showed the shipped path vectors steer legibly at ≤0.5 and collapse into gibberish
 at ≥1.0, so the old band was entirely inside the incoherent range — `paths.json` `blind_read_scale`
 0.5 is the measured ceiling and stage 5 rides it. The keep vectors each carry this curve;
-the four fallback vectors (D21) are prompt-only and schedule no weight.)
+the four fallback vectors (D21) are prompt-only and schedule no weight. The table's
+"path weight" column is the **keep-vector curve** — the weight a bound path's vector
+carries once `ctx.path` is assigned; before assignment the scheduled weight is the
+flat `path_mix` interim (0 / 0.1 / 0.2 / 0.2 / 0.2 / 0.2), which binds no file.)
 
 The schedule reaches the model as `TurnRequest.dose`, a `{name: scale}` map (docs/07 §3.1). Its keys:
 

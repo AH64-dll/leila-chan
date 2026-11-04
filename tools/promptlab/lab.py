@@ -19,6 +19,7 @@ import re
 import time
 import unicodedata
 import urllib.request
+import warnings
 from difflib import SequenceMatcher
 from pathlib import Path
 
@@ -164,7 +165,18 @@ def scheduled_dose(stage, path=""):
     vector = (doc.get("path_vectors") or {}).get(path) if path else None
     if vector:
         curve = (doc.get("weight_curves") or {}).get(vector) or {}
-        dose[str(vector)] = float(curve.get(str(stage), row["path_mix"]))
+        weight = curve.get(str(stage))
+        if weight is not None:
+            dose[str(vector)] = float(weight)
+        else:
+            # Mirror Steering._weight's push_warning: a curve gap is a data typo,
+            # not a silent path_mix substitution (P3.04 r2 CODE-4/DES-4).
+            warnings.warn(
+                "scheduled_dose: no %s weight-curve weight for stage %d — "
+                "falling back to the interim path_mix row" % (vector, stage),
+                stacklevel=2,
+            )
+            dose[str(vector)] = float(row["path_mix"])
     elif not path:
         dose["path_mix"] = float(row["path_mix"])
     return dose

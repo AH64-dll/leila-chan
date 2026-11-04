@@ -157,6 +157,45 @@ func test_crossing_emits_one_transition() -> void:
 	assert_str(String(spec["cue"])).is_equal("stinger.stage_change")
 
 
+func test_path_is_assigned_before_the_transition_signal() -> void:
+	# P3.04 r2 CODE-1/DES-1: LLM._on_stage_transition resolves the docs/06 §3 dose
+	# from GameState.path, so the path must already be assigned when
+	# stage_transition fires — otherwise the crossing relaunch binds the
+	# unassigned-path interim `path_mix` (declared unbound, no file) instead of
+	# the assigned path's keep vector. The capture is a Dictionary because
+	# GDScript lambdas copy scalar locals — a Dictionary shares the reference.
+	var s: Variant = _state()
+	var order: Array = []
+	var seen := {"path": &"", "locked": false}
+	s.path_assigned.connect(func(p: StringName, _locked: bool) -> void: order.append(p))
+	s.stage_transition.connect(
+		func(_previous: int, _current: int, _spec: Dictionary) -> void:
+			order.append(&"transition")
+			seen["path"] = s.path
+			seen["locked"] = s.path_locked
+	)
+	s.set_meter(&"instability", 30.0)  # the stage-2 crossing
+	# Empty profile → docs order → YANDERE, a keep path (possessive vector).
+	assert_str(String(seen["path"])).is_equal("YANDERE")
+	assert_array(order).is_equal([&"YANDERE", &"transition"])
+
+
+func test_multi_band_jump_assigns_before_the_landing_transition() -> void:
+	# Same ordering on a multi-band jump: stage 0 → 3 in one write lands past the
+	# lock stage, so the crossing both assigns and locks — and the transition
+	# signal still sees the locked path.
+	var s: Variant = _state()
+	var seen := {"path": &"", "locked": false}
+	s.stage_transition.connect(
+		func(_previous: int, _current: int, _spec: Dictionary) -> void:
+			seen["path"] = s.path
+			seen["locked"] = s.path_locked
+	)
+	s.set_meter(&"instability", 55.0)  # stage 3 in one crossing
+	assert_str(String(seen["path"])).is_equal("YANDERE")
+	assert_bool(bool(seen["locked"])).is_true()
+
+
 func test_once_per_crossing_guard() -> void:
 	# The guard: staying inside a band never re-announces the stage, however
 	# many writes land there.

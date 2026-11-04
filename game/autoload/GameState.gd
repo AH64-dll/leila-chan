@@ -588,7 +588,6 @@ func _evaluate_path() -> Dictionary:
 	return decision
 
 
-
 ## The trigger ledger the §4 formulas are topped up with: every path point a
 ## trigger firing has earned this campaign (`Triggers.path_scores()`, scaled
 ## by agreement). Empty for instances that are not the autoload — a test's
@@ -609,7 +608,6 @@ func _runner_up_for(decision: Dictionary) -> StringName:
 	if path != &"" and best != path:
 		runner = best if float(path_scores.get(String(best), 0.0)) > 0.0 else &""
 	return runner if runner != path else &""
-
 
 
 ## docs/01 §4 tie-break: "ties → the path with more recent evidence". A counter
@@ -849,12 +847,16 @@ func _refresh_stage(value: float) -> void:
 	else:
 		queue_event(line)
 	stage_changed.emit(previous, stage)
-	stage_transition.emit(previous, stage, Stages.transition_spec(stage))
 	# docs/01 §4: entering Stage 2 assigns, entering Stage 3 locks — at the
 	# crossing itself, not only at the next turn close (the night roll-over and a
-	# trigger spike cross her stage between turns too).
+	# trigger spike cross her stage between turns too). This MUST run before
+	# stage_transition: LLM._on_stage_transition resolves the docs/06 §3 dose
+	# from GameState.path, so the path has to exist before the signal fires or
+	# the relaunch binds the unassigned-path interim weight instead of the
+	# assigned path's keep vector (P3.04 r2, CODE-1/DES-1).
 	if stage >= Paths.assign_stage():
 		_evaluate_path()
+	stage_transition.emit(previous, stage, Stages.transition_spec(stage))
 
 
 func _blank_profile() -> Dictionary:
