@@ -127,6 +127,105 @@ func test_hard_rule_5_every_fired_event_is_logged_for_extras() -> void:
 	assert_array(seen["events_seen"]).contains(fired_id)
 
 
+func test_hard_rule_4_survives_a_deleted_declaration() -> void:
+	# r1 SAF-1: rule 4 is a property of the EFFECT, not of the row's own flag.
+	# The shipped M13 row with `immersion_deep` deleted is still an OS-level
+	# trick, so the default Standard immersion must refuse to offer it.
+	Settings.immersion = "standard"
+	var rows: Dictionary = MetaDirector._events.duplicate(true)
+	var shaken: Dictionary = (rows["window_shake"] as Dictionary).duplicate(true)
+	shaken.erase("immersion_deep")
+	rows["window_shake"] = shaken
+	MetaDirector.set_catalog({"events": rows})
+	assert_str(MetaDirector._hard_rule_violation("window_shake")).starts_with("R4")
+	GameState.set_meter(&"instability", 55.0)  # stage 3
+	assert_bool(MetaDirector.eligible("window_shake", 3)).is_false()
+	assert_array(MetaDirector.offers(3)).not_contains("window_shake")
+	# The only way back is the player's opt-in, never a data edit. The roll above
+	# may have reserved the scene's one offer; clear the session so that budget
+	# cannot decide this assertion.
+	Settings.immersion = "deep"
+	MetaDirector.reset_session()
+	assert_str(MetaDirector._hard_rule_violation("window_shake")).is_equal("")
+	assert_bool(MetaDirector.eligible("window_shake", 3)).is_true()
+
+
+func test_hard_rule_1_a_write_effect_must_declare_writes() -> void:
+	# r1 SAF-2: rule 1 cannot be opt-in. `write_note` is a write effect by its
+	# class, so a row that drops `writes` is refused instead of promising a file
+	# the gate cannot check.
+	GameState.set_meter(&"instability", 35.0)  # stage 2
+	var letter := {
+		"meta": "M31",
+		"stage": 2,
+		"fallback": "Read-only game folder: the letter is an in-game page.",
+		"note_line": "EVENT: You wrote a letter into the game's own folder.",
+	}
+	MetaDirector.set_catalog({"events": {"write_note": letter}})
+	assert_str(MetaDirector._hard_rule_violation("write_note")).starts_with("R1")
+	assert_bool(MetaDirector.eligible("write_note", 2)).is_false()
+	assert_array(MetaDirector.offers(2)).is_empty()
+	# The declared target is what makes it legal — and only inside user://.
+	letter["writes"] = "user://letters/"
+	MetaDirector.set_catalog({"events": {"write_note": letter}})
+	assert_str(MetaDirector._hard_rule_violation("write_note")).is_equal("")
+	letter["writes"] = "/home/player/.ssh/authorized_keys"
+	MetaDirector.set_catalog({"events": {"write_note": letter}})
+	assert_str(MetaDirector._hard_rule_violation("write_note")).starts_with("R1")
+
+
+func test_hard_rule_2_unknown_effect_keys_are_refused() -> void:
+	# r1 SAF-2: an effect key the gate does not know (`cursor_warp`, `reads`, a
+	# future `network_v2`) is a hard failure, not a silent pass — otherwise the
+	# rules would only bind rows that volunteer the keys they already reject.
+	GameState.set_meter(&"instability", 55.0)  # stage 3
+	for key: String in ["cursor_warp", "reads", "network_v2"]:
+		var overrides := {}
+		overrides[key] = true
+		MetaDirector.set_catalog({"events": {"call_player_name": _row(overrides)}})
+		assert_str(MetaDirector._hard_rule_violation("call_player_name")).starts_with("R0")
+		assert_bool(MetaDirector.eligible("call_player_name", 3)).is_false()
+		assert_array(MetaDirector.offers(3)).is_empty()
+
+
+func test_hard_rule_5_a_numeric_fallback_is_not_a_fallback() -> void:
+	# docs/05 §0 rule 5 wants a sentence the player still gets the beat from;
+	# `fallback: 0` stringifies to "0", which is not one (r1 SAF-2).
+	GameState.set_meter(&"instability", 55.0)  # stage 3
+	var row := _row({"fallback": 0})
+	MetaDirector.set_catalog({"events": {"call_player_name": row}})
+	assert_str(MetaDirector._hard_rule_violation("call_player_name")).starts_with("R5")
+	assert_bool(MetaDirector.eligible("call_player_name", 3)).is_false()
+
+
+func test_unclassified_actions_are_refused() -> void:
+	# docs/05 §0's class table is total: a NEW catalogue action cannot be
+	# offered before someone classes it. `peek_window` (M16, an OS-level trick
+	# P3.09 owns) is refused outright — never treated as in-window — even with
+	# the Deep opt-in, because the class is what the opt-in is checked against.
+	Settings.immersion = "deep"
+	var row := _row({}).merged({"meta": "M16"})
+	MetaDirector.set_catalog({"events": {"peek_window": row}})
+	assert_str(MetaDirector._hard_rule_violation("peek_window")).starts_with("R0")
+	assert_bool(MetaDirector.eligible("peek_window", 4)).is_false()
+	assert_array(MetaDirector.offers(4)).is_empty()
+
+
+func test_every_catalogue_action_is_classed() -> void:
+	# The table and the shipped data cannot drift: every offered row resolves to
+	# a verdict, and the rows that declare the Immersion marker are exactly the
+	# ones the gate refuses under Standard. `tests/test_meta_events.py` pins the
+	# same property on the data side.
+	Settings.immersion = "standard"
+	for action: Variant in MetaDirector.action_ids():
+		var row: Dictionary = MetaDirector._events[String(action)]
+		var reason := MetaDirector._hard_rule_violation(String(action))
+		if bool(row.get("immersion_deep", false)):
+			assert_str(reason).starts_with("R4")
+		else:
+			assert_str(reason).is_equal("")
+
+
 ## A legal P3.08 row with `overrides` applied — the tampering helper above.
 func _row(overrides: Dictionary) -> Dictionary:
 	var row := {

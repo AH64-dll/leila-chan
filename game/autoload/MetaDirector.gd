@@ -21,9 +21,10 @@ extends Node
 ##      is unchanged.
 ##   3. The quit goes through one injected Callable, so a scripted test can
 ##      press close without ending the test run.
-##   4. OS-level tricks (`immersion_deep` rows) are only ever *offered* while
-##      Settings says Immersion: Deep — the offer is the gate P3.09's effects
-##      will later check again.
+##   4. OS-level tricks are only ever *offered* while Settings says Immersion:
+##      Deep. The class is `ACTION_CLASS` in code, not a row's self-description,
+##      so dropping a declaration cannot exempt an effect; the offer is the gate
+##      P3.09's effects will later check again.
 ##
 ## docs/05 §3 caps live in data/meta_events.json ("rules"): per-scene maxima,
 ## never two meta events in a row, and per-event `once_per_session` /
@@ -58,7 +59,6 @@ const DEFAULT_RULES := {
 	"per_scene_caps": {"3": 1, "4": 2, "5": 3},
 	"default_scene_cap": 1,
 	"never_two_in_a_row": true,
-	"scheduler_stage_min": 3,
 }
 ## docs/05 §0 rule 4: Deep-immersion tricks default to OFF. Settings owns the
 ## player-facing switch (P3.13); until then the scheduler reads it when present
@@ -76,6 +76,50 @@ const FORBIDDEN_EFFECTS := {
 	"move_files": "R1: never move the player's files",
 	"read_personal_files": "R1: never read personal files",
 }
+## docs/05 §0: the effect class of every action the scheduler may offer, owned by
+## CODE and not by the row. This is the authority for rules 1 and 4, so a row
+## cannot leave a class by dropping a key (r1 SAF-1: deleting `immersion_deep`
+## from M13 must not make an OS-level trick eligible under Standard) and a new
+## action is refused until someone classes it here (r1 SAF-2: unclassified is a
+## data error, never an in-window default). The Python contract pins the data's
+## `immersion_deep` declarations to this table.
+##   "os_deep"   a §0 rule-4 OS-level trick — window move/shake, fullscreen,
+##               transparency, extra windows, taskbar flash, cursor. docs/05 §1.2
+##               marks each of these "Imm. ✔".
+##   "window"    the OS title bar only; docs/05 gives M12 no "Imm.", so rule 4
+##               does not apply to it.
+##   "write"     writes a file: §0 rule 1 — the row must declare `writes` inside
+##               user://.
+##   "quit"      quits the app on purpose after her line (docs/05 §1.1 M02); the
+##               class is here so the behaviour is reviewed, not inferred.
+##   "in_window" everything it does happens inside the game's own window.
+const ACTION_CLASS := {
+	"refuse_exit": ["in_window"],
+	"rename_window": ["window"],
+	"window_shake": ["os_deep"],
+	"she_closes_game": ["quit"],
+	"fake_crash": ["in_window"],
+	"push_window": ["os_deep"],
+	"look_at_me": ["os_deep"],
+	"call_player_name": ["in_window"],
+	"write_note": ["write"],
+	"mimic_player": ["in_window"],
+	"hide_ui": ["in_window"],
+}
+## The complete catalogue row vocabulary (docs/07 §2: the row is data, its shape
+## is code). Any OTHER key is a hard failure: rules 1–2 must not be opt-in, so an
+## effect the gate does not understand (`cursor_warp`, `reads`, a future
+## `network_v2`) can never ride a row through on silence (r1 SAF-2).
+const ROW_KEYS := [
+	"meta",
+	"stage",
+	"repeat",
+	"weights",
+	"fallback",
+	"note_line",
+	"writes",
+	"immersion_deep",
+]
 ## docs/05 §0 rule 1: the only writable root the game has.
 const USER_DIR := "user://"
 
@@ -119,6 +163,12 @@ func hold_close_requested() -> bool:
 		return false  # the second press always closes (docs/05 §1.1 M01)
 	if int(GameState.stage) < close_gate():
 		return false
+	# docs/05 §3: the close request is a meta event too, so a scene that already
+	# spent its budget buys no intercept. The press then closes the game, which
+	# is the one outcome docs/05 §0 rule 3 always allows — the cap can never
+	# trap the player (r1 CODE-4 / DES-5 / SAF-3).
+	if _scene_events >= scene_cap(int(GameState.stage)):
+		return false
 	_held = true
 	_open_offer(EXIT_OFFER, _opportunity_line(EXIT_OFFER))
 	close_held.emit()
@@ -145,21 +195,40 @@ func close_gate() -> int:
 
 
 ## docs/02 §2.4: meta actions are offered, never free — 0–2 per turn. The enum
-## is `["none"]` unless this returns action names, and docs/05 §2 puts the
-## reason on every turn with an offer, so each open offer's sentence is queued
-## again here: the pending-event queue drains once per submit, and an offer
-## that outlived its one line would leave the enum without a why. An offer's
-## sentence is erased when the offer closes, so it never rides a turn after
-## the action it explains.
+## is `["none"]` unless this returns action names. Rolling is the only side
+## effect; the offer's reason is delivered separately by `turn_events()` so the
+## sentence can never outlive the enum it explains.
 func offers(stage: int) -> Array:
 	if stage >= scheduler_stage_min():
 		_roll_schedule(stage)
+	return _visible_offers(stage)
+
+
+## docs/02 §2.4 / docs/05 §2: an offer's reason must ride the SAME turn as the
+## enum that carries it. The Director merges these into the submit's `events`
+## snapshot while building the turn (`build_turn_context`), because the
+## pending-event queue drains at step 0 — before this turn's offers exist — so a
+## queued line rode the NEXT submit with a different enum and was erased when
+## the offer was taken (P3.08 r1 CODE-1/DES-1). Duplicates are dropped: an
+## empty-say retry snapshots the same turn twice.
+func turn_events(events: Array, stage: int) -> Array:
+	var merged := events.duplicate()
+	for action: String in _visible_offers(stage):
+		var line := String(_open_offers[action])
+		if not merged.has(line):
+			merged.append(line)
+	return merged
+
+
+## The offers the enum may carry right now, in open order. M01's offer only
+## exists above the close gate, so a stage that lost the gate never sees a
+## `refuse_exit` the schema's own gate would reject.
+func _visible_offers(stage: int) -> Array:
 	var out: Array = []
 	for action: String in _open_offers:
 		if action == EXIT_OFFER and stage < close_gate():
 			continue
 		out.append(action)
-		GameState.queue_event(String(_open_offers[action]))
 	return out
 
 
@@ -169,18 +238,31 @@ func offers(stage: int) -> Array:
 ## event's own session/save/cooldown counter. The docs/05 §2 event note is
 ## queued so the next prompt tells her what happened. Unknown actions are not
 ## consumed: `end_date` (and anything the catalogue does not own) stays free.
-func execute_after_text(action: String) -> void:
+## `answered_turn` is the index of the turn the player answered (the Director's
+## `_turn_index`, read BEFORE `apply_turn_meters()` advances the counter), so
+## every cap counts PLAYER turns: an event that lands at the end of turn N makes
+## turn N+1 the one quiet turn, not N+1 and N+2 (P3.08 r1 CODE-2/DES-2). A caller
+## outside a turn (F3, a suite) passes nothing and means the current counter.
+func execute_after_text(action: String, answered_turn: int = -1) -> void:
 	if not _open_offers.has(action):
 		return
-	var id := _event_id_for(action)
+	var turn := answered_turn if answered_turn >= 0 else int(GameState.turn)
 	_rolled_offers.erase(action)
 	_close_offer(action)
+	# docs/05 §3: the scene budget is re-checked HERE and not only when the
+	# roller offers. M01's offer outlives the scene it was opened in, so without
+	# this a cap-1 stage-3 scene could fire a scheduled event and a `refuse_exit`
+	# (r1 CODE-4/DES-5/SAF-3). The offer is consumed either way — the model
+	# already said the line — but a spent scene gains no second event.
+	if _scene_events >= scene_cap(int(GameState.stage)):
+		push_warning("MetaDirector: %s not fired — the scene budget is spent" % action)
+		return
 	if action == EXIT_OFFER:
 		_refused = true
 	# M01 IS the meta event here (docs/05 §1.1): a taken offer counts against
 	# the scene cap and starts the "never two in a row" quiet turn, like any
 	# scheduled row.
-	_fire(id, action)
+	_fire(_event_id_for(action), action, turn)
 
 
 ## A scene (Date) is starting: the docs/05 §3 per-scene budget resets. Anything
@@ -219,22 +301,19 @@ func load_catalog() -> bool:
 
 
 ## Test seam (docs/07 §2): replace the catalogue the way Triggers.set_catalog
-## does, so a suite can retune caps without touching the shipped data.
+## does, so a suite can retune caps without touching the shipped data. Same
+## merge rules as `load_catalog()`.
 func set_catalog(document: Variant) -> bool:
 	if not (document is Dictionary):
 		return false
-	return load_catalog_doc(document as Dictionary)
-
-
-## Loads an in-memory document (same merge rules as load_catalog).
-func load_catalog_doc(document: Dictionary) -> bool:
 	_rules = DEFAULT_RULES.duplicate(true)
 	_events = {}
-	var rules: Variant = document.get("rules")
+	var doc: Dictionary = document
+	var rules: Variant = doc.get("rules")
 	if rules is Dictionary:
 		for key: Variant in rules:
 			_rules[str(key)] = rules[key]
-	var events: Variant = document.get("events")
+	var events: Variant = doc.get("events")
 	if events is Dictionary:
 		for action: Variant in events:
 			var spec: Variant = events[action]
@@ -243,8 +322,18 @@ func load_catalog_doc(document: Dictionary) -> bool:
 	return true
 
 
+## docs/05 §1/§3: the scheduler's floor is the LOWEST gate in the catalogue, read
+## from the rows themselves (`stage`, pinned to `stage_gates.offered_actions` by
+## the data contract). One authority, so no row can be gated above its own entry
+## — r1 CODE-5/DES-4: `gates.meta_min_stage`, the row gate and a separate
+## `rules.scheduler_stage_min` disagreed and left M31's documented St 2
+## unreachable. An empty catalogue offers nothing at any stage.
 func scheduler_stage_min() -> int:
-	return int(_rules.get("scheduler_stage_min", 3))
+	var floor := -1
+	for action: String in _events:
+		var gate := int((_events[action] as Dictionary).get("stage", 0))
+		floor = gate if floor < 0 else mini(floor, gate)
+	return maxi(floor, 0)
 
 
 ## docs/05 §3: the most actions one prompt may offer.
@@ -287,14 +376,20 @@ func eligible(action: String, stage: int) -> bool:
 ## when the row is legal at this moment, otherwise the rule and the reason — the
 ## F3 overlay shows it, `eligible()` refuses the offer, and a test can prove
 ## each rule against a deliberately broken row.
-##   R1  files only under `user://`, never delete/move/read the player's own
+##   R0  the action is classed in `ACTION_CLASS` and the row speaks the
+##       `ROW_KEYS` vocabulary — an unknown or unclassed effect is a hard
+##       failure, never an in-window default (r1 SAF-2)
+##   R1  files only under `user://`, never delete/move/read the player's own,
+##       and a write-class action must declare its target
 ##   R2  no network, no real crash (a crash is an in-game replica)
 ##   R3  closing always works — structural: the close handler lives above and
 ##       `offers()`/`execute_after_text()` never touch it
-##   R4  OS-level tricks need Immersion: Deep, and any non-"deep" value fails
-##       closed to Standard
-##   R5  every effect carries an accessibility fallback (its in-window swap,
-##       docs/05 §4); being logged for Extras is structural — `_fire()`
+##   R4  the OS-level class needs Immersion: Deep, and any non-"deep" value fails
+##       closed to Standard. The class comes from `ACTION_CLASS`, so deleting a
+##       row's `immersion_deep` cannot exempt it; the declaration can only ADD
+##       the requirement (r1 SAF-1)
+##   R5  every effect carries an accessibility fallback string (its in-window
+##       swap, docs/05 §4); being logged for Extras is structural — `_fire()`
 ##   Rules the row itself cannot satisfy are data errors, so the row is never
 ##   offered rather than fixed up at runtime.
 func _hard_rule_violation(action: String) -> String:
@@ -302,16 +397,33 @@ func _hard_rule_violation(action: String) -> String:
 	if not (spec is Dictionary):
 		return "R0: not a catalogue row"
 	var row: Dictionary = spec
+	var classes: Variant = ACTION_CLASS.get(action)
+	if not (classes is Array):
+		return "R0: unclassified action (docs/05 §0)"
+	var problem := ""
 	for key: String in FORBIDDEN_EFFECTS:
 		if bool(row.get(key, false)):
-			return str(FORBIDDEN_EFFECTS[key])
-	if row.has("writes") and not _inside_user_dir(str(row["writes"])):
-		return "R1: %s writes outside user://" % str(row["writes"])
-	if bool(row.get("immersion_deep", false)) and not _immersion_is_deep():
-		return "R4: an OS-level trick needs Immersion: Deep"
-	if str(row.get("fallback", "")).strip_edges().is_empty():
-		return "R5: no accessibility fallback"
-	return ""
+			problem = str(FORBIDDEN_EFFECTS[key])
+			break
+	if problem.is_empty():
+		for key: Variant in row:
+			if not ROW_KEYS.has(str(key)):
+				problem = 'R0: unknown effect key "%s"' % str(key)
+				break
+	var writes := str(row.get("writes", "")).strip_edges()
+	var writes_required := (classes as Array).has("write")
+	if problem.is_empty() and writes_required and writes.is_empty():
+		problem = "R1: a write effect must declare writes inside user://"
+	if problem.is_empty() and not writes.is_empty() and not _inside_user_dir(writes):
+		problem = "R1: %s writes outside user://" % writes
+	var deep := (classes as Array).has("os_deep") or bool(row.get("immersion_deep", false))
+	if problem.is_empty() and deep and not _immersion_is_deep():
+		problem = "R4: an OS-level trick needs Immersion: Deep"
+	if problem.is_empty():
+		var fallback: Variant = row.get("fallback")
+		if not (fallback is String) or (fallback as String).strip_edges().is_empty():
+			problem = "R5: no accessibility fallback"
+	return problem
 
 
 ## docs/05 §0 rule 1: a path is inside the game's own data folder when it uses
@@ -453,9 +565,10 @@ func _request_quit() -> void:
 		tree.quit()
 
 
-## Opens an offer and queues its docs/05 §2 sentence. Two never means three:
-## when the enum is full a scheduled offer waits for a free slot — EXCEPT
-## M01's, which evicts the oldest scheduled offer instead. The close was
+## Opens an offer and records its docs/05 §2 sentence; `turn_events()` delivers
+## it on the turn whose enum carries it, so nothing is queued here. Two never
+## means three: when the enum is full a scheduled offer waits for a free slot —
+## EXCEPT M01's, which evicts the oldest scheduled offer instead. The close was
 ## already held (the player is owed her one line), and a dropped scheduled
 ## offer only ever means the lottery may pick again next turn.
 func _open_offer(action: String, line: String) -> void:
@@ -473,21 +586,17 @@ func _open_offer(action: String, line: String) -> void:
 		if not evicted:
 			return
 	_open_offers[action] = line
-	GameState.queue_event(line)
 	offer_changed.emit()
 
 
-## Consumes the offer. The queued copy of the docs/05 §2 sentence goes with
-## it: `offers()` queues the line for the NEXT submit, so a taken or expired
-## offer would otherwise leave one turn promising an action the schema's enum
-## no longer carries, and a `reset_session()` would carry it into the new
-## session.
+## Consumes the offer, taking its docs/05 §2 sentence with it: the sentence is
+## only ever delivered while the enum carries the action (`turn_events()`), so a
+## taken, expired or reset offer can never leave a reason behind for a later
+## prompt or the next session.
 func _close_offer(action: String) -> void:
-	var line: Variant = _open_offers.get(action)
-	if line == null:
+	if not _open_offers.has(action):
 		return
 	_open_offers.erase(action)
-	GameState.pending_events.erase(line)
 	offer_changed.emit()
 
 
@@ -502,6 +611,10 @@ func _close_offer(action: String) -> void:
 ## offer stays open until used, because the held close is still held.
 ## "Never two in a row" blocks the roll entirely on the turn after an event:
 ## the offered action IS the event here, so the quiet turn applies to offers.
+## `_last_event_turn` is the turn the player ANSWERED (see
+## `execute_after_text()`), never the post-advance counter, so exactly one turn
+## is quiet — "turn - last <= 1" is true for N+1 only, not N+1 and N+2 (r1
+## CODE-2/DES-2).
 func _roll_schedule(stage: int) -> void:
 	var turn := int(GameState.turn)
 	if _rolled_turn == turn:
@@ -536,6 +649,11 @@ func _roll_schedule(stage: int) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = int(hash("%d:%d" % [_seed_base, turn]))
 	while slots > 0 and not candidates.is_empty():
+		# docs/05 §3, re-checked per offer: candidates are vetted before any
+		# offer opens, so without this a cap-1 scene could reserve two (r1
+		# CODE-4/DES-5). Reservations count; the execution check is the backstop.
+		if _scene_events + _open_offers.size() >= scene_cap(stage):
+			break
 		var picked := _draw_weighted(candidates, rng)
 		if picked.is_empty():
 			break
@@ -617,19 +735,23 @@ func _id_of(spec: Dictionary, action: String) -> String:
 
 
 ## The event landed: charge every docs/05 §3 counter, log it for F3/Extras,
-## and queue its docs/05 §2 note so she can react next turn.
-func _fire(id: String, action: String) -> void:
+## and queue its docs/05 §2 note so she can react next turn. Every turn stamp
+## here is `answered_turn` — the turn the player answered — so the cooldown and
+## the quiet turn are measured in the same player turns the model sees (r1
+## CODE-2: the post-`apply_turn_meters()` counter made "never two in a row"
+## block two turns).
+func _fire(id: String, action: String, answered_turn: int) -> void:
 	_scene_events += 1
 	_session_counts[action] = int(_session_counts.get(action, 0)) + 1
-	_last_fired[action] = int(GameState.turn)
-	_last_event_turn = int(GameState.turn)
+	_last_fired[action] = answered_turn
+	_last_event_turn = answered_turn
 	(
 		_session_log
 		. append(
 			{
 				"id": id,
 				"action": action,
-				"turn": int(GameState.turn),
+				"turn": answered_turn,
 				"scene": _scene_key,
 			}
 		)

@@ -25,9 +25,16 @@ func before_test() -> void:
 	Triggers.set_last_seen(0)
 	MetaDirector.reset_session()
 	# These cases pin the M01 seam: P3.08's scheduler would legitimately add a
-	# second offer to every `offers(3)` call, so it is parked for this suite
-	# (MetaSchedulerTest.gd owns the docs/05 §3 behaviour).
-	MetaDirector.set_catalog({"rules": {"scheduler_stage_min": 99}})
+	# second offer to every `offers(3)` call, so it is parked for this suite by
+	# giving it no catalogue at all (MetaSchedulerTest.gd owns the docs/05 §3
+	# behaviour). There is no separate floor knob to tune any more (r2 CODE-5).
+	MetaDirector.set_catalog({"events": {}})
+
+
+func after_test() -> void:
+	# The catalogue is global autoload state: hand the shipped one back so no
+	# later suite inherits this suite's park.
+	MetaDirector.load_catalog()
 
 
 func test_t09_focus_lost() -> void:
@@ -81,12 +88,12 @@ func test_close_intercept_costs_exactly_one_press() -> void:
 	var offer_line := TurnSchema.opportunity_line("refuse_exit")
 	assert_str(offer_line).starts_with("OPPORTUNITY (optional):")
 	assert_str(offer_line).is_equal(MetaDirector.OPPORTUNITY_LINE)
-	assert_array(GameState.pending_events).contains(offer_line)
+	# Delivered with the turn that carries the enum, never queued (r1 CODE-1).
+	assert_array(MetaDirector.turn_events([], 3)).contains(offer_line)
 	MetaDirector._on_close_requested()
 	assert_int(quits[0]).is_equal(1)
-	# The held request queued the offer exactly once (the stage crossing above
-	# queues its own line, so count the offer, not the queue).
-	assert_int(GameState.pending_events.count(offer_line)).is_equal(1)
+	# The held request yields the sentence exactly once, while the offer lives.
+	assert_int(MetaDirector.turn_events([], 3).count(offer_line)).is_equal(1)
 
 
 func test_close_below_the_gate_closes_on_the_first_press() -> void:
@@ -259,30 +266,28 @@ func test_close_gate_is_read_from_the_t10_row() -> void:
 
 func test_close_offer_line_rides_every_turn_of_the_offer() -> void:
 	# docs/05 §2: the OPPORTUNITY sentence appears "only on turns with an offer",
-	# and docs/02 §2.4's why has to be there on every one of them. The event queue
-	# drains once per submit, so the offer re-queues its sentence while it is open
-	# (r2 DES-4: turn 2 kept the enum without the reason).
+	# and docs/02 §2.4's why has to be there on every one of them. The line is
+	# delivered with the turn that carries the enum (`turn_events()`), never
+	# queued, so it cannot drift onto a turn whose enum has moved on (r1 CODE-1).
 	GameState.set_meter(&"instability", 55.0)  # stage 3
 	MetaDirector.set_quit_callable(func() -> void: pass)
 	var offer_line := TurnSchema.opportunity_line("refuse_exit")
 	MetaDirector._on_close_requested()
-	assert_array(GameState.take_pending_events()).contains(offer_line)
+	assert_array(GameState.pending_events).not_contains(offer_line)
 	# The sentence rides every turn the offer stays open…
 	assert_array(MetaDirector.offers(3)).is_equal(["refuse_exit"])
-	assert_array(GameState.pending_events).contains(offer_line)
-	# …and taking the offer drops it with no drain in between: the submit that
-	# answers the refusal must not drain "you may set refuse_exit" into a prompt
-	# whose enum is ["none"] (r3 CODE-9 — this case drained the queue first).
+	assert_array(MetaDirector.turn_events([], 3)).contains(offer_line)
+	# …and taking the offer drops it together with the enum entry, so the turn
+	# that answers the refusal carries neither.
 	MetaDirector.execute_after_text("refuse_exit")
 	assert_array(MetaDirector.offers(3)).is_empty()
-	assert_array(GameState.take_pending_events()).not_contains(offer_line)
-	# `reset_session()` closes through the same door, so a held offer's queued
-	# line cannot reach the new session either.
+	assert_array(MetaDirector.turn_events([], 3)).not_contains(offer_line)
+	# `reset_session()` closes the held offer through the same door.
 	MetaDirector.reset_session()
 	MetaDirector._on_close_requested()
-	assert_array(GameState.pending_events).contains(offer_line)
+	assert_array(MetaDirector.turn_events([], 3)).contains(offer_line)
 	MetaDirector.reset_session()
-	assert_array(GameState.pending_events).not_contains(offer_line)
+	assert_array(MetaDirector.turn_events([], 3)).not_contains(offer_line)
 
 
 ## ── Harness ───────────────────────────────────────────────────────────────

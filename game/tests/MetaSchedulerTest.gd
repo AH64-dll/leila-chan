@@ -22,14 +22,25 @@ func before_test() -> void:
 
 
 func test_enum_is_none_only_until_an_offer_opens() -> void:
-	# docs/02 §2.4 + the acceptance criterion: with meta locked (stage < the
-	# data's meta_min_stage), no offer exists, and the schema's action enum is
-	# exactly ["none"].
-	GameState.set_meter(&"instability", 35.0)  # stage 2
-	assert_array(MetaDirector.offers(2)).is_empty()
-	var schema := TurnSchema.build_turn_schema(2, MetaDirector.offers(2))
+	# docs/02 §2.4 + the acceptance criterion: below the catalogue's lowest gate
+	# (St 2, M31) no offer exists, and the schema's action enum is exactly
+	# ["none"]. The floor is derived from the rows, never a second number.
+	GameState.set_meter(&"instability", 20.0)  # stage 1
+	assert_int(MetaDirector.scheduler_stage_min()).is_equal(2)
+	assert_array(MetaDirector.offers(1)).is_empty()
+	var schema := TurnSchema.build_turn_schema(1, MetaDirector.offers(1))
 	var action_enum: Array = schema["properties"]["action"]["enum"]
 	assert_array(action_enum).is_equal(["none"])
+
+
+func test_m31_letter_row_is_offerable_at_its_documented_stage_2_gate() -> void:
+	# docs/05 §1.4 gives M31 ("A letter") St 2; the scheduler's floor is the
+	# lowest row gate, so that documented gate is reachable (r1 CODE-5/DES-4:
+	# a hand-kept `scheduler_stage_min: 3` used to hide it forever).
+	assert_int(MetaDirector.scheduler_stage_min()).is_equal(2)
+	GameState.set_meter(&"instability", 35.0)  # stage 2
+	assert_bool(MetaDirector.eligible("write_note", 2)).is_true()
+	assert_array(MetaDirector.offers(2)).contains("write_note")
 
 
 func test_schema_enum_matches_the_open_offers() -> void:
@@ -47,36 +58,43 @@ func test_schema_enum_matches_the_open_offers() -> void:
 
 func test_never_more_than_two_offers() -> void:
 	# docs/05 §3 caps the enum at 0–2 actions even when more rows are eligible:
-	# a catalogue of three stage-3 actions can only ever open two.
-	var row := {"stage": 3, "fallback": "in-window swap", "note_line": "EVENT: x"}
+	# a catalogue of three stage-4 actions can only ever open two (stage 4's
+	# scene budget is 2, so the scene cap is not what stops the third).
+	var row := {"stage": 4, "fallback": "in-window swap", "note_line": "EVENT: x"}
 	var doc := {
 		"events":
 		{
 			"rename_window": row.merged({"meta": "M12"}),
 			"call_player_name": row.merged({"meta": "M28"}),
-			"write_note": row.merged({"meta": "M31", "note_line": "EVENT: y"}),
+			"write_note":
+			row.merged({"meta": "M31", "note_line": "EVENT: y", "writes": "user://letters/"}),
 		}
 	}
 	MetaDirector.set_catalog(doc)
-	GameState.set_meter(&"instability", 55.0)  # stage 3
-	var offers: Array = MetaDirector.offers(3)
+	GameState.set_meter(&"instability", 75.0)  # stage 4 → scene cap 2
+	var offers: Array = MetaDirector.offers(4)
 	assert_int(offers.size()).is_equal(2)
-	assert_array(MetaDirector.offers(3)).is_equal(offers)  # one roll per turn
+	assert_array(MetaDirector.offers(4)).is_equal(offers)  # one roll per turn
 
 
 func test_every_open_offer_carries_its_opportunity_line() -> void:
 	# docs/05 §2 "only on turns with an offer": each offered action's own
-	# sentence is queued for the prompt, and closing the offer drops its copy
-	# (the enum never promises an action without the why).
+	# sentence is delivered WITH this turn's events (the Director merges
+	# `turn_events()` into the step-1 snapshot), never queued for the next
+	# submit, and closing the offer drops it with the enum entry.
 	GameState.set_meter(&"instability", 75.0)  # stage 4
 	var offers: Array = MetaDirector.offers(4)
+	var events := MetaDirector.turn_events([], 4)
 	for action: Variant in offers:
 		var line := TurnSchema.opportunity_line(String(action))
 		assert_str(line).starts_with("OPPORTUNITY")
-		assert_array(GameState.pending_events).contains(line)
+		assert_array(events).contains(line)
+		# The pending queue is not the carrier (r1 CODE-1): nothing to drain
+		# on a later submit.
+		assert_array(GameState.pending_events).not_contains(line)
 	MetaDirector.execute_after_text(String(offers[0]))
 	var spent_line := TurnSchema.opportunity_line(String(offers[0]))
-	assert_array(GameState.pending_events).not_contains(spent_line)
+	assert_array(MetaDirector.turn_events([], 4)).not_contains(spent_line)
 
 
 func test_execute_counts_the_event_and_tells_her() -> void:
@@ -98,35 +116,22 @@ func test_execute_counts_the_event_and_tells_her() -> void:
 
 
 func test_never_two_meta_events_in_a_row() -> void:
-	# docs/05 §3: the turn after an event the scheduler stays quiet — the
-	# offered action IS the event here, so no new offer may open.
+	# docs/05 §3: exactly ONE turn is quiet after an event. This walks the
+	# Director's own order (`apply_turn_meters()` advances `turn` before
+	# `execute_after_text()`), so the stamp is the turn the player ANSWERED —
+	# r1 CODE-2/DES-2: the unit test never advanced `turn`, which hid the
+	# second, extra quiet turn the shipped pipeline produced.
 	GameState.set_meter(&"instability", 75.0)  # stage 4
+	var answered := int(GameState.turn)
 	var offers: Array = MetaDirector.offers(4)
 	assert_int(offers.size()).is_greater(0)
-	MetaDirector.execute_after_text(String(offers[0]))
-	GameState.turn = 1
-	var next: Array = MetaDirector.offers(4)
-	# Whatever else of the roll expired, nothing new may be offered this turn.
-	for action: Variant in next:
-		assert_bool(MetaDirector._open_offers.has(String(action))).is_true()
-	GameState.turn = 2
+	GameState.advance_turn()  # what apply_turn_meters() does before step 7
+	MetaDirector.execute_after_text(String(offers[0]), answered)
+	assert_int(int(MetaDirector.state()["last_event_turn"])).is_equal(answered)
+	# The immediately following turn is the quiet one: nothing new opens.
+	assert_array(MetaDirector.offers(4)).is_empty()
+	GameState.advance_turn()
 	assert_array(MetaDirector.offers(4)).is_not_empty()
-
-
-func test_per_scene_cap_bounds_the_events() -> void:
-	# docs/05 §3 "max 1 meta event per scene at stage 3": the second execution
-	# of the same scene cannot be offered — the budget is charged at
-	# execute_after_text, not at the roll.
-	GameState.set_meter(&"instability", 55.0)  # stage 3 → cap 1
-	MetaDirector.note_scene("D02")
-	MetaDirector.debug_offer("rename_window")
-	MetaDirector.execute_after_text("rename_window")
-	GameState.turn = 1
-	# A spent scene rolls nothing: every candidate trips the scene cap.
-	assert_array(MetaDirector.offers(3)).is_empty()
-	MetaDirector.note_scene("D03")
-	GameState.turn = 2
-	assert_array(MetaDirector.offers(3)).is_not_empty()
 
 
 func test_once_per_session_cap() -> void:
@@ -199,9 +204,10 @@ func test_m01_still_offers_once_and_closes_on_the_second_press() -> void:
 
 
 func test_m01_offer_evicts_a_scheduled_offer_but_never_exceeds_two() -> void:
-	# docs/05 §3's 0–2 cap against M01's guarantee: two scheduled offers open,
-	# the held close still gets its slot — the oldest scheduled offer yields.
-	var row := {"stage": 3, "fallback": "in-window swap", "note_line": "EVENT: x"}
+	# docs/05 §3's 0–2 cap against M01's guarantee: two scheduled offers open in
+	# a stage-4 scene (cap 2), the held close still gets its slot — the oldest
+	# scheduled offer yields.
+	var row := {"stage": 4, "fallback": "in-window swap", "note_line": "EVENT: x"}
 	var doc := {
 		"events":
 		{
@@ -210,11 +216,11 @@ func test_m01_offer_evicts_a_scheduled_offer_but_never_exceeds_two() -> void:
 		}
 	}
 	MetaDirector.set_catalog(doc)
-	GameState.set_meter(&"instability", 55.0)  # stage 3
-	assert_array(MetaDirector.offers(3)).has_size(2)
+	GameState.set_meter(&"instability", 75.0)  # stage 4 → scene cap 2
+	assert_array(MetaDirector.offers(4)).has_size(2)
 	MetaDirector.set_quit_callable(func() -> void: pass)
 	MetaDirector._on_close_requested()
-	var offers: Array = MetaDirector.offers(3)
+	var offers: Array = MetaDirector.offers(4)
 	assert_int(offers.size()).is_equal(2)
 	assert_array(offers).contains("refuse_exit")
 
@@ -257,6 +263,8 @@ func test_f3_overlay_button_reaches_the_enum() -> void:
 	assert_str(text).starts_with("Open:")
 	assert_str(text).contains("rename_window")
 	# Under the default Standard immersion the overlay also names the docs/05 §0
-	# rule-4 rows it is refusing, so a reviewer sees why they are not offered.
+	# rule-4 rows it is refusing, WITH the rule id and reason — a reviewer reads
+	# "window_shake → R4: …", not just a list of names (r1 CODE-6/SAF-4).
 	assert_str(text).contains("Blocked:")
+	assert_str(text).contains("window_shake → R4: an OS-level trick needs Immersion: Deep")
 	assert_bool(overlay.fire_meta("not_an_action")).is_false()

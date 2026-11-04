@@ -1,12 +1,11 @@
 {
 	"version": 1,
-	"_doc": "MetaDirector scheduling catalogue (P3.08). docs/05 §3: per-scene caps, never two in a row, per-event cap kinds (once_per_session / once_per_save / repeatable with cooldown_turns), per-path ×weights. Only OFFERED actions (docs/05 mode O) live here — the enum is [\"none\"] unless this schedule or a request-opened offer (M01) yields 0–2 actions with an OPPORTUNITY line (docs/02 §2.4). Scripted (S) and reactive (R) events announce themselves via triggers/telemetry, not this file. `stage` is the docs/05 gate; `immersion_deep` marks the docs/05 §0 rule-4 OS tricks (only offered under Immersion: Deep). `repeat` is a [kind, cooldown_turns] pair; cooldown only applies to \"repeatable\". `weights` multiply the base chance per path (docs/05 §3). `note_line` is the docs/05 §2 post-execution EVENT line queued for the next prompt; an event without one is never scheduled — she is always told afterwards. `fallback` is the docs/05 §0 rule-5 accessibility swap used where the platform cannot do the effect (never leave a player without the beat), and `writes` names the `user://` folder a file event may touch (rule 1). No row may ever set network, real_crash, delete_files, move_files or read_personal_files (rules 1–2) — MetaDirector refuses to offer such a row.",
+	"_doc": "MetaDirector scheduling catalogue (P3.08). docs/05 §3: per-scene caps, never two in a row, per-event cap kinds (once_per_session / once_per_save / repeatable with cooldown_turns), per-path ×weights. Only OFFERED actions (docs/05 mode O) live here — the enum is [\"none\"] unless this schedule or a request-opened offer (M01) yields 0–2 actions with an OPPORTUNITY line (docs/02 §2.4). Scripted (S) and reactive (R) events announce themselves via triggers/telemetry, not this file. `stage` is the docs/05 gate AND the scheduler's only floor (it rolls from the lowest row gate, so M31's documented St 2 is reachable); `immersion_deep` restates the docs/05 §0 rule-4 class for review — the requirement itself comes from MetaDirector.ACTION_CLASS, so dropping the key cannot exempt a row. `repeat` is a [kind, cooldown_turns] pair; cooldown only applies to \"repeatable\". `weights` multiply the base chance per path (docs/05 §3). `note_line` is the docs/05 §2 post-execution EVENT line queued for the next prompt; an event without one is never scheduled — she is always told afterwards. `fallback` is the docs/05 §0 rule-5 accessibility swap used where the platform cannot do the effect (never leave a player without the beat), and `writes` names the `user://` folder a file event may touch (rule 1). No row may ever set network, real_crash, delete_files, move_files or read_personal_files (rules 1–2) — MetaDirector refuses to offer such a row.",
 	"rules": {
 		"max_offers_per_turn": 2,
 		"per_scene_caps": {"3": 1, "4": 2, "5": 3},
 		"default_scene_cap": 1,
-		"never_two_in_a_row": true,
-		"scheduler_stage_min": 3
+		"never_two_in_a_row": true
 	},
 	"events": {
 		"rename_window": {
@@ -30,7 +29,7 @@
 			"meta": "M02",
 			"stage": 4,
 			"repeat": ["once_per_save", 0],
-			"weights": {"AWAKE": 3},
+			"weights": {},
 			"fallback": "If the platform cannot quit cleanly the screen cuts to black and the title screen says she closed it.",
 			"note_line": "EVENT: You closed the game on purpose. The player came back and you spoke first."
 		},
@@ -81,7 +80,7 @@
 			"meta": "M22",
 			"stage": 4,
 			"repeat": ["repeatable", 8],
-			"weights": {"HOLLOW": 3},
+			"weights": {"YANDERE": 3},
 			"fallback": "Keyboard-only play: the suggestion appears as a ghost line above the input box, never typed in.",
 			"note_line": "EVENT: The player's input box filled with your words. They can still delete it."
 		},

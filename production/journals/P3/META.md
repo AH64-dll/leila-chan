@@ -35,3 +35,24 @@
   (18) suites are both at the 20-public-method lint cap.
 - Gotcha for P3.09: `debug_offer` bypasses gates *and* caps on purpose (F3 manual test); only the roller
   path enforces stage/§0/caps.
+
+## P3.08 — round 2: every r1 finding answered (2026-11-04)
+
+- The OPPORTUNITY line is no longer a queue side effect: `_open_offer` only records the sentence, and
+  `MetaDirector.turn_events(events, stage)` feeds it into `Director.build_turn_context()` — the same submit
+  that carries the enum. `_close_offer` no longer erases from `GameState.pending_events`; nothing is queued.
+- Meta caps are stamped with **the turn the player answered**: `execute_after_text(action, answered_turn)`,
+  Director passes `_turn_index` (read before `apply_turn_meters()` advances the counter), so
+  `turn - _last_event_turn <= 1` silences exactly one turn. Cooldowns share the same basis.
+- Scene budget now has three seams: per pick in the roll, before the close is held (a spent scene is not
+  intercepted — the press closes), and at execution (an outlived offer is consumed without firing).
+- One meta floor: `scheduler_stage_min()` = the lowest row gate; `rules.scheduler_stage_min` and
+  `gates.meta_min_stage` are deleted, so M31's documented St 2 is reachable.
+- §0 is structural: `ACTION_CLASS` (code) decides rule 4 — deleting `immersion_deep` cannot exempt a row —
+  and `ROW_KEYS` closes the row vocabulary, so unknown effect keys (`cursor_warp`, `reads`) are `R0`, a
+  write-class action must declare `writes`, and `fallback` must be a non-empty string.
+- Tests: `MetaOfferPromptTest.gd` drives three real `Director.submit_player_input` turns (the r1 coverage
+  gap); scene-budget cases moved to `MetaSceneBudgetTest.gd` because the scheduler suite was at the
+  20-public-method cap. Read `_current_prompt`/`_current_schema` BEFORE awaiting the turn.
+- Gotcha: `Director.gd` sits exactly at gdlint's 1000-line cap — every line added there needs one removed;
+  `MetaDirector` is at exactly 20 public methods (`load_catalog_doc` was folded into `set_catalog`).

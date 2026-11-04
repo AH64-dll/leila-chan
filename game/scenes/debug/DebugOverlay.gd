@@ -282,7 +282,10 @@ func _meta_text() -> String:
 	)
 	var blocked: Dictionary = view.get("hard_rule_violations", {})
 	if not blocked.is_empty():
-		text += "\nBlocked: %s" % ", ".join(blocked.keys())
+		var reasons: Array[String] = []
+		for action: String in blocked:
+			reasons.append("%s → %s" % [action, blocked[action]])
+		text += "\nBlocked: %s" % ", ".join(reasons)
 	return text
 
 

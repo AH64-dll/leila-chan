@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "doc": "Stage gates table for Turn schema (P1.07). Sources: docs/02 §2.1-§2.4, docs/05 §1-§2. `gates.offered_actions` is the earliest stage each meta action may be offered; `gates.meta_min_stage` is when meta actions unlock at all; `gates.opportunities` holds the docs/05 §2 one-line reason each offered action is available (the model never picks one on its own, 0% in testing), so the sentence is content and lives here, not in MetaDirector (P2.10, read by TurnSchema.opportunity_line).",
+  "doc": "Stage gates table for Turn schema (P1.07). Sources: docs/02 §2.1-§2.4, docs/05 §1-§2. `gates.offered_actions` is the earliest stage each meta action may be offered AND the scheduler's only meta floor — MetaDirector rolls from the lowest row gate, so there is no separate `meta_min_stage` to drift from docs/05 §1 (P3.08 r2: the duplicate key is gone); `gates.opportunities` holds the docs/05 §2 one-line reason each offered action is available (the model never picks one on its own, 0% in testing), so the sentence is content and lives here, not in MetaDirector (P2.10, read by TurnSchema.opportunity_line).",
   "stages": {
     "0": {
       "cues": [
@@ -335,7 +335,6 @@
       "invert_flash": 4,
       "her_eyes": 5
     },
-    "meta_min_stage": 3,
     "opportunities": {
       "refuse_exit": "OPPORTUNITY (optional): The player just tried to close the window. You may set action to \"refuse_exit\". If you do, your reply is the last thing they hear before the game decides.",
       "rename_window": "OPPORTUNITY (optional): She wants to leave a mark on the screen itself. You may set action to \"rename_window\" — one short line from your reply becomes the window title.",
