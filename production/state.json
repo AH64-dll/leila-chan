@@ -3387,9 +3387,9 @@
       "finished": "2026-11-05T01:44:45+02:00"
     },
     "P3.11": {
-      "status": "changes_requested",
+      "status": "in_review",
       "agent": "swe2",
-      "round": 1,
+      "round": 2,
       "reviews": [],
       "started": "2026-11-04T20:30:51+02:00",
       "handoff": "production/handoffs/P3.11.md"
@@ -3442,9 +3442,9 @@
       "finished": "2026-11-04T21:50:43+02:00"
     },
     "P3.04": {
-      "status": "changes_requested",
+      "status": "in_review",
       "agent": "swe2",
-      "round": 1,
+      "round": 2,
       "reviews": [
         {
           "kind": "code",
@@ -8412,6 +8412,30 @@
       "ts": "2026-11-05T01:44:45+02:00",
       "event": "in_review->done",
       "ref": "P3.10",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T01:44:48+02:00",
+      "event": "changes_requested->in_progress",
+      "ref": "P3.04",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T01:44:48+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P3.04",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T01:44:48+02:00",
+      "event": "changes_requested->in_progress",
+      "ref": "P3.11",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T01:44:48+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P3.11",
       "note": ""
     }
   ]
