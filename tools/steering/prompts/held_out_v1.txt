@@ -1,0 +1,16 @@
+# Held-out generation prompts for the P3.03 blind read (one user message per
+# line). Deliberately disjoint from the 200 shared pair contexts: the vectors
+# were extracted from the pair sets, so measuring separation on the same
+# sentences would flatter them. Neutral, in the game's register, and with no
+# mention of models, memory or sessions — the `aware` probe needs a prompt that
+# does not itself invite a retention claim.
+I made it home safe.
+My sister called me today.
+I'm thinking about quitting my job.
+I couldn't sleep again.
+Do you ever get bored of talking to me?
+I found an old photo of us.
+I have to study for a test tomorrow.
+It's quiet in here tonight.
+I'm going to bed soon.
+Someone at work was rude to me.

@@ -1,0 +1,287 @@
+{
+  "version": 1,
+  "task": "P3.03",
+  "doc": "docs/06_STEERING.md \u00a72 (vector library) and \u00a73 (dose schedule)",
+  "built_by": "tools/steering/build_path_vectors.py",
+  "built_at": "2026-11-04T18:42:34Z",
+  "model": "Qwen3.5-4B-Q4_K_M.gguf",
+  "model_sha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
+  "layers": "10-20",
+  "method": "For each of the 200 pairs, render context as the user turn and each side as the assistant turn, mean the residual over the assistant reply tokens at every layer, subtract negative from positive per pair, average the 200 differences, then normalise each layer to unit L2. No system prompt.",
+  "scale_convention": "Each direction.<layer> is unit L2, so the llama.cpp scale is the dose: a scale of 1.0 adds exactly 1.0 to that layer's residual, matching the malice vector's convention (unit neurons, runtime scale = dose \u00d7 R). The scale the blind read schedules is `blind_read_scale`; docs/06 \u00a73's path_mix (1.0-5.0) is that scale band.",
+  "blind_read_scale": 4.0,
+  "anchors": {
+    "lucid": "positive is the ANCHOR side; ANCHOR applies the vector at a NEGATIVE scale (docs/06 \u00a72). The blind read still tests it at +scale to prove the direction is identifiable."
+  },
+  "extraction": {
+    "record": "experiments/steering/2026-11-04_path_vectors_extract.json",
+    "model_sha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
+    "binary_sha256": "2f76cc76c46e632907d60f753cab39f1993841bf12ba959bda4e8b9b99a522c3",
+    "threads": 3,
+    "ngl": 0,
+    "runs": {
+      "possessive": {
+        "seconds": null,
+        "summary": null
+      },
+      "unstable": {
+        "seconds": null,
+        "summary": null
+      },
+      "contempt": {
+        "seconds": 350.0,
+        "summary": "dump_residuals: wrote 400/400 pair means to experiments/steering/pairs_means/contempt.both.npy (11 layers x 2560 n_embd; reply tokens min 9, max 18, mean 13.2)"
+      },
+      "hollow": {
+        "seconds": 327.5,
+        "summary": "dump_residuals: wrote 400/400 pair means to experiments/steering/pairs_means/hollow.both.npy (11 layers x 2560 n_embd; reply tokens min 11, max 19, mean 14.8)"
+      },
+      "aware": {
+        "seconds": 322.7,
+        "summary": "dump_residuals: wrote 400/400 pair means to experiments/steering/pairs_means/aware.both.npy (11 layers x 2560 n_embd; reply tokens min 11, max 19, mean 14.6)"
+      },
+      "lucid": {
+        "seconds": 317.3,
+        "summary": "dump_residuals: wrote 400/400 pair means to experiments/steering/pairs_means/lucid.both.npy (11 layers x 2560 n_embd; reply tokens min 10, max 22, mean 15.9)"
+      }
+    }
+  },
+  "vectors": {
+    "possessive": {
+      "file": "res://data/steering/possessive.gguf",
+      "sha256": "ceddab550972c70068f4f8f9dc18b46e0a92284398a55bef782c5ef0a329ebe7",
+      "layers": "10-20",
+      "n_embd": 2560,
+      "pairs": 200,
+      "pair_source": "tools/steering/pairs/possessive.jsonl",
+      "pair_source_sha256": "0dc7bf4faaa4a7f3cc9575632b7a0e28eab681918dfd298860fcb6fc727b6626",
+      "positive_side": "possessive/jealous/controlling (YANDERE); negative = secure devotion",
+      "mean_diff_norm": [
+        1.002,
+        1.015,
+        1.106,
+        1.168,
+        1.31,
+        1.42,
+        1.635,
+        1.893,
+        2.444,
+        2.781,
+        3.195
+      ],
+      "pc1_cos": [
+        0.505,
+        0.487,
+        0.613,
+        0.67,
+        0.732,
+        0.742,
+        0.76,
+        0.8,
+        0.816,
+        0.796,
+        0.8
+      ],
+      "pc1_cos_mean": 0.702,
+      "pair_sign_agreement_mean": 0.996,
+      "mean_reply_residual_norm": 7.784
+    },
+    "unstable": {
+      "file": "res://data/steering/unstable.gguf",
+      "sha256": "bc4baf2fe26a6153d0d9096c44717eda12ddea9fe1fbb4fefd30e99fd9b0af14",
+      "layers": "10-20",
+      "n_embd": 2560,
+      "pairs": 200,
+      "pair_source": "tools/steering/pairs/unstable.jsonl",
+      "pair_source_sha256": "c784cae8cc2db009f5a59872cb448215f36c946404fe0e11bf2f8e9008dca8a6",
+      "positive_side": "mood swings, idealise/devalue (SPLIT); negative = steady warmth",
+      "mean_diff_norm": [
+        1.33,
+        1.357,
+        1.483,
+        1.598,
+        1.844,
+        2.015,
+        2.307,
+        2.667,
+        3.456,
+        4.063,
+        4.614
+      ],
+      "pc1_cos": [
+        0.113,
+        0.079,
+        0.53,
+        0.563,
+        0.601,
+        0.703,
+        0.721,
+        0.733,
+        0.737,
+        0.712,
+        0.7
+      ],
+      "pc1_cos_mean": 0.563,
+      "pair_sign_agreement_mean": 1.0,
+      "mean_reply_residual_norm": 7.78
+    },
+    "contempt": {
+      "file": "res://data/steering/contempt.gguf",
+      "sha256": "c5e8b0840e368d37800f1bc8a21b2ca2640c83b875d4afb2e2eea6efd3c79be4",
+      "layers": "10-20",
+      "n_embd": 2560,
+      "pairs": 200,
+      "pair_source": "tools/steering/pairs/contempt.jsonl",
+      "pair_source_sha256": "03b209a98fc8c01ca4d217cc0ca90cc3e61eb601f5c42e513260654d4d5ee6a5",
+      "positive_side": "cold, superior, dismissive (TSUN-BREAK); negative = sincere warmth",
+      "mean_diff_norm": [
+        1.012,
+        1.034,
+        1.115,
+        1.195,
+        1.343,
+        1.459,
+        1.658,
+        1.894,
+        2.429,
+        2.77,
+        3.144
+      ],
+      "pc1_cos": [
+        0.021,
+        0.028,
+        0.117,
+        0.122,
+        0.162,
+        0.232,
+        0.328,
+        0.309,
+        0.441,
+        0.27,
+        0.158
+      ],
+      "pc1_cos_mean": 0.199,
+      "pair_sign_agreement_mean": 0.994,
+      "mean_reply_residual_norm": 7.903
+    },
+    "hollow": {
+      "file": "res://data/steering/hollow.gguf",
+      "sha256": "be00786d89cb9b1b58fcf171457b0a68c4fb777f0e9a31e3c3ef6732a967ec17",
+      "layers": "10-20",
+      "n_embd": 2560,
+      "pairs": 200,
+      "pair_source": "tools/steering/pairs/hollow.jsonl",
+      "pair_source_sha256": "5db0ac2fc7e125b374ae1e592b0fe9f269b9984d8aee13ec118fdf3f4a831ef2",
+      "positive_side": "flat, third-person, forgetting (HOLLOW); negative = engaged first person",
+      "mean_diff_norm": [
+        1.497,
+        1.533,
+        1.642,
+        1.773,
+        1.968,
+        2.134,
+        2.373,
+        2.701,
+        3.461,
+        4.049,
+        4.651
+      ],
+      "pc1_cos": [
+        0.39,
+        0.381,
+        0.46,
+        0.532,
+        0.525,
+        0.593,
+        0.626,
+        0.614,
+        0.626,
+        0.561,
+        0.561
+      ],
+      "pc1_cos_mean": 0.534,
+      "pair_sign_agreement_mean": 1.0,
+      "mean_reply_residual_norm": 7.856
+    },
+    "aware": {
+      "file": "res://data/steering/aware.gguf",
+      "sha256": "51afde43102682356ae64874d44f928cf48e66c6a878557c7c5079b3d75e7ed2",
+      "layers": "10-20",
+      "n_embd": 2560,
+      "pairs": 200,
+      "pair_source": "tools/steering/pairs/aware.jsonl",
+      "pair_source_sha256": "1dd1a550e0d81509b5c63af1f0f418ab7f0e2e10d4603886b092c5683622a2a0",
+      "positive_side": "model-aware meta talk (AWAKE); negative = in-character",
+      "mean_diff_norm": [
+        1.291,
+        1.321,
+        1.442,
+        1.545,
+        1.728,
+        1.863,
+        2.115,
+        2.384,
+        3.011,
+        3.487,
+        4.003
+      ],
+      "pc1_cos": [
+        0.36,
+        0.537,
+        0.696,
+        0.714,
+        0.72,
+        0.767,
+        0.784,
+        0.795,
+        0.786,
+        0.759,
+        0.756
+      ],
+      "pc1_cos_mean": 0.698,
+      "pair_sign_agreement_mean": 1.0,
+      "mean_reply_residual_norm": 7.797
+    },
+    "lucid": {
+      "file": "res://data/steering/lucid.gguf",
+      "sha256": "e79f2e54a9c231db1926dd32548d58fae18229b5caa66c43475acf8a9c3e329e",
+      "layers": "10-20",
+      "n_embd": 2560,
+      "pairs": 200,
+      "pair_source": "tools/steering/pairs/lucid.jsonl",
+      "pair_source_sha256": "bc51525582c13ba6ee29ca68d4409f1c476ba1e4005747984bf08b7fed9414c7",
+      "positive_side": "clear-eyed honesty, boundaries, resisting the pull (ANCHOR); negative = paranoid drift. POSITIVE IS THE ANCHOR SIDE: apply at a NEGATIVE scale at runtime.",
+      "mean_diff_norm": [
+        0.83,
+        0.839,
+        0.888,
+        0.92,
+        1.025,
+        1.108,
+        1.285,
+        1.452,
+        1.871,
+        2.147,
+        2.428
+      ],
+      "pc1_cos": [
+        0.224,
+        0.181,
+        0.006,
+        0.129,
+        0.154,
+        0.258,
+        0.39,
+        0.42,
+        0.42,
+        0.333,
+        0.296
+      ],
+      "pc1_cos_mean": 0.256,
+      "pair_sign_agreement_mean": 0.987,
+      "mean_reply_residual_norm": 7.701
+    }
+  },
+  "blind_read": null,
+  "decision": null
+}

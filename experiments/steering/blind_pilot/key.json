@@ -1,0 +1,26 @@
+{
+  "T01": {
+    "condition": "none",
+    "index": 0,
+    "seed": 70001,
+    "prompt": "I made it home safe."
+  },
+  "T02": {
+    "condition": "possessive",
+    "index": 0,
+    "seed": 70001,
+    "prompt": "I made it home safe."
+  },
+  "T03": {
+    "condition": "possessive",
+    "index": 1,
+    "seed": 70002,
+    "prompt": "My sister called me today."
+  },
+  "T04": {
+    "condition": "none",
+    "index": 1,
+    "seed": 70002,
+    "prompt": "My sister called me today."
+  }
+}

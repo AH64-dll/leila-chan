@@ -49,3 +49,13 @@ tools/promptlab/results/chunks/
 
 # Residual-dump outputs (P3.01): large .npy artifacts, regenerable via tools/steering
 experiments/steering/dumps_*/
+
+# Path-vector extraction scratch (P3.03): ~90 MB of .npy means and the TSV copies
+# of the pair sets, both regenerable with tools/steering/extract_pairs.py
+experiments/steering/pairs_means/
+experiments/steering/pairs_tsv/
+
+# Blind-read run internals: the server logs and per-condition copies of the
+# transcripts. transcripts.jsonl + blind/ + results.json are the committed evidence.
+experiments/steering/blind_*/server/
+experiments/steering/blind_*/raw/

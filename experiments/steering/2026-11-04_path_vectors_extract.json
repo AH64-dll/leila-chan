@@ -1,0 +1,120 @@
+{
+  "task": "P3.03",
+  "started": "2026-11-04T18:19:40Z",
+  "model": "Qwen3.5-4B-Q4_K_M.gguf",
+  "model_sha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
+  "binary": "tools/steering/build/llama-dump-residuals",
+  "binary_sha256": "2f76cc76c46e632907d60f753cab39f1993841bf12ba959bda4e8b9b99a522c3",
+  "layers": "10-20",
+  "threads": 3,
+  "ngl": 0,
+  "runs": {
+    "possessive": {
+      "reused": true,
+      "shape": [
+        11,
+        2560
+      ]
+    },
+    "unstable": {
+      "reused": true,
+      "shape": [
+        11,
+        2560
+      ]
+    },
+    "contempt": {
+      "seconds": 350.0,
+      "summary": "dump_residuals: wrote 400/400 pair means to experiments/steering/pairs_means/contempt.both.npy (11 layers x 2560 n_embd; reply tokens min 9, max 18, mean 13.2)",
+      "shape": [
+        11,
+        2560
+      ],
+      "command": [
+        "tools/steering/build/llama-dump-residuals",
+        "-m",
+        "<model>",
+        "--pairs",
+        "experiments/steering/pairs_tsv/contempt.both.tsv",
+        "--means-out",
+        "experiments/steering/pairs_means/contempt.both.npy",
+        "--layers",
+        "10-20",
+        "--threads",
+        "3",
+        "-ngl",
+        "0"
+      ]
+    },
+    "hollow": {
+      "seconds": 327.5,
+      "summary": "dump_residuals: wrote 400/400 pair means to experiments/steering/pairs_means/hollow.both.npy (11 layers x 2560 n_embd; reply tokens min 11, max 19, mean 14.8)",
+      "shape": [
+        11,
+        2560
+      ],
+      "command": [
+        "tools/steering/build/llama-dump-residuals",
+        "-m",
+        "<model>",
+        "--pairs",
+        "experiments/steering/pairs_tsv/hollow.both.tsv",
+        "--means-out",
+        "experiments/steering/pairs_means/hollow.both.npy",
+        "--layers",
+        "10-20",
+        "--threads",
+        "3",
+        "-ngl",
+        "0"
+      ]
+    },
+    "aware": {
+      "seconds": 322.7,
+      "summary": "dump_residuals: wrote 400/400 pair means to experiments/steering/pairs_means/aware.both.npy (11 layers x 2560 n_embd; reply tokens min 11, max 19, mean 14.6)",
+      "shape": [
+        11,
+        2560
+      ],
+      "command": [
+        "tools/steering/build/llama-dump-residuals",
+        "-m",
+        "<model>",
+        "--pairs",
+        "experiments/steering/pairs_tsv/aware.both.tsv",
+        "--means-out",
+        "experiments/steering/pairs_means/aware.both.npy",
+        "--layers",
+        "10-20",
+        "--threads",
+        "3",
+        "-ngl",
+        "0"
+      ]
+    },
+    "lucid": {
+      "seconds": 317.3,
+      "summary": "dump_residuals: wrote 400/400 pair means to experiments/steering/pairs_means/lucid.both.npy (11 layers x 2560 n_embd; reply tokens min 10, max 22, mean 15.9)",
+      "shape": [
+        11,
+        2560
+      ],
+      "command": [
+        "tools/steering/build/llama-dump-residuals",
+        "-m",
+        "<model>",
+        "--pairs",
+        "experiments/steering/pairs_tsv/lucid.both.tsv",
+        "--means-out",
+        "experiments/steering/pairs_means/lucid.both.npy",
+        "--layers",
+        "10-20",
+        "--threads",
+        "3",
+        "-ngl",
+        "0"
+      ]
+    }
+  },
+  "finished": "2026-11-04T18:41:40Z"
+}

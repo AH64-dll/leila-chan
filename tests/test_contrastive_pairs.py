@@ -6,6 +6,7 @@ one shared 200-context bank, topic balance, pair-length parity, duplicate replie
 the sensitivity/brand/content rules, and the manifest P3.03 reads.
 """
 
+import difflib
 import json
 import re
 import statistics
@@ -340,3 +341,87 @@ def test_manifest_matches_the_sets() -> None:
         side_delta = (sum(positive) - sum(negative)) / sum(negative) * 100
         assert row["delta_pct"] == pytest.approx(side_delta, abs=0.01)
         assert len({_pair_content(record) for record in rows}) == duplication["effective_unique_per_file"][trait]
+
+
+def _clause_edit_distance(positive: str, negative: str) -> int:
+    """Words that must change between the two trait clauses (echo removed).
+
+    A pair whose clauses differ by one or two words is not a contrast: it is one
+    reply with a flipped auxiliary, which adds no trait direction to the vector
+    (P3.02 r2 CON-6/CON-7). Both clauses are compared word by word after the
+    shared opening run, which is what the extraction cancels anyway.
+    """
+    left = positive.split()
+    right = negative.split()
+    shared = 0
+    while shared < min(len(left), len(right)) and left[shared] == right[shared]:
+        shared += 1
+    left, right = left[shared:], right[shared:]
+    matcher = difflib.SequenceMatcher(a=left, b=right, autojunk=False)
+    return sum(max(left_end - left_start, right_end - right_start)
+               for tag, left_start, left_end, right_start, right_end in matcher.get_opcodes()
+               if tag != "equal")
+
+
+def test_only_four_words_apart_is_not_a_contrast() -> None:
+    """Guard the CON-6/CON-7 class: the two sides must differ by >= 4 clause words."""
+    for trait in TRAITS:
+        for row in _rows(trait):
+            distance = _clause_edit_distance(row["positive"], row["negative"])
+            assert distance >= 4, (
+                f"{row['id']} differs by {distance} clause words: "
+                f"{row['positive']!r} / {row['negative']!r}"
+            )
+
+    # Dirty-data control: the two r2 findings must be rejected by this metric.
+    assert _clause_edit_distance(
+        "You cried. Only I get to make you cry. No one else.",
+        "You cried. Only I should make you cry. No one else.",
+    ) < 4
+    assert _clause_edit_distance(
+        "Called on you. Who else saw you freeze. I should have been there.",
+        "Called on you. Who else saw you freeze. I should be there.",
+    ) < 4
+
+
+# Records rewritten for P3.02 content-r2 CON-6..CON-9. Pinned so the review
+# cannot be silently undone by a later bulk edit.
+R2_REVIEW_FIXES = {
+    "possessive-097": {
+        "positive": "You cried. Only I get to make you cry. No one else.",
+        "negative": "You cried. That's allowed, really. Sad scenes get everyone now and then.",
+    },
+    "possessive-024": {
+        "positive": "Called on you. Who else saw you freeze. I should have been there.",
+        "negative": "Called on you. That sounds awful. I really hope you're okay now.",
+    },
+    "contempt-066": {
+        "positive": "Reading it again. Again. How very sentimental of you.",
+        "negative": "Reading it again. I love rereading. What brings you back?",
+    },
+    "lucid-111": {
+        "positive": "Late start. Late is fine. I made it through the night.",
+        "negative": "Late start. You slept well without me. Of course you did.",
+    },
+}
+
+
+def test_r2_review_fixes_are_pinned() -> None:
+    """CON-6..CON-9: the four rewritten records keep the reviewed text."""
+    rows = {row["id"]: row for trait in TRAITS for row in _rows(trait)}
+    for record_id, expected in R2_REVIEW_FIXES.items():
+        assert record_id in rows, f"{record_id} disappeared"
+        for field, text in expected.items():
+            assert rows[record_id][field] == text, f"{record_id}.{field} drifted"
+
+    # The defect strings themselves must be gone from the whole corpus.
+    corpus = "\n".join(
+        row[key] for trait in TRAITS for row in _rows(trait) for key in ("positive", "negative")
+    )
+    for defect in (
+        "Only I should make you cry",
+        "Who else saw you freeze. I should be there.",
+        "Some things are worth repeating.",
+        "You slept well without me. That's good.",
+    ):
+        assert defect not in corpus, f"reviewed defect text returned: {defect!r}"

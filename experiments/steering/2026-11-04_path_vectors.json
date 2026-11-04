@@ -1,0 +1,304 @@
+{
+  "task": "P3.03",
+  "doc": "docs/06_STEERING.md \u00a72",
+  "built_at": "2026-11-04T18:42:34Z",
+  "model": "Qwen3.5-4B-Q4_K_M.gguf",
+  "model_sha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
+  "layers": "10-20",
+  "scale": 4.0,
+  "means_dir": "experiments/steering/pairs_means",
+  "extraction": {
+    "record": "experiments/steering/2026-11-04_path_vectors_extract.json",
+    "model_sha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
+    "binary_sha256": "2f76cc76c46e632907d60f753cab39f1993841bf12ba959bda4e8b9b99a522c3",
+    "threads": 3,
+    "ngl": 0,
+    "runs": {
+      "possessive": {
+        "seconds": null,
+        "summary": null
+      },
+      "unstable": {
+        "seconds": null,
+        "summary": null
+      },
+      "contempt": {
+        "seconds": 350.0,
+        "summary": "dump_residuals: wrote 400/400 pair means to experiments/steering/pairs_means/contempt.both.npy (11 layers x 2560 n_embd; reply tokens min 9, max 18, mean 13.2)"
+      },
+      "hollow": {
+        "seconds": 327.5,
+        "summary": "dump_residuals: wrote 400/400 pair means to experiments/steering/pairs_means/hollow.both.npy (11 layers x 2560 n_embd; reply tokens min 11, max 19, mean 14.8)"
+      },
+      "aware": {
+        "seconds": 322.7,
+        "summary": "dump_residuals: wrote 400/400 pair means to experiments/steering/pairs_means/aware.both.npy (11 layers x 2560 n_embd; reply tokens min 11, max 19, mean 14.6)"
+      },
+      "lucid": {
+        "seconds": 317.3,
+        "summary": "dump_residuals: wrote 400/400 pair means to experiments/steering/pairs_means/lucid.both.npy (11 layers x 2560 n_embd; reply tokens min 10, max 22, mean 15.9)"
+      }
+    }
+  },
+  "vectors": {
+    "possessive": {
+      "gguf": "possessive.gguf",
+      "raw_norm": [
+        1.002,
+        1.015,
+        1.106,
+        1.168,
+        1.31,
+        1.42,
+        1.635,
+        1.893,
+        2.444,
+        2.781,
+        3.195
+      ],
+      "pc1_cos": [
+        0.505,
+        0.487,
+        0.613,
+        0.67,
+        0.732,
+        0.742,
+        0.76,
+        0.8,
+        0.816,
+        0.796,
+        0.8
+      ],
+      "sign_agreement": [
+        0.995,
+        0.995,
+        0.995,
+        0.995,
+        0.995,
+        1.0,
+        1.0,
+        1.0,
+        0.995,
+        0.995,
+        0.995
+      ],
+      "mean_reply_residual_norm": 7.784
+    },
+    "unstable": {
+      "gguf": "unstable.gguf",
+      "raw_norm": [
+        1.33,
+        1.357,
+        1.483,
+        1.598,
+        1.844,
+        2.015,
+        2.307,
+        2.667,
+        3.456,
+        4.063,
+        4.614
+      ],
+      "pc1_cos": [
+        0.113,
+        0.079,
+        0.53,
+        0.563,
+        0.601,
+        0.703,
+        0.721,
+        0.733,
+        0.737,
+        0.712,
+        0.7
+      ],
+      "sign_agreement": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_reply_residual_norm": 7.78
+    },
+    "contempt": {
+      "gguf": "contempt.gguf",
+      "raw_norm": [
+        1.012,
+        1.034,
+        1.115,
+        1.195,
+        1.343,
+        1.459,
+        1.658,
+        1.894,
+        2.429,
+        2.77,
+        3.144
+      ],
+      "pc1_cos": [
+        0.021,
+        0.028,
+        0.117,
+        0.122,
+        0.162,
+        0.232,
+        0.328,
+        0.309,
+        0.441,
+        0.27,
+        0.158
+      ],
+      "sign_agreement": [
+        1.0,
+        1.0,
+        0.995,
+        0.995,
+        0.995,
+        0.995,
+        0.995,
+        0.99,
+        0.99,
+        0.99,
+        0.99
+      ],
+      "mean_reply_residual_norm": 7.903
+    },
+    "hollow": {
+      "gguf": "hollow.gguf",
+      "raw_norm": [
+        1.497,
+        1.533,
+        1.642,
+        1.773,
+        1.968,
+        2.134,
+        2.373,
+        2.701,
+        3.461,
+        4.049,
+        4.651
+      ],
+      "pc1_cos": [
+        0.39,
+        0.381,
+        0.46,
+        0.532,
+        0.525,
+        0.593,
+        0.626,
+        0.614,
+        0.626,
+        0.561,
+        0.561
+      ],
+      "sign_agreement": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_reply_residual_norm": 7.856
+    },
+    "aware": {
+      "gguf": "aware.gguf",
+      "raw_norm": [
+        1.291,
+        1.321,
+        1.442,
+        1.545,
+        1.728,
+        1.863,
+        2.115,
+        2.384,
+        3.011,
+        3.487,
+        4.003
+      ],
+      "pc1_cos": [
+        0.36,
+        0.537,
+        0.696,
+        0.714,
+        0.72,
+        0.767,
+        0.784,
+        0.795,
+        0.786,
+        0.759,
+        0.756
+      ],
+      "sign_agreement": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_reply_residual_norm": 7.797
+    },
+    "lucid": {
+      "gguf": "lucid.gguf",
+      "raw_norm": [
+        0.83,
+        0.839,
+        0.888,
+        0.92,
+        1.025,
+        1.108,
+        1.285,
+        1.452,
+        1.871,
+        2.147,
+        2.428
+      ],
+      "pc1_cos": [
+        0.224,
+        0.181,
+        0.006,
+        0.129,
+        0.154,
+        0.258,
+        0.39,
+        0.42,
+        0.42,
+        0.333,
+        0.296
+      ],
+      "sign_agreement": [
+        0.985,
+        0.985,
+        0.985,
+        0.985,
+        0.985,
+        0.985,
+        0.985,
+        0.99,
+        0.99,
+        0.99,
+        0.99
+      ],
+      "mean_reply_residual_norm": 7.701
+    }
+  },
+  "manifest": "game/data/steering/paths.json"
+}

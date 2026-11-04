@@ -13,7 +13,18 @@
   shifted by ≈ SCALE.
 - `prompts/probe_v1.txt`: 10-prompt probe set (game register) used for the
   P3.01 acceptance dumps; `prompts/persona_stage0.txt` is the stage-0 persona
-  system prompt.
+  system prompt; `prompts/held_out_v1.txt` is the blind-read set (disjoint from
+  the pair contexts).
+- `prepare_pairs.py` (P3.03): turns `pairs/<trait>.jsonl` into
+  `context<TAB>reply` TSV files, 200 per side, and prints source/output hashes.
+- `extract_pairs.py` (P3.03): runs the dump tool in pair mode for all six
+  traits (both sides concatenated: one model load per trait), writes
+  `pairs_means/<trait>.{pos,neg}.npy` `(200, 11, 2560)` and `extract.json`.
+- `build_path_vectors.py` (P3.03): mean activation difference per layer, unit L2,
+  first-PC cross-check; writes `game/data/steering/<trait>.gguf` and the
+  manifest `game/data/steering/paths.json`.
+- `blind_read.py` (P3.03): `generate` / `judge` / `score` / `probe` stages for
+  the docs/06 §5 separation test and the `aware` retention probe.
 
 ## Build
 
@@ -44,6 +55,22 @@ LD_LIBRARY_PATH=tools/steering/build/bin ./tools/steering/build/llama-dump-resid
 Inputs are strict: a `--system` file that is missing or empty is an error (pass
 `--no-system` to dump without one), and `--layers` must lie inside the model's
 block range (`0..n_layer-1`; a reversed range like `20-10` is rejected).
+
+### Pair mode (P3.03)
+
+```bash
+LD_LIBRARY_PATH=tools/steering/build/bin ./tools/steering/build/llama-dump-residuals \
+    -m "$LEILA_MODEL" --pairs <trait>.both.tsv --means-out <trait>.both.npy \
+    --layers 10-20 --threads 8
+```
+
+Each `--pairs` line is `context<TAB>reply`; the tool renders a two-turn chat
+(user = context, assistant = reply) and writes the mean residual over the reply
+tokens only, shape `(n_pairs, n_layers, n_embd)`. No per-prompt `.npy` is
+written, so a 200-pair side costs ~45 MB instead of ~2 GB. A prompt that cannot
+be measured aborts the run without writing the file: the two sides of a pair
+must stay row-aligned. `--pairs` and `--prompts` are mutually exclusive, and
+`--means-out` is required with `--pairs`.
 
 Exit codes: `0` every prompt wrote a `.npy`; `1` a runtime failure or at least
 one prompt was skipped (too long for `--ctx-size`, decode error, a layer that
