@@ -593,6 +593,78 @@ def test_post_follows_a_rename_and_catches_taking_the_deletion(repo: Path) -> No
     assert finding["dropped"] == ["branch work"]
 
 
+def test_post_catches_a_lossy_resolution_of_a_renamed_file(repo: Path) -> None:
+    """A move does not hide the P1.16 shape: one parent's copy verbatim loses the other's line."""
+    moved = "docs/moved-notes.md"
+
+    # direction 1 — the branch moves the file, the target edits it in place.
+    git(repo, "checkout", "-q", "-b", "moves-notes", "main")
+    git(repo, "mv", MOVE_FILE, moved)
+    write(repo, moved, MOVE_TEXT + "branch work\n")
+    commit(repo, "branch renames the notes")
+
+    git(repo, "checkout", "-q", "main")
+    write(repo, MOVE_FILE, MOVE_TEXT + "target work\n")
+    commit(repo, "target edits the notes in place")
+
+    merge_expect_conflict(repo, "moves-notes")
+    resolve_with_branch_copy(repo, moved)
+
+    proc, report = check_json(repo, "--staged")
+
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    finding = next(item for item in report["findings"] if item["path"] == MOVE_FILE)
+    assert finding["takeover"] is True
+    assert finding["dropped"] == ["target work"]
+    assert finding["target_rename"] == moved
+
+    commit_merge(repo)
+
+    proc, report = check_json(repo, "--post", "HEAD")
+
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    finding = next(item for item in report["findings"] if item["path"] == MOVE_FILE)
+    assert finding["takeover"] is True
+    text = check(repo, "--post", "HEAD").stdout
+    assert "STALE-COPY" in text
+    assert f"the merge result at {moved} is the other parent's copy verbatim" in text
+
+    # direction 2 — the target moves the file, the branch edits it in place.
+    git(repo, "reset", "-q", "--hard", "HEAD^1")
+    renamed = "docs/renamed-notes.md"
+
+    git(repo, "checkout", "-q", "-b", "edits-notes", "main")
+    write(repo, MOVE_FILE, MOVE_TEXT + "target work\nbranch work\n")
+    commit(repo, "branch edits the notes in place")
+
+    git(repo, "checkout", "-q", "main")
+    git(repo, "mv", MOVE_FILE, renamed)
+    write(repo, renamed, MOVE_TEXT + "target work\ntarget work 2\n")
+    commit(repo, "target renames the notes")
+
+    merge_expect_conflict(repo, "edits-notes")
+    git(repo, "checkout", "--ours", "--", renamed)
+    git(repo, "add", "--", renamed)
+
+    proc, report = check_json(repo, "--staged")
+
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    finding = next(item for item in report["findings"] if item["path"] == MOVE_FILE)
+    assert finding["takeover"] is True
+    assert finding["dropped"] == ["branch work"]
+    assert finding["source_rename"] == renamed
+    text = check(repo, "--staged").stdout
+    assert "STALE-COPY" in text
+    assert f"the merge result at {renamed} is the other parent's copy verbatim" in text
+
+    commit_merge(repo)
+
+    proc, report = check_json(repo, "--post", "HEAD")
+
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert report["verdict"] == "FAIL"
+
+
 def test_post_names_the_commit_it_audited(repo: Path) -> None:
     """Evidence has to name the tree it audited, not just the ref it ran against."""
     merge_expect_conflict(repo)

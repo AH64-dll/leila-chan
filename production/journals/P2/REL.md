@@ -50,3 +50,16 @@
 - `--allow` is a whitelist: exact repo-relative paths only (no pattern, absolute path, `..` or generated file), every
   entry must match a finding, and a stale-copy takeover or unresolved path can never be acknowledged. `--post` prints
   the full audited commit id and refuses `--post HEAD` while a merge is stopped — HEAD is the wrong tree then.
+
+## P2.25 — round 4 (2026-11-04, agent: commandcode)
+
+- CODE-7: following a rename made `_audit_parents()` take the `if moved_to:` branch and skip the blob comparison, so a
+  moved file resolved from one parent's copy verbatim was a non-blocking `DROPPED`/exit 0. The takeover test is now
+  unconditional and looks at the other parent's copy under the audited path, the destination and this side's origin;
+  `--staged` and `--post` both fail all three lossy shapes, and `render()` names the destination.
+- Convention: the takeover rule is about **the blob**, not the path. A move changes where the copy lives, never whether
+  one parent's whole delta may be replaced — any new "result exists, so nothing is lost" shortcut must keep the blob
+  comparison.
+- Test gotcha: assert the lossy move at `--staged` before committing (afterwards `HEAD^1`/`HEAD^2` change and
+  `--post` is the only mode), and keep the move fixture ≥8 lines or git reports delete+add instead of a rename.
+- `main` moved to eb6ca7f; merged as 4b3cf6c and `--post 4b3cf6c` passes. Suite 34 cases, full pytest 362 passed.

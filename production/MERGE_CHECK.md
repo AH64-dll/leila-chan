@@ -20,6 +20,9 @@ normal case. The defect is in the **resolution**, and a resolution is a human ac
 > A merge must keep every line each parent added since the merge-base. A file that comes out of the merge as the
 > other parent's copy, verbatim, is a stale-file replacement and fails.
 
+A move does not exempt a file from that rule: keeping one parent's copy of a moved file is the same takeover,
+whichever of the two names (old or new) holds the copy.
+
 Two severities, deliberately asymmetric:
 
 | Finding | Meaning | Blocks? |
@@ -245,7 +248,9 @@ a blanket red gate on healthy merges.
 - `--post`: takes the merge commit's two parents and the same merge-base, then checks every line each parent
   added against the merge result. `STALE-COPY` when the result blob equals the other parent's blob. When the result
   no longer has a path, its renames against the merge-base are checked first, so a merge that followed a move is not
-  called `DELETED-BY-MERGE` and dropping the moved copy still is.
+  called `DELETED-BY-MERGE` and dropping the moved copy still is. A moved path keeps the same blob comparison: the
+  result is compared with the other parent's copy under the path, the destination and this side's rename origin,
+  so taking one parent's copy wholesale under a move is `STALE-COPY` too.
 - `--staged`: the same, with the index as the result and `MERGE_HEAD` as the second parent (renames come from
   `git diff --cached`). Unresolved paths fail.
 - Blank lines are ignored (they carry no information); binary and non-blob paths are reported for manual review;
@@ -271,9 +276,10 @@ and edits the same file, the merge is resolved with the branch copy) and asserts
 lines and the post-check fails. It also covers a correct two-sided resolution, a same-line supersede that must
 *not* fail, delete-vs-edit in both directions (including the wording that names the copy to keep), both-sides
 deletion, the three rename shapes — rename/rename to two names and to one, rename/delete, and the rename/edit that
-git merges cleanly, followed through to the post check — `--allow` on `--post`, its rejection in pre mode, and the
-seven acknowledgments it refuses (a pattern, an absolute path, a `..` escape, a generated file, a path that matched
-nothing, a stale copy, an unresolved conflict), whole-file deletion, the `track.py`-generated exclusions,
-unresolved staged paths, the already-merged case, the `commit` evidence line, `--post HEAD` refusing while a merge
-is stopped, and the exit-2 contract when git is missing from `PATH` or a git call times out. 33 cases, no network
-and no project history: CI can run it on a shallow checkout.
+git merges cleanly, followed through to the post check — the lossy resolution of a moved file in both directions
+(keeping one parent's copy under a new name is `STALE-COPY`, not a warning), `--allow` on `--post`, its rejection in
+pre mode, and the seven acknowledgments it refuses (a pattern, an absolute path, a `..` escape, a generated file, a
+path that matched nothing, a stale copy, an unresolved conflict), whole-file deletion, the `track.py`-generated
+exclusions, unresolved staged paths, the already-merged case, the `commit` evidence line, `--post HEAD` refusing
+while a merge is stopped, and the exit-2 contract when git is missing from `PATH` or a git call times out. 34 cases,
+no network and no project history: CI can run it on a shallow checkout.

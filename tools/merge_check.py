@@ -642,7 +642,10 @@ def _audit_parents(
     `renames_from_base` maps old -> new path between the merge-base and the
     result. A merge that follows a rename deletes the old path, so without it a
     file that moved would read as `deleted-by-merge` — a false FAIL on a merge
-    git resolved correctly (P2.25 CODE-1).
+    git resolved correctly (P2.25 CODE-1). A move does not exempt the result
+    from the takeover test: the result's blob is compared with the other
+    parent's copy under the path, the destination and this side's rename origin
+    (P2.25 CODE-7).
     """
     base = merge_base(target_commit, source_commit)
     report = Report(
@@ -705,11 +708,17 @@ def _audit_parents(
                         finding.target_rename = moved_to
                     else:
                         finding.source_rename = moved_to
-                else:
-                    result_blob = blob(path)
-                    finding.takeover = (
-                        result_blob is not None and result_blob == other_blob_by_path[path]
-                    )
+                # A moved file is not exempt from the P1.16 rule: the result may
+                # be the other parent's copy verbatim under the old name, the new
+                # name, or this side's rename origin (P2.25 CODE-7).
+                result_blob = blob(moved_to or path)
+                other_blobs = {
+                    other_blob_by_path[path],
+                    blob_of(other_commit, moved_to or path),
+                }
+                if origin:
+                    other_blobs.add(blob_of(other_commit, origin))
+                finding.takeover = result_blob is not None and result_blob in other_blobs
             report.findings.append(finding)
 
     if any(
@@ -922,10 +931,17 @@ def render(report: Report) -> None:
         for detail in _stale_details(finding):
             print(f"      {detail}")
         if finding.takeover:
-            print(
-                f"      the merge result is the other parent's copy verbatim: "
-                f"{len(finding.dropped)} line(s) from its {finding.side} are gone"
-            )
+            where = finding.target_rename or finding.source_rename
+            if where and where != finding.path:
+                print(
+                    f"      the merge result at {where} is the other parent's copy verbatim: "
+                    f"{len(finding.dropped)} line(s) from its {finding.side} are gone"
+                )
+            else:
+                print(
+                    f"      the merge result is the other parent's copy verbatim: "
+                    f"{len(finding.dropped)} line(s) from its {finding.side} are gone"
+                )
             _examples(finding.dropped)
         elif finding.status == "deleted-by-merge":
             print(
