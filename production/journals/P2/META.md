@@ -78,3 +78,27 @@
   `--check`) after de-nesting a block, and re-check before committing.
 - Privacy sweeps must fail closed: `_dir_contains()` now asserts the directory exists, so a disabled
   logger can no longer make the "never persisted" test pass vacuously.
+
+## P2.07 — inner-voice leak (2026-11-04, round 1)
+
+- Built `InnerLeak` (pure: docs chance table + stage→style map + seeded per-turn roll + word list),
+  `InnerLeakLabel` (the ghost line: instant or word-by-word, `advance(delta)` like the typewriter) and
+  `data/inner_leak.json` (chances and both looks). `ChatUI.leak_inner()` is the **only** inner→screen
+  path: it scans via `/root/Safety.filter_text` and fails closed to `SaySafetyGate.redact()` bars;
+  `Date` forwards each finished turn's `inner` from `Director.turn_completed`.
+- Convention kept: docs-fixed rules are code (`GATE_MIN` 2, one leak per turn, 2–3 ghost / 4–5 red);
+  data tunes chances and each style's colour/alpha/size/hold/interval/align/`behind_overlap`; the
+  plan/`describe` pair is what F3 shows, and `force` (F4) skips only the gate/chance/cap.
+- Layering gotcha (cost the most time): a z −1 child draws *under* the ChatLog's 0.75-alpha panel, so
+  the "in red" leak rendered near-black. Fix: ChatLog at z −2, leak at −1, box at 0 — first pixel-diff
+  each Xvfb render against a no-leak baseline; eyeballing a dim line is not evidence.
+- Label gotcha: an autowrapping `Label` clamps `size` to a minimum measured at the *previous* width, so
+  the first placement ballooned to 396 px. `clip_text = true` pins the min to (1,1) and makes the rect
+  exact; `Label.get_line_height()` is native in 4.7, so name helpers `line_px()`.
+- Test gotchas: `_turn_seq` only advances when `_turn_open` was false — a second turn in a test needs
+  `abort_turn()` (or `end_turn()` + a frame) first, or the per-turn cap silently eats the leak; and
+  `:=` on a member of a `Control`-typed scene yields Variant → parse error, so type test vars
+  explicitly (`var colour: Color = …`). gdUnit prints `is_equal_approx` failures tolerance-adjusted;
+  read raw values from a probe script instead of chasing the printed delta.
+- Next (P3.08): route M41 through the meta-event budget/"never two in a row", add the Extras "what
+  happened" log line, and move the trigger earlier in the turn if design wants it before the first beat.
