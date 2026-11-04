@@ -190,6 +190,51 @@ func test_opening_beats_resolve_once_per_beat() -> void:
 	assert_str(String(passes[0]["sprite"])).is_equal(_date.character.current_sprite)
 
 
+## P3.06: the date route hands GameState.flags to the resolver's beat rules. With
+## `anchor_relapse` set the opening beat is ANCHOR's relapse spike; without it the same
+## beat is her healthy face. Before this route existed no flag reached a date beat, so
+## tsun_break / anchor_relapse / rival_gone were dead in the scene the player plays.
+## The scenario's opening feeling is whatever the campaign picked, so the expectation
+## comes from the same pure lookup the packet carries, not from a hard-coded sprite.
+func test_opening_beats_pass_game_state_flags_to_the_resolver() -> void:
+	GameState.reset()
+	GameState.flags["anchor_relapse"] = true
+	var packets := await _opening_packets(4, "ANCHOR")
+	assert_int(packets.size()).is_equal(1)
+	var feeling := String(packets[0]["feeling"])
+	var intensity := int(packets[0]["intensity"])
+	var healthy_face := SpriteResolver.resolve(feeling, intensity, 4, "ANCHOR")
+	var spike := SpriteResolver.resolve(feeling, intensity, 4, "ANCHOR", {"anchor_relapse": true})
+	assert_str(String(packets[0]["sprite"])).is_equal(spike)
+	assert_str(String(packets[0]["path_rule"])).is_equal("relapse")
+	assert_str(spike).is_not_equal(healthy_face)
+
+	GameState.flags.erase("anchor_relapse")
+	var after := await _opening_packets(4, "ANCHOR")
+	assert_int(after.size()).is_equal(1)
+	var after_face := SpriteResolver.resolve(
+		String(after[0]["feeling"]), int(after[0]["intensity"]), 4, "ANCHOR"
+	)
+	assert_str(String(after[0]["sprite"])).is_equal(after_face)
+	assert_str(String(after[0]["path_rule"])).is_equal("healthy")
+	GameState.reset()
+
+
+## Play one date's opening beats and return the packets it routed, so a test reads the
+## real scene route (scenario pick, opening beats, resolver, Character) end to end.
+func _opening_packets(stage: int, path: String) -> Array:
+	var date: Node2D = DatePacked.instantiate()
+	date.stage = stage
+	date.path_name = path
+	date.set_instant_text(true)
+	add_child(auto_free(date))
+	var packets: Array = []
+	date.beat_played.connect(func(_idx: int, packet: Dictionary) -> void: packets.append(packet))
+	date.start_date()
+	await get_tree().process_frame
+	return packets
+
+
 func test_fx_wiring_and_twitch_signal() -> void:
 	var fx_played: Array[StringName] = []
 	# Twitch hook wired from character

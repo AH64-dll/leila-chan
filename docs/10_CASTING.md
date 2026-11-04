@@ -273,14 +273,37 @@ own `tiers` start above the current tier is skipped, so the beat simply repeats 
 
 ## 4. Paths
 
-| Path | Overrides (T2–T3) | Rule | Music / cue bias |
-|---|---|---|---|
-| YANDERE | love→24, angry→21, suspicious→28, joy→22 |  | music_box / heartbeat_fast, breath_close |
-| SPLIT | crying→16, pleading→19 | alternate when beat valence flips | tense / sob, door_slam |
-| TSUN | playful→03, cold→07, disgusted→18, angry→17 |  | keep / sigh, door_slam |
-| HOLLOW | — | sprite changes only on intensity 3 | silence / clock_tick, music_box_note |
-| AWAKE | confused→29, surprised→26, cold→25, manic→22 | glitch shader on every sprite change | distorted / static |
-| ANCHOR | — | keeps healthy sprites; relapse beat uses 26/22 once, then 02 | calm / hum, sigh |
+Each path owns a sprite pool — docs/01 §4's own `Sprites:` line — and docs/03 §3.2's beat rules, live from
+the path's tiers up (T2–T3; below them every path is inert, docs/03 §3 step 2). A face a path's rules name
+must be either in its pool or one of the **docs/03 extras** counted below, and every pool face is exported
+art: a docs/03 §3.2 override the design bible's pool omits still ships (the resolver spec is explicit per
+feeling), but the divergence stays visible here instead of hiding in code.
+
+| Path | Pool (docs/01 §4) | Overrides (docs/03 §3.2) | Rule | Music / cue bias |
+|---|---|---|---|---|
+| YANDERE | 01 06 24 21 30 27 | love→24, angry→21, suspicious→28, joy→22; warmth→27 if rival_gone | love and violence share a face | music_box / heartbeat_fast, breath_close |
+| SPLIT | 01 17 19 15 16 13 | crying→16, pleading→19 | alternate when beat valence flips | tense / sob, door_slam |
+| TSUN | 03 07 09 17 10 26 | playful→03, cold→07, disgusted→18, angry→17; afraid→20, crying→16 | the act cracks into a scared child | keep / sigh, door_slam |
+| HOLLOW | 14 12 10 23 25 | — | sprite changes only on intensity 3 | silence / clock_tick, music_box_note |
+| AWAKE | 08 29 11 22 25 | confused→29, surprised→26, cold→25, manic→22 | glitch shader on every sprite change | distorted / static |
+| ANCHOR | 02 05 06 13 14 26 21 | — | keeps healthy sprites; relapse beat uses 26/22 once, then 02 | calm / hum, sigh |
+
+### 4.1 Beat rules
+
+| Path | What the resolver does | Data |
+|---|---|---|
+| SPLIT | alternate when beat valence flips | valence flip → 01 (idealize) / 17 (devalue) |
+| TSUN | the act cracks into a scared child | flag `tsun_break`: afraid→20, crying→16 |
+| HOLLOW | sprite changes only on intensity 3 | freezes below i3; drift default→23, sad→14, tired→12, bored→10, cold→25 |
+| ANCHOR | keeps healthy sprites; relapse beat uses 26/22 once, then 02 | keeps healthy sprites: resolves from the T1 (pre-fracture) column · flag `anchor_relapse`: distress→26, elation→22; crisis→21 at T3 i3; then 02 |
+
+A pool face is a docs/01 §4 signature. Faces docs/03 §3.2 names outside the pool (kept, see above):
+- YANDERE: 22, 28
+- SPLIT: —
+- TSUN: 16, 18, 20
+- HOLLOW: —
+- AWAKE: 26
+- ANCHOR: 22
 
 ## 5. Voice by stage
 
