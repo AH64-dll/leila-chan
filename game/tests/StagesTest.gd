@@ -369,30 +369,47 @@ func test_reset_clears_pending_events() -> void:
 
 func test_stage_invariant_over_a_hundred_turns() -> void:
 	# SYS invariant for anything that accumulates: stage is monotonic, always the
-	# peak's band, and every rise is one transition with one queued line.
-	for seed_value: int in [7, 77]:
-		var rng := RandomNumberGenerator.new()
-		rng.seed = seed_value
-		var s: Variant = _state()
-		var transitions: Array = []
-		var told: Array = []
-		s.stage_transition.connect(
-			func(p: int, c: int, _spec: Dictionary) -> void: transitions.append([p, c])
+	# peak's band, and every rise is one transition with one queued line — plus
+	# the replay rule: the same seed gives the same state and the same events.
+	var first := _run_stage_sim(7)
+	assert_bool(int(first["stage"]) > 0).is_true()
+	var replay := _run_stage_sim(7)
+	assert_int(int(replay["stage"])).is_equal(int(first["stage"]))
+	assert_float(float(replay["instability"])).is_equal_approx(float(first["instability"]), EPS)
+	assert_array(replay["transitions"]).is_equal(first["transitions"])
+	assert_array(replay["told"]).is_equal(first["told"])
+	_run_stage_sim(77)
+
+
+## One seeded 100-turn campaign: asserts the stage invariants on every turn and
+## returns what the run produced, so two runs can be compared for replay.
+func _run_stage_sim(seed_value: int) -> Dictionary:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var s: Variant = _state()
+	var transitions: Array = []
+	var told: Array = []
+	s.stage_transition.connect(
+		func(p: int, c: int, _spec: Dictionary) -> void: transitions.append([p, c])
+	)
+	var last_stage := 0
+	for turn: int in 100:
+		s.apply_turn_meters(
+			{"mood": {"stress": rng.randi_range(-3, 3), "affection": rng.randi_range(-3, 3)}}
 		)
-		var last_stage := 0
-		for turn: int in 100:
-			s.apply_turn_meters(
-				{"mood": {"stress": rng.randi_range(-3, 3), "affection": rng.randi_range(-3, 3)}}
-			)
-			if turn % 7 == 6:
-				s.advance_day()
-			assert_int(s.stage).is_greater_equal(last_stage)
-			assert_int(s.stage).is_equal(StagesScript.for_instability(s.instability_peak))
-			last_stage = s.stage
-			for line: String in s.take_pending_events():
-				told.append(line)
-		assert_int(told.size()).is_equal(transitions.size())
-		assert_bool(transitions.size() > 0).is_true()
-		assert_int(transitions.size()).is_less_equal(s.stage)
-		for pair: Array in transitions:
-			assert_int(pair[0]).is_less(pair[1])
+		if turn % 7 == 6:
+			s.advance_day()
+		assert_int(s.stage).is_greater_equal(last_stage)
+		assert_int(s.stage).is_equal(StagesScript.for_instability(s.instability_peak))
+		last_stage = s.stage
+		told.append_array(s.take_pending_events())
+	assert_int(told.size()).is_equal(transitions.size())
+	assert_int(transitions.size()).is_less_equal(s.stage)
+	for pair: Array in transitions:
+		assert_int(pair[0]).is_less(pair[1])
+	return {
+		"stage": s.stage,
+		"instability": s.instability,
+		"transitions": transitions,
+		"told": told,
+	}
