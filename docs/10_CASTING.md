@@ -53,6 +53,10 @@ Sprite cells are `i1–2 / i3`. Tiers: T0 = stage 0–1, T1 = 2, T2 = 3, T3 = 4�
 | **empty** | -2/0 | 07/07 · 10/10 · 23/23 · 23/29 | freeze/freeze/freeze | silent | no cue; music silence when it deepens |
 | **manic** | +0/3 | 03/13 · 13/13 · 22/22 · 22/28 | bounce/twitch/twitch | +3 st ×1.5 | giggle; music playful |
 
+Motion presets have no extra art per intensity (docs/03 §4): the displacement is scaled by
+`casting.motion_intensity` (i1 ×0.6 · i2 ×1 · i3 ×1.4), with i2 = the doc's baseline. A beat's `motion_scale` travels in the
+resolver packet, so bounce/shake/tremble/sink/lean-in/twitch all breathe more or less with the intensity.
+
 ### 2.1 Sound, music and screen per tier
 
 | Feeling | Tier | Cue pool | Music | FX |
@@ -176,6 +180,10 @@ any implemented effect.
 
 ## 3. Sprite on-enter events
 
+Extra sound, music, fx or motion the instant a sprite appears, on top of the beat's own casting. `cue_below_stage4`
+and `fx_below_stage5` swap in the quieter variant under that stage; `budget` caps how often the effect may fire
+(`1 reveal per scene` gates the sprite itself, `terminal climax only` withholds the `system` sting until stage 5).
+
 | Sprite | Extra when it appears |
 |---|---|
 | 11 sudden_shock | system: stinger.soft |
@@ -196,7 +204,7 @@ any implemented effect.
 
 docs/03 §3 step 4: when one sprite would show on a third beat in a row, the resolver shows the feeling's sibling
 instead. Siblings are healthy faces (ids 01–20, so a T0–T1 swap can never read as corruption) in the same mood
-family; T2+ path-aware siblings belong to the resolver's path rules (P2.14).
+family; a swap never crosses the healthy/corrupt band.
 
 | Feeling | Sibling |
 |---|---|
@@ -222,6 +230,25 @@ family; T2+ path-aware siblings belong to the resolver's path rules (P2.14).
 | pleading | 15 tearful_sorrow |
 | empty | 14 quiet_melancholy |
 | manic | 11 sudden_shock |
+
+### 3.2 Corrupt-band siblings (T2+)
+
+A corrupted sprite cannot swap to a healthy one (that would lie about the state), so the corruption band has its
+own table: one sibling per sprite, same path signature or mood family, addressed by sprite id. A sibling whose
+own `tiers` start above the current tier is skipped, so the beat simply repeats rather than jump forward.
+
+| Sprite | Tiers | Sibling |
+|---|---|---|
+| 21 red_eyed_knife_mania | T3 | 24 obsessive_yandere_blush |
+| 22 unhinged_jaw_laugh | T2–T3 | 26 sanity_break_twitch |
+| 23 hollow_dead_eyed_void | T2–T3 | 29 glitching_distortion |
+| 24 obsessive_yandere_blush | T2–T3 | 28 manic_finger_biting |
+| 25 shadowed_psychosis | T3 | 29 glitching_distortion |
+| 26 sanity_break_twitch | T2–T3 | 28 manic_finger_biting |
+| 27 bloodstained_innocence | T3 | 24 obsessive_yandere_blush |
+| 28 manic_finger_biting | T2–T3 | 26 sanity_break_twitch |
+| 29 glitching_distortion | T3 | 23 hollow_dead_eyed_void |
+| 30 predatory_bloodlust | T3 | 21 red_eyed_knife_mania |
 
 ## 4. Paths
 

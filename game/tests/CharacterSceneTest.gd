@@ -244,16 +244,28 @@ func test_motion_freeze_stops_breathing() -> void:
 
 
 func test_motion_sink_drops_and_darkens() -> void:
-	_char.set_feeling("sad", 1, 0)  # sink: -10 px over 1 s, 2% darker
+	# docs/03 §4 baseline at i2: -10 px over 1 s, 2% darker (casting i2 = 1.0)
+	_char.set_feeling("sad", 2, 0)
 	await _wait_seconds(1.3)
 	assert_float(_motion_root.position.y).is_equal_approx(FEET.y + 10.0, 0.5)
 	assert_float(_char._current.self_modulate.r).is_equal_approx(0.98, 0.005)
+	# i1 runs the same preset at 0.6 x (casting.motion_intensity "1")
+	_char.set_feeling("sad", 1, 0)
+	await _wait_seconds(1.3)
+	assert_float(_motion_root.position.y).is_equal_approx(FEET.y + 6.0, 0.5)
 
 
+## P2.14: docs/03 §4 "no extra art per intensity" — the packet's motion_scale scales
+## the same preset (i1 x0.6, i2 x1.0 = the doc's 1.15, i3 x1.4). lean_in settles on
+## an exact value, so the whole ladder is frame-independent.
 func test_motion_lean_in_zooms_toward_face() -> void:
-	_char.set_feeling("suspicious", 2, 0)  # lean_in: scale -> 1.15 on the eyes pivot
-	await _wait_seconds(0.6)
-	assert_vector(_lean_root.scale).is_equal_approx(Vector2(1.15, 1.15), Vector2(0.02, 0.02))
+	var ladder: Array = [[1, "pleading", 1.09], [2, "suspicious", 1.15], [3, "suspicious", 1.21]]
+	for step: Array in ladder:
+		_char.set_feeling(String(step[1]), int(step[0]), 0)
+		await _wait_seconds(0.6)
+		assert_vector(_lean_root.scale).is_equal_approx(
+			Vector2(float(step[2]), float(step[2])), Vector2(0.012, 0.012)
+		)
 
 
 func test_motion_breathe_oscillates_in_band() -> void:
@@ -340,13 +352,35 @@ func test_reduced_motion_snaps_in_flight_camera() -> void:
 
 
 ## CODE-2: lean_in must not animate under reduced motion — it lands on the
-## static end pose instead of creating a scale tween.
+## static end pose instead of creating a scale tween — and enabling reduced
+## motion mid-beat re-runs the preset with that beat's motion_scale. The i1/i3
+## rungs prove the scale survives (1.09 / 1.21); the i2 baseline alone is what
+## the old `_apply_motion(_motion)` call also produced.
 func test_reduced_motion_lean_in_is_static() -> void:
 	_char.set_reduced_motion(true)
 	_char.set_feeling("suspicious", 2, 0)  # lean_in beat
 	await get_tree().process_frame
 	assert_bool(_char._motion_tween == null or not _char._motion_tween.is_running()).is_true()
 	assert_vector(_lean_root.scale).is_equal(Vector2(1.15, 1.15))  # pose, no tween
+
+	# i3 (casting.motion_intensity = 1.4): a beat applied WITHOUT reduced motion
+	# tweens to 1.21, and switching reduced motion on then re-runs lean_in at the
+	# same amplitude — it must not snap the pose back to the i2 1.15 baseline.
+	_char.set_reduced_motion(false)
+	_char.set_feeling("suspicious", 3, 0)
+	await _wait_seconds(0.5)  # lean_in tween is 0.35 s
+	assert_vector(_lean_root.scale).is_equal_approx(Vector2(1.21, 1.21), Vector2(0.001, 0.001))
+	_char.set_reduced_motion(true)
+	assert_bool(_char._motion_tween == null).is_true()
+	assert_vector(_lean_root.scale).is_equal_approx(Vector2(1.21, 1.21), Vector2(0.001, 0.001))
+
+	# i1 (0.6): the same re-run holds 1.09, not 1.15.
+	_char.set_reduced_motion(false)
+	_char.set_feeling("pleading", 1, 0)
+	await _wait_seconds(0.5)
+	assert_vector(_lean_root.scale).is_equal_approx(Vector2(1.09, 1.09), Vector2(0.001, 0.001))
+	_char.set_reduced_motion(true)
+	assert_vector(_lean_root.scale).is_equal_approx(Vector2(1.09, 1.09), Vector2(0.001, 0.001))
 	_char.set_reduced_motion(false)
 
 
