@@ -4,7 +4,7 @@
   "title": "Cooking together",
   "background": "bg/kitchen",
   "music": "playful",
-  "ambience": "ambience.dishes",
+  "ambience": "none",
   "available": {
     "days": [4, 12],
     "stages": [0, 5],

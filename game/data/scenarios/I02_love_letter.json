@@ -4,7 +4,7 @@
   "title": "Love letter",
   "background": "bg/classroom",
   "music": "romantic",
-  "ambience": "ambience.paper",
+  "ambience": "none",
   "available": {
     "days": [1, 14],
     "stages": [0, 5],

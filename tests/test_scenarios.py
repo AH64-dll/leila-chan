@@ -31,6 +31,7 @@ SCHEMA_PATH = SCHEMAS_DIR / "scenario.schema.json"
 
 CASTING_PATH = ROOT / "data" / "casting.json"
 CUE_MAP_PATH = ROOT / "assets" / "audio" / "cue_map.json"
+AUDIO_RULES_PATH = ROOT / "game" / "data" / "audio_rules.json"
 STAGE_GATES_PATH = ROOT / "game" / "data" / "stage_gates.json"
 
 SCENARIO_PATHS = sorted(SCENARIOS_DIR.glob("*.json"))
@@ -488,12 +489,48 @@ def test_p3_15_opening_beats_cover_every_available_stage(name: str) -> None:
         assert str(stage) in beats, f"{name}: no opening beat at stage {stage}"
 
 
-@pytest.mark.parametrize("name", P3_15_SCENARIOS)
-def test_p3_15_ambience_is_backed(name: str) -> None:
-    """A new scene must not point at an ambience id the audio map cannot play."""
+def _engine_ambience_key(value: str) -> str:
+    """Date.gd:365's key: 'amb.' + value, or the value when it already starts with 'amb.'."""
+    return value if value.startswith("amb.") else "amb." + value
+
+
+def _ambience_errors(ambience: str) -> list[str]:
+    """Why `ambience` would play nothing, or [] when the runtime can resolve it.
+
+    AudioDirector.play_system() needs the built key in cue_map['system'] (the files)
+    AND in audio_rules['system_keys'] (bus/category). 'none' means ship silence.
+    The two maps currently disagree (cue_map names 'ambience.paper'/'ambience.dishes',
+    audio_rules defines 'amb.rain') and no ambience bed ships, so no non-'none' id can
+    play until the audio wiring ticket lands; this guard pins the contract for that fix
+    instead of claiming playback works today.
+    """
+    if ambience == "none":
+        return []
+    key = _engine_ambience_key(ambience)
     cue_map = json.loads(CUE_MAP_PATH.read_text(encoding="utf-8"))
-    backed = {key for key in cue_map["system"] if key.startswith("ambience.")}
+    rules = json.loads(AUDIO_RULES_PATH.read_text(encoding="utf-8"))
+    errors: list[str] = []
+    if key not in cue_map.get("system", {}):
+        errors.append(f"cue_map['system'] has no {key!r}")
+    if key not in rules.get("system_keys", {}):
+        errors.append(f"audio_rules['system_keys'] has no {key!r}")
+    return errors
+
+
+@pytest.mark.parametrize("name", P3_15_SCENARIOS)
+def test_p3_15_ambience_names_an_engine_key(name: str) -> None:
+    """The scene's ambience is 'none' or builds a key both audio tables can resolve."""
     ambience = _scenario(name)["ambience"]
-    assert ambience == "none" or ambience in backed, (
-        f"{name}: ambience {ambience!r} is neither 'none' nor a cue_map ambience id"
-    )
+    errors = _ambience_errors(ambience)
+    assert not errors, f"{name}: ambience {ambience!r} builds an unplayable key: {errors}"
+
+
+def test_p3_15_ambience_guard_rejects_unplayable_keys() -> None:
+    """Negative control: the guard must fail exactly the drift it exists to catch."""
+    assert not _ambience_errors("none")
+    assert _engine_ambience_key("ambience.paper") == "amb.ambience.paper"
+    for value in ("ambience.paper", "ambience.dishes"):
+        assert _engine_ambience_key(value).startswith("amb.ambience."), value
+        assert _ambience_errors(value), f"{value!r} must not be accepted"
+    assert _engine_ambience_key("rain") == "amb.rain"
+    assert _ambience_errors("rain"), "amb.rain is in audio_rules but not cue_map, so it plays nothing"

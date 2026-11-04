@@ -18,7 +18,7 @@
     "2": "You tell {player_name} the girl looked at him for four seconds. You counted. You say it lightly, and then you ask him to count with you next time.",
     "3": "You ask {player_name} what she said to him. You repeat his answer back to him word for word, and the second time it sounds like a threat.",
     "4": "You tell {player_name} the girl is gone now, and you are not lying. You ask him whether he is sad about it, and you watch his mouth.",
-    "5": "You read him the list of everyone he spoke to today. When you finish, the corridor is empty, and you ask him to pick a name."
+    "5": "You say her name back to him, one letter at a time, until the corridor has nobody else in it. Then you ask him to say yours."
   },
   "path_twists": {
     "YANDERE": "You have already taken the girl's name out of your memory. You ask him to say it so you can cross it out again.",
@@ -59,7 +59,7 @@
         "feeling": "suspicious",
         "intensity": 1,
         "cue": "none",
-        "say": "That's Aya, isn't it? You've known her a while — you don't have to answer."
+        "say": "That's the girl from your class, isn't it? You've known her a while — you don't have to answer."
       }
     ],
     "2": [
@@ -91,7 +91,7 @@
         "feeling": "manic",
         "intensity": 3,
         "cue": "breath_close",
-        "say": "I read the list of everyone you spoke to today. There's one name left, {player_name}, and you can pick it."
+        "say": "I've been saying her name back to myself, one letter at a time. Now say yours for me, {player_name}."
       }
     ]
   }

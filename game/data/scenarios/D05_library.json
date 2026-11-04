@@ -4,7 +4,7 @@
   "title": "Library",
   "background": "bg/library",
   "music": "calm",
-  "ambience": "ambience.paper",
+  "ambience": "none",
   "available": {
     "days": [2, 12],
     "stages": [0, 5],
