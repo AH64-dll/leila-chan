@@ -8,6 +8,7 @@ extends RefCounted
 ## Director owns when a turn starts; this owns what the turn is told about.
 
 const SAMPLING_PATH := "res://data/sampling.json"
+const STAGE_MAX := 5
 
 ## docs/02 §9, the in-code fallback for a missing or partial data file. The data
 ## file is authoritative (P2.02 owns retuning it); this exists so a broken
@@ -21,6 +22,10 @@ const SAMPLING_FALLBACK := {
 	5: {"temperature": 0.95, "top_p": 0.97, "repeat_penalty": 1.18, "dose": 8.0},
 }
 
+## The four docs/02 §9 columns: the first three go to the request's sampling,
+## `dose` is the steering base (docs/06 §4 owns applying it).
+const SAMPLING_KEYS: Array[String] = ["temperature", "top_p", "repeat_penalty", "dose"]
+
 static var _sampling_cache: Dictionary = {}
 
 
@@ -29,35 +34,109 @@ static func clear_cache() -> void:
 
 
 ## docs/02 §9 sampling row for `stage`: the data row when present, else the
-## documented fallback.
+## documented fallback. Always a complete four-key row, and always a copy so a
+## consumer cannot poison the cache.
 static func sampling_spec(stage: int) -> Dictionary:
 	if _sampling_cache.is_empty():
 		_sampling_cache = _load_sampling()
 	var row: Variant = _sampling_cache.get(stage)
 	if row is Dictionary:
-		return row
-	return SAMPLING_FALLBACK.get(stage, SAMPLING_FALLBACK[0])
+		return (row as Dictionary).duplicate()
+	return (SAMPLING_FALLBACK.get(stage, SAMPLING_FALLBACK[0]) as Dictionary).duplicate()
+
+
+## The sampling subset a TurnRequest carries (docs/07 §3.1): exactly the three
+## docs/02 §9 columns the transport sends. `dose` is steering, not sampling, so
+## it never leaks into this dictionary (docs/06 §4).
+static func request_sampling(stage: int) -> Dictionary:
+	var row := sampling_spec(stage)
+	return {
+		"temperature": float(row["temperature"]),
+		"top_p": float(row["top_p"]),
+		"repeat_penalty": float(row["repeat_penalty"]),
+	}
+
+
+## Parses a sampling document into {stage: row}, data-driven on purpose: a test
+## can hand it a synthetic document and prove the loader (not a hard-coded copy)
+## decides the numbers.
+##
+## Accepted shapes:
+##  - current: {"stages": {"0": {...}, ..., "5": {...}}}
+##  - legacy stage-agnostic: one flat row at the top level ({"temperature": ...}),
+##    applied to every stage — the shape sampling.json had before per-stage rows.
+## A missing key falls back to that stage's docs/02 §9 row, so a partial file
+## can never send a half-empty sampling.
+static func parse_sampling(parsed: Variant) -> Dictionary:
+	if not (parsed is Dictionary):
+		return _fallback_table()
+	var document: Dictionary = parsed
+	var flat := _numeric_sampling(parsed)
+	var table := {}
+	var stages: Variant = document.get("stages")
+	if stages is Dictionary:
+		for key: Variant in stages:
+			var name := str(key)
+			var stage := int(name) if name.is_valid_int() else -1
+			if stage < 0 or stage > STAGE_MAX:
+				push_warning(
+					(
+						"TurnContext: %s stage key '%s' is not 0..%d; ignored"
+						% [SAMPLING_PATH, name, STAGE_MAX]
+					)
+				)
+				continue
+			table[stage] = _stage_row(stage, _numeric_sampling(stages[key]))
+	for stage: int in SAMPLING_FALLBACK:
+		if not table.has(stage):
+			table[stage] = _stage_row(stage, flat)
+	return table
+
+
+## One complete row: the docs/02 §9 row for `stage` overlaid with the file's
+## numeric keys. The file is authoritative; a missing key keeps the documented
+## value so a partial edit can never send a half-empty sampling.
+static func _stage_row(stage: int, row: Dictionary) -> Dictionary:
+	var out := (SAMPLING_FALLBACK[stage] as Dictionary).duplicate()
+	for key: String in SAMPLING_KEYS:
+		if row.has(key):
+			out[key] = row[key]
+	return out
+
+
+## The numeric sampling keys of `source`, as floats (JSON numbers arrive as int
+## or float; anything else is not a setting and is ignored).
+static func _numeric_sampling(source: Variant) -> Dictionary:
+	var out := {}
+	if not (source is Dictionary):
+		return out
+	for key: String in SAMPLING_KEYS:
+		var value: Variant = source.get(key)
+		if typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT:
+			var number := float(value)
+			if is_finite(number):
+				out[key] = number
+	return out
+
+
+static func _fallback_table() -> Dictionary:
+	var out := {}
+	for stage: int in SAMPLING_FALLBACK:
+		out[stage] = (SAMPLING_FALLBACK[stage] as Dictionary).duplicate()
+	return out
 
 
 static func _load_sampling() -> Dictionary:
-	var out := {}
-	if FileAccess.file_exists(SAMPLING_PATH):
-		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(SAMPLING_PATH))
-		if parsed is Dictionary and parsed.get("stages") is Dictionary:
-			for key: Variant in parsed["stages"]:
-				var stage_key := str(key)
-				if stage_key.is_valid_int():
-					out[int(stage_key)] = parsed["stages"][key]
-		else:
-			push_warning(
-				"TurnContext: %s has no stages table; using the in-code table" % SAMPLING_PATH
-			)
-	else:
+	if not FileAccess.file_exists(SAMPLING_PATH):
 		push_warning("TurnContext: %s missing; using the in-code sampling table" % SAMPLING_PATH)
-	for stage: int in SAMPLING_FALLBACK:
-		if not out.has(stage):
-			out[stage] = SAMPLING_FALLBACK[stage]
-	return out
+		return _fallback_table()
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(SAMPLING_PATH))
+	if not (parsed is Dictionary):
+		push_warning(
+			"TurnContext: %s is not a JSON object; using the in-code table" % SAMPLING_PATH
+		)
+		return _fallback_table()
+	return parse_sampling(parsed)
 
 
 ## docs/08 §5 "Offered this turn — …": the enums the schema compiles for this

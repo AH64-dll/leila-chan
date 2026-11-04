@@ -1,6 +1,12 @@
 {
-  "version": 1,
-  "doc": "docs/02 §9 Sampling settings by stage (P1.08 DES-4). temperature/top_p/repeat_penalty go to the request's sampling; `dose` is the steering dose base for that stage. P2.02 owns per-stage dose tuning.",
+  "version": 2,
+  "doc": "docs/02 §9 sampling settings by stage. temperature/top_p/repeat_penalty go to the request's sampling; `dose` is the steering dose base for that stage (P2.02/P2.04 own dose and number tuning). Shape: {\"stages\": {\"<0-5>\": row}}. A legacy stage-agnostic file (one flat row at the top level, no `stages`) still applies that row to every stage. `hardened` records the docs/06 §1 envelope the schema limits are tested against.",
+  "hardened": {
+    "doc": "docs/06 §1: maxLength on strings + repeat_penalty 1.15 + temperature 0.7 kept 100% valid JSON up to steering scale 12. A stage whose dose enters the 8-12 band must keep repeat_penalty at or above the floor; the schema must carry the string limits (docs/02 §3: inner 90, say 200).",
+    "repeat_penalty_floor": 1.15,
+    "inner_max_length": 90,
+    "say_max_length": 200
+  },
   "stages": {
     "0": {
       "temperature": 0.75,
