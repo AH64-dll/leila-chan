@@ -11,7 +11,8 @@
   compaction was reverted for that reason. Worst stage-2 pair (TSUN + SPLIT, 16-char name): 899 real / 893 builder.
 - The 900 line has always been measured **without** the per-turn "Offered this turn — cue: …; music: …; fx: …" line,
   which is 62–143 real tokens by stage (stage 2: 91). The full system message is therefore ~990 at stage 2. Flagged as
-  DCR-2 (SYS: shorten the enum line or count it as dynamic); do not paper over it by cutting persona content.
+  DCR-2, later decided as D15 (docs/07 §3.1: 900 = fixed block, per-turn lines ≤ 200, whole system ≤ 1100);
+  do not paper over it by cutting persona content.
 - `game/data/prompts/signature_moves.json` is the shared contract: `module` cues are checked by tests/test_prompts.py,
   `transcript` regexes by production/handoffs/media/P3.05_signature_moves.py. Add a move to the table before writing its
   probe, and keep each module cue an exact substring of the module — a capitalisation slip fails the test.
