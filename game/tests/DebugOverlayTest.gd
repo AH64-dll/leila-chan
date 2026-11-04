@@ -5,6 +5,7 @@ extends GdUnitTestSuite
 ## FX cooldowns, offered actions, and signal reactivity.
 
 const DebugOverlayScene := preload("res://scenes/debug/DebugOverlay.tscn")
+const ChatUIScene := preload("res://scenes/ui/ChatUI.tscn")
 
 var _overlay: DebugOverlay
 
@@ -218,3 +219,57 @@ func test_displays_corruption_plan_for_the_stage() -> void:
 
 	Settings.content_level = ""
 	Settings.reduced_motion = false
+
+
+func test_displays_inner_leak_plan_for_the_stage() -> void:
+	# P2.07: F3 shows the docs/03 §5 leak this stage would run — chance, look and
+	# reveal mode — with the same reduced-motion/content-level inputs the ChatUI
+	# resolves for its own plan.
+	Settings.reduced_motion = false
+	Settings.content_level = ""
+	GameState.stage = 3
+	_overlay.refresh()
+	assert_str(_overlay.get_inner_leak_text()).is_equal(
+		"Inner Leak: stage 3 · 15% · ghost · instant"
+	)
+
+	GameState.stage = 5
+	_overlay.refresh()
+	assert_str(_overlay.get_inner_leak_text()).is_equal(
+		"Inner Leak: stage 5 · 30% · red · word_by_word"
+	)
+
+	Settings.reduced_motion = true
+	_overlay.refresh()
+	assert_str(_overlay.get_inner_leak_text()).is_equal("Inner Leak: stage 5 · 30% · red · instant")
+
+	Settings.reduced_motion = false
+	Settings.content_level = "calmer"
+	GameState.stage = 5
+	_overlay.refresh()
+	assert_str(_overlay.get_inner_leak_text()).is_equal(
+		"Inner Leak: stage 3 · 15% · ghost · instant"
+	)
+
+	Settings.content_level = ""
+	GameState.stage = 0
+	_overlay.refresh()
+	assert_str(_overlay.get_inner_leak_text()).is_equal("Inner Leak: off (stage 0)")
+
+
+func test_triggers_the_inner_leak_through_the_registered_chat_ui() -> void:
+	# Role playbook: every meta event is triggerable from the F3 overlay. The
+	# trigger uses the production path — the registered ChatUI scans the line
+	# with Safety and plays the label; only the docs gate/chance/cap are skipped.
+	assert_bool(_overlay.trigger_inner_leak("forced")).is_false()
+	var ui: Control = ChatUIScene.instantiate()
+	add_child(auto_free(ui))
+	await get_tree().process_frame
+	Director.register_chat_ui(ui)
+	assert_bool(_overlay.trigger_inner_leak("He said her name again.")).is_true()
+	assert_bool(ui.inner_leak.is_leaking()).is_true()
+	assert_str(ui.inner_leak.get_leak_text()).is_equal("He said her name again.")
+	# The F4 sample is data, and it goes through the same scan.
+	assert_bool(_overlay.trigger_inner_leak()).is_true()
+	assert_str(ui.inner_leak.get_leak_text()).is_equal(InnerLeak.debug_sample())
+	Director.register_chat_ui(null)
