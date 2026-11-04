@@ -1,8 +1,10 @@
 extends GdUnitTestSuite
-## P1.12 — AudioDirector v1 contract (docs/04 §1-§3, docs/02 §2.1/§2.2/§5).
-## The clock is injected (auto_clock=false + advance_time) so the 20 s music
-## hold and the 1.5 s crossfade are tested deterministically; streams load
-## threaded and tests await cue_played instead of timing out on the loader.
+## AudioDirector contract — P1.12 v1 (docs/04 §1-§3, docs/02 §2.1/§2.2/§5).
+## P2.16's stage layers/blips/gate tables live in AudioStageLayersTest.gd so each
+## suite stays inside gdlint's max-public-methods. The clock is injected
+## (auto_clock=false + advance_time) so the 20 s music hold and the 1.5 s
+## crossfade are tested deterministically; streams load threaded and tests await
+## cue_played instead of timing out on the loader.
 
 const AudioDirectorScript := preload("res://autoload/AudioDirector.gd")
 
@@ -257,7 +259,7 @@ func test_music_silence_cuts_instantly() -> void:
 	assert_dict(director._active_fade).is_empty()
 
 
-func test_music_gates_and_missing_band() -> void:
+func test_music_gate_boundaries_and_stage_layer_playback() -> void:
 	var director := _new_director()
 	var spy := _spy(director)
 	director.set_stage(0)
@@ -267,12 +269,18 @@ func test_music_gates_and_missing_band() -> void:
 	assert_array(spy["music_denied"]).contains_exactly(
 		[[&"dread", &"gated"], [&"bogus", &"unknown"]]
 	)
-	# docs/02 §2.2: tense is legal from stage 2, but its tracks are outside the
-	# v1 import scope -> clean "no_files" denial, current music untouched.
+	# docs/04 §8.3: the stage 2-5 tense band is imported, so the docs/02 §2.2
+	# stage-2 gate opening now resolves to a real track (was a v1 no_files).
 	director.set_stage(2)
 	director.begin_turn()
-	assert_bool(director.request_music(&"tense")).is_false()
-	assert_str(String(director.current_music())).is_equal("none")
+	assert_bool(director.request_music(&"tense")).is_true()
+	assert_str(String(director.current_music())).is_equal("tense")
+	var track := String(spy["music"][0][1])
+	(
+		assert_bool(track.contains("music_insistent") or track.contains("glitchstairs"))
+		. is_true()
+		. append_failure_message("unexpected tense layer track: " + track)
+	)
 
 
 func test_music_keep_restores_scene_default_after_three_turns() -> void:

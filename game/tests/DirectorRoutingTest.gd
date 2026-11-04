@@ -426,12 +426,18 @@ func test_absent_filter_fails_closed_to_redaction_bars() -> void:
 
 func test_stage_change_tells_audio_director() -> void:
 	# review CODE-2: the §5 cue gates read AudioDirector._stage, so the Director
-	# must hand over the stage when GameState's derived stage moves.
+	# must hand over the stage when GameState's derived stage moves. Behavioural
+	# proof: sob's gate is 1, so at the stale stage 0 it would deny "gated";
+	# handed over, it clears the gate and dies on its documented asset gap.
 	AudioDirector.set_stage(0)
-	GameState.instability = GameState.STAGE_BANDS[1] + 1.0  # cross into stage 1
+	GameState.instability = Stages.bands()[1] + 1.0  # cross into stage 1
 	await get_tree().process_frame
 	assert_int(GameState.stage).is_equal(1)
-	assert_int(AudioDirector.get_stage()).is_equal(1)
+	AudioDirector.begin_turn()
+	AudioDirector._silence_this_turn = false
+	AudioDirector._last_cue_reject = &""
+	AudioDirector.play_cue(&"sob")
+	assert_str(String(AudioDirector.last_cue_reject())).is_equal("gap")
 
 
 func test_sprite_change_is_noted_for_rare_reveals() -> void:
@@ -467,3 +473,67 @@ func test_sprite_change_is_noted_for_rare_reveals() -> void:
 
 	character.queue_free()
 	chat.queue_free()
+
+
+func test_stage_transition_line_rides_the_next_prompt_once() -> void:
+	# docs/01 §3 + docs/08 §6: a crossing queues her post-transition line at the
+	# end of turn N, and turn N+1 carries it in the event layer exactly once.
+	var character := FakeCharacter.new()
+	var chat := FakeChatUI.new()
+	add_child(character)
+	add_child(chat)
+	Director.register_character(character)
+	Director.register_chat_ui(chat)
+	_fake_backend.chunks = PackedStringArray([_flat_turn_chunk()])
+
+	var transitions: Array = []
+	GameState.stage_transition.connect(
+		func(previous: int, current: int, spec: Dictionary) -> void:
+			transitions.append([previous, current, spec])
+	)
+
+	assert_bool(Director.submit_player_input("Hi.")).is_true()
+	await _await_until(func() -> bool: return not Director.is_busy())
+	assert_int(GameState.stage).is_zero()
+	assert_array(transitions).is_empty()
+
+	# The crossing itself — a trigger spike or the night roll-over in production.
+	GameState.set_meter(&"instability", Stages.bands()[1])
+	var line := Stages.event_line(1)
+	assert_int(transitions.size()).is_equal(1)
+	assert_int(transitions[0][0]).is_zero()
+	assert_int(transitions[0][1]).is_equal(1)
+	assert_str(String((transitions[0][2] as Dictionary)["fx"])).is_equal("glitch")
+	assert_float(float((transitions[0][2] as Dictionary)["duration_s"])).is_between(2.0, 3.0)
+
+	assert_bool(Director.submit_player_input("So... um.")).is_true()
+	await _await_until(func() -> bool: return not Director.is_busy())
+	var messages: Array = _fake_backend.seen_request.messages.duplicate(true)
+	assert_bool(_prompt_contains(messages, line)).is_true().append_failure_message(
+		"the post-transition EVENT line never reached the prompt"
+	)
+
+	# Told once: the turn after that no longer carries it.
+	assert_bool(Director.submit_player_input("Again.")).is_true()
+	await _await_until(func() -> bool: return not Director.is_busy())
+	messages = _fake_backend.seen_request.messages.duplicate(true)
+	assert_bool(_prompt_contains(messages, line)).is_false()
+
+	character.queue_free()
+	chat.queue_free()
+
+
+## A complete docs/02 §3 turn: one beat, neutral mood, nothing remembered.
+func _flat_turn_chunk() -> String:
+	return (
+		'{"read":"greeting","inner":"hi","music":"keep","fx":"none",'
+		+ '"beats":[{"feeling":"joy","intensity":1,"cue":"none","say":"Hello there."}],'
+		+ '"mood":{"affection":0,"trust":0,"stress":0},"memory":"","action":"none"}'
+	)
+
+
+func _prompt_contains(messages: Array, needle: String) -> bool:
+	for message: Variant in messages:
+		if String((message as Dictionary).get("content", "")).contains(needle):
+			return true
+	return false

@@ -11,8 +11,11 @@ tools/bridge/export_to_godot.py) with ``loop=true`` for music.
 Selection is explicit, mirroring the AudioDirector scope:
   --max-stage N   cues whose docs/02 §2.1 gate <= N, plus every music band
                   that intersects stages 0..N (default 1)
+  --music-stage N music bands intersect stages 0..N instead of 0..max-stage —
+                  opens the stage 2-5 layers without pulling every high-stage
+                  cue asset (P2.16; e.g. --max-stage 0 --music-stage 5)
   --cue NAME      extra cue names (repeatable)
-  --music STATE   extra music states (all bands intersecting 0..max-stage)
+  --music STATE   extra music states (all bands intersecting 0..music-stage)
   --system KEY    cue_map "system" keys (repeatable)
 
 Modes:
@@ -96,11 +99,13 @@ def music_bands_intersecting(entry: dict, lo: int, hi: int) -> list[str]:
 def build_selection(
     cue_map: dict, rules: dict, max_stage: int, extra_cues: list[str],
     extra_music: list[str], system_keys: list[str],
+    music_max_stage: int | None = None,
 ) -> dict[str, list[tuple[str, str]]]:
     """{category: [(src_relpath, dst_relpath_under_category)]} sorted, unique."""
     sel: dict[str, list[tuple[str, str]]] = {"music": [], "sfx": [], "vocal": [], "amb": []}
     vocal = set(rules.get("vocal_cues", []))
     gates = rules.get("cue_gates", {})
+    music_hi = max_stage if music_max_stage is None else music_max_stage
 
     cue_names = set(extra_cues)
     for name in cue_map.get("cues", {}):
@@ -114,16 +119,16 @@ def build_selection(
             sel[cat].append((src, sanitise_relpath(src)))
 
     music_names = set(extra_music)
-    if max_stage >= 0:
-        # Music states the model may actually request at stage 0..max_stage.
+    if music_hi >= 0:
+        # Music states the model may actually request across the layer scope.
         music_names |= {
             name
             for name, gate in rules.get("music_gates", {}).items()
-            if int(gate) <= max_stage and name not in ("keep", "silence")
+            if int(gate) <= music_hi and name not in ("keep", "silence")
         }
     for name in sorted(music_names):
         entry = cue_map.get("music", {}).get(name, {})
-        for band in music_bands_intersecting(entry, 0, max_stage):
+        for band in music_bands_intersecting(entry, 0, music_hi):
             for src in entry[band]:
                 sel["music"].append((src, sanitise_relpath(src)))
 
@@ -158,8 +163,11 @@ def raw_dir(explicit: str | None) -> Path | None:
 
 def ffmpeg_convert(src: Path, dst: Path, category: str) -> None:
     filters = [f"loudnorm=I={'-16' if category == 'music' else OTHER_LUFS}"]
-    if category != "music":
-        # docs/04 §8 "trimmed": leading/trailing silence under -40 dB.
+    if category == "sfx":
+        # docs/04 §8 "trimmed": leading/trailing silence under -40 dB. Only cue
+        # SFX — her voice blips are ~0.25 s syllables and the trim swallowed
+        # whole takes (P2.16: 4 of the 20 blip oggs came out header-only), and
+        # vocal cues need their breath attack intact.
         filters.append(
             "silenceremove=start_periods=1:start_threshold=-40dB:"
             "stop_periods=1:stop_threshold=-40dB"
@@ -229,6 +237,8 @@ def plan_rows(selection: dict[str, list[tuple[str, str]]]) -> list[tuple[str, st
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--max-stage", type=int, default=1)
+    ap.add_argument("--music-stage", type=int, default=None,
+                    help="music bands intersect 0..N instead of 0..max-stage")
     ap.add_argument("--cue", action="append", default=[])
     ap.add_argument("--music", action="append", default=[])
     ap.add_argument("--system", action="append", default=[])
@@ -244,7 +254,8 @@ def main() -> int:
 
     cue_map, rules = load_tables()
     selection = build_selection(
-        cue_map, rules, args.max_stage, args.cue, args.music, args.system
+        cue_map, rules, args.max_stage, args.cue, args.music, args.system,
+        music_max_stage=args.music_stage,
     )
     rows = plan_rows(selection)
 

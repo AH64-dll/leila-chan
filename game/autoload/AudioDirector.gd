@@ -1,15 +1,23 @@
 extends Node
-## AudioDirector — music states, cues, budgets and buses (docs/04 §1-§3, docs/02 §5).
+## AudioDirector — music states, cues, budgets, stage layers and buses
+## (docs/04 §1-§7, docs/02 §5).
 ##
 ## The Director reports each turn with begin_turn(), then routes the model's
 ## `music` request through request_music() and each `cue` through play_cue().
 ## Music states are *requests*: minimum hold (20 s, from audio_rules.json),
 ## at most one change per turn, 1.5 s crossfade, instant cut for `silence`.
-## Later requests are queued and applied on the next legal turn. Cues resolve
+## Later requests are queued and applied on the next legal turn. Each state
+## resolves to a stage-band track pool in cue_map.json (docs/04 §8.3) and the
+## Music bus carries the docs/04 §2 stage drift — pitch drifts -5 cents per
+## stage, the low-pass closes 1 kHz per stage after 2, distortion and reverb
+## open by stage (table: audio_rules.json "stage_layers"). Cues resolve
 ## through res://data/cue_map.json, honour the stage gates and the docs/02 §5
 ## token-bucket budget, the 4-turn same-cue window, the rare-reveal caps and
 ## the stage >= 3 silence rule. Over-budget values are dropped silently
 ## (denials are observable via cue_denied for the overlay, never sent back).
+## Her text blips (text_blip) pick the casting.json voice_by_stage pool per
+## stage (AWAKE override from stage 3, stage 5 mixing the demon pool under
+## stage 4's) and pitch it by the beat's feeling (docs/04 §4/§7, docs/10 §5).
 ## MusicA/MusicB child buses form the docs/04 §1 crossfade pair; every bus a
 ## Settings slider may touch is in bus_names(). Rule tables live in
 ## res://data/audio_rules.json — content in data, not code.
@@ -20,10 +28,13 @@ signal music_request_denied(state: StringName, reason: StringName)
 signal cue_played(cue: StringName, file_path: String, bus: StringName)
 signal cue_denied(cue: StringName, reason: StringName)
 signal stream_load_failed(res_path: String, kind: StringName)
+signal voice_blip_played(key: StringName, file_path: String, pitch_scale: float, volume_db: float)
 
 const RULES_PATH := "res://data/audio_rules.json"
 const CUE_MAP_PATH := "res://data/cue_map.json"
+const CASTING_PATH := "res://data/casting.json"
 const AUDIO_RES_ROOT := "res://assets/audio/"
+const MUSIC_BUS := &"Music"
 const MUSIC_PLAYER_COUNT := 2
 const SFX_PLAYER_COUNT := 6
 
@@ -34,10 +45,16 @@ var crossfade_seconds := 1.5
 
 var _rules: Dictionary = {}
 var _cue_map: Dictionary = {}
+var _casting: Dictionary = {}
 var _rng := RandomNumberGenerator.new()
 var _now := 0.0
 var _stage := 0
 var _turn_index := -1
+
+var _stage_fx: Dictionary = {}
+var _blip_feeling := &""
+var _blip_chars := 0
+var _blip_next := 2
 
 var _cue_tokens := 0.0
 var _cue_last_turn: Dictionary = {}
@@ -68,9 +85,12 @@ var _stream_waiters: Dictionary = {}
 func _ready() -> void:
 	_rules = _load_json_dict(RULES_PATH)
 	_cue_map = _load_json_dict(CUE_MAP_PATH)
+	_casting = _load_json_dict(CASTING_PATH)
 	crossfade_seconds = float(_rules.get("music", {}).get("crossfade_seconds", 1.5))
 	_rng.randomize()
 	_ensure_buses()
+	_ensure_stage_fx()
+	_apply_stage_dsp()
 	_ensure_players()
 
 
@@ -216,6 +236,29 @@ func play_engine_cue(cue: StringName) -> bool:
 	return true
 
 
+## One revealed character of her `say` (docs/04 §4/§7, docs/10 §5). Call this
+## once per character from the typewriter: the director plays a soft blip every
+## 2-3 characters, drawing the pool from casting.json's voice_by_stage — AWAKE
+## overrides from stage 3, and stage 5 already mixes the demon pool under the
+## stage-4 whispers. Pitch and gain come from the beat's feeling voice spec
+## (`empty` has none, so she speaks in silence). Returns true when this
+## character triggered a blip; engine-owned, so it never charges the cue budget.
+func text_blip(feeling: StringName, stage: int = -1, path: StringName = &"") -> bool:
+	var use_stage := _stage if stage < 0 else clampi(stage, 0, 5)
+	if feeling != _blip_feeling:
+		_blip_feeling = feeling
+		_blip_chars = 0
+	_blip_chars += 1
+	if _blip_chars < _blip_next:
+		return false
+	var cadence: Dictionary = _rules.get("voice_blips", {})
+	_blip_chars = 0
+	_blip_next = _rng.randi_range(
+		int(cadence.get("every_chars_min", 2)), int(cadence.get("every_chars_max", 3))
+	)
+	return _play_blip(feeling, use_stage, path)
+
+
 ## Sprite on-enter hook (docs/04 §3): tracks sprites 21/30 for knife_draw.
 func note_sprite(sprite_id: StringName) -> void:
 	_sprites_seen[String(sprite_id)] = true
@@ -238,10 +281,7 @@ func set_scene_music(default_state: StringName) -> void:
 
 func set_stage(stage: int) -> void:
 	_stage = clampi(stage, 0, 5)
-
-
-func get_stage() -> int:
-	return _stage
+	_apply_stage_dsp()
 
 
 func current_music() -> StringName:
@@ -425,6 +465,64 @@ func _cue_bus(cue: StringName) -> StringName:
 	return StringName(map.get(_cue_category(cue), "SFX"))
 
 
+func _play_blip(feeling: StringName, stage: int, path: StringName) -> bool:
+	var voice: Variant = _voice_spec(feeling)
+	if not voice is Dictionary:
+		return false
+	var key := _blip_key(stage, path)
+	var files: Array = _cue_map.get("system", {}).get(String(key), [])
+	if key == &"" or files.is_empty():
+		return false
+	var spec: Dictionary = _rules.get("system_keys", {}).get(String(key), {})
+	var category := String(spec.get("category", "vocal"))
+	var paths := _existing_paths(files, category)
+	if paths.is_empty():
+		return false
+	var rel := _pick_avoiding(paths, _cue_last_file.get(key, ""))
+	_cue_last_file[key] = rel
+	var res_path := _resolve_src(String(files[paths.find(rel)]), category)
+	var pitch := pow(2.0, float(voice.get("pitch_st", 0)) / 12.0)
+	var gain := float(voice.get("gain_db", 0.0))
+	var bus := StringName(spec.get("bus", "Voice"))
+	_with_stream(
+		res_path,
+		&"blip",
+		func(stream: AudioStream) -> void:
+			var player := _next_sfx_player()
+			player.bus = bus
+			player.stream = stream
+			player.pitch_scale = pitch
+			player.volume_db = gain
+			player.play()
+			voice_blip_played.emit(key, res_path, pitch, gain)
+	)
+	return true
+
+
+## docs/10 §5 voice_by_stage: AWAKE overrides the stage pool from stage 3 and
+## stage 5 mixes the demon pool under the stage-4 whispers 30% of the time
+## (docs/04 §7).
+func _blip_key(stage: int, path: StringName) -> StringName:
+	var table: Dictionary = _casting.get("voice_by_stage", {})
+	var blips: Dictionary = _rules.get("voice_blips", {})
+	if path == &"AWAKE" and stage >= int(blips.get("awake_min_stage", 3)):
+		return StringName(String(table.get("AWAKE>=3", "")))
+	var key := StringName(String(table.get(str(clampi(stage, 0, 5)), "")))
+	if key == &"voice_blip.stage5" and _rng.randf() >= float(blips.get("stage5_demon_mix", 0.3)):
+		return StringName(String(blips.get("stage5_base_key", "voice_blip.stage4")))
+	return key
+
+
+## casting.json feelings[f].voice; null means "no blips" (docs/04 §4 — "empty:
+## no blips, silence while she 'speaks'").
+func _voice_spec(feeling: StringName) -> Variant:
+	var feelings: Dictionary = _casting.get("feelings", {})
+	var entry: Variant = feelings.get(String(feeling))
+	if not entry is Dictionary:
+		return null
+	return entry.get("voice")
+
+
 ## Gate, silence, window, caps and budget in drop order. Asset existence is
 ## checked after this so a missing file never burns the turn's budget.
 func _cue_gate_reason(cue: StringName, files: Array) -> StringName:
@@ -575,6 +673,90 @@ func _ensure_buses() -> void:
 		AudioServer.add_bus(idx)
 		AudioServer.set_bus_name(idx, bus)
 		AudioServer.set_bus_send(idx, String(buses[bus].get("parent", "Master")))
+
+
+## docs/04 §1: the Music bus carries the stage-driven effect chain. Idempotent —
+## the AudioServer bus graph outlives a single AudioDirector instance (tests
+## build many), so an existing effect of the same class is reused, never
+## stacked, and its index is cached for _apply_stage_dsp().
+func _ensure_stage_fx() -> void:
+	var bus_idx := AudioServer.get_bus_index(MUSIC_BUS)
+	if bus_idx < 0:
+		return
+	_stage_fx = {
+		"pitch": _bus_effect_index(bus_idx, AudioEffectPitchShift.new()),
+		"lowpass": _bus_effect_index(bus_idx, AudioEffectLowPassFilter.new()),
+		"distortion": _bus_effect_index(bus_idx, AudioEffectDistortion.new()),
+		"reverb": _bus_effect_index(bus_idx, AudioEffectReverb.new()),
+	}
+
+
+func _bus_effect_index(bus_idx: int, effect: AudioEffect) -> int:
+	for i: int in AudioServer.get_bus_effect_count(bus_idx):
+		var existing := AudioServer.get_bus_effect(bus_idx, i)
+		if existing != null and existing.get_class() == effect.get_class():
+			return i
+	AudioServer.add_bus_effect(bus_idx, effect)
+	return AudioServer.get_bus_effect_count(bus_idx) - 1
+
+
+## docs/04 §2 stage drift computed from the "stage_layers" table so the bus
+## effects and the tests share one source: pitch -5 cents per stage, the
+## low-pass base 12 kHz closing 1 kHz per stage after 2, distortion drive and
+## reverb wet by stage (0.0 = effect bypassed).
+func _stage_layer(stage: int) -> Dictionary:
+	var spec: Dictionary = _rules.get("stage_layers", {})
+	var cents := float(spec.get("pitch_cents_per_stage", -5.0)) * stage
+	var lowpass_start := int(spec.get("lowpass_start_stage", 2))
+	var lowpass := 0.0
+	if stage >= lowpass_start:
+		lowpass = (
+			float(spec.get("lowpass_base_hz", 12000.0))
+			+ float(spec.get("lowpass_hz_per_stage", -1000.0)) * (stage - lowpass_start)
+		)
+	var distortion: Dictionary = spec.get("distortion", {})
+	var drive := 0.0
+	if stage >= int(distortion.get("min_stage", 4)):
+		drive = float(distortion.get("drive", {}).get(str(stage), 0.0))
+	var reverb: Dictionary = spec.get("reverb", {})
+	var wet := 0.0
+	if stage >= int(reverb.get("min_stage", 3)):
+		wet = float(reverb.get("wet", {}).get(str(stage), 0.0))
+	return {
+		"pitch_cents": cents,
+		"pitch_scale": pow(2.0, cents / 1200.0),
+		"lowpass_hz": lowpass,
+		"distortion_drive": drive,
+		"reverb_wet": wet,
+	}
+
+
+func _apply_stage_dsp() -> void:
+	var bus_idx := AudioServer.get_bus_index(MUSIC_BUS)
+	if bus_idx < 0 or _stage_fx.is_empty():
+		return
+	var layer := _stage_layer(_stage)
+	var pitch := (
+		AudioServer.get_bus_effect(bus_idx, int(_stage_fx["pitch"])) as AudioEffectPitchShift
+	)
+	pitch.pitch_scale = float(layer["pitch_scale"])
+	var lowpass := (
+		AudioServer.get_bus_effect(bus_idx, int(_stage_fx["lowpass"])) as AudioEffectLowPassFilter
+	)
+	lowpass.cutoff_hz = maxf(float(layer["lowpass_hz"]), 100.0)
+	AudioServer.set_bus_effect_enabled(
+		bus_idx, int(_stage_fx["lowpass"]), lowpass.cutoff_hz > 100.0
+	)
+	var distortion := (
+		AudioServer.get_bus_effect(bus_idx, int(_stage_fx["distortion"])) as AudioEffectDistortion
+	)
+	distortion.drive = float(layer["distortion_drive"])
+	AudioServer.set_bus_effect_enabled(
+		bus_idx, int(_stage_fx["distortion"]), distortion.drive > 0.0
+	)
+	var reverb := AudioServer.get_bus_effect(bus_idx, int(_stage_fx["reverb"])) as AudioEffectReverb
+	reverb.wet = float(layer["reverb_wet"])
+	AudioServer.set_bus_effect_enabled(bus_idx, int(_stage_fx["reverb"]), reverb.wet > 0.0)
 
 
 func _ensure_players() -> void:

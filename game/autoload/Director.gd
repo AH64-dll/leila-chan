@@ -286,8 +286,14 @@ func submit_player_input(raw_input: String, telemetry: Dictionary = {}) -> bool:
 		_reject_unsafe_input()
 		return false
 
+	# docs/08 §6 "this turn only": the event layer starts empty, then the input
+	# hooks add their lines and a closed turn's queued lines ride along once.
+	_turn_events.clear()
+
 	# Step 0.2: Telemetry / Typing hooks (docs/02 §4 step 0)
 	_handle_input_telemetry(trimmed, telemetry)
+	# docs/01 §3: a stage crossing queued her post-transition EVENT line.
+	_turn_events.append_array(GameState.take_pending_events())
 
 	# Track player input window for memory validation (docs/02 §6)
 	last_player_inputs.append(trimmed)
@@ -300,7 +306,6 @@ func submit_player_input(raw_input: String, telemetry: Dictionary = {}) -> bool:
 	_current_player_input = trimmed
 	_retry_count = 0
 	_dose_offset = 0.0
-	_turn_events.clear()
 	# Step 1–4: Prepare and launch generation
 	return _start_turn(trimmed)
 
