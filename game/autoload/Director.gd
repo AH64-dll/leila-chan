@@ -18,12 +18,11 @@ const UNSAFE_INPUT_CODE := "unsafe_input"
 const UNSAFE_INPUT_MESSAGE := "Input blocked by safety policy"
 ## Turn history maintained by Director: array of {"role": "user"|"assistant", ...}
 var history: Array[Dictionary] = []
-## Current active scene info
-var scene_info: Dictionary = {
-	"prompt": "You are in a small café after class. Two cups, one window seat.",
-	"variant": "The afternoon light filters softly through the glass.",
-	"event": "",
-}
+## This turn's docs/08 §1 `[scene]` layer (goal/prompt/variant/event), assigned by
+## the live Date before each submit (`Date._apply_director_scene`) and cleared when
+## that date ends. Empty means no date is running: no scene layer at all, instead of
+## the café this used to hard-code for every shipped date (P2.22 S1-3).
+var scene_info: Dictionary = {}
 
 ## Subsystem node references (injected or registered)
 var character_node: Node = null
@@ -127,6 +126,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func reset() -> void:
 	history.clear()
 	Memory.reset()
+	scene_info = {}
 	last_player_inputs.clear()
 	quiet_turn_streak = 0
 	last_turn_data.clear()

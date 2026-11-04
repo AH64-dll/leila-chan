@@ -9,22 +9,44 @@ extends GdUnitTestSuite
 
 const DateScene := preload("res://scenes/Date.gd")
 const DatePacked := preload("res://scenes/Date.tscn")
+const FakeLLMBackendScript := preload("res://tests/helpers/FakeLLMBackend.gd")
+const TURN_FIXTURE := "res://tests/fixtures/streams/turn_001.json"
 const PALETTE_RES := "res://assets/sprites/leila/palette.json"
 const CAFE_BG_RES := "res://assets/bg/cafe.png"
 
 var _date: Node2D
+var _fake_backend: RefCounted
+var _previous_backend: LLMBackend
 
 
 func before_test() -> void:
+	# P2.22 S1-1/S1-2: a shipped Date starts itself, and a typed line opens a real
+	# Director turn. This suite drives the date by hand (it changes the stage
+	# between beats and captures frames), so it opts out of both: `auto_start`
+	# off before the node enters the tree, and a scripted backend so the submit
+	# test never waits on a model.
+	_fake_backend = FakeLLMBackendScript.new()
+	_fake_backend.chunks = PackedStringArray([FileAccess.get_file_as_string(TURN_FIXTURE)])
+	_previous_backend = LLM.get_backend()
+	LLM.set_backend(_fake_backend)
+	Director.reset()
+
 	_date = DatePacked.instantiate()
+	_date.auto_start = false
 	get_tree().root.add_child(_date)
 	await get_tree().process_frame
 
 
 func after_test() -> void:
+	# A submitted line may still be streaming; the Director outlives this scene,
+	# so close it before the ChatUI it points at is freed.
+	Director.cancel()
 	if _date != null and is_instance_valid(_date):
 		_date.queue_free()
 	await get_tree().process_frame
+	await get_tree().process_frame
+	Director.reset()
+	LLM.set_backend(_previous_backend)
 
 
 func test_date_scene_wires_character_textbox_inputbox_fx_audio() -> void:
@@ -62,6 +84,7 @@ func test_date_follows_the_campaign_stage_when_not_pinned() -> void:
 	GameState.reset()
 	GameState.stage = 4
 	var fresh: Node2D = DatePacked.instantiate()
+	fresh.auto_start = false
 	add_child(auto_free(fresh))
 	await get_tree().process_frame
 	assert_int(fresh.stage).is_equal(4)
@@ -69,6 +92,7 @@ func test_date_follows_the_campaign_stage_when_not_pinned() -> void:
 
 	# an explicit value still wins: the dev tools and scene tests pin a stage
 	var pinned: Node2D = DatePacked.instantiate()
+	pinned.auto_start = false
 	pinned.stage = 1
 	add_child(auto_free(pinned))
 	await get_tree().process_frame
@@ -218,14 +242,22 @@ func test_reduced_motion_wiring() -> void:
 
 func test_player_turn_input_flow() -> void:
 	var submitted_lines: Array[String] = []
+	var turns_opened: Array[String] = []
 	_date.player_turn_submitted.connect(func(t: String) -> void: submitted_lines.append(t))
+	Director.turn_started.connect(func(_idx: int, text: String) -> void: turns_opened.append(text))
 
 	_date.chat_ui._on_input_submitted("Can I order coffee?")
-	await get_tree().process_frame
 
+	# P2.22 S1-1: the Date is the production bridge — the submit opens the
+	# Director's turn synchronously, so a typed line can never be logged with no
+	# reply behind it. (The playtest harness used to install this itself.)
+	assert_array(turns_opened).contains(["Can I order coffee?"])
 	assert_int(submitted_lines.size()).is_equal(1)
 	assert_str(submitted_lines[0]).is_equal("Can I order coffee?")
 	assert_int(_date.chat_log.entry_count()).is_equal(1)
+	var first: Dictionary = (_date.chat_log.get_entries())[0]
+	assert_str(String(first["speaker_key"])).is_equal("player")
+	assert_str(String(first["text"])).is_equal("Can I order coffee?")
 
 
 func test_pause_request_propagation() -> void:

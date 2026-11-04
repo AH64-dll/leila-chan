@@ -33,7 +33,14 @@ const STAGE_FROM_GAME_STATE := -1
 @export var stage: int = STAGE_FROM_GAME_STATE
 @export var path_name: String = ""
 @export var player_name: String = "Senpai"
-@export var auto_start: bool = false
+## P2.22 S1-2: a date starts itself. Every real entry (NewGame, Continue, the
+## Night's next-day hand-off) arrives through change_scene_to_file, which cannot
+## pass a value in, so a shipped date that waited for a caller never played its
+## greeting, never requested its music, never wrote its scene-entry autosave and
+## never reached its `end` rule. The flag stays as the seam the dev tools and the
+## scene suites use: they host a Date they drive by hand and turn it off before
+## adding it to the tree (fx_shot, fx_bench, SaveFlowTest).
+@export var auto_start: bool = true
 @export var reduced_motion: bool = false
 @export var photosensitive: bool = false
 ## P2.19: the day/night loop. On, the date takes its scenario from the campaign (a
@@ -202,6 +209,10 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	_note_telemetry_date(false)
 	_clear_save_seam()
+	# This date's scene layer dies with it (P2.22 S1-3): the Director is an
+	# autoload that outlives the scene, so a stale goal would ride into whatever
+	# builds the next prompt.
+	_clear_director_scene()
 	var registered: Variant = Director.chat_ui_node
 	if registered == null:
 		return
@@ -304,6 +315,10 @@ func _check_scenario_end() -> void:
 	if not bool(outcome.get("ended", false)):
 		return
 	_date_over = true
+	# The date is over, so its scene layer is too: a listener of `date_ended`
+	# (or the idler frame before the night scene) must not find a goal for a date
+	# that just finished.
+	_clear_director_scene()
 	date_ended.emit(String(outcome.get("reason", "")))
 	if campaign_flow and scene_change_enabled:
 		get_tree().change_scene_to_file.call_deferred(NIGHT_SCENE_PATH)
@@ -562,9 +577,56 @@ func _shake_camera(amount: float, duration: float) -> void:
 	tween.tween_property(cam, "position", orig_pos, duration * 0.25)
 
 
+## docs/02 §4 step 0: the player's line opens the Director's turn. ChatUI emits
+## `player_turn_sent` after it logged the line and locked the input
+## (ChatUI.gd `_on_input_submitted`), and this is the Date's only submit point.
+## P2.22 S1-1: nothing called `Director.submit_player_input`, so a typed line
+## opened no turn in the shipped game — the playtest harness installed its own
+## bridge, which is exactly why the gap survived. This is the production seam.
 func _on_player_turn_sent(text: String) -> void:
 	_current_turn += 1
+	# docs/08 §1: the scene layer belongs to this turn. The Director reads
+	# `scene_info` while it builds the prompt (`build_turn_context`), so it must
+	# land before the submit, never after it.
+	_apply_director_scene()
 	player_turn_submitted.emit(text)
+	Director.submit_player_input(text)
+
+
+## docs/08 §1 + §7: this turn's `[scene]` layer — the scenario's goal, its
+## prompt, the stage/path variant and the turn's `events` line. The Director owns
+## the field (its TurnContext carries it into the prompt); the Date owns the
+## value, because it is the only node that knows which scenario, stage and turn
+## this prompt is for. P2.22 S1-3: nothing assigned it, so every prompt kept the
+## Director's constructor café line and no scenario ever reached the model.
+func _apply_director_scene() -> void:
+	if _scenario.is_empty():
+		_clear_director_scene()
+		return
+	Director.scene_info = ScenarioLoader.resolve_scene(
+		_scenario, stage, _scene_path(), _current_turn, player_name
+	)
+
+
+## docs/01 §2: the campaign owns the path. `path_name` is the export a dev tool
+## pins when it hosts a Date with no campaign behind it; the live game answers
+## from GameState, so the scene layer twists with the path she is on.
+func _scene_path() -> String:
+	var gs_node: Node = get_node_or_null("/root/GameState")
+	if gs_node != null and "path" in gs_node:
+		var path_id := String(gs_node.path).strip_edges()
+		if not path_id.is_empty():
+			return path_id
+	return path_name
+
+
+## No date, no scene layer. A finished date's goal must never reach a later
+## prompt, and an empty dictionary is the Director's "no date in progress" state
+## (docs/08 §1's scene layer then renders nothing) — never stale, never a café
+## this date was not set in.
+func _clear_director_scene() -> void:
+	if not Director.scene_info.is_empty():
+		Director.scene_info = {}
 
 
 func _on_turn_displayed() -> void:

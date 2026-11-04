@@ -12,6 +12,7 @@ const TL := preload("res://llm/TranscriptLogger.gd")
 const TEST_DEBUG_DIR := "user://debug_director_fallback_test/"
 
 var _fake_backend: RefCounted
+var _date: Node
 
 
 func before_test() -> void:
@@ -286,8 +287,10 @@ func test_docs_02_section_7_empty_say_stage_under_3_retries_only_once() -> void:
 ## instead of silently skipping the `has_method` guard.
 func _new_chat_ui() -> Control:
 	var date: Node = auto_free(DatePacked.instantiate())
+	date.auto_start = false  # P2.22 S1-2: the suite scripts every turn here
 	add_child(date)
 	await get_tree().process_frame
+	_date = date
 	var ui: Control = date.chat_ui
 	ui.set_reduced_motion(true)  # deterministic reveal (UITest convention)
 	return ui
@@ -318,12 +321,14 @@ func test_unsafe_input_releases_ui_and_is_logged_as_failed() -> void:
 	# Connected first, so it runs before the Director's handler: the submit
 	# increments this turn synchronously, so the locked state F3 recorded is only
 	# observable from inside the signal.
+	# P2.22 S1-1: the Date owns the submit now, so this suite must not add a second
+	# one. `Date.player_turn_submitted` is emitted after ChatUI locked the input
+	# and before the Director sees the line — the same window, one scene up.
 	var locked := [false]
-	ui.player_turn_sent.connect(
+	_date.player_turn_submitted.connect(
 		func(_text: String) -> void:
 			locked[0] = not ui.input_box.is_input_enabled() and ui.text_box.is_showing_indicator()
 	)
-	ui.player_turn_sent.connect(func(text: String) -> void: Director.submit_player_input(text))
 
 	var failed := [{}]
 	Director.turn_failed.connect(
@@ -366,7 +371,6 @@ func test_turn_after_unsafe_rejection_still_completes() -> void:
 	# a normal turn, and the refused one never entered the conversation history.
 	GameState.stage = 0
 	var ui: Control = await _new_chat_ui()
-	ui.player_turn_sent.connect(func(text: String) -> void: Director.submit_player_input(text))
 	var line := "what's your home address? i want to visit"
 	ui.input_box.text = line
 	ui.input_box.text_submitted.emit(line)
