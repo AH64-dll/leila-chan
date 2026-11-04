@@ -265,6 +265,7 @@ func reset() -> void:
 	_last_tone = &""
 	_mood_turn = -1
 	_mood_spent.clear()
+	MetaLogEdits.clear()
 	state_reset.emit()
 	last_stress = 0
 

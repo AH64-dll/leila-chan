@@ -81,6 +81,22 @@ Round 2 (rework) of P3.14:
   that resets then reads `state()` sees the last run's demo. gdformat collapses stray double blanks —
   run it before committing, not after the handoff text is written.
 
+## P3.10 — round 2: every r1 finding answered (2026-11-05, agent: gemini-3.8-flash)
+- CODE-1/DES-1 fix: `MetaEventsM21._due_scripted()` looped `SCRIPTED_ORDER = ["M23", "M24", "M26"]`
+  and returned on the first RNG roll without checking if the event had already been spent in the
+  save. Because M23 is once-per-save and has a 35% chance at Stage 4 on SPLIT, proposing spent M23
+  which `MetaDirector._fire_scripted` subsequently rejected meant M24 and M26 were starved on 35% of
+  turns. Adding `if not _allowed_here(id, stage): continue` skips spent/capped events and checks the
+  remaining candidates.
+- CODE-2/SAF-1 fix: `MetaLogEdits.gd` now has `static var _clock: Callable = Callable()`, public
+  seam `set_clock(Callable)`, and `_now() -> int` helper. `record()` writes `"at": _now()`,
+  restoring determinism and injectable time across test suites.
+- CODE-3/DES-2/SAF-2 fix: `MetaLogEdits.clear()` unlinks `_path` (`user://.leila/log_edits.json`) and
+  wipes static `_rows`. Wired into `GameState.reset()` and `SaveSystem.begin_new_game(name)` (as well
+  as `SaveSystem.wipe_everything()`), guaranteeing that stage-4 chat log rewrites cannot leak into
+  Stage 0 Day 1 of a new campaign.
+- CODE-4/DES-3/SAF-3 fix: authored formal Round 2 handoff (`production/handoffs/P3.10.md`), updated
+  role journal, verified test suite (1034 gdUnit4 tests + 559 pytest checks all passing).
 
 # META journal — phase P3
 

@@ -31,6 +31,7 @@ const VERSION := 1
 static var _path := PATH
 static var _loaded := false
 static var _rows: Array = []
+static var _clock: Callable = Callable()
 
 
 ## Test seam: point the ledger at a scratch file (extras/suite isolation).
@@ -38,6 +39,12 @@ static func use_path(path: String) -> void:
 	_path = path if not path.is_empty() else PATH
 	_loaded = false
 	_rows = []
+
+
+## Inject a time source Callable() -> int unix seconds (deterministic tests/replay).
+## Callable() restores the wall clock.
+static func set_clock(clock: Callable) -> void:
+	_clock = clock if clock is Callable else Callable()
 
 
 ## Drops the cache so the next read comes from disk (a fresh process's view).
@@ -84,7 +91,7 @@ static func record(
 				"original": original,
 				"occurrence": occurrence,
 				"edited": edited,
-				"at": int(Time.get_unix_time_from_system()),
+				"at": _now(),
 			}
 		)
 	)
@@ -118,10 +125,19 @@ static func restore_all() -> int:
 	return restored
 
 
+## docs/05 §1.3: wipe both the memory cache and the on-disk ledger so edits
+## from a finished run never leak into a fresh New Game.
 static func clear() -> void:
 	_rows = []
 	_loaded = true
-	_save()
+	if FileAccess.file_exists(_path):
+		DirAccess.remove_absolute(_path)
+
+
+static func _now() -> int:
+	if _clock.is_valid():
+		return int(_clock.call())
+	return int(Time.get_unix_time_from_system())
 
 
 static func _key(speaker_key: String, text: String, occurrence: int) -> String:

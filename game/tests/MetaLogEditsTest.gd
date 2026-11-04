@@ -26,6 +26,7 @@ func before_test() -> void:
 
 func after_test() -> void:
 	await get_tree().process_frame
+	MetaLogEdits.set_clock(Callable())
 	MetaLogEdits.use_path("")
 	EndingLog.use_path("")
 	EndingLog.set_clock(Callable())
@@ -166,3 +167,30 @@ func test_extras_says_so_when_nothing_was_rewritten() -> void:
 	# restore — so `restore_log_edits()` is a safe no-op.
 	assert_int(extras.restore_log_edits()).is_equal(0)
 	assert_dict(EndingLog.record_of("E01")).is_empty()  # nothing else was touched
+
+
+func test_record_timestamp_uses_injected_clock() -> void:
+	MetaLogEdits.set_clock(func() -> int: return 1_700_000_123)
+	assert_bool(MetaLogEdits.record("M23", "player", "hello", 1, "hi")).is_true()
+	var rows: Array = MetaLogEdits.rows()
+	assert_int(int(rows[0].get("at", 0))).is_equal(1_700_000_123)
+
+
+func test_game_state_reset_clears_edits_from_memory_and_disk() -> void:
+	MetaLogEdits.record("M23", "player", "I like you", 1, "I love you")
+	assert_int(MetaLogEdits.count()).is_equal(1)
+	assert_bool(FileAccess.file_exists(LEDGER)).is_true()
+	GameState.reset()
+	assert_int(MetaLogEdits.count()).is_equal(0)
+	assert_str(MetaLogEdits.shown("player", "I like you", 1)).is_equal("I like you")
+	assert_bool(FileAccess.file_exists(LEDGER)).is_false()
+
+
+func test_begin_new_game_clears_edits_from_memory_and_disk() -> void:
+	MetaLogEdits.record("M23", "player", "I like you", 1, "I love you")
+	assert_int(MetaLogEdits.count()).is_equal(1)
+	assert_bool(FileAccess.file_exists(LEDGER)).is_true()
+	SaveSystem.begin_new_game("Ren")
+	assert_int(MetaLogEdits.count()).is_equal(0)
+	assert_str(MetaLogEdits.shown("player", "I like you", 1)).is_equal("I like you")
+	assert_bool(FileAccess.file_exists(LEDGER)).is_false()

@@ -231,6 +231,8 @@ func _due_scripted(stage: int) -> Dictionary:
 			continue
 		if not _path_matches(spec):
 			continue
+		if not _allowed_here(id, stage):
+			continue
 		if not _roll(id, spec):
 			continue
 		if not _can_apply(id):

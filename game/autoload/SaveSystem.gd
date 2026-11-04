@@ -99,6 +99,7 @@ var _pending_scene: Dictionary = {}
 ## final stage and, at the meta gate (stage 3+), the memories she keeps — then
 ## records the new name. Returns the ShadowStore write result.
 func begin_new_game(player_name: String) -> Dictionary:
+	MetaLogEdits.clear()
 	var record := shadow.blank()
 	var read := shadow.load_shadow()
 	if bool(read["ok"]):
@@ -141,6 +142,7 @@ func shadow_first_name() -> String:
 ## test seam), so the wipe is always complete for the configured files.
 ## Returns {ok, removed, errors} — a locked file is reported, not thrown.
 func wipe_everything(keep: Array = []) -> Dictionary:
+	MetaLogEdits.clear()
 	var kept := {}
 	for item: Variant in keep:
 		kept[_string(item)] = true

@@ -151,6 +151,29 @@ func test_a_scripted_event_is_once_per_save() -> void:
 	assert_bool(bool(MetaDirector.call("_scripted_allowed", "M23", 4))).is_false()
 
 
+## CODE-1/DES-1: spent M23 must not starve M24 or M26.
+func test_spent_m23_does_not_starve_m24() -> void:
+	var ui := await _new_chat()
+	for index in 6:
+		var key := "player" if index % 2 == 0 else "her"
+		ui.chat_log.append_entry(key, "Senpai" if key == "player" else "Leila", "line %d" % index)
+	GameState.set_flag(&"meta_seen", ["M23"])
+	(
+		_module
+		. set_data(
+			{
+				"m23": {"stage": 3, "paths": [], "chance": 1.0},
+				"m24": {"stage": 3, "paths": [], "chance": 1.0},
+				"m26": {"stage": 3, "paths": [], "chance": 0.0},
+			}
+		)
+	)
+	assert_bool(MetaDirector.events_seen().has("M23")).is_true()
+	assert_bool(MetaDirector.events_seen().has("M24")).is_false()
+	MetaDirector.offers(4)
+	assert_bool(MetaDirector.events_seen().has("M24")).is_true()
+
+
 ## The per-scene budget is the same one offers pay: a spent cap-1 scene buys no
 ## scripted event either.
 func test_a_spent_scene_buys_no_scripted_event() -> void:
