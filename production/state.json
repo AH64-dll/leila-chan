@@ -3350,11 +3350,12 @@
       "finished": "2026-11-04T23:44:31+02:00"
     },
     "P3.10": {
-      "status": "in_progress",
-      "agent": null,
+      "status": "in_review",
+      "agent": "swe2",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-04T20:30:51+02:00"
+      "started": "2026-11-04T20:30:51+02:00",
+      "handoff": "production/handoffs/P3.10.md"
     },
     "P3.11": {
       "status": "changes_requested",
@@ -8309,6 +8310,18 @@
       "ts": "2026-11-05T01:18:04+02:00",
       "event": "in_progress->in_review",
       "ref": "P3.04",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T01:25:52+02:00",
+      "event": "agent",
+      "ref": "P3.10",
+      "note": "adopted from handoff: swe2"
+    },
+    {
+      "ts": "2026-11-05T01:25:52+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P3.10",
       "note": ""
     }
   ]
