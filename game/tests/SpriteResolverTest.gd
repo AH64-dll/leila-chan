@@ -181,10 +181,10 @@ func test_beat_packet_contents() -> void:
 	assert_str(String(terror["motion"])).is_equal("tremble")
 
 
-func test_reset_repeat_clears_the_window() -> void:
+func test_reset_scene_clears_the_window() -> void:
 	_resolver.resolve_beat("shy", 2, 0)
 	_resolver.resolve_beat("shy", 2, 0)
-	_resolver.reset_repeat()
+	_resolver.reset_scene()
 	var packet: Dictionary = _resolver.resolve_beat("shy", 2, 0)
 	assert_str(String(packet["sprite"])).is_equal("06")
 	assert_bool(bool(packet["anti_repeated"])).is_false()

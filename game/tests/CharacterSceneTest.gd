@@ -244,16 +244,28 @@ func test_motion_freeze_stops_breathing() -> void:
 
 
 func test_motion_sink_drops_and_darkens() -> void:
-	_char.set_feeling("sad", 1, 0)  # sink: -10 px over 1 s, 2% darker
+	# docs/03 §4 baseline at i2: -10 px over 1 s, 2% darker (casting i2 = 1.0)
+	_char.set_feeling("sad", 2, 0)
 	await _wait_seconds(1.3)
 	assert_float(_motion_root.position.y).is_equal_approx(FEET.y + 10.0, 0.5)
 	assert_float(_char._current.self_modulate.r).is_equal_approx(0.98, 0.005)
+	# i1 runs the same preset at 0.6 x (casting.motion_intensity "1")
+	_char.set_feeling("sad", 1, 0)
+	await _wait_seconds(1.3)
+	assert_float(_motion_root.position.y).is_equal_approx(FEET.y + 6.0, 0.5)
 
 
+## P2.14: docs/03 §4 "no extra art per intensity" — the packet's motion_scale scales
+## the same preset (i1 x0.6, i2 x1.0 = the doc's 1.15, i3 x1.4). lean_in settles on
+## an exact value, so the whole ladder is frame-independent.
 func test_motion_lean_in_zooms_toward_face() -> void:
-	_char.set_feeling("suspicious", 2, 0)  # lean_in: scale -> 1.15 on the eyes pivot
-	await _wait_seconds(0.6)
-	assert_vector(_lean_root.scale).is_equal_approx(Vector2(1.15, 1.15), Vector2(0.02, 0.02))
+	var ladder: Array = [[1, "pleading", 1.09], [2, "suspicious", 1.15], [3, "suspicious", 1.21]]
+	for step: Array in ladder:
+		_char.set_feeling(String(step[1]), int(step[0]), 0)
+		await _wait_seconds(0.6)
+		assert_vector(_lean_root.scale).is_equal_approx(
+			Vector2(float(step[2]), float(step[2])), Vector2(0.012, 0.012)
+		)
 
 
 func test_motion_breathe_oscillates_in_band() -> void:

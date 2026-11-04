@@ -190,7 +190,7 @@ func start_date() -> void:
 			return
 
 	if SpriteResolver != null:
-		SpriteResolver.reset_repeat()
+		SpriteResolver.reset_scene()
 
 	var music_id := StringName(String(_scenario.get("music", "calm")))
 	if AudioDirector != null:
@@ -225,8 +225,14 @@ func play_opening_beats() -> void:
 		var packet: Dictionary = {}
 		if SpriteResolver != null:
 			packet = SpriteResolver.resolve_beat(feeling, intensity, stage, path_name)
+		# Hand the finished packet down: resolving again inside set_feeling() would
+		# run the anti-repeat window and the reveal budget twice per beat (the same
+		# CODE-4 rule the Director follows).
 		if character != null:
-			character.set_feeling(feeling, intensity, stage, path_name)
+			if character.has_method("apply_beat"):
+				character.apply_beat(packet)
+			else:
+				character.set_feeling(feeling, intensity, stage, path_name)
 
 		var sprite_id := StringName(String(packet.get("sprite", "")))
 		if AudioDirector != null:

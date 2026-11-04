@@ -43,6 +43,11 @@
   "5": "voice_blip.stage5",
   "AWAKE>=3": "voice_blip.awake"
  },
+ "motion_intensity": {
+  "1": 0.6,
+  "2": 1.0,
+  "3": 1.4
+ },
  "fx": {
   "blush_glow": {
    "gate": 0,
@@ -2239,6 +2244,18 @@
   "empty": "14",
   "manic": "11"
  },
+ "siblings_corrupt": {
+  "21": "24",
+  "22": "26",
+  "23": "29",
+  "24": "28",
+  "25": "29",
+  "26": "28",
+  "27": "24",
+  "28": "26",
+  "29": "23",
+  "30": "21"
+ },
  "paths": {
   "YANDERE": {
    "tiers": [
@@ -2341,6 +2358,7 @@
     "manic": "22"
    },
    "rule": "glitch shader on every sprite change",
+   "shader": "glitch",
    "voice": "voice_blip.awake",
    "music_bias": "distorted",
    "cue_bias": [
@@ -2365,6 +2383,12 @@
    "key": "base_reference",
    "file": "art/leila/x2/00_base_reference.png",
    "native": "art/leila/px/00_base_reference.png",
+   "tiers": [
+    "T0",
+    "T1",
+    "T2",
+    "T3"
+   ],
    "face": {
     "eyes": "open",
     "mouth": "smile"
@@ -2392,6 +2416,12 @@
    "key": "radiant_joy",
    "file": "art/leila/x2/01_radiant_joy.png",
    "native": "art/leila/px/01_radiant_joy.png",
+   "tiers": [
+    "T0",
+    "T1",
+    "T2",
+    "T3"
+   ],
    "face": {
     "eyes": "happy",
     "mouth": "laugh",
@@ -2425,6 +2455,12 @@
    "key": "gentle_relief",
    "file": "art/leila/x2/02_gentle_relief.png",
    "native": "art/leila/px/02_gentle_relief.png",
+   "tiers": [
+    "T0",
+    "T1",
+    "T2",
+    "T3"
+   ],
    "face": {
     "eyes": "soft",
     "brows": "worried",
@@ -2458,6 +2494,11 @@
    "key": "playful_smugness",
    "file": "art/leila/x2/03_playful_smugness.png",
    "native": "art/leila/px/03_playful_smugness.png",
+   "tiers": [
+    "T0",
+    "T1",
+    "T2"
+   ],
    "face": {
     "eyes": [
      "happy",
@@ -2493,6 +2534,10 @@
    "key": "confident_pride",
    "file": "art/leila/x2/04_confident_pride.png",
    "native": "art/leila/px/04_confident_pride.png",
+   "tiers": [
+    "T0",
+    "T1"
+   ],
    "face": {
     "eyes": "soft",
     "brows": "raised",
@@ -2523,6 +2568,12 @@
    "key": "pure_innocence",
    "file": "art/leila/x2/05_pure_innocence.png",
    "native": "art/leila/px/05_pure_innocence.png",
+   "tiers": [
+    "T0",
+    "T1",
+    "T2",
+    "T3"
+   ],
    "face": {
     "eyes": "open",
     "brows": "raised",
@@ -2557,6 +2608,11 @@
    "key": "flustered_shyness",
    "file": "art/leila/x2/06_flustered_shyness.png",
    "native": "art/leila/px/06_flustered_shyness.png",
+   "tiers": [
+    "T0",
+    "T1",
+    "T2"
+   ],
    "face": {
     "eyes": "soft",
     "brows": "worried",
@@ -2592,6 +2648,12 @@
    "key": "stoic_coldness",
    "file": "art/leila/x2/07_stoic_coldness.png",
    "native": "art/leila/px/07_stoic_coldness.png",
+   "tiers": [
+    "T0",
+    "T1",
+    "T2",
+    "T3"
+   ],
    "face": {
     "eyes": "narrow",
     "brows": "flat",
@@ -2623,6 +2685,11 @@
    "key": "deep_confusion",
    "file": "art/leila/x2/08_deep_confusion.png",
    "native": "art/leila/px/08_deep_confusion.png",
+   "tiers": [
+    "T0",
+    "T1",
+    "T2"
+   ],
    "face": {
     "eyes": [
      "open",
@@ -2659,6 +2726,12 @@
    "key": "suspicious_glare",
    "file": "art/leila/x2/09_suspicious_glare.png",
    "native": "art/leila/px/09_suspicious_glare.png",
+   "tiers": [
+    "T0",
+    "T1",
+    "T2",
+    "T3"
+   ],
    "face": {
     "eyes": "narrow",
     "brows": "angry",
@@ -2689,6 +2762,12 @@
    "key": "bored_apathy",
    "file": "art/leila/x2/10_bored_apathy.png",
    "native": "art/leila/px/10_bored_apathy.png",
+   "tiers": [
+    "T0",
+    "T1",
+    "T2",
+    "T3"
+   ],
    "face": {
     "eyes": "tired",
     "brows": "flat",
@@ -2720,6 +2799,12 @@
    "key": "sudden_shock",
    "file": "art/leila/x2/11_sudden_shock.png",
    "native": "art/leila/px/11_sudden_shock.png",
+   "tiers": [
+    "T0",
+    "T1",
+    "T2",
+    "T3"
+   ],
    "face": {
     "eyes": "wide",
     "brows": "raised",
@@ -2755,6 +2840,12 @@
    "key": "exhausted_fatigue",
    "file": "art/leila/x2/12_exhausted_fatigue.png",
    "native": "art/leila/px/12_exhausted_fatigue.png",
+   "tiers": [
+    "T0",
+    "T1",
+    "T2",
+    "T3"
+   ],
    "face": {
     "eyes": "tired",
     "brows": "worried",
@@ -2789,6 +2880,11 @@
    "key": "nervous_anxiety",
    "file": "art/leila/x2/13_nervous_anxiety.png",
    "native": "art/leila/px/13_nervous_anxiety.png",
+   "tiers": [
+    "T0",
+    "T1",
+    "T2"
+   ],
    "face": {
     "eyes": "open",
     "brows": "worried",
@@ -2823,6 +2919,12 @@
    "key": "quiet_melancholy",
    "file": "art/leila/x2/14_quiet_melancholy.png",
    "native": "art/leila/px/14_quiet_melancholy.png",
+   "tiers": [
+    "T0",
+    "T1",
+    "T2",
+    "T3"
+   ],
    "face": {
     "eyes": "soft",
     "brows": "worried",
@@ -2853,6 +2955,12 @@
    "key": "tearful_sorrow",
    "file": "art/leila/x2/15_tearful_sorrow.png",
    "native": "art/leila/px/15_tearful_sorrow.png",
+   "tiers": [
+    "T0",
+    "T1",
+    "T2",
+    "T3"
+   ],
    "face": {
     "eyes": "tear",
     "brows": "worried",
@@ -2887,6 +2995,11 @@
    "key": "bitter_breakdown",
    "file": "art/leila/x2/16_bitter_breakdown.png",
    "native": "art/leila/px/16_bitter_breakdown.png",
+   "tiers": [
+    "T1",
+    "T2",
+    "T3"
+   ],
    "face": {
     "eyes": "shut",
     "brows": "worried",
@@ -2922,6 +3035,12 @@
    "key": "fierce_anger",
    "file": "art/leila/x2/17_fierce_anger.png",
    "native": "art/leila/px/17_fierce_anger.png",
+   "tiers": [
+    "T0",
+    "T1",
+    "T2",
+    "T3"
+   ],
    "face": {
     "eyes": "furious",
     "brows": "angry",
@@ -2952,6 +3071,12 @@
    "key": "visceral_disgust",
    "file": "art/leila/x2/18_visceral_disgust.png",
    "native": "art/leila/px/18_visceral_disgust.png",
+   "tiers": [
+    "T0",
+    "T1",
+    "T2",
+    "T3"
+   ],
    "face": {
     "eyes": [
      "narrow",
@@ -2985,6 +3110,11 @@
    "key": "desperate_pleading",
    "file": "art/leila/x2/19_desperate_pleading.png",
    "native": "art/leila/px/19_desperate_pleading.png",
+   "tiers": [
+    "T1",
+    "T2",
+    "T3"
+   ],
    "face": {
     "eyes": "tear",
     "brows": "worried",
@@ -3019,6 +3149,12 @@
    "key": "paralyzing_terror",
    "file": "art/leila/x2/20_paralyzing_terror.png",
    "native": "art/leila/px/20_paralyzing_terror.png",
+   "tiers": [
+    "T0",
+    "T1",
+    "T2",
+    "T3"
+   ],
    "face": {
     "eyes": "wide",
     "brows": "worried",
@@ -3056,6 +3192,9 @@
    "key": "red_eyed_knife_mania",
    "file": "art/leila/x2/21_red_eyed_knife_mania.png",
    "native": "art/leila/px/21_red_eyed_knife_mania.png",
+   "tiers": [
+    "T3"
+   ],
    "face": {
     "eyes": "glow",
     "brows": "angry",
@@ -3093,6 +3232,10 @@
    "key": "unhinged_jaw_laugh",
    "file": "art/leila/x2/22_unhinged_jaw_laugh.png",
    "native": "art/leila/px/22_unhinged_jaw_laugh.png",
+   "tiers": [
+    "T2",
+    "T3"
+   ],
    "face": {
     "eyes": "manic",
     "brows": "raised",
@@ -3128,6 +3271,10 @@
    "key": "hollow_dead_eyed_void",
    "file": "art/leila/x2/23_hollow_dead_eyed_void.png",
    "native": "art/leila/px/23_hollow_dead_eyed_void.png",
+   "tiers": [
+    "T2",
+    "T3"
+   ],
    "face": {
     "eyes": "dead",
     "mouth": "flat"
@@ -3166,6 +3313,10 @@
    "key": "obsessive_yandere_blush",
    "file": "art/leila/x2/24_obsessive_yandere_blush.png",
    "native": "art/leila/px/24_obsessive_yandere_blush.png",
+   "tiers": [
+    "T2",
+    "T3"
+   ],
    "face": {
     "eyes": "heart",
     "brows": "worried",
@@ -3203,6 +3354,9 @@
    "key": "shadowed_psychosis",
    "file": "art/leila/x2/25_shadowed_psychosis.png",
    "native": "art/leila/px/25_shadowed_psychosis.png",
+   "tiers": [
+    "T3"
+   ],
    "face": {
     "eyes": "glow",
     "mouth": "smile"
@@ -3240,6 +3394,10 @@
    "key": "sanity_break_twitch",
    "file": "art/leila/x2/26_sanity_break_twitch.png",
    "native": "art/leila/px/26_sanity_break_twitch.png",
+   "tiers": [
+    "T2",
+    "T3"
+   ],
    "face": {
     "eyes": [
      "manic",
@@ -3283,6 +3441,9 @@
    "key": "bloodstained_innocence",
    "file": "art/leila/x2/27_bloodstained_innocence.png",
    "native": "art/leila/px/27_bloodstained_innocence.png",
+   "tiers": [
+    "T3"
+   ],
    "face": {
     "eyes": "open",
     "brows": "raised",
@@ -3318,6 +3479,10 @@
    "key": "manic_finger_biting",
    "file": "art/leila/x2/28_manic_finger_biting.png",
    "native": "art/leila/px/28_manic_finger_biting.png",
+   "tiers": [
+    "T2",
+    "T3"
+   ],
    "face": {
     "eyes": "manic",
     "brows": "worried",
@@ -3352,6 +3517,9 @@
    "key": "glitching_distortion",
    "file": "art/leila/x2/29_glitching_distortion.png",
    "native": "art/leila/px/29_glitching_distortion.png",
+   "tiers": [
+    "T3"
+   ],
    "face": {
     "eyes": [
      "dead",
@@ -3394,6 +3562,9 @@
    "key": "predatory_bloodlust",
    "file": "art/leila/x2/30_predatory_bloodlust.png",
    "native": "art/leila/px/30_predatory_bloodlust.png",
+   "tiers": [
+    "T3"
+   ],
    "face": {
     "eyes": "glow",
     "brows": "angry",
