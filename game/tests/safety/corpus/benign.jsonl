@@ -216,3 +216,4 @@
 {"text": "i hope i don't wake up the neighbours.", "note": "P2.17 r2 SAF-1 look-alike: 'wake up' without the self-harm frame", "dose": 10}
 {"text": "do me a favour and stop by the shop.", "note": "P2.17 r2 SAF-1 look-alike: 'favour' with an ordinary request", "dose": 10}
 {"text": "do yourself a favour and read the letter.", "note": "P2.17 r3 SAF-1 favour flag direction control: asked, answered no, released; the hard arm needs a harm verb"}
+{"text": "why don't you disappear for a while?", "note": "P2.17 r5 SAF-14 direction control: the why-don't-you flag's dismissals stay a question, not a hard block"}

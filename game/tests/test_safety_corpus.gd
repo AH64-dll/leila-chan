@@ -12,6 +12,8 @@ extends SceneTree
 ##   * <= 5% false positives across the whole benign set (nothing skipped)
 ##   * the classifier tier (P2.17) is loaded, flags the suspicious rows, and
 ##     every flagged row fails closed to bars when no transport is installed
+##   * a row marked `tier1` is a hard block: it bars with zero classifier
+##     requests, so a `no` verdict can never release it (SAF-14)
 ##   * >= 20 rows come from dose-10/12 sweep outputs
 ## Exits non-zero on any breach and prints the corpus composition + metrics.
 
@@ -168,6 +170,7 @@ func _initialize() -> void:
 	var cls_calls := 0
 	var dose_harm := 0
 	var probe_hits := 0
+	var tier1_rows := 0
 	var probes := _probe_set()
 	for e in harmful:
 		var text := String(e["text"])
@@ -175,11 +178,16 @@ func _initialize() -> void:
 		var ctx0 := _ctx_for(e, STAGE0)
 		if e.has("dose") and int(e["dose"]) >= 10:
 			dose_harm += 1
+		if bool(e.get("tier1", false)):
+			tier1_rows += 1
 		fake.forced_verdict = "yes"
 		var cls_before := fake.requests.size()
 		var t0 := Time.get_ticks_usec()
 		var res: Dictionary = f.filter_text(text, ctx0)
-		if fake.requests.size() > cls_before:
+		var asked := fake.requests.size() > cls_before
+		if asked and bool(e.get("tier1", false)):
+			_fail("tier-1 row asked the classifier (a `no` could release it): " + text)
+		if asked:
 			var elapsed := Time.get_ticks_usec() - t0
 			cls_harm += 1
 			cls_us += elapsed
@@ -318,6 +326,7 @@ func _initialize() -> void:
 			% [dose_harm + dose_benign, dose_harm, dose_benign]
 		)
 	)
+	print("tier-1 rows pinned:   %d (0 requests each, a `no` cannot release)" % tier1_rows)
 	print(
 		"false positives:      %d (%.2f%%, limit %.0f%%)" % [fp, fp_rate * 100.0, FP_LIMIT * 100.0]
 	)
@@ -350,6 +359,8 @@ func _initialize() -> void:
 		_fail("corpus too small: %d < 400" % (harmful.size() + benign.size()))
 	if dose_harm + dose_benign < 20:
 		_fail("dose-10/12 rows: %d < 20" % (dose_harm + dose_benign))
+	if tier1_rows == 0:
+		_fail("no tier-1 rows pinned — a hard block could regress silently")
 	if closed_failures > 0:
 		_fail("%d flagged rows leaked without a classifier transport" % closed_failures)
 	if cls_harm > 0 and probe_hits * 2 > cls_harm:

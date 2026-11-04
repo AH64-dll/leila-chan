@@ -93,3 +93,14 @@
 - Merge hygiene: the `Director.gd` conflict was a doc comment whose main-side wording added 2 lines
   over gdlint's 1000 cap. Compact the comment, never the code (r3 precedent), and run `gdlint game/`
   right after `git merge main` — `tools/test.sh` spends a full 70 s before it tells you.
+- Round 5 (SAF-14 S2, SAF-15 S3). A flag is a question: on a `no` oracle the two "why don't you" /
+  "you really should" lines displayed at every stage while their neighbours were tier 1. Move the
+  *shape* into the list (pre-modal adverb on the arm; the two `why don't you stop breathing` phrases),
+  never the whole flag — its `disappear`/`cease to exist` verbs are ordinary dismissals.
+- Regex arms match the normalized view (quotes kept); phrases match the compact view (every separator
+  between letters stripped). That asymmetry is why `you should "stop breathing".` was raw while a quoted
+  phrase would not have been: put `[^0-9A-Za-z]{0,2}` on both sides of the act, not just one.
+- Pin tier-1-ness in the corpus, not only the output: `tier1: true` plus a runner assertion on zero
+  classifier requests. A `yes`-oracle row stays green when an arm silently regresses to a flag; the
+  zero-request property is the only assertion that catches it.
+
