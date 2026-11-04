@@ -23,3 +23,17 @@
   il range from the file's non-zero directions.
 - Next (P3.03): feed NAR's ~200 contrastive pairs per trait through
   `probe_v1`-style files; mean-diff/PCA over the token axis of the .npy.
+
+### Round 2 — error paths + method-standard log (2026-11-04)
+
+- Hardened `dump_residuals.cpp` per the r1 findings: `--out-dir` is created, `--layers`
+  validated after model load (`lo>=0, hi>=lo, hi<n_layer`), missing/empty `--system` is a
+  hard error, skipped prompts counted → exit 1. Exit codes 0 ok / 1 runtime-or-skipped /
+  2 bad input.
+- Gotcha: reversed `--layers 20-10` used to write a 128-byte `.npy` with a negative layer
+  count and exit 0 (`numpy.load` then fails) — always open one `.npy` before trusting a run.
+- Re-dumped through the hardened binary: md5 identical to r1 (base 000 `7180369c1e2a`,
+  malice8 000 `9ac8c1285e0e`), `check_malice.py` PASS; log committed as
+  `experiments/steering/2026-11-04_dump_p301.log` (STR standard: `.json` + `.log`).
+- Plan row P3.01 criterion 1 amended to "builds on a standard CMake toolchain (Linux
+  verified; Windows flagged for one verification pass on the design machine)".

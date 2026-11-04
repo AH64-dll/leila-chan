@@ -40,4 +40,14 @@ LD_LIBRARY_PATH=tools/steering/build/bin ./tools/steering/build/llama-dump-resid
     --out-dir <dir> --layers 10-20 [--cvec cvec.gguf:SCALE]
 ```
 
+`--out-dir` is created when missing, so the command above works on a clean tree.
+Inputs are strict: a `--system` file that is missing or empty is an error (pass
+`--no-system` to dump without one), and `--layers` must lie inside the model's
+block range (`0..n_layer-1`; a reversed range like `20-10` is rejected).
+
+Exit codes: `0` every prompt wrote a `.npy`; `1` a runtime failure or at least
+one prompt was skipped (too long for `--ctx-size`, decode error, a layer that
+captured fewer tokens) — the final line states `wrote N/M prompts`; `2` bad
+usage or input (arguments, `--system`, `--layers`, `--out-dir`).
+
 Python side needs `pip install -r requirements-experiments.txt` (numpy, gguf).

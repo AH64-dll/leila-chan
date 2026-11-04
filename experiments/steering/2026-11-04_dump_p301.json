@@ -16,6 +16,7 @@
   "system": "tools/steering/prompts/persona_stage0.txt",
   "layers_dumped": "10-20 inclusive",
   "dumps": "experiments/steering/dumps_p301/{base,malice8}/prompt_000..009.npy (gitignored, regenerable)",
+  "log": "experiments/steering/2026-11-04_dump_p301.log (verbatim output of the two runs, companion to this record)",
   "checks": {
     "all_finite": true,
     "mean_residual_norm_per_layer": {"base": 11.4, "steered": 12.5},

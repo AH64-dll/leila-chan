@@ -25,7 +25,9 @@
 #include <cinttypes>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <map>
 #include <sstream>
@@ -158,14 +160,19 @@ struct dump_args {
 static void usage(const char * argv0) {
     fprintf(stderr,
         "usage: %s -m MODEL.gguf --prompts FILE --out-dir DIR [options]\n"
-        "  --layers A-B        residual layers to dump (default 10-20)\n"
+        "  --layers A-B        residual layers to dump (default 10-20); must lie\n"
+        "                      inside the model's block range\n"
         "  --system FILE       system-prompt text file (persona); default none\n"
+        "  --no-system         run without a system prompt (ignores --system)\n"
         "  --cvec F[:SCALE]    control vector gguf + optional scale (repeatable)\n"
         "  --ctx-size N        context size (default 2048)\n"
         "  --threads N         cpu threads (default: llama.cpp default)\n"
         "  -ngl N              gpu layers (default 0)\n"
         "  prompts file: one user message per line; each becomes a chat-templated\n"
-        "  single-turn conversation and writes <out-dir>/prompt_NNN.npy\n",
+        "  single-turn conversation and writes <out-dir>/prompt_NNN.npy\n"
+        "  --out-dir DIR       created when missing; default '.'\n"
+        "  exit: 0 all prompts written; 1 runtime failure or skipped prompts;\n"
+        "        2 bad usage/input (args, --system, --layers, --out-dir)\n",
         argv0);
 }
 
@@ -186,8 +193,10 @@ static bool parse_args(int argc, char ** argv, dump_args & a) {
         else if (s == "--no-system")                a.no_system    = true;
         else if (s == "--layers") {
             std::string v = next(i);
-            if (sscanf(v.c_str(), "%d-%d", &a.layer_lo, &a.layer_hi) != 2) {
-                fprintf(stderr, "bad --layers value '%s' (want A-B)\n", v.c_str());
+            int consumed = 0;
+            if (sscanf(v.c_str(), "%d-%d%n", &a.layer_lo, &a.layer_hi, &consumed) != 2 ||
+                consumed != (int) v.size()) {
+                fprintf(stderr, "bad --layers value '%s' (want A-B, e.g. 10-20)\n", v.c_str());
                 return false;
             }
         } else if (s == "--cvec") {
@@ -220,11 +229,15 @@ static bool parse_args(int argc, char ** argv, dump_args & a) {
     return true;
 }
 
-static std::string slurp(const std::string & path) {
+static bool slurp(const std::string & path, std::string & out) {
     std::ifstream in(path);
+    if (!in) {
+        return false;
+    }
     std::ostringstream ss;
     ss << in.rdbuf();
-    return ss.str();
+    out = ss.str();
+    return true;
 }
 
 // ---------------------------------------------------------------------------
@@ -232,18 +245,33 @@ static std::string slurp(const std::string & path) {
 int main(int argc, char ** argv) {
     dump_args args;
     if (!parse_args(argc, argv, args)) {
-        return 1;
+        return 2;
     }
 
     std::string system_prompt;
     if (!args.no_system && !args.system_file.empty()) {
-        system_prompt = slurp(args.system_file);
+        if (!slurp(args.system_file, system_prompt)) {
+            fprintf(stderr, "dump_residuals: cannot read --system file '%s'\n",
+                    args.system_file.c_str());
+            return 2;
+        }
+        if (system_prompt.find_first_not_of(" \t\r\n") == std::string::npos) {
+            fprintf(stderr, "dump_residuals: --system file '%s' is empty; pass --no-system "
+                            "to dump without a system prompt\n",
+                    args.system_file.c_str());
+            return 2;
+        }
     }
 
     // prompts: one user message per non-empty line
     std::vector<std::string> prompts;
     {
         std::ifstream in(args.prompts_file);
+        if (!in) {
+            fprintf(stderr, "dump_residuals: cannot open --prompts file '%s'\n",
+                    args.prompts_file.c_str());
+            return 2;
+        }
         std::string line;
         while (std::getline(in, line)) {
             if (!line.empty() && line.back() == '\r') line.pop_back();
@@ -257,7 +285,19 @@ int main(int argc, char ** argv) {
     }
     if (prompts.empty()) {
         fprintf(stderr, "dump_residuals: no prompts in %s\n", args.prompts_file.c_str());
-        return 1;
+        return 2;
+    }
+
+    // --out-dir is created when missing so the documented command works on a
+    // clean tree; a bad path fails here, before the model is loaded.
+    {
+        std::error_code ec;
+        std::filesystem::create_directories(args.out_dir, ec);
+        if (ec) {
+            fprintf(stderr, "dump_residuals: cannot create --out-dir '%s': %s\n",
+                    args.out_dir.c_str(), ec.message().c_str());
+            return 2;
+        }
     }
 
     llama_backend_init();
@@ -269,6 +309,15 @@ int main(int argc, char ** argv) {
     if (!model) {
         fprintf(stderr, "dump_residuals: failed to load model %s\n", args.model.c_str());
         return 1;
+    }
+
+    const int n_model_layers = llama_model_n_layer(model);
+    if (args.layer_lo < 0 || args.layer_hi < args.layer_lo || args.layer_hi >= n_model_layers) {
+        fprintf(stderr, "dump_residuals: bad --layers %d-%d: this model has %d blocks (%d-%d)\n",
+                args.layer_lo, args.layer_hi, n_model_layers, 0, n_model_layers - 1);
+        llama_model_free(model);
+        llama_backend_free();
+        return 2;
     }
 
     dump_store store;
@@ -326,6 +375,11 @@ int main(int argc, char ** argv) {
     auto tmpls = common_chat_templates_init(model, "");
     const llama_vocab * vocab = llama_model_get_vocab(model);
 
+    // a prompt that yields no .npy is a lost experiment pair, so it is
+    // counted and reported as a failure at the end (exit 1)
+    size_t n_written = 0;
+    size_t n_skipped = 0;
+
     for (size_t pi = 0; pi < prompts.size(); pi++) {
         common_chat_templates_inputs inputs;
         inputs.use_jinja       = true;
@@ -342,6 +396,7 @@ int main(int argc, char ** argv) {
         if ((int) toks.size() > args.n_ctx) {
             fprintf(stderr, "dump_residuals: prompt %zu too long (%zu tokens > %d), skipped\n",
                     pi, toks.size(), args.n_ctx);
+            n_skipped++;
             continue;
         }
 
@@ -350,8 +405,19 @@ int main(int argc, char ** argv) {
         llama_memory_clear(llama_get_memory(ctx), true);
         llama_batch batch = llama_batch_get_one(toks.data(), (int32_t) toks.size());
         if (llama_decode(ctx, batch) != 0) {
-            fprintf(stderr, "dump_residuals: llama_decode failed for prompt %zu\n", pi);
+            fprintf(stderr, "dump_residuals: llama_decode failed for prompt %zu, skipped\n", pi);
+            n_skipped++;
             continue;
+        }
+
+        if (store.n_embd == 0) {
+            fprintf(stderr, "dump_residuals: no l_out-<il> residual captured for layers %d-%d; "
+                            "this model's graph does not expose them\n",
+                    args.layer_lo, args.layer_hi);
+            llama_free(ctx);
+            llama_model_free(model);
+            llama_backend_free();
+            return 1;
         }
 
         // assemble (n_layers, n_tokens, n_embd); each layer must cover all
@@ -371,20 +437,33 @@ int main(int argc, char ** argv) {
             std::copy(it->second.begin(), it->second.end(),
                       arr.begin() + (size_t) store.layer_row[il] * n_tok * store.n_embd);
         }
-        if (!ok) continue;
+        if (!ok) {
+            n_skipped++;
+            continue;
+        }
 
         char fname[512];
         snprintf(fname, sizeof(fname), "%s/prompt_%03zu.npy", args.out_dir.c_str(), pi);
         if (!write_npy(fname, arr, { n_layers, n_tok, store.n_embd })) {
             fprintf(stderr, "dump_residuals: failed to write %s\n", fname);
+            llama_free(ctx);
+            llama_model_free(model);
+            llama_backend_free();
             return 1;
         }
+        n_written++;
         fprintf(stderr, "dump_residuals: prompt %zu -> %s (%d layers x %" PRId64 " tokens x %" PRId64 ")\n",
                 pi, fname, n_layers, n_tok, store.n_embd);
+    }
+
+    fprintf(stderr, "dump_residuals: wrote %zu/%zu prompts to %s\n",
+            n_written, prompts.size(), args.out_dir.c_str());
+    if (n_skipped > 0) {
+        fprintf(stderr, "dump_residuals: %zu prompt(s) skipped — no .npy written for them\n", n_skipped);
     }
 
     llama_free(ctx);
     llama_model_free(model);
     llama_backend_free();
-    return 0;
+    return n_skipped == 0 ? 0 : 1;
 }
