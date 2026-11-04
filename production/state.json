@@ -2437,7 +2437,7 @@
       "handoff": "production/handoffs/P2.21.md"
     },
     "P2.18": {
-      "status": "in_review",
+      "status": "done",
       "agent": "deepseek",
       "round": 2,
       "reviews": [
@@ -2467,10 +2467,20 @@
           "report": "production/reviews/P2.18-content-r2.md",
           "ts": "2026-11-04T12:08:10+02:00",
           "declared": "deepseek"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P2.18-design-r2.md",
+          "ts": "2026-11-04T12:20:51+02:00",
+          "declared": "deepseek"
         }
       ],
       "started": "2026-11-04T10:56:49+02:00",
-      "handoff": "production/handoffs/P2.18.md"
+      "handoff": "production/handoffs/P2.18.md",
+      "finished": "2026-11-04T12:20:57+02:00"
     }
   },
   "history": [
@@ -6054,6 +6064,18 @@
       "ts": "2026-11-04T12:08:57+02:00",
       "event": "in_review->done",
       "ref": "P2.20",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T12:20:51+02:00",
+      "event": "review:design:approved",
+      "ref": "P2.18",
+      "note": "production/reviews/P2.18-design-r2.md"
+    },
+    {
+      "ts": "2026-11-04T12:20:57+02:00",
+      "event": "in_review->done",
+      "ref": "P2.18",
       "note": ""
     }
   ]
