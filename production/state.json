@@ -3204,6 +3204,24 @@
           "report": "production/reviews/P3.17-safety-r1.md",
           "ts": "2026-11-04T19:48:03+02:00",
           "declared": "deepseek"
+        },
+        {
+          "kind": "content",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "gemini-flash",
+          "report": "production/reviews/P3.17-content-r2.md",
+          "ts": "2026-11-04T21:34:37+02:00",
+          "declared": "gemini-flash"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "gemini-flash",
+          "report": "production/reviews/P3.17-design-r2.md",
+          "ts": "2026-11-04T21:34:37+02:00",
+          "declared": "gemini-flash"
         }
       ],
       "started": "2026-11-04T19:03:52+02:00",
@@ -7921,6 +7939,18 @@
       "event": "in_review->done",
       "ref": "P3.15",
       "note": ""
+    },
+    {
+      "ts": "2026-11-04T21:34:37+02:00",
+      "event": "review:content:approved",
+      "ref": "P3.17",
+      "note": "production/reviews/P3.17-content-r2.md"
+    },
+    {
+      "ts": "2026-11-04T21:34:37+02:00",
+      "event": "review:design:approved",
+      "ref": "P3.17",
+      "note": "production/reviews/P3.17-design-r2.md"
     }
   ]
 }
