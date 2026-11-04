@@ -182,6 +182,15 @@ word repetition / wrong name (3+), zalgo bursts & redaction (4+), text bleed & r
 `user://saves/slot_N.json` (state, memories, log), `user://.leila/shadow.json` (persists across New Game, docs/05 M08),
 `user://letters/`, `user://diary/`. Settings → "Reset Everything" deletes all of `user://` except settings.
 
+The shadow file's full contents, for privacy review (enforced by `ShadowStore`, tested in
+`game/tests/ShadowSaveTest.gd`): `first_name` — the first name ever typed at New Game (docs/08 §1.5);
+`names` — every distinct name across runs; `runs` — the name of each run ended by New Game (cap 8);
+`memories` — up to `data/memory.json → shadow.limit` (3) facts from the most recent run that reached the
+meta gate (stage 3+); a run that ended earlier keeps the previous set.
+It never holds logs, transcripts, deleted drafts, the OS username, telemetry or device data.
+The write point is `SaveSystem.begin_new_game`, called by the New Game scene before it resets the
+run; "Reset Everything" (`Settings.reset_everything` → `SaveSystem.wipe_everything`) deletes it.
+
 ## 4. Threading and performance
 
 | Item | Budget (RTX 4050 6 GB) |

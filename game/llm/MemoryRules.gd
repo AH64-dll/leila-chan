@@ -272,6 +272,9 @@ const DOCS_TABLE := {
 			"ten": 10,
 		},
 	},
+	## docs/05 M08 "a few memories": how many of a run's facts the shadow save
+	## carries into the next run (P3.12; read by ShadowStore).
+	"shadow": {"limit": 3},
 }
 
 const MAX_STAGE := 5
@@ -336,6 +339,12 @@ static func capacity() -> int:
 ## docs/08 §1 "≤ 8 facts": PromptBuilder's MEMORY_LIMIT, pinned by a test.
 static func prompt_limit() -> int:
 	return int(_table()["prompt_limit"])
+
+
+## docs/05 M08 "a few memories": the cap on facts sealed into the shadow save
+## at New Game (P3.12).
+static func shadow_memory_limit() -> int:
+	return int((_table()["shadow"] as Dictionary)["limit"])
 
 
 ## TurnSchema.MEMORY_MAX_LENGTH; a fact never exceeds the schema's own limit.

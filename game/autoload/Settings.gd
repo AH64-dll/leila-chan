@@ -94,6 +94,19 @@ func _ready() -> void:
 
 ## ── Photosensitive (P2.15) ────────────────────────────────────────────────
 
+## Settings → "Reset Everything" (docs/07 §3.5, docs/05 M08): deletes ALL of
+## `user://` — save slots, the shadow save, letters, diary, debug transcripts —
+## EXCEPT this file (a wiped game still honours the photosensitive
+## accommodation it already saved). SaveSystem owns the recursive delete and
+## the seam paths; this is the screen's entry point. Returns its result
+## {ok, removed, errors}; the live flags are NOT cleared — the settings file
+## is the one thing kept, on purpose.
+func reset_everything() -> Dictionary:
+	var saves := get_node_or_null("/root/SaveSystem")
+	if saves == null or not saves.has_method("wipe_everything"):
+		return {"ok": false, "removed": 0, "errors": ["SaveSystem unavailable"]}
+	return saves.wipe_everything([settings_path])
+
 
 ## The player-facing switch: the flag lands on the FX host immediately (a
 ## running strobe is cut mid-cue, not at the next trigger) and is written to
