@@ -3413,10 +3413,29 @@
       "finished": "2026-11-04T21:50:43+02:00"
     },
     "P3.04": {
-      "status": "in_review",
+      "status": "changes_requested",
       "agent": "swe2",
       "round": 1,
-      "reviews": [],
+      "reviews": [
+        {
+          "kind": "code",
+          "verdict": "changes",
+          "round": 1,
+          "reviewer": "swe-2-flash",
+          "report": "production/reviews/P3.04-code-r1.md",
+          "ts": "2026-11-05T01:26:02+02:00",
+          "declared": "swe-2-flash"
+        },
+        {
+          "kind": "design",
+          "verdict": "changes",
+          "round": 1,
+          "reviewer": "swe-2-flash",
+          "report": "production/reviews/P3.04-design-r1.md",
+          "ts": "2026-11-05T01:26:03+02:00",
+          "declared": "swe-2-flash"
+        }
+      ],
       "started": "2026-11-05T01:18:04+02:00",
       "handoff": "production/handoffs/P3.04.md"
     }
@@ -8323,6 +8342,24 @@
       "event": "in_progress->in_review",
       "ref": "P3.10",
       "note": ""
+    },
+    {
+      "ts": "2026-11-05T01:26:02+02:00",
+      "event": "review:code:changes",
+      "ref": "P3.04",
+      "note": "production/reviews/P3.04-code-r1.md"
+    },
+    {
+      "ts": "2026-11-05T01:26:02+02:00",
+      "event": "in_review->changes_requested",
+      "ref": "P3.04",
+      "note": "by code review"
+    },
+    {
+      "ts": "2026-11-05T01:26:03+02:00",
+      "event": "review:design:changes",
+      "ref": "P3.04",
+      "note": "production/reviews/P3.04-design-r1.md"
     }
   ]
 }
