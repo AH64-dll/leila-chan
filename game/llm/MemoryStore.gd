@@ -19,6 +19,10 @@ extends RefCounted
 ## save carries `to_dict()`, `seed` and `state` included.
 
 const ENTRY_TEXT := "text"
+## The player message the fact was grounded in: docs/01 §5 T13 quotes that
+## message exactly, so the paraphrase she stored is never presented as the
+## player's own words.
+const ENTRY_SOURCE := "source"
 const ENTRY_IMPORTANCE := "importance"
 const ENTRY_QUOTES := "quotes"
 
@@ -91,6 +95,7 @@ func consider(candidate: String, player_inputs: Array) -> Dictionary:
 		. append(
 			{
 				ENTRY_TEXT: trimmed,
+				ENTRY_SOURCE: MemoryRules.grounding_input(trimmed, window),
 				ENTRY_IMPORTANCE: MemoryRules.new_importance(),
 				ENTRY_QUOTES: 0,
 			}
@@ -165,6 +170,23 @@ func facts() -> Array[String]:
 	var out: Array[String] = []
 	for entry: Dictionary in entries:
 		out.append(String(entry[ENTRY_TEXT]))
+	return out
+
+
+## Each true fact with the player message it was grounded in (T13's quote).
+## Older saves carry no source; the entry then reports an empty one.
+func facts_with_sources() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for entry: Dictionary in entries:
+		(
+			out
+			. append(
+				{
+					"text": String(entry[ENTRY_TEXT]),
+					"source": String(entry.get(ENTRY_SOURCE, "")),
+				}
+			)
+		)
 	return out
 
 
@@ -248,11 +270,16 @@ func from_dict(data: Dictionary) -> void:
 			ENTRY_IMPORTANCE, MemoryRules.new_importance()
 		)
 		var quotes: Variant = (row as Dictionary).get(ENTRY_QUOTES, 0)
+		var raw_source: Variant = (row as Dictionary).get(ENTRY_SOURCE, "")
+		var source := ""
+		if raw_source is String or raw_source is StringName:
+			source = String(raw_source).strip_edges()
 		(
 			entries
 			. append(
 				{
 					ENTRY_TEXT: text,
+					ENTRY_SOURCE: source,
 					ENTRY_IMPORTANCE: maxf(0.0, _save_number(importance)),
 					ENTRY_QUOTES: maxi(0, _save_int(quotes, 0)),
 				}

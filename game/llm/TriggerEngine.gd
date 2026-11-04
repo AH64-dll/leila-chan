@@ -31,6 +31,11 @@ extends RefCounted
 ## the line with each firing and stops after max_steps, while `stage` grows them
 ## with the stage since stage_min (T08 "escalates with stage") and keeps
 ## repeating, cooldown-gated — the stage, not the repeat count, is the dose.
+##
+## Guards: a `guard` block holds conditions that must ALSO hold but that are not
+## detectors, so docs/01 §5's detection column stays honest (T03 "before Day 3").
+## A row with no detector at all is a guard row — the game's own check is its
+## evidence, so it fires at full strength (T13, T15; P2.10 DCR-1/DCR-2).
 
 const TABLE_PATH := "res://data/triggers.json"
 const VERSION := 1
@@ -38,15 +43,16 @@ const MAX_STAGE := 5
 ## Fired results kept for the F3 overlay and the transcript; state, not a log.
 const MAX_HISTORY := 16
 const BEHAVIORS: Array[String] = ["once", "repeatable", "escalating"]
-const DETECTORS: Array[String] = ["keyword", "model", "event", "clock"]
 ## docs/01 §5 "C clock / OS": every condition a clock detector may carry.
 const CLOCK_KEYS: Array[String] = [
 	"day_gte", "day_lte", "day_eq", "turn_gte", "hour_from", "hour_to", "absence_hours_gte"
 ]
 const CLOCK_FLAG_KEYS: Array[String] = ["flag_set", "flag_absent"]
-## Effect groups in row order; `flags` is the only one that is not scaled by
-## strength (a marker is either set or not).
-const EFFECT_GROUPS: Array[String] = ["meters", "profile", "path", "flags"]
+## The firing label -> strength-table key (docs/02 §1.2). A label missing here is
+## full strength, which is what a guard firing gets on purpose.
+const AGREEMENT_STRENGTH_KEYS := {
+	"model": "model", "both": "agreement", "keyword": "keyword", "event": "engine", "clock": "clock"
+}
 
 ## docs/02 §1.2 as code: the detector weights, the defaults every row falls back
 ## to, and the engine's own identity. The data file is authoritative; this is
@@ -65,6 +71,9 @@ const DOCS_TABLE := {
 }
 
 static var _file_cache: Dictionary = {}
+
+## A row's `observe` writes, collected on its evidence: no count, no cooldown, no line.
+var observed_flags: Dictionary = {}
 
 var _table: Dictionary = {}
 var _state: Dictionary = {}
@@ -99,6 +108,7 @@ func use_table(table_data: Dictionary) -> void:
 	_fired.clear()
 	_turn = -1
 	_path_scores.clear()
+	observed_flags.clear()
 
 
 ## The installed table, lazily the shipped one. READ-ONLY: copy before editing.
@@ -117,6 +127,7 @@ func reset() -> void:
 	_turn = -1
 	_history.clear()
 	_path_scores.clear()
+	observed_flags.clear()
 
 
 ## docs/01 §5 detection at submit (docs/02 §4 step 0): K against the player's
@@ -131,6 +142,11 @@ func begin_turn(ctx: Dictionary) -> Array[Dictionary]:
 		if _fired.has(id):
 			continue
 		var rec: Dictionary = rows[id]
+		if _guard_only(rec):
+			# No detector: the game's own check is the evidence (T13, T15).
+			if _eligible(id, rec, ctx):
+				fired.append(_fire(id, rec, ctx, "guard"))
+			continue
 		# Merge, never overwrite: an engine event may already have matched this
 		# row for this same turn (handle_event runs before the submit).
 		var sources: Dictionary = (_matched.get(id, {}) as Dictionary).duplicate()
@@ -140,7 +156,9 @@ func begin_turn(ctx: Dictionary) -> Array[Dictionary]:
 		if detect.has("clock"):
 			sources["clock"] = _clock_matches(detect["clock"], ctx)
 		_matched[id] = sources
-		if _needs_model(rec) and String(rec["requires"]) == "all":
+		if _any_source(sources):
+			_observe(rec, ctx)
+		if (rec["detect"] as Dictionary).has("model") and String(rec["requires"]) == "all":
 			continue  # agreement is decided at close_turn
 		var satisfied := (
 			_all_sources(rec, sources) if String(rec["requires"]) == "all" else _any_source(sources)
@@ -174,7 +192,8 @@ func handle_event(ctx: Dictionary) -> Array[Dictionary]:
 		var sources: Dictionary = (_matched.get(id, {}) as Dictionary).duplicate()
 		sources["event"] = true
 		_matched[id] = sources
-		if _needs_model(rec) and String(rec["requires"]) == "all":
+		_observe(rec, ctx)  # the event is this row's evidence by definition
+		if (rec["detect"] as Dictionary).has("model") and String(rec["requires"]) == "all":
 			continue  # agreement is decided at close_turn
 		if String(rec["requires"]) == "all" and not _all_sources(rec, sources):
 			continue  # the event matched, a declared detector has not (yet)
@@ -192,15 +211,22 @@ func close_turn(ctx: Dictionary) -> Array[Dictionary]:
 	_turn_begin(ctx)
 	var fired: Array[Dictionary] = []
 	var read := str(ctx.get("read", ""))
-	if read.is_empty():
-		return fired
 	var rows := _catalogue()
 	for id: String in rows:
 		if _fired.has(id):
 			continue
 		var rec: Dictionary = rows[id]
+		if _guard_only(rec):
+			# Guard rows need the closed turn (T15's counter bump lands in
+			# step 7), and they do not need a `read` label to decide.
+			if _eligible(id, rec, ctx):
+				fired.append(_fire(id, rec, ctx, "guard"))
+			continue
+		if read.is_empty():
+			continue
 		if not ((rec["detect"] as Dictionary).get("model", []) as Array).has(read):
 			continue
+		_observe(rec, ctx)  # the model named it; that is this row's evidence
 		if String(rec["requires"]) == "all":
 			if not _all_sources(rec, _matched.get(id, {})) or not _eligible(id, rec, ctx):
 				continue
@@ -232,6 +258,31 @@ func report() -> Dictionary:
 ## here, so the trigger contribution stays attributable.
 func path_scores() -> Dictionary:
 	return _path_scores.duplicate()
+
+
+## docs/05 §1.1 M01: one row's stage gate from the data (−1 when unknown). The
+## close intercept reads T10's gate here, so the row stays the only copy.
+func stage_min_of(id: String) -> int:
+	var rows := _catalogue()
+	if not rows.has(id):
+		return -1
+	return int((rows[id] as Dictionary)["stage_min"])
+
+
+## Drains the batch, so a second entry point cannot write a marker twice.
+func take_observed_flags() -> Dictionary:
+	var out := observed_flags
+	observed_flags = {}
+	return out
+
+
+func _observe(rec: Dictionary, ctx: Dictionary) -> void:
+	var flags: Dictionary = rec["observe"]
+	var known: Variant = ctx.get("flags")
+	for name: Variant in flags:
+		observed_flags[str(name)] = flags[name]
+		if known is Dictionary:
+			(known as Dictionary)[str(name)] = flags[name]  # deliberate: T03 → T04
 
 
 ## P2.20's save seam: firings and cooldowns survive a reload, or a "once"
@@ -319,6 +370,8 @@ func _eligible(id: String, rec: Dictionary, ctx: Dictionary) -> bool:
 		var cooldown := int(rec["cooldown_turns"])
 		if int(ctx.get("turn", 0)) - int(state.get("last_turn", 0)) < cooldown:
 			return false
+	if not _guard_matches(rec, ctx):
+		return false
 	return true
 
 
@@ -334,7 +387,7 @@ func _fire(id: String, rec: Dictionary, ctx: Dictionary, agreement: String) -> D
 		"strength": strength,
 		"agreement": agreement,
 		"effects": effects,
-		"line": _line_for(rec, step, ctx),
+		"line": _line_for(rec, step, ctx, _guard_values(rec, ctx)),
 	}
 	_state[id] = {"count": step, "last_turn": int(ctx.get("turn", 0))}
 	_fired[id] = true
@@ -347,21 +400,16 @@ func _fire(id: String, rec: Dictionary, ctx: Dictionary, agreement: String) -> D
 
 ## docs/02 §1.2's agreement rule as data: the detector that decided the firing
 ## picks the weight. "both" is the agreement case; "model" is the model-only
-## case and nothing else.
+## case and nothing else. A "guard" firing is the game's own deterministic
+## check (T13, T15), so docs/02 §1.2's halving does not apply to it.
 func _base_strength(agreement: String) -> float:
+	if agreement == "guard":
+		return 1.0
 	var strength: Dictionary = table()["strength"]
-	match agreement:
-		"model":
-			return float(strength["model"])
-		"both":
-			return float(strength["agreement"])
-		"keyword":
-			return float(strength["keyword"])
-		"event":
-			return float(strength["engine"])
-		"clock":
-			return float(strength["clock"])
-	return 1.0
+	var key: String = str(AGREEMENT_STRENGTH_KEYS.get(agreement, ""))
+	if key.is_empty() or not strength.has(key):
+		return 1.0
+	return float(strength[key])
 
 
 ## docs/01 §5 "escalating": the effect grows with each escalation step (the
@@ -420,8 +468,9 @@ func _add_path(effects: Dictionary) -> void:
 
 
 ## docs/08 §6 line style. A row may carry one template or an array indexed by
-## escalation step (the last line repeats past the array's end).
-func _line_for(rec: Dictionary, step: int, ctx: Dictionary) -> String:
+## escalation step (the last line repeats past the array's end). `details`
+## carries the guard's own values, so a T13 line can quote the fact she caught.
+func _line_for(rec: Dictionary, step: int, ctx: Dictionary, details := {}) -> String:
 	var raw: Variant = rec.get("line", "")
 	if raw is Array:
 		var lines: Array = raw
@@ -430,16 +479,18 @@ func _line_for(rec: Dictionary, step: int, ctx: Dictionary) -> String:
 		raw = lines[mini(_escalation_step(rec, step, ctx), lines.size()) - 1]
 	if not raw is String:
 		return ""
-	return _render(raw, step, ctx)
+	return _render(raw, step, ctx, details)
 
 
-static func _render(template: String, step: int, ctx: Dictionary) -> String:
+static func _render(template: String, step: int, ctx: Dictionary, details := {}) -> String:
 	var line := template
 	line = line.replace("{count}", str(step))
 	line = line.replace("{ordinal}", _ordinal(step))
 	line = line.replace("{stage}", str(int(ctx.get("stage", 0))))
 	line = line.replace("{day}", str(int(ctx.get("day", 1))))
 	line = line.replace("{turn}", str(int(ctx.get("turn", 0))))
+	if details is Dictionary:
+		line = line.replace("{fact}", str((details as Dictionary).get("fact", "")))
 	return line.strip_edges()
 
 
@@ -535,8 +586,57 @@ static func _hour_in_window(hour: int, from: int, to: int) -> bool:
 	return hour >= from or hour < to
 
 
-func _needs_model(rec: Dictionary) -> bool:
-	return (rec["detect"] as Dictionary).has("model")
+## A row with no detector at all. Its evidence is a guard the game evaluates
+## itself, so it fires at full strength and needs no `read` label (T13, T15).
+func _guard_only(rec: Dictionary) -> bool:
+	return (rec["detect"] as Dictionary).is_empty()
+
+
+## Every declared guard condition must hold; a row without a guard always
+## passes. Guards never contribute to the detection letters in docs/01 §5.
+func _guard_matches(rec: Dictionary, ctx: Dictionary) -> bool:
+	var guard: Dictionary = rec["guard"]
+	if guard.is_empty():
+		return true
+	if guard.has("clock") and not _clock_matches(guard["clock"], ctx):
+		return false
+	var floors: Dictionary = guard.get("counter_gte", {})
+	if not floors.is_empty():
+		var raw_delta: Variant = ctx.get("profile_delta")
+		var delta: Dictionary = raw_delta if raw_delta is Dictionary else {}
+		for name: Variant in floors:
+			if int(delta.get(str(name), 0)) < int(floors[name]):
+				return false
+	if (
+		guard.has("contradicts_memory")
+		and _contradiction(ctx, guard["contradicts_memory"]).is_empty()
+	):
+		return false
+	return true
+
+
+## docs/01 §5 T13 "contradict a remembered fact": the message denies something
+## the store still holds. `memory_facts` is injected as {text, source} entries —
+## the *true* facts (stage-3 corruption is what she reads, not what she knows)
+## and the player message each was grounded in — so the engine stays pure.
+func _contradiction(ctx: Dictionary, spec: Dictionary) -> Dictionary:
+	var facts: Variant = ctx.get("memory_facts")
+	if not facts is Array:
+		return {}
+	return MemoryRules.contradiction(str(ctx.get("text", "")), facts, spec)
+
+
+## The values a guard contributes to the line template ({fact}).
+func _guard_values(rec: Dictionary, ctx: Dictionary) -> Dictionary:
+	var guard: Dictionary = rec["guard"]
+	if not guard.has("contradicts_memory"):
+		return {}
+	var hit := _contradiction(ctx, guard["contradicts_memory"])
+	if hit.is_empty():
+		return {}
+	# docs/01 §5 T13 "your earlier message exactly": the quote is the player's line.
+	var quoted := String(hit.get("source", ""))
+	return {"fact": quoted if not quoted.is_empty() else String(hit.get("fact", ""))}
 
 
 ## `requires: "all"`: every declared non-model detector must have matched this
@@ -565,12 +665,9 @@ func _any_source(sources: Variant) -> bool:
 
 
 func _sources_label(sources: Dictionary) -> String:
-	if bool(sources.get("keyword", false)):
-		return "keyword"
-	if bool(sources.get("event", false)):
-		return "event"
-	if bool(sources.get("clock", false)):
-		return "clock"
+	for label: String in ["keyword", "event", "clock"]:
+		if bool(sources.get(label, false)):
+			return label
 	return ""
 
 
@@ -620,7 +717,8 @@ static func _parse_row(raw: Variant, defaults: Dictionary) -> Dictionary:
 		return {}
 	var row: Dictionary = raw
 	var detect := _parse_detect(row.get("detect"))
-	if detect.is_empty():
+	var guard := _parse_guard(row.get("guard"))
+	if detect.is_empty() and guard.is_empty():
 		return {}
 	var behavior := str(row.get("behavior", defaults["behavior"]))
 	if not BEHAVIORS.has(behavior):
@@ -657,12 +755,14 @@ static func _parse_row(raw: Variant, defaults: Dictionary) -> Dictionary:
 	return {
 		"name": name,
 		"detect": detect,
+		"guard": guard,
 		"requires": requires,
 		"behavior": behavior,
 		"escalate": escalate,
 		"cooldown_turns": cooldown,
 		"stage_min": stage_min,
 		"stage_max": stage_max,
+		"observe": _parse_effects({"flags": row.get("observe")})["flags"],
 		"effects": _parse_effects(row.get("effects")),
 		"line": _parse_line(row.get("line")),
 	}
@@ -727,6 +827,46 @@ static func _parse_clock(raw: Variant) -> Dictionary:
 ## unknown value heals to the default rather than skipping the row.
 static func _parse_axis(raw: Variant) -> String:
 	return "stage" if str(raw).strip_edges() == "stage" else "step"
+
+
+## A row's guard: conditions that must also hold but that are NOT detectors.
+static func _parse_guard(raw: Variant) -> Dictionary:
+	var out := {}
+	if not raw is Dictionary:
+		return out
+	var spec: Dictionary = raw
+	var clock := _parse_clock(spec)
+	if not clock.is_empty():
+		out["clock"] = clock
+	var counters: Variant = spec.get("counter_gte")
+	if counters is Dictionary:
+		var floors := {}
+		for name: Variant in counters:
+			var key := str(name).strip_edges()
+			var value := _int(counters[name], 0)
+			if not key.is_empty() and value > 0:
+				floors[key] = value
+		if not floors.is_empty():
+			out["counter_gte"] = floors
+	var contradiction: Variant = spec.get("contradicts_memory")
+	if contradiction is Dictionary:
+		out["contradicts_memory"] = _parse_contradiction(contradiction)
+	elif contradiction is bool and bool(contradiction):
+		out["contradicts_memory"] = _parse_contradiction({})
+	return out
+
+
+## docs/01 §5 T13: the cues and the shared-word floor are data; omitted keys
+## keep MemoryRules' defaults.
+static func _parse_contradiction(raw: Dictionary) -> Dictionary:
+	var out := {}
+	var negations := _parse_strings(raw.get("negations"))
+	if not negations.is_empty():
+		out["negations"] = negations
+	var shared := _int(raw.get("min_shared_words"), 0)
+	if shared > 0:
+		out["min_shared_words"] = shared
+	return out
 
 
 static func _parse_effects(raw: Variant) -> Dictionary:

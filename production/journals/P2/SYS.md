@@ -283,6 +283,27 @@
 - Gate green: 634 tests / 53 suites. `FXHostTest.test_twitch_fires_chromatic_split` flakes under machine
   load (shader-uniform sample after a wall-clock wait); it passes alone and is untouched by save work.
 
+## P2.10 — triggers T01–T15 + the M01 close intercept (round 1, 2026-11-04, agent: commandcode)
+
+- Built the 15 rows in `game/data/triggers.json` (T01–T07 and T13–T15 new; effects added to T08–T12) plus two data-driven engine extensions: a `guard` block for conditions that must hold but are **not** detection letters (T03's "before Day 3"), and **guard-only rows** whose evidence is the game's own check. T13 = `MemoryRules.contradiction()` against the *true* memory facts; T15 = this turn's `ignored_questions` bump (Triggers snapshots `GameState.profile` at begin_turn, injects the delta at close).
+- Convention: a guard firing is full strength — docs/02 §1.2's halving is about *disagreement* between keyword and model evidence, and a guard row has no model claim to halve. `_base_strength()` now maps agreement→strength-key through a const table (gdlint caps 6 returns per function).
+- Convention: line templates may use `{fact}`, and the guard injects the value; E rows still leave `line` empty because Telemetry speaks those.
+- The close intercept lives in `MetaDirector` (the docs/05 owner) and *takes over* `auto_accept_quit`, but only after connecting its handler. Gate from `Triggers.stage_min_of("T10")`, offer sentence from `data/stage_gates.json` → `gates.opportunities.refuse_exit` (via `TurnSchema.opportunity_line`), quit through an injected Callable so a scripted close never ends a test run.
+- Gotcha: handler ordering on `root.close_requested` does not matter — the intercept decides from its own once-per-session flag, not from T10's count, so Telemetry's listener can run before or after it.
+- Gotcha: `GameState.set_meter(&"instability", 55)` queues the stage-transition EVENT line, so a test counting `pending_events` must count its own line (`count(line)`), never the queue size.
+- Gotcha: `TriggerEngine.gd` sits at 999/1000 gdlint lines — every added line needs a deletion; the new guard docs are already compressed, so split the class (e.g. a `TriggerTable` loader) before adding more vocabulary.
+- Two merged tests changed with the data, by design: `TriggersTest.test_to_dict_from_dict_round_trip` asserted "nothing fires" on "I love you" (T03 now does, so it asserts T68 is absent) and `TelemetryTest` asserted `auto_accept_quit` is true (P2.10 takes the quit path; M01's own tests are in `TriggersT09T15Test`).
+
+## P2.10 — triggers T01–T15 + the M01 close intercept (round 2, 2026-11-04, agent: commandcode)
+
+- Rework is data + one small vocabulary item, not a redesign: T02's farewell is `see you (later|soon|tomorrow|tonight|around)`, `grace` left T01's name list, and T13 needs two content words **inside the clause a denial cue governs** (`MemoryRules._negated_clauses()`), with statement-denial cues only — "I don't like that music" is an opinion, not a lie.
+- New row field `observe` (flat `{flag: value}`): the game records it the moment the row's own evidence matches, before guard/caps/cooldown. That is how T03's confession flag reaches T04 on Day 3–9 while T03's `day_lte: 2` reaction stays. Gotcha: `_observe()` must also write the *ctx* flags copy — rows run in catalogue order, so T03's write is what makes T04's `flag_absent` stand down in the same `begin_turn` (otherwise a Day-12 confession still ships "never said it").
+- DES-2: a memory entry now carries `source`, the player message `MemoryRules.grounding_input()` grounded it in; T13's `{fact}` renders that, never her paraphrase. `MemoryStore` entries gained a fourth key, `from_dict` tolerates old saves without it, and `SaveSystemTest`'s round trip passes unchanged.
+- DES-4: `MetaDirector.offers()` re-queues the OPPORTUNITY sentence while the offer is open — the event queue drains once per submit, and an enum without its `why` is docs/02 §2.4 violated. Dedupe is `GameState.queue_event`'s.
+- DES-1/DES-3 went the DCR way and are applied to docs/01 §5 (T01's clause, T09/T12's numbers) — the design reviewer explicitly allowed either implementing or filing the DCR; "until answered" has no resolution signal in the design, and a mention and an answer are the same keyword set.
+- Gotcha: `TriggerEngine.gd` is at exactly 1000/1000 gdlint lines again. `observe` was paid for by deleting `GUARD_KEYS`, `GUARD_CLOCK_KEYS`, `DETECTORS`, `EFFECT_GROUPS` and inlining `_needs_model()`. Split the loader/parser into a `TriggerTable` before the next vocabulary addition — no more pay-as-you-go.
+- Test convention worth keeping: every false positive a reviewer probes becomes a *negative* case in the same suite that owns the row (`test_t01_another_girl_name`, `test_t02_goodbye_begs_you_to_stay`, `test_t13_needs_a_denial_and_a_shared_fact`), plus a re-read of the data file in `tests/test_triggers.py` so the contract holds without a Godot build.
+
 ## P2.19 — day/night loop + night screen (round 1, 2026-11-04, agent: commandcode)
 
 - Built `llm/NightLoop.gd` (the night as a four-step ordered report: meters → stage → path → event),
@@ -325,3 +346,10 @@
   `_show_morning`. N12 is "nothing", and a "Day 2 / Night" frame is not nothing.
 - Interrupt injection (P2.18's handoff) and the doc's "or trigger" scene end are deferred to
   P5.02/P5.06, named in the handoff follow-ups. Do not run an interrupt as a day in the meantime.
+
+## P2.10 — triggers T01–T15 + the M01 close intercept (round 3, 2026-11-04, agent: commandcode)
+
+- CODE-9/DES-5: `MetaDirector._close_offer()` erases `_opportunity_line()` from `GameState.pending_events`. `offers()` queues the sentence for the *next* submit (the queue drains before `offers()` runs), so nothing was removing the copy queued on the turn the model accepted — the turn after a refusal said "you may set action to refuse_exit" with an enum of `["none"]`. `reset_session()` goes through the same door, so a new session cannot inherit it either.
+- Gotcha for the suite: the old case drained at both `take_pending_events()` calls before consuming, so its `not_contains` ran against an empty queue and could never fail. The case now consumes with the line still queued, and separately re-holds, then resets — both assertions fail without the erase (l. 274 and 281), which is the only evidence that a test pins a fix.
+- CODE-10: `Triggers._context()`'s flags comment said a fire must not change what a later row's clock detector sees — the opposite of the `observe` contract it now documents. It says the copy isolates *fired effects*, `observe` is the one deliberate same-turn write, and catalogue order (T03 → T04) is what stands T04 down inside one `begin_turn()`. `TriggerEngine._observe()`'s inline note names that order; the file stays at 1000/1000 gdlint lines.
+- Gate green: 791 cases / 65 suites (the merged main added P2.19/P2.25/P2.26 suites), 496 pytest. No data or docs change this round: docs/05 §2's "only on turns with an offer" was already the contract, the code was the thing that disagreed.

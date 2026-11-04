@@ -382,9 +382,10 @@ func note_idle_seconds(seconds: float) -> bool:
 
 
 ## docs/05 M01 / docs/01 T10: the player asked to close the window. Recorded
-## only — auto_accept_quit is never touched, so closing still works in one
-## press (docs/05 §0). The count lets M01's "intercepted once per session"
-## rule and M04's quit memory read the same fact.
+## only — MetaDirector owns the intercept and the quit path (it clears
+## `auto_accept_quit` only after wiring its own handler, docs/05 §0 rule 1), and
+## this node never touches the tree's close behaviour. The count lets M01's
+## "intercepted once per session" rule and M04's quit memory read the same fact.
 func note_close_requested() -> void:
 	_close_requests += 1
 	_record(CLOSE_KIND, {"count": _close_requests})

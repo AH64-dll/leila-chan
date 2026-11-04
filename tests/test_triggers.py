@@ -1,4 +1,4 @@
-"""P2.08 — pin the docs/01 §5 trigger catalogue the engine reads.
+"""P2.08 + P2.10 — pin the docs/01 §5 trigger catalogue the engine reads.
 
 The GDScript suite (game/tests/TriggersTest.gd) proves the engine's behaviour;
 this file guards the *table* a reviewer reads without a Godot build. Three
@@ -19,6 +19,7 @@ TRIGGERS_FILE = ROOT / "game" / "data" / "triggers.json"
 TRIGGERS = json.loads(TRIGGERS_FILE.read_text(encoding="utf-8"))
 TELEMETRY = json.loads((ROOT / "game" / "data" / "telemetry.json").read_text(encoding="utf-8"))
 PROFILE_MAP = json.loads((ROOT / "game" / "data" / "profile_map.json").read_text(encoding="utf-8"))
+PATHS_DATA = json.loads((ROOT / "game" / "data" / "paths.json").read_text(encoding="utf-8"))
 DESIGN = (ROOT / "docs" / "01_GAME_DESIGN.md").read_text(encoding="utf-8")
 DIRECTOR = (ROOT / "docs" / "02_DIRECTOR_PROTOCOL.md").read_text(encoding="utf-8")
 
@@ -40,13 +41,54 @@ PROFILE_COUNTERS = {
     "control",
     "flattery",
 }
+# docs/01 §4: the six path formulas read three counters of their own beside the
+# twelve §2 tags. data/paths.json is the only list — GameState's
+# `Paths.counters()` reads the same terms, so P2.12's seam and this contract
+# cannot drift — so the set is derived instead of restated.
+FORMULA_COUNTERS = {
+    term["counter"]
+    for terms in PATHS_DATA["scores"].values()
+    for term in terms
+    if "counter" in term
+}
+PROFILE_COUNTERS = PROFILE_COUNTERS | FORMULA_COUNTERS
 # TriggerEngine's vocabulary.
 BEHAVIORS = {"once", "repeatable", "escalating"}
 REQUIRES = {"any", "all"}
 ESCALATION_AXES = {"step", "stage"}
 DETECTORS = {"keyword", "model", "event", "clock"}
+# TriggerEngine's guard vocabulary (P2.10): a guard holds a condition that must
+# also be true but that is not a detection letter (see the row-field contract).
+GUARD_CLOCK_KEYS = {
+    "day_gte",
+    "day_lte",
+    "day_eq",
+    "turn_gte",
+    "hour_from",
+    "hour_to",
+    "absence_hours_gte",
+    "flag_set",
+    "flag_absent",
+}
+GUARD_KEYS = GUARD_CLOCK_KEYS | {"counter_gte", "contradicts_memory"}
 DETECTOR_LETTERS = {"keyword": "K", "model": "M", "event": "E", "clock": "C"}
-LINE_TOKENS = {"count", "ordinal", "stage", "day", "turn"}
+LINE_TOKENS = {"count", "ordinal", "stage", "day", "turn", "fact"}
+# The row fields the loader reads. A misspelt field would be dropped silently,
+# so an unknown key is a contract failure, not data (P2.10 r2 CODE-5).
+ROW_KEYS = {
+    "name",
+    "detect",
+    "observe",
+    "guard",
+    "requires",
+    "behavior",
+    "escalate",
+    "cooldown_turns",
+    "stage_min",
+    "stage_max",
+    "effects",
+    "line",
+}
 
 TRIGGER_ROWS = TRIGGERS["triggers"]
 DEFAULTS = TRIGGERS["defaults"]
@@ -127,8 +169,35 @@ def test_every_row_is_a_legal_row() -> None:
         assert re.fullmatch(r"T\d\d", trigger_id), f"{trigger_id!r} is not a Tnn id"
         assert row["name"].strip(), f"{trigger_id} has no name"
         detect = row["detect"]
-        assert isinstance(detect, dict) and detect, f"{trigger_id} has no detector"
+        guard = row.get("guard", {})
+        assert isinstance(detect, dict), f"{trigger_id} detect is not an object"
+        assert isinstance(guard, dict), f"{trigger_id} guard is not an object"
+        # Evidence is a detector or a guard the game evaluates itself (T13/T15:
+        # docs/02 §1.2's read enum has no label for a lie or an ignored question).
+        assert detect or guard, f"{trigger_id} has neither a detector nor a guard"
+        assert set(row) <= ROW_KEYS, (
+            f"{trigger_id} has unknown fields: {sorted(set(row) - ROW_KEYS)}"
+        )
         assert set(detect) <= DETECTORS, f"{trigger_id} uses an unknown detector"
+        observe = row.get("observe", {})
+        assert isinstance(observe, dict), f"{trigger_id} observe is not an object"
+        for flag, value in observe.items():
+            assert isinstance(flag, str) and flag.strip(), f"{trigger_id} has an empty flag"
+            assert isinstance(value, (bool, int, float, str)), (
+                f"{trigger_id} observe flag {flag!r} is not a scalar"
+            )
+        assert set(guard) <= GUARD_KEYS, f"{trigger_id} uses an unknown guard: {sorted(guard)}"
+        for counter, floor in guard.get("counter_gte", {}).items():
+            assert counter in PROFILE_COUNTERS, f"{trigger_id} guards unknown counter {counter!r}"
+            assert isinstance(floor, int) and floor > 0, f"{trigger_id} counter floor is not a count"
+        contradiction = guard.get("contradicts_memory")
+        if contradiction is not None:
+            assert isinstance(contradiction, dict), f"{trigger_id} contradiction is not an object"
+            for cue in contradiction.get("negations", ["never"]):
+                assert isinstance(cue, str) and cue.strip(), f"{trigger_id} has an empty cue"
+            if "min_shared_words" in contradiction:
+                shared = contradiction["min_shared_words"]
+                assert isinstance(shared, int) and shared > 0 
         assert _field(row, "behavior") in BEHAVIORS
         assert row.get("requires", DEFAULTS["requires"]) in REQUIRES
         # docs/01 §5: every trigger has a cooldown so she does not feel like a
@@ -263,3 +332,110 @@ def test_line_templates_use_the_docs08_style() -> None:
             )
             for token in re.findall(r"\{([a-z_]+)\}", line):
                 assert token in LINE_TOKENS, f"{trigger_id} uses unknown token {{{token}}}"
+
+
+def test_t01_t15_rows_are_the_shipped_catalogue() -> None:
+    # P2.10's whole acceptance criterion in one place: all fifteen exist, by id.
+    covered = {f"T{n:02d}" for n in range(1, 16)}
+    assert covered <= set(TRIGGER_ROWS), "P2.10 ships T01–T15"
+    for trigger_id in sorted(covered):
+        row = TRIGGER_ROWS[trigger_id]
+        assert row["name"].strip(), f"{trigger_id} has no name"
+        assert row["detect"] or row.get("guard"), f"{trigger_id} has no evidence"
+
+
+def test_documented_effects_land() -> None:
+    # docs/01 §5's numbers are the acceptance criterion, so the ones the bible
+    # states are pinned exactly; the unnumbered rows only have to point the way
+    # the clause points.
+    assert TRIGGER_ROWS["T01"]["effects"]["meters"]["instability"] == 8
+    assert TRIGGER_ROWS["T01"]["effects"]["path"]["YANDERE"] == 3
+    assert TRIGGER_ROWS["T03"]["effects"]["meters"]["instability"] == 5
+    assert TRIGGER_ROWS["T03"]["effects"]["meters"]["affection"] > 0
+    assert TRIGGER_ROWS["T04"]["effects"]["path"]["SPLIT"] == 5
+    assert TRIGGER_ROWS["T05"]["effects"]["path"]["AWAKE"] == 4
+    assert TRIGGER_ROWS["T06"]["effects"]["path"]["AWAKE"] == 6
+    assert TRIGGER_ROWS["T07"]["effects"]["path"]["AWAKE"] == 10
+    assert TRIGGER_ROWS["T13"]["effects"]["meters"]["trust"] == -10
+    contradiction = TRIGGER_ROWS["T13"]["guard"]["contradicts_memory"]
+    assert contradiction["min_shared_words"] >= 2, "one shared word is a coincidence"
+    for plain in ("never", "don't", "do not", "didn't", "wasn't", "was not"):
+        assert plain not in contradiction["negations"], (
+            f"{plain!r} is ordinary negation, not a denial of a statement"
+        )
+    for trigger_id, path_id in [
+        ("T02", "SPLIT"),
+        ("T02", "YANDERE"),
+        ("T11", "HOLLOW"),
+        ("T14", "TSUN"),
+        ("T14", "SPLIT"),
+        ("T15", "HOLLOW"),
+        ("T15", "SPLIT"),
+    ]:
+        points = TRIGGER_ROWS[trigger_id]["effects"]["path"][path_id]
+        assert points > 0, f"{trigger_id} does not spike {path_id}"
+    # Docs/01 §5 T06/T14's "sprite 29 / sprite 17 flash" is a flag: the effects
+    # vocabulary is meters/profile/path/flags (P2.08's row shape).
+    assert TRIGGER_ROWS["T06"]["effects"]["flags"]["flash_sprite"] == 29
+    assert TRIGGER_ROWS["T14"]["effects"]["flags"]["flash_sprite"] == 17
+    # docs/01 §5 T09/T12's numbers (r2 DES-3: the bible states them now).
+    assert TRIGGER_ROWS["T09"]["effects"]["path"]["SPLIT"] == 2
+    assert TRIGGER_ROWS["T12"]["effects"]["profile"]["apathy"] == 1
+    assert "SPLIT +2" in DOC_TRIGGERS["T09"]["effect"]
+    assert "apathy +1" in DOC_TRIGGERS["T12"]["effect"]
+    assert "again each time you bring her up" in DOC_TRIGGERS["T01"]["effect"]
+    # P2.12's seam: the two §4 formula counters the brief names are fed here.
+    assert "broken_promises" in TRIGGER_ROWS["T13"]["effects"]["profile"]
+    assert TRIGGER_ROWS["T15"]["guard"]["counter_gte"] == {"ignored_questions": 1}
+
+
+def test_t03_t04_are_one_clock_pair() -> None:
+    # docs/01 §5 T03 "before Day 3" is a clock GUARD (the row stays a K row, so
+    # the reaction rides the turn the player speaks), and T04 is the C row. The
+    # flag T03 writes is what makes T04's clock detector stand down.
+    t03 = TRIGGER_ROWS["T03"]
+    assert t03["guard"]["day_lte"] == 2
+    # The flag is written by `observe`, which runs before the guard: ANY
+    # confession sets it, so a Day 3–9 confession stands T04 down (r2 CODE-1).
+    assert t03["observe"]["love_confessed"] is True
+    assert "flags" not in t03["effects"], "the reaction must not be the flag's only writer"
+    t04 = TRIGGER_ROWS["T04"]
+    assert t04["detect"]["clock"]["day_gte"] == 10
+    assert t04["detect"]["clock"]["flag_absent"] == "love_confessed"
+    assert t04["behavior"] == "once"
+
+
+def test_guard_only_rows_are_the_game_checks() -> None:
+    # T13/T15 are M in docs/01 §5, but docs/02 §1.2's 17 read labels cannot say
+    # "that was a lie" or "you ignored my question", so the game decides and the
+    # row declares no detector at all (P2.10 handoff DCR-1/DCR-2). A guard-only
+    # row fires at full strength — its evidence is not a guess.
+    t13, t15 = TRIGGER_ROWS["T13"], TRIGGER_ROWS["T15"]
+    assert t13["detect"] == {}
+    assert "contradicts_memory" in t13["guard"]
+    assert t15["detect"] == {}
+    assert t15["guard"] == {"counter_gte": {"ignored_questions": 1}}
+    # Nothing about them may claim a detection letter the bible did not give.
+    for trigger_id in ("T13", "T15"):
+        declared = {DETECTOR_LETTERS[detector] for detector in TRIGGER_ROWS[trigger_id]["detect"]}
+        assert declared == set()
+
+
+def test_t01_name_list_has_no_common_nouns() -> None:
+    # r2 CODE-4: "she moved with such grace" is not another girl. Every name
+    # alternative must fail on a sentence that only uses the word as a noun.
+    names = TRIGGER_ROWS["T01"]["detect"]["keyword"]["any"][0]
+    assert not re.search(names, "she moved with such grace through the room", re.I)
+    assert re.search(names, "I ran into Sarah on the way here", re.I)
+
+
+def test_t02_see_you_is_a_farewell_not_a_greeting() -> None:
+    # r2 CODE-2: "I see you, Leila" is a date line. The row keeps the farewell.
+    patterns = TRIGGER_ROWS["T02"]["detect"]["keyword"]["any"]
+
+    def fires(text: str) -> bool:
+        return any(re.search(pattern, text, re.I) for pattern in patterns)
+
+    assert fires("see you later")
+    assert fires("I have to go now")
+    assert not fires("I see you, Leila. You look tired.")
