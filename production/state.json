@@ -1262,9 +1262,9 @@
       "finished": "2026-11-03T09:33:29+02:00"
     },
     "P1.08": {
-      "status": "changes_requested",
+      "status": "in_review",
       "agent": "deepseek",
-      "round": 3,
+      "round": 4,
       "reviews": [
         {
           "kind": "code",
@@ -1309,6 +1309,15 @@
           "reviewer": "deepseek",
           "report": "production/reviews/P1.08-design-r3.md",
           "ts": "2026-11-04T01:55:56+02:00",
+          "declared": "deepseek"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 4,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P1.08-design-r4.md",
+          "ts": "2026-11-04T02:30:28+02:00",
           "declared": "deepseek"
         }
       ],
@@ -3632,6 +3641,24 @@
       "event": "in_review->done",
       "ref": "P1.32",
       "note": ""
+    },
+    {
+      "ts": "2026-11-04T02:30:24+02:00",
+      "event": "changes_requested->in_progress",
+      "ref": "P1.08",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T02:30:28+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P1.08",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T02:30:28+02:00",
+      "event": "review:design:approved",
+      "ref": "P1.08",
+      "note": "production/reviews/P1.08-design-r4.md"
     }
   ]
 }
