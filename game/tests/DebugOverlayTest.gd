@@ -189,3 +189,32 @@ func test_escape_key_closes_overlay() -> void:
 
 func test_release_feature_tag_guard() -> void:
 	assert_bool(DebugOverlay.is_dev_build()).is_true()
+
+
+func test_displays_corruption_plan_for_the_stage() -> void:
+	# P2.06: F3 shows the docs/07 §3.4 effects the text filter will apply, with
+	# the same reduced-motion/content-level inputs the ChatUI resolves.
+	Settings.reduced_motion = false
+	Settings.content_level = ""
+	GameState.stage = 3
+	_overlay.refresh()
+	assert_str(_overlay.get_corruption_text()).is_equal(
+		"Text FX: stage 3 · hesitate, strike, repeat, wrong_name"
+	)
+
+	Settings.reduced_motion = true
+	GameState.stage = 5
+	_overlay.refresh()
+	assert_str(_overlay.get_corruption_text()).is_equal(
+		"Text FX: stage 5 · hesitate, strike, repeat, wrong_name, redact, reverse"
+	)
+
+	Settings.reduced_motion = false
+	Settings.content_level = "calmer"
+	_overlay.refresh()
+	assert_str(_overlay.get_corruption_text()).is_equal(
+		"Text FX: stage 3 · hesitate, strike, repeat, wrong_name"
+	)
+
+	Settings.content_level = ""
+	Settings.reduced_motion = false

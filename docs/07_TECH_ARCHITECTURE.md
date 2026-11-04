@@ -39,7 +39,8 @@ res://
 │  ├─ backends/LlamaServerBackend.gd   # HTTP + SSE streaming (prototype)
 │  ├─ backends/NativeBackend.gd        # GDExtension (ship)
 │  ├─ IncrementalJson.gd               # streaming JSON → events
-│  └─ Meters.gd                       # docs/01 §2 + docs/02 §1.1 meter math: slow burn, ratchet, mood scaling
+│  ├─ Meters.gd                       # docs/01 §2 + docs/02 §1.1 meter math: slow burn, ratchet, mood scaling
+│  └─ Stages.gd                       # docs/01 §3 stage bands, transition spec, post-transition EVENT lines
 ├─ scenes/
 │  ├─ Boot.tscn  Title.tscn  NewGame.tscn  Date.tscn  Night.tscn  Ending.tscn  Extras.tscn
 │  ├─ ui/TextBox.tscn  ui/InputBox.tscn  ui/ChatLog.tscn  ui/NameTag.tscn  ui/Settings.tscn
