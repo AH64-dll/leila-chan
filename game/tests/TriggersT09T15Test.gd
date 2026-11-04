@@ -260,14 +260,24 @@ func test_close_offer_line_rides_every_turn_of_the_offer() -> void:
 	# (r2 DES-4: turn 2 kept the enum without the reason).
 	GameState.set_meter(&"instability", 55.0)  # stage 3
 	MetaDirector.set_quit_callable(func() -> void: pass)
-	MetaDirector._on_close_requested()
 	var offer_line := TurnSchema.opportunity_line("refuse_exit")
+	MetaDirector._on_close_requested()
 	assert_array(GameState.take_pending_events()).contains(offer_line)
+	# The sentence rides every turn the offer stays open…
 	assert_array(MetaDirector.offers(3)).is_equal(["refuse_exit"])
-	assert_array(GameState.take_pending_events()).contains(offer_line)
-	# A consumed offer stops both the action and its sentence.
+	assert_array(GameState.pending_events).contains(offer_line)
+	# …and taking the offer drops it with no drain in between: the submit that
+	# answers the refusal must not drain "you may set refuse_exit" into a prompt
+	# whose enum is ["none"] (r3 CODE-9 — this case drained the queue first).
 	MetaDirector.execute_after_text("refuse_exit")
 	assert_array(MetaDirector.offers(3)).is_empty()
+	assert_array(GameState.take_pending_events()).not_contains(offer_line)
+	# `reset_session()` closes through the same door, so a held offer's queued
+	# line cannot reach the new session either.
+	MetaDirector.reset_session()
+	MetaDirector._on_close_requested()
+	assert_array(GameState.pending_events).contains(offer_line)
+	MetaDirector.reset_session()
 	assert_array(GameState.pending_events).not_contains(offer_line)
 
 

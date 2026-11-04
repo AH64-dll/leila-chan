@@ -282,7 +282,7 @@ func _observe(rec: Dictionary, ctx: Dictionary) -> void:
 	for name: Variant in flags:
 		observed_flags[str(name)] = flags[name]
 		if known is Dictionary:
-			(known as Dictionary)[str(name)] = flags[name]  # this turn's later rows
+			(known as Dictionary)[str(name)] = flags[name]  # deliberate: T03 → T04
 
 
 ## P2.20's save seam: firings and cooldowns survive a reload, or a "once"

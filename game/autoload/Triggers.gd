@@ -243,8 +243,11 @@ func _context(upcoming: bool) -> Dictionary:
 		"stage": int(GameState.stage),
 		"hour": _local_hour(now),
 		"absence_hours": _absence_hours(now),
-		# A copy: a fire during this turn must not change what a later row's
-		# clock detector sees inside the same evaluation.
+		# A copy: a fire's own effects land on GameState, not here, so one row
+		# cannot hand the next row's clock detector different evidence in the
+		# same evaluation. `observe` is the one deliberate same-turn write —
+		# catalogue order (T03 before T04) is what lets a confession stand its
+		# own clock row down inside one begin_turn().
 		"flags": GameState.flags.duplicate(true),
 		# docs/01 §5 T13: the *true* facts (corruption is what she reads, not
 		# what she knows), so a lie is measured against her real memory.

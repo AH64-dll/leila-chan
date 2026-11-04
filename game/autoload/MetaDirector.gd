@@ -90,6 +90,8 @@ func close_gate() -> int:
 ## actually held. docs/05 §2 puts the reason on every turn with an offer, so the
 ## sentence is queued again here: the pending-event queue drains once per submit,
 ## and an offer that outlived its one line would leave the enum without a why.
+## `_close_offer()` drops the copy waiting in the queue, so the sentence never
+## rides a turn after the offer it explains.
 func offers(stage: int) -> Array:
 	if not _offer_open or stage < close_gate():
 		return []
@@ -159,8 +161,13 @@ func _request_quit() -> void:
 		tree.quit()
 
 
+## Consumes the offer. The queued copy of the docs/05 §2 sentence goes with it:
+## `offers()` queues the line for the NEXT submit, so a refusal would otherwise
+## leave one turn promising an action the schema's enum no longer carries, and a
+## `reset_session()` would carry it into the new session.
 func _close_offer() -> void:
 	if not _offer_open:
 		return
 	_offer_open = false
+	GameState.pending_events.erase(_opportunity_line())
 	offer_changed.emit()

@@ -346,3 +346,10 @@
   `_show_morning`. N12 is "nothing", and a "Day 2 / Night" frame is not nothing.
 - Interrupt injection (P2.18's handoff) and the doc's "or trigger" scene end are deferred to
   P5.02/P5.06, named in the handoff follow-ups. Do not run an interrupt as a day in the meantime.
+
+## P2.10 — triggers T01–T15 + the M01 close intercept (round 3, 2026-11-04, agent: commandcode)
+
+- CODE-9/DES-5: `MetaDirector._close_offer()` erases `_opportunity_line()` from `GameState.pending_events`. `offers()` queues the sentence for the *next* submit (the queue drains before `offers()` runs), so nothing was removing the copy queued on the turn the model accepted — the turn after a refusal said "you may set action to refuse_exit" with an enum of `["none"]`. `reset_session()` goes through the same door, so a new session cannot inherit it either.
+- Gotcha for the suite: the old case drained at both `take_pending_events()` calls before consuming, so its `not_contains` ran against an empty queue and could never fail. The case now consumes with the line still queued, and separately re-holds, then resets — both assertions fail without the erase (l. 274 and 281), which is the only evidence that a test pins a fix.
+- CODE-10: `Triggers._context()`'s flags comment said a fire must not change what a later row's clock detector sees — the opposite of the `observe` contract it now documents. It says the copy isolates *fired effects*, `observe` is the one deliberate same-turn write, and catalogue order (T03 → T04) is what stands T04 down inside one `begin_turn()`. `TriggerEngine._observe()`'s inline note names that order; the file stays at 1000/1000 gdlint lines.
+- Gate green: 791 cases / 65 suites (the merged main added P2.19/P2.25/P2.26 suites), 496 pytest. No data or docs change this round: docs/05 §2's "only on turns with an offer" was already the contract, the code was the thing that disagreed.
