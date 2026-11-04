@@ -82,16 +82,28 @@ class GitError(RuntimeError):
 # --------------------------------------------------------------------------- git
 
 
-def git(*args: str, timeout: int = 120) -> bytes:
-    """Run git and return stdout; raise GitError with git's own words on failure."""
+def _run_git(args: tuple[str, ...], timeout: int) -> subprocess.CompletedProcess[bytes]:
+    """Run git, turning "it did not run" into the documented exit 2.
+
+    A missing binary or a hung git is not evidence about the merge: it must not
+    read as exit 1 ("work is at risk") or as a traceback the producer has to
+    interpret. Both callers below share this one guard.
+    """
     try:
-        proc = subprocess.run(
+        return subprocess.run(
             ["git", "--literal-pathspecs", *args],
             capture_output=True,
             timeout=timeout,
         )
-    except FileNotFoundError as exc:  # pragma: no cover - no git on PATH
+    except FileNotFoundError as exc:
         raise GitError("git is not installed") from exc
+    except subprocess.TimeoutExpired as exc:
+        raise GitError(f"git {' '.join(args)}: timed out after {timeout}s") from exc
+
+
+def git(*args: str, timeout: int = 120) -> bytes:
+    """Run git and return stdout; raise GitError with git's own words on failure."""
+    proc = _run_git(args, timeout)
     if proc.returncode != 0:
         detail = proc.stderr.decode("utf-8", "replace").strip() or f"exit {proc.returncode}"
         raise GitError(f"git {' '.join(args)}: {detail}")
@@ -100,11 +112,7 @@ def git(*args: str, timeout: int = 120) -> bytes:
 
 def git_soft(*args: str, timeout: int = 120) -> tuple[int, bytes]:
     """Run git and return (exit code, stdout) without raising; for expected misses."""
-    proc = subprocess.run(
-        ["git", "--literal-pathspecs", *args],
-        capture_output=True,
-        timeout=timeout,
-    )
+    proc = _run_git(args, timeout)
     return proc.returncode, proc.stdout
 
 
@@ -186,14 +194,7 @@ def merge_tree(target: str, source: str) -> tuple[str | None, set[str]]:
     tree into the object database (dangling unless referenced) and exits 1 when
     any path conflicts; conflicted paths carry stage 1/2/3 records on stdout.
     """
-    try:
-        proc = subprocess.run(
-            ["git", "merge-tree", "--write-tree", "-z", target, source],
-            capture_output=True,
-            timeout=300,
-        )
-    except FileNotFoundError as exc:  # pragma: no cover - no git on PATH
-        raise GitError("git is not installed") from exc
+    proc = _run_git(("merge-tree", "--write-tree", "-z", target, source), 300)
     if proc.returncode not in (0, 1):
         detail = proc.stderr.decode("utf-8", "replace").strip() or f"exit {proc.returncode}"
         raise GitError(f"git merge-tree {target} {source}: {detail}")
@@ -285,6 +286,12 @@ def pre_merge(target_ref: str, source_ref: str) -> Report:
     for path in overlap:
         target_type = object_type(target, path)
         source_type = object_type(source, path)
+        if target_type is None and source_type is None:
+            # Both sides deleted the same path: git resolves delete/delete by
+            # deleting it, and neither side has a line left to lose. Reported so
+            # the overlap count adds up, never as a risk (P2.25 CODE-1).
+            report.findings.append(Finding(path, "both-deleted"))
+            continue
         if target_type is None or source_type is None:
             deleted_side = "target" if target_type is None else "branch"
             report.findings.append(Finding(path, "delete-vs-edit", side=deleted_side))
@@ -526,12 +533,19 @@ def render(report: Report) -> None:
         if finding.allowed:
             tag += " (allowed)"
         counts = ""
-        if report.mode == "pre":
+        if report.mode == "pre" and finding.status not in ("delete-vs-edit", "both-deleted"):
             counts = f"  target +{finding.target_added} / branch +{finding.branch_added}"
         print(f"  {tag:<22} {finding.path}{counts}")
         if finding.status == "delete-vs-edit":
-            keeps = "target" if finding.side == "target" else "branch"
-            print(f"      the {finding.side} deleted this file; the {keeps} side changed it")
+            # `side` is the side that deleted; the other one holds the only copy
+            # of the work, so it is the copy the resolution has to keep.
+            kept = "branch" if finding.side == "target" else "target"
+            print(
+                f"      the {finding.side} deleted this file; the {kept} side changed it "
+                f"— keep the {kept} copy"
+            )
+        elif finding.status == "both-deleted":
+            print("      both sides deleted this path; the merge deletes it too and loses nothing")
         for detail in _stale_details(finding):
             print(f"      {detail}")
         if finding.takeover:

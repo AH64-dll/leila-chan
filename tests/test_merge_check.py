@@ -17,7 +17,9 @@ All repositories are built in tmp_path; nothing here needs the project history
 
 from __future__ import annotations
 
+import importlib.util
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -147,13 +149,16 @@ def git_expect_failure(repo: Path, *args: str) -> subprocess.CompletedProcess:
     return proc
 
 
-def check(repo: Path, *args: str) -> subprocess.CompletedProcess:
+def check(
+    repo: Path, *args: str, env: dict[str, str] | None = None
+) -> subprocess.CompletedProcess:
     return subprocess.run(
         [sys.executable, str(CHECK), *args],
         cwd=repo,
         capture_output=True,
         text=True,
         timeout=120,
+        env=env,
     )
 
 
@@ -214,6 +219,27 @@ def resolve_with_branch_copy(repo: Path, path: str) -> None:
 
 def commit_merge(repo: Path) -> None:
     git(repo, "commit", "-q", "--no-edit")
+
+
+def merge_that_deletes_an_extended_handoff(repo: Path) -> str:
+    """The E34a shape: a modify/delete resolution takes the deletion, losing added work."""
+    path = "production/handoffs/P1.14.md"
+    write(repo, path, "# Handoff\n\napproved work\n")
+    commit(repo, "handoff v1")
+
+    git(repo, "checkout", "-q", "-b", "keeps-handoff")
+    write(repo, path, "# Handoff\n\napproved work\n\nmore approved work\n")
+    commit(repo, "handoff v2")
+
+    git(repo, "checkout", "-q", "main")
+    git(repo, "rm", "-q", path)
+    commit(repo, "drop handoff")
+
+    git_expect_failure(repo, "merge", "--no-ff", "-m", "merge keeps-handoff", "keeps-handoff")
+    # resolve modify/delete by accepting the deletion, as the real merges did
+    git(repo, "rm", "-q", path)
+    commit_merge(repo)
+    return path
 
 
 # --------------------------------------------------------------------------- pre
@@ -284,6 +310,60 @@ def test_pre_flags_delete_versus_edit(repo: Path) -> None:
     assert finding["status"] == "delete-vs-edit"
     assert finding["side"] == "branch"
 
+    # the report must name the side that still holds the work, not the side that left
+    text = check(repo, "deletes-readme").stdout
+    assert "the branch deleted this file; the target side changed it" in text
+    assert "keep the target copy" in text
+
+
+def test_pre_names_the_side_that_kept_the_file(repo: Path) -> None:
+    """The mirror direction: the target deletes, the branch edits — keep the branch copy."""
+    git(repo, "checkout", "-q", "-b", "edits-readme", "main")
+    write(repo, "README.md", "leila\n\nbranch still edits this\n")
+    commit(repo, "edit README on the branch")
+
+    git(repo, "checkout", "-q", "main")
+    git(repo, "rm", "-q", "README.md")
+    commit(repo, "drop README on main")
+
+    proc, report = check_json(repo, "edits-readme")
+
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    finding = next(item for item in report["findings"] if item["path"] == "README.md")
+    assert finding["status"] == "delete-vs-edit"
+    assert finding["side"] == "target"
+
+    text = check(repo, "edits-readme").stdout
+    assert "the target deleted this file; the branch side changed it" in text
+    assert "keep the branch copy" in text
+
+
+def test_pre_passes_when_both_sides_delete_the_same_file(repo: Path) -> None:
+    """Nothing can be lost: both sides deleted the path, so git merges it by deleting."""
+    git(repo, "checkout", "-q", "-b", "deletes-readme", "main")
+    git(repo, "rm", "-q", "README.md")
+    commit(repo, "drop README on the branch")
+
+    git(repo, "checkout", "-q", "main")
+    git(repo, "rm", "-q", "README.md")
+    commit(repo, "drop README on main")
+
+    proc, report = check_json(repo, "deletes-readme")
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert report["verdict"] == "PASS"
+    finding = next(item for item in report["findings"] if item["path"] == "README.md")
+    assert finding["status"] == "both-deleted"
+
+    # the printed report explains why the overlap is not a risk
+    assert "BOTH-DELETED" in check(repo, "deletes-readme").stdout
+
+    # and the habit agrees end to end: this merge is clean and stays clean after it
+    git(repo, "merge", "--no-ff", "-m", "merge deletes-readme", "deletes-readme")
+    proc, report = check_json(repo, "--post", "HEAD")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert report["verdict"] == "PASS"
+
 
 # -------------------------------------------------------------------------- post
 
@@ -330,30 +410,38 @@ def test_post_passes_when_the_resolution_keeps_both_sides(repo: Path) -> None:
 
 def test_post_catches_a_merge_that_drops_an_entire_file(repo: Path) -> None:
     """The E34a shape: a modify/delete resolution takes the deletion, losing added work."""
-    write(repo, "production/handoffs/P1.14.md", "# Handoff\n\napproved work\n")
-    commit(repo, "handoff v1")
-
-    git(repo, "checkout", "-q", "-b", "keeps-handoff")
-    write(repo, "production/handoffs/P1.14.md", "# Handoff\n\napproved work\n\nmore approved work\n")
-    commit(repo, "handoff v2")
-
-    git(repo, "checkout", "-q", "main")
-    git(repo, "rm", "-q", "production/handoffs/P1.14.md")
-    commit(repo, "drop handoff")
-
-    git_expect_failure(repo, "merge", "--no-ff", "-m", "merge keeps-handoff", "keeps-handoff")
-    # resolve modify/delete by accepting the deletion, as the real merges did
-    git(repo, "rm", "-q", "production/handoffs/P1.14.md")
-    commit_merge(repo)
+    path = merge_that_deletes_an_extended_handoff(repo)
 
     proc, report = check_json(repo, "--post", "HEAD")
 
     assert proc.returncode == 1, proc.stdout + proc.stderr
-    finding = next(
-        item for item in report["findings"] if item["path"] == "production/handoffs/P1.14.md"
-    )
+    finding = next(item for item in report["findings"] if item["path"] == path)
     assert finding["status"] == "deleted-by-merge"
     assert "more approved work" in finding["dropped"]
+
+
+def test_post_allows_a_reviewed_finding(repo: Path) -> None:
+    """--allow is the documented escape hatch: a reviewed deletion turns into a note."""
+    path = merge_that_deletes_an_extended_handoff(repo)
+
+    proc, report = check_json(repo, "--post", "HEAD", "--allow", path)
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert report["verdict"] == "PASS"
+    finding = next(item for item in report["findings"] if item["path"] == path)
+    assert finding["status"] == "deleted-by-merge"
+    assert finding["allowed"] is True
+
+    text = check(repo, "--post", "HEAD", "--allow", path).stdout
+    assert "DELETED-BY-MERGE (allowed)" in text
+
+
+def test_pre_rejects_allow(repo: Path) -> None:
+    """In pre mode nothing is resolved yet, so there is nothing to acknowledge."""
+    proc = check(repo, "--allow", "README.md", "task/P1.21")
+
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "--allow acknowledges a completed resolution" in proc.stderr
 
 
 def test_post_ignores_track_generated_files(repo: Path) -> None:
@@ -451,3 +539,40 @@ def test_source_already_merged_is_a_pass(repo: Path) -> None:
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert report["verdict"] == "PASS"
     assert "already contained" in report["note"]
+
+
+def test_git_missing_from_path_exits_two(repo: Path, tmp_path: Path) -> None:
+    """A check that cannot run is exit 2, never a traceback that reads like lost work."""
+    nogit = tmp_path / "no-git-on-path"
+    nogit.mkdir()
+
+    proc = check(repo, "--post", "HEAD", env={**os.environ, "PATH": str(nogit)})
+
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "git is not installed" in proc.stderr
+    assert "Traceback" not in proc.stderr
+
+
+def load_merge_check():
+    """Import the tool so one call can be driven without a fake git binary."""
+    spec = importlib.util.spec_from_file_location("merge_check_under_test", CHECK)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_git_timeout_is_an_error_not_a_traceback(monkeypatch: pytest.MonkeyPatch) -> None:
+    module = load_merge_check()
+
+    def timed_out(*args: object, **kwargs: object) -> None:
+        raise subprocess.TimeoutExpired(cmd="git", timeout=1)
+
+    monkeypatch.setattr(module.subprocess, "run", timed_out)
+
+    with pytest.raises(module.GitError, match="timed out"):
+        module.git("status", timeout=1)
+    with pytest.raises(module.GitError, match="timed out"):
+        module.git_soft("status", timeout=1)
+    assert module.main(["--post", "HEAD"]) == module.EXIT_ERROR
