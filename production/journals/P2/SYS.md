@@ -375,3 +375,30 @@
 - Convention: the Date's `_current_turn` names a *played* turn, so it advances only when the Director accepts
   the line. A Safety refusal is not a turn (docs/02 §4 step 0) — counting it spent an `events[].at_turn` and
   walked `max_turns` down. The same number feeds `resolve_scene`, `evaluate_turn_end` and the saved scene turn.
+
+## P2.22B — Fixation/Lucidity writers + the 14-day Terminal pacing (round 1, 2026-11-04, agent: commandcode)
+
+- The slow burn was a constant because nothing wrote its inputs: Fixation's only writer in `game/`
+  was NewGame's +5, Lucidity's was none. Writers now live in `data/meters.json`'s `writers` block and
+  run at the two step-7 seams — `apply_turn_meters()` (time + affection gained) and
+  `apply_turn_profile()` (isolation, kindness/honesty/boundaries from *this turn's* counter deltas).
+  Read the deltas, never the running totals: `_apply_read()` now mirrors its bumps out, because a
+  counter earned in an earlier turn must not pay a meter twice.
+- Gotcha: `ProfileKeywords.classify` calls any reply of ≤ 6 words *apathy* (docs/01 §4.4 "short
+  replies"), so a "warm" test line of three words bumps an isolation counter. Writer tests need long
+  lines, or they measure the wrong rule.
+- Never change a doc number on a hunch. The P2.22 transcript decomposes exactly (T01 88 / slow burn
+  25.6 / daily 15 / T03 5 / mood −2.85): T01's *model-only* path was the accelerator, and the stress
+  scale measured net-negative. The scale stays at docs/02 §1.1's ×0.6; DCR-3 is the one-line change
+  if a later run contradicts the measurement. `meters.json`'s doc string says this out loud.
+- T01's retune has two halves that must move together: `requires: "all"` (a name is a fact, an intent
+  is not) and `first_effects` (the +8 spike lands once; the question and YANDERE points repeat). The
+  second needed a general row capability, so `first_effects` is an engine concept, not a T01 hack —
+  and it is the only row using it (pinned by `tests/test_triggers.py`).
+- `TriggerEngine.gd` sat at exactly 1000 lines (gdlint's cap). Adding `first_effects` forced the
+  split: the effect arithmetic moved to `game/llm/TriggerEffects.gd` (scale / merge / add_path). When
+  a second row needs a first-spike or a new effect group, extend that file, not the engine.
+- Pacing evidence is a committed artifact, not prose: `tools/meters/campaign.sh` writes
+  `production/handoffs/media/P2.22B/campaign_curve.csv` (3 players × 14 days × 12 turns over the
+  real code). Terminal day 13 possessive, day 13 awake, day 14 stage 3 + Lucidity 78.4 for ANCHOR.
+  Re-run it after any balance change — the pytest pins read the CSV, so a stale artifact fails.

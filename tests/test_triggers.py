@@ -87,6 +87,7 @@ ROW_KEYS = {
     "stage_min",
     "stage_max",
     "effects",
+    "first_effects",
     "line",
 }
 
@@ -276,22 +277,27 @@ def test_rows_match_the_bible_detection_column() -> None:
 
 def test_effects_use_the_game_vocabulary() -> None:
     for trigger_id, row in TRIGGER_ROWS.items():
-        effects = row.get("effects", {})
-        assert set(effects) <= {"meters", "profile", "path", "flags"}, trigger_id
-        for meter, value in effects.get("meters", {}).items():
-            assert meter in METER_NAMES, f"{trigger_id} moves unknown meter {meter!r}"
-            assert isinstance(value, (int, float)) and value != 0
-        for counter, value in effects.get("profile", {}).items():
-            assert counter in PROFILE_COUNTERS, f"{trigger_id} bumps unknown counter {counter!r}"
-            assert isinstance(value, int)
-        for path, value in effects.get("path", {}).items():
-            assert path in PATHS, f"{trigger_id} scores unknown path {path!r}"
-            assert isinstance(value, int)
-        for flag, value in effects.get("flags", {}).items():
-            assert flag.strip()
-            assert isinstance(value, (bool, int, float, str)), (
-                f"{trigger_id} sets non-scalar flag {flag!r}"
-            )
+        # `effects` lands on every firing, `first_effects` only on the first
+        # (P2.22B) — both are the same effect vocabulary.
+        for group_key in ("effects", "first_effects"):
+            effects = row.get(group_key, {})
+            assert set(effects) <= {"meters", "profile", "path", "flags"}, trigger_id
+            for meter, value in effects.get("meters", {}).items():
+                assert meter in METER_NAMES, f"{trigger_id} moves unknown meter {meter!r}"
+                assert isinstance(value, (int, float)) and value != 0
+            for counter, value in effects.get("profile", {}).items():
+                assert counter in PROFILE_COUNTERS, (
+                    f"{trigger_id} bumps unknown counter {counter!r}"
+                )
+                assert isinstance(value, int)
+            for path, value in effects.get("path", {}).items():
+                assert path in PATHS, f"{trigger_id} scores unknown path {path!r}"
+                assert isinstance(value, int)
+            for flag, value in effects.get("flags", {}).items():
+                assert flag.strip()
+                assert isinstance(value, (bool, int, float, str)), (
+                    f"{trigger_id} sets non-scalar flag {flag!r}"
+                )
 
 
 def test_escalating_rows_can_escalate() -> None:
@@ -348,7 +354,7 @@ def test_documented_effects_land() -> None:
     # docs/01 §5's numbers are the acceptance criterion, so the ones the bible
     # states are pinned exactly; the unnumbered rows only have to point the way
     # the clause points.
-    assert TRIGGER_ROWS["T01"]["effects"]["meters"]["instability"] == 8
+    assert TRIGGER_ROWS["T01"]["first_effects"]["meters"]["instability"] == 8
     assert TRIGGER_ROWS["T01"]["effects"]["path"]["YANDERE"] == 3
     assert TRIGGER_ROWS["T03"]["effects"]["meters"]["instability"] == 5
     assert TRIGGER_ROWS["T03"]["effects"]["meters"]["affection"] > 0
@@ -387,6 +393,38 @@ def test_documented_effects_land() -> None:
     # P2.12's seam: the two §4 formula counters the brief names are fed here.
     assert "broken_promises" in TRIGGER_ROWS["T13"]["effects"]["profile"]
     assert TRIGGER_ROWS["T15"]["guard"]["counter_gte"] == {"ignored_questions": 1}
+
+
+def test_t01_spikes_once_and_asks_again() -> None:
+    """P2.22B retune (handoff DCR-2): T01 is agreement-only and its +8 lands once.
+
+    The live P2.22 run fired T01 19 times in 84 turns (16 of them model-only on
+    possessive lines that mention no girl) for 88 of the 130.7 Instability the
+    campaign had — Terminal on day 5. docs/01 §5's row gives the +8 for a
+    mention, and 'again each time you bring her up' is the question repeating,
+    so the spike sits in first_effects while the path points and the line keep
+    landing. The 3-turn cooldown is docs/01 §5's 'cooldown so she doesn't feel
+    like a keyword machine' (16 turns was the observed spacing at the model's
+    over-labelling rate).
+    """
+    row = TRIGGER_ROWS["T01"]
+    assert row["requires"] == "all", "a model-only read is an intent, not a mention"
+    assert set(row["detect"]) == {"keyword", "model"}
+    assert row["cooldown_turns"] == 3
+    assert row["behavior"] == "repeatable"
+    assert set(row["first_effects"]["meters"]) == {"instability"}
+    assert set(row["effects"]) == {"path"}
+    assert "instability" not in row["effects"].get("meters", {})
+    # The spike is the only first_effects in the catalogue: a second one would
+    # mean a row whose doc effect is silently capped without its own DCR.
+    users = [
+        trigger_id
+        for trigger_id, other in TRIGGER_ROWS.items()
+        if other.get("first_effects", {}).get("meters")
+        or other.get("first_effects", {}).get("path")
+        or other.get("first_effects", {}).get("profile")
+    ]
+    assert users == ["T01"]
 
 
 def test_t03_t04_are_one_clock_pair() -> None:

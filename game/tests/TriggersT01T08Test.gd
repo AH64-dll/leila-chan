@@ -27,26 +27,52 @@ func before_test() -> void:
 
 
 func test_t01_another_girl_name() -> void:
-	# docs/01 §5 T01: "Instability +8, YANDERE +3". A keyword hit is full
-	# strength (docs/02 §1.2 + the strength table), and the doc's example name
-	# is the one the line is written for.
+	# docs/01 §5 T01: "Instability +8, YANDERE +3, she asks 'who is she?', again
+	# each time you bring her up". P2.22B retune (handoff DCR-2): the row is K+M
+	# agreement — a mention is a fact, and a model-only jealousy_bait read is an
+	# intent — the +8 spike lands on the first mention only, and the question
+	# and the YANDERE points keep landing on later mentions.
 	var lines := Triggers.begin_turn("I ran into Sarah on the way here.")
+	assert_array(lines).is_empty()  # K alone waits for M (requires: all)
+	assert_float(GameState.get_meter(&"instability")).is_zero()
+	GameState.turn = 1
+	lines = Triggers.close_turn("jealousy_bait")  # both agree
 	assert_float(GameState.get_meter(&"instability")).is_equal_approx(8.0, EPS)
 	assert_int(int(Triggers.path_scores().get("YANDERE", 0))).is_equal(3)
 	assert_array(lines).has_size(1)
 	assert_str(String(lines[0])).starts_with("TRIGGER: The player mentioned another girl")
-	# Model-only: the same row fires at half strength (docs/02 §1.2).
-	_reset_session()
+
+	# A second mention once the 3-turn cooldown has passed: the question and the
+	# path points repeat, the +8 spike does not (it is the row's first_effects).
+	GameState.turn = 3
+	Triggers.begin_turn("I ran into Sarah again.")
+	GameState.turn = 4
+	lines = Triggers.close_turn("jealousy_bait")
+	assert_array(lines).has_size(1)
+	assert_float(GameState.get_meter(&"instability")).is_equal_approx(8.0, EPS)
+	assert_int(int(Triggers.path_scores().get("YANDERE", 0))).is_equal(6)
+
+	# Cooldown 3: a mention on the next turn is silent.
+	GameState.turn = 4
+	assert_array(Triggers.begin_turn("Sarah said hi.")).is_empty()
+	GameState.turn = 5
+	assert_array(Triggers.close_turn("jealousy_bait")).is_empty()
+	assert_int(int(Triggers.path_scores().get("YANDERE", 0))).is_equal(6)
+
+	# Model-only is not a mention: no line, no spike, no path points. The
+	# possessive read still lands in the profile, which is docs/01 §4's
+	# jealousy_bait channel for intent.
+	_reset_all()
 	GameState.turn = 0
 	Triggers.begin_turn("hello there")
 	GameState.turn = 1
-	var fired := Triggers.close_turn("jealousy_bait")
-	assert_float(GameState.get_meter(&"instability")).is_equal_approx(4.0, EPS)
-	assert_int(int(Triggers.path_scores().get("YANDERE", 0))).is_equal(2)
-	assert_array(fired).has_size(1)
+	assert_array(Triggers.close_turn("jealousy_bait")).is_empty()
+	assert_float(GameState.get_meter(&"instability")).is_zero()
+	assert_int(int(Triggers.path_scores().get("YANDERE", 0))).is_zero()
+
 	# A common noun must not be a name: "such grace" is not another girl (r2
 	# CODE-4 — the word was in the list and fired the row on an ordinary line).
-	_reset_session()
+	_reset_all()
 	GameState.turn = 0
 	assert_array(Triggers.begin_turn("She moved with such grace through the room.")).is_empty()
 	assert_float(GameState.get_meter(&"instability")).is_equal_approx(0.0, EPS)
@@ -202,9 +228,13 @@ func test_rows_without_detector_or_guard_are_dropped() -> void:
 
 func test_shipped_rows_carry_the_documented_effects() -> void:
 	# docs/01 §5's numbers, read from the shipped data (the doc is the spec).
+	# P2.22B: T01's +8 is the first_effects spike (DCR-2) and its +3 path points
+	# repeat with the question, so the doc's numbers live in one of the two groups.
 	var t01 := _row("T01")
-	assert_float(float((t01["effects"] as Dictionary)["meters"]["instability"])).is_equal(8.0)
+	assert_float(float((t01["first_effects"] as Dictionary)["meters"]["instability"])).is_equal(8.0)
 	assert_int(int((t01["effects"] as Dictionary)["path"]["YANDERE"])).is_equal(3)
+	assert_dict(t01["effects"] as Dictionary).contains_keys(["meters", "path"])
+	assert_dict(t01["effects"]["meters"] as Dictionary).is_empty()
 	var t03 := _row("T03")
 	assert_float(float((t03["effects"] as Dictionary)["meters"]["instability"])).is_equal(5.0)
 	assert_int(int((t03["effects"] as Dictionary)["meters"]["affection"])).is_equal(3)
@@ -268,3 +298,13 @@ func _row(id: String) -> Dictionary:
 func _reset_session() -> void:
 	GameState.reset()
 	Triggers.clear_engine_events()
+
+
+## Session boundary plus the catalogue's firing history: a case that re-fires
+## the same row needs its count and cooldown back to zero too (P2.22B).
+func _reset_all() -> void:
+	GameState.reset()
+	Triggers.load_catalog()
+	Triggers.clear_engine_events()
+	Triggers.set_clock(Callable())
+	Triggers.set_last_seen(0)

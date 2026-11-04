@@ -32,6 +32,11 @@ extends RefCounted
 ## with the stage since stage_min (T08 "escalates with stage") and keeps
 ## repeating, cooldown-gated — the stage, not the repeat count, is the dose.
 ##
+## A row may also split its effects: `effects` lands on every firing, while
+## `first_effects` lands on the first one only (P2.22B). T01 uses the split
+## because docs/01 §5 gives the mention spike +8 once and keeps the *question*
+## repeating; without it a repeatable row's spike stacks into the whole curve.
+##
 ## Guards: a `guard` block holds conditions that must ALSO hold but that are not
 ## detectors, so docs/01 §5's detection column stays honest (T03 "before Day 3").
 ## A row with no detector at all is a guard row — the game's own check is its
@@ -379,7 +384,12 @@ func _fire(id: String, rec: Dictionary, ctx: Dictionary, agreement: String) -> D
 	var state: Dictionary = _state.get(id, {})
 	var step := int(state.get("count", 0)) + 1
 	var strength := _base_strength(agreement) * _escalation(rec, step, ctx)
-	var effects := _scaled_effects(rec["effects"], strength)
+	var effects := TriggerEffects.scale(rec["effects"], strength)
+	# P2.22B: a row may split its effects — `first_effects` is the spike that
+	# lands once (docs/01 §5 T01's mention), `effects` repeats. The spike is
+	# scaled by the same strength, so a model-only firing would still halve.
+	if step == 1:
+		TriggerEffects.merge(effects, TriggerEffects.scale(rec.get("first_effects", {}), strength))
 	var result := {
 		"id": id,
 		"name": String(rec["name"]),
@@ -391,7 +401,7 @@ func _fire(id: String, rec: Dictionary, ctx: Dictionary, agreement: String) -> D
 	}
 	_state[id] = {"count": step, "last_turn": int(ctx.get("turn", 0))}
 	_fired[id] = true
-	_add_path(effects)
+	TriggerEffects.add_path(_path_scores, effects)
 	_history.append(result.duplicate(true))
 	if _history.size() > MAX_HISTORY:
 		_history.pop_front()
@@ -436,35 +446,6 @@ func _escalation_step(rec: Dictionary, step: int, ctx: Dictionary) -> int:
 		var stage := clampi(int(ctx.get("stage", 0)), 0, MAX_STAGE)
 		return clampi(stage - int(rec["stage_min"]) + 1, 1, int(spec["max_steps"]))
 	return mini(step, int(spec["max_steps"]))
-
-
-## Scales one row's effects by the firing's strength. Meters stay fractional;
-## profile counters and path points are integers and round half away from zero,
-## so a data author who needs an exact halving uses an even value.
-func _scaled_effects(effects: Dictionary, strength: float) -> Dictionary:
-	var out := {"meters": {}, "profile": {}, "path": {}, "flags": {}}
-	var meters: Dictionary = effects.get("meters", {})
-	for name: Variant in meters:
-		var value := float(meters[name]) * strength
-		if not is_zero_approx(value):
-			out["meters"][str(name)] = value
-	for group: String in ["profile", "path"]:
-		var points: Dictionary = effects.get(group, {})
-		for name: Variant in points:
-			var value := roundi(float(points[name]) * strength)
-			if value != 0:
-				out[group][str(name)] = value
-	var flags: Dictionary = effects.get("flags", {})
-	for name: Variant in flags:
-		out["flags"][str(name)] = flags[name]
-	return out
-
-
-func _add_path(effects: Dictionary) -> void:
-	var points: Dictionary = effects.get("path", {})
-	for name: Variant in points:
-		var key := str(name)
-		_path_scores[key] = int(_path_scores.get(key, 0)) + int(points[name])
 
 
 ## docs/08 §6 line style. A row may carry one template or an array indexed by
@@ -764,6 +745,7 @@ static func _parse_row(raw: Variant, defaults: Dictionary) -> Dictionary:
 		"stage_max": stage_max,
 		"observe": _parse_effects({"flags": row.get("observe")})["flags"],
 		"effects": _parse_effects(row.get("effects")),
+		"first_effects": _parse_effects(row.get("first_effects")),
 		"line": _parse_line(row.get("line")),
 	}
 

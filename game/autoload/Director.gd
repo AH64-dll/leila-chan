@@ -39,9 +39,9 @@ var last_offered_actions: Array = []
 var last_read: String = ""
 var last_inner: String = ""
 ## docs/01 §2 ledger of the last completed turn: turn index, the slow burn that
-## landed, the mood deltas that landed, instability/floor/stage after the turn.
-## Written by GameState.apply_turn_meters(); dev tooling reads it (DirectorTest
-## asserts the wiring, the P2.19 night screen can show it).
+## landed, the mood deltas that landed, the Fixation the writers added, and
+## instability/floor/stage after the turn. Written by
+## GameState.apply_turn_meters(); dev tooling reads it.
 var last_meter_ledger: Dictionary = {}
 var last_sprite_enter: Dictionary = {}  # docs/10 §3: last {"events", "report"} dispatch
 

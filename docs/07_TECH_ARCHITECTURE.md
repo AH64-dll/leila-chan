@@ -46,6 +46,8 @@ res://
 │  ├─ NightLoop.gd                    # docs/01 §1 night: meters → stage → path → overnight event, one ordered report
 │  ├─ OvernightEvents.gd              # docs/01 §6.3 overnight events: availability, weighted pick, per-stage lines
 │  ├─ Campaign.gd                     # docs/01 §1 campaign clock + the day's scenario pick by availability
+│  ├─ TriggerEngine.gd                # docs/01 §5 row matching, once/repeatable/escalating, cooldowns, guard blocks
+│  ├─ TriggerEffects.gd               # docs/02 §1.2 strength scaling + first-firing spike + path-point ledger for a firing
 │  └─ ProfileKeywords.gd              # docs/01 §2 keyword half of the behaviour profile (control, apathy, …)
 ├─ scenes/
 │  ├─ Boot.tscn  Title.tscn  NewGame.tscn  Date.tscn  Night.tscn  Ending.tscn  Extras.tscn
