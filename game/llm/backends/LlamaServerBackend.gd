@@ -109,7 +109,18 @@ func generate(request: TurnRequest, on_token: Callable, cancel: LLMCancelToken) 
 	# The turn session is shared with a stage-change relaunch: a restart holds it
 	# too, so the server is never killed under a line that is being spoken (P2.03,
 	# "no lost player input"). Lock order is always session -> relaunch -> process.
-	_session.lock()
+	# The wait observes the turn's own token, so a turn queued behind a relaunch
+	# can be cancelled (and a quit joined) instead of blocking out the stop+start.
+	if not _acquire_stream_session(cancel):
+		_set_turn_active(false)
+		var stopped := _finish_result(
+			_error_attempt(
+				"cancelled", "cancelled while a stage-change relaunch held the server", {}, 0
+			),
+			started
+		)
+		_record(stopped)
+		return stopped
 	var attempt := _attempt(request, on_token, cancel, started)
 	if not attempt["ok"] and int(attempt["emitted"]) == 0:
 		attempt = _maybe_retry(request, on_token, cancel, started, attempt)
@@ -137,12 +148,21 @@ func ensure_server(cancel: LLMCancelToken = null) -> Dictionary:
 ## belong to another task, and relaunching would put a second server on a busy
 ## port (P1.02). That is also the one case where the game keeps the old dose for
 ## good: Boot installs attach mode unless `LEILA_OWN_SERVER` asks it to launch.
+## `auto_start` alone is not proof of ownership (docs/06 §4.1): a server already
+## answering on the port is adopted, and a relaunch is refused with
+## `server_not_owned` instead of spawning a doomed replacement.
 ##
 ## `window_ms` is the transition glitch the restart should hide behind (0 = not
 ## hidden: a restore); `info.fits_window`/`info.within_budget` report both.
 func apply_steering(vectors: Array, stage := 0, window_ms := 0, on_done := Callable()) -> bool:
 	_reap_steering_threads()
-	if not bool(config.get("auto_start", false)):
+	var auto_start := bool(config.get("auto_start", false))
+	# Ownership, not the launch flag alone (docs/06 §4.1): `auto_start` *asks* for
+	# a server the app launches, but `ensure_running()` adopts a healthy one that
+	# already answers on the port (another task's `serve.sh`). `is_attached()` is
+	# the cached probe result, so this stays cheap on the main thread; a backend
+	# that has not probed yet is caught by `LlamaServerProcess`'s own re-check.
+	if not auto_start or _process.is_attached():
 		_steering_mutex.lock()
 		if _steering_busy:
 			_steering_mutex.unlock()
@@ -153,13 +173,7 @@ func apply_steering(vectors: Array, stage := 0, window_ms := 0, on_done := Calla
 			vectors,
 			(config.get("control_vectors", []) as Array).duplicate(true),
 			"server_not_owned",
-			(
-				(
-					"the dose is a launch flag and this transport only attached to %s; "
-					+ "start llama-server from the app (auto_start) to rebind it"
-				)
-				% String(config.get("base_url", ""))
-			)
+			_ownership_message(auto_start)
 		)
 		_steering_info = refused
 		_steering_mutex.unlock()
@@ -552,6 +566,19 @@ func _steering_main(
 	_relay_steering(on_done, info)
 
 
+## Wait for the streaming session, observing the turn's own cancel token. A turn
+## can queue behind a stage-change relaunch, which holds the session for its whole
+## stop/start; cancelling that turn — or shutting the app down — must not wait the
+## relaunch out (CODE-4, docs/05 §0 "closing always works"). The relaunch's own
+## wait is `_acquire_turn_session`, bounded by `steering_turn_wait_ms` instead.
+func _acquire_stream_session(cancel: LLMCancelToken) -> bool:
+	while not _session.try_lock():
+		if cancel != null and cancel.is_cancelled():
+			return false
+		OS.delay_msec(WATCHDOG_SLEEP_SLICE_MS)
+	return true
+
+
 ## docs/06 §4 + "no lost player input": hold the same session a turn holds while
 ## it streams, so the server can never be killed under a line that is being read.
 ## A crossing normally lands at turn close and costs milliseconds; a trigger that
@@ -639,6 +666,28 @@ func _steering_info_base(
 		"restarts": _steering_count,
 		"error": (error as Dictionary).duplicate(true) if error is Dictionary else {},
 	}
+
+
+## Why a relaunch is refused for ownership (docs/06 §4.1): either the transport
+## only attaches (no launch mode), or `auto_start` was asked for but the server
+## answering is one the app adopted instead of launching.
+func _ownership_message(auto_start: bool) -> String:
+	var url := String(config.get("base_url", ""))
+	if auto_start:
+		return (
+			(
+				"a server is already answering on %s and this app did not launch it; "
+				+ "only a server the app launched can be rebound"
+			)
+			% url
+		)
+	return (
+		(
+			"the dose is a launch flag and this transport only attached to %s; "
+			+ "start llama-server from the app (auto_start) to rebind it"
+		)
+		% url
+	)
 
 
 ## The info for a relaunch that never started (attached server, thread failure).

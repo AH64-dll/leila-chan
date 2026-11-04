@@ -7,6 +7,7 @@ extends GdUnitTestSuite
 
 const LLMScript := preload("res://autoload/LLM.gd")
 const FakeBackend := preload("res://tests/helpers/FakeLLMBackend.gd")
+const Steer := preload("res://llm/StageSteering.gd")
 
 
 func _new_llm(transport: Variant) -> Node:
@@ -43,6 +44,31 @@ func test_stage_transition_binds_the_dose_inside_the_glitch_window() -> void:
 	assert_bool(bool(reports[0]["ok"])).is_true()
 	assert_float(float(llm.get_dose()["malice"])).is_equal(4.5)
 	assert_float(float(llm.last_steering_info()["dose"]["malice"])).is_equal(4.5)
+
+
+## CODE-1/DES-1: an unusable vector map must keep the old dose instead of moving
+## the stage bookkeeping. Before the fix `launch_for()` returned `ok` with an
+## empty `vectors` list, `_same_vectors([], [])` matched a fresh boot, and the
+## game recorded a dose the server never bound.
+func test_an_unusable_vector_map_keeps_the_old_dose() -> void:
+	var backend := FakeBackend.new()
+	backend.steering_ok = true
+	var llm := _new_llm(backend)
+	# An empty mapper stands in for a missing/unreadable vectors.json: the loader
+	# leaves both tables empty, so no key is mapped or declared unbound.
+	llm._steering = Steer.new()
+	var reports := []
+	llm.steering_applied.connect(func(info: Dictionary) -> void: reports.append(info))
+
+	assert_bool(llm.apply_stage_steering(3, 2500)).is_false()
+	await get_tree().process_frame
+
+	assert_bool(llm.get_dose().is_empty()).is_true()
+	assert_array(backend.steering_calls).is_empty()
+	assert_int(reports.size()).is_equal(1)
+	assert_bool(bool(reports[0]["ok"])).is_false()
+	assert_str(String(reports[0]["error"]["code"])).is_equal("control_vector_unmapped")
+	assert_array(reports[0]["previous_vectors"]).is_empty()
 
 
 ## AC "failure → keep old dose + log": the dose map must keep describing the

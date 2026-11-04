@@ -100,10 +100,34 @@ func test_unbound_dose_keys_are_reported_not_dropped() -> void:
 	assert_bool(_steering.load_map()).is_true()
 	# A path vector name (P3.04) has no file yet: the weight is scheduled and said
 	# so, but nothing is invented for it.
-	var launch := _steering.launch_for({"malice": 4.5, "possessive": 2.0})
+	var launch := _steering.launch_for({"malice": 4.5, "path_mix": 2.0})
 	assert_bool(bool(launch["ok"])).is_true()
 	assert_int((launch["vectors"] as Array).size()).is_equal(1)
-	assert_array(launch["unbound"]).contains_exactly_in_any_order(["possessive"])
+	assert_array(launch["unbound"]).contains_exactly(["path_mix"])
+
+
+func test_an_undeclared_dose_key_fails_the_payload() -> void:
+	# A renamed/typo'd key must be a failure, not a silent skip: otherwise the
+	# caller "binds" nothing, moves the stage bookkeeping and the server runs
+	# unsteered (docs/06 §4.1 "Failure keeps the old dose", CODE-1).
+	assert_bool(_steering.load_map()).is_true()
+	var launch := _steering.launch_for({"malice": 4.5, "possessive": 2.0})
+	assert_bool(bool(launch["ok"])).is_false()
+	assert_array(launch["vectors"]).is_empty()
+	assert_str(String((launch["error"] as Dictionary)["code"])).is_equal("control_vector_unmapped")
+	# Declaring the key is what makes it a reported gap instead of a failure.
+	(
+		_steering
+		. parse_document(
+			{
+				"vectors": {"malice": {"file": VECTOR_FILE}},
+				"unbound": {"possessive": "P3.04 ships this vector"},
+			}
+		)
+	)
+	var declared := _steering.launch_for({"malice": 4.5, "possessive": 2.0})
+	assert_bool(bool(declared["ok"])).is_true()
+	assert_array(declared["unbound"]).contains_exactly(["possessive"])
 
 
 func test_empty_dose_binds_nothing() -> void:
@@ -133,7 +157,11 @@ func test_broken_documents_leave_the_map_empty() -> void:
 func test_missing_map_file_reports_the_reason() -> void:
 	assert_bool(_steering.load_map("res://data/steering/does_not_exist.json")).is_false()
 	assert_bool(_steering.last_error().is_empty()).is_false()
-	assert_array(_steering.launch_for({"malice": 4.5})["vectors"]).is_empty()
+	# With no map there are no declarations either, so a scheduled dose must fail
+	# closed instead of reporting an empty (unsteered) bind (CODE-1/DES-1).
+	var launch := _steering.launch_for({"malice": 4.5})
+	assert_bool(bool(launch["ok"])).is_false()
+	assert_str(String((launch["error"] as Dictionary)["code"])).is_equal("control_vector_unmapped")
 
 
 func test_shipped_vector_is_a_gguf_container() -> void:

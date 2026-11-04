@@ -23,6 +23,11 @@ const HEALTH_MAX_BYTES := 16384
 var config := {}
 var _pid := 0
 var _owns := false
+## A healthy server that this process adopted instead of launching (P1.02 attach
+## rule). It is never ours to stop, relaunch, or take over (docs/06 §4.1), and the
+## safety classifier must not be pointed at it when `auto_start` only *asked* for
+## an owned server (CODE-3). Set by the last probe; reset by a launch/stop.
+var _attached := false
 var _supervised := false
 var _mutex := Mutex.new()
 var _host := "127.0.0.1"
@@ -323,6 +328,12 @@ func restart(cancel: LLMCancelToken = null) -> Dictionary:
 	if not _lock(cancel):
 		return _cancelled()
 	var old_pid := _pid
+	if _foreign_locked():
+		# A server this process did not launch is not ours to stop; starting a
+		# second one would only fight it for the port (docs/06 §4.1).
+		var refused := _foreign_result(old_pid)
+		_mutex.unlock()
+		return refused
 	_stop_locked()
 	_supervised = true
 	var result := _start_locked(cancel)
@@ -350,6 +361,16 @@ func restart_with_vectors(
 		return _cancelled()
 	var started := Time.get_ticks_msec()
 	var old_pid := _pid
+	if _foreign_locked():
+		# docs/06 §4.1 "only a server the app launched can be rebound": the
+		# stop below cannot kill an adopted server, so launching a replacement
+		# would leave two llama-servers on the port and report a failure the
+		# attached one never had. `_attached` is only a memory of the last probe
+		# (a fresh backend may never have probed), so check the live server.
+		var refused := _foreign_result(old_pid)
+		refused["restart_ms"] = Time.get_ticks_msec() - started
+		_mutex.unlock()
+		return refused
 	config["control_vectors"] = vectors.duplicate(true)
 	var validation := _validate_files()
 	if not validation["ok"]:
@@ -388,7 +409,17 @@ func server_pid() -> int:
 
 
 func owns_process() -> bool:
-	return _owns and _pid > 0
+	## A dead pid is not ownership: `server_owned` (the classifier's live check,
+	## SAF-12) and the relaunch guard must describe the server answering *now*,
+	## not one this process used to have.
+	return _owns and is_running()
+
+
+## True when the last probe found a healthy server this process did not launch.
+## Cheap (no probe): the caller uses it for the main-thread refusal, while the
+## worker path re-probes before it touches anything (`_foreign_locked`).
+func is_attached() -> bool:
+	return _attached
 
 
 func is_supervised() -> bool:
@@ -403,11 +434,54 @@ func is_healthy(timeout_ms := -1) -> bool:
 	return probe_health(timeout_ms)["ok"]
 
 
+## Under `_mutex`, worker threads only: true when a healthy server answers that
+## this process did not launch. The live probe is why this is not the cheap
+## main-thread check — `is_attached()` is the cached answer for that. The flag is
+## set here so the next main-thread call refuses without a probe (docs/06 §4.1).
+func _foreign_locked() -> bool:
+	if _owns and is_running():
+		_attached = false
+		return false
+	if not is_healthy():
+		return false
+	_attached = true
+	return true
+
+
+## The refusal every relaunch reports for an adopted server. Nothing was
+## stopped, so the old dose still runs: `kept_previous` and `recovered` hold.
+func _foreign_result(old_pid: int) -> Dictionary:
+	return {
+		"ok": false,
+		"error":
+		{
+			"code": "server_not_owned",
+			"message":
+			(
+				(
+					"a server is already answering on %s and this app did not launch it; "
+					+ "refusing to relaunch a process it does not own"
+				)
+				% String(config["base_url"])
+			),
+		},
+		"kept_previous": true,
+		"recovered": true,
+		"old_pid": old_pid,
+		"pid": _pid,
+		"restart_ms": 0,
+	}
+
+
 func _ensure_locked(cancel: LLMCancelToken) -> Dictionary:
 	if _owns and is_running():
+		_attached = false
 		return _running_result(false, 0)
 	var health := probe_health()
 	if health["ok"]:
+		# Another task's server: adopted, never killed (P1.02). The flag is what
+		# makes a relaunch refuse instead of spawning a doomed second server.
+		_attached = true
 		return _running_result(false, 0)
 	if _port_is_open():
 		return {
@@ -453,6 +527,7 @@ func _start_locked(cancel: LLMCancelToken) -> Dictionary:
 		}
 	_pid = pid
 	_owns = true
+	_attached = false
 	var started := Time.get_ticks_msec()
 	var budget := int(config["startup_timeout_ms"])
 	while Time.get_ticks_msec() - started < budget:
@@ -584,6 +659,7 @@ func _build_args() -> PackedStringArray:
 
 func _stop_locked() -> void:
 	_supervised = false
+	_attached = false
 	if _pid > 0 and OS.is_process_running(_pid):
 		OS.kill(_pid)
 		# Wait for the socket to close rather than for the pid to vanish: once a

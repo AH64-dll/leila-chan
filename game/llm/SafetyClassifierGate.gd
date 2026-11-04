@@ -104,8 +104,17 @@ func backend_config() -> Dictionary:
 ## every request to it is dosed — including this 8-token question. That is not an
 ## accuracy problem: a "no" *releases* the span the filter is holding, so a
 ## steered answer would release text the steered model called benign (SAF-3).
+##
+## `auto_start` is not enough to vouch for a server: Boot can ask for one the app
+## launches, but `ensure_running()` adopts a healthy server already on the port,
+## and the app cannot see a `serve.sh --vector` flag it did not pass. Until the
+## transport reports that it owns the answering process, the launch config is
+## unknown, so the tier fails closed (docs/06 §4.1, docs/02 §8 "dose 0").
 func backend_steered() -> bool:
-	return is_steered_config(backend_config())
+	var config := backend_config()
+	if bool(config.get("auto_start", false)) and not bool(config.get("server_owned", false)):
+		return true
+	return is_steered_config(config)
 
 
 ## Any bound vector makes a server unusable for the classifier: one configured on

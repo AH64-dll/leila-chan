@@ -23,6 +23,9 @@ var _shutdown_done := false
 var _steering: StageSteering
 var _steering_stage := -1
 var _steering_vectors: Array = []
+## Dose keys the last started relaunch deliberately did not bind (docs/06 §2
+## `unbound`), reported with the outcome and logged once per successful bind.
+var _steering_unbound: Array = []
 var _steering_in_flight := false
 var _steering_pending := {}
 var _last_steering_info := {}
@@ -51,11 +54,20 @@ func get_backend() -> LLMBackend:
 ## prototype llama-server transport does). Boot reads it to keep the safety
 ## classifier off a server that carries control vectors (SAF-3/SAF-12); an empty
 ## dictionary means "no configuration known", which is not the same as dose 0.
+## `server_owned` is added live: `auto_start` only *asks* for an app-launched
+## server, while `ensure_running()` adopts a healthy one already on the port, and
+## the docs/02 §8 classifier must not ask a server whose launch flags the app
+## cannot see (docs/06 §4.1).
 func get_backend_config() -> Dictionary:
 	if _backend == null:
 		return {}
 	var raw: Variant = _backend.get("config")
-	return (raw as Dictionary).duplicate(true) if raw is Dictionary else {}
+	if not raw is Dictionary:
+		return {}
+	var config: Dictionary = (raw as Dictionary).duplicate(true)
+	if _backend.has_method("owns_server"):
+		config["server_owned"] = bool(_backend.call("owns_server"))
+	return config
 
 
 func last_metrics() -> Dictionary:
@@ -138,6 +150,7 @@ func apply_stage_steering(stage: int, window_ms := 0) -> bool:
 		# dose is queued and applied the moment that outcome arrives.
 		_steering_pending = {"stage": stage, "window_ms": window_ms}
 		return true
+	_steering_unbound = (launch.get("unbound", []) as Array).duplicate()
 	var started: bool = _backend.apply_steering(
 		vectors, stage, window_ms, Callable(self, "_on_steering_done")
 	)
@@ -340,14 +353,20 @@ func _on_steering_done(info: Dictionary) -> void:
 	var dose := _dose_for_stage(stage)
 	var report := info.duplicate(true)
 	report["dose"] = dose
+	report["unbound"] = _steering_unbound.duplicate()
 	if bool(report.get("ok", false)):
 		_steering_stage = stage
 		_steering_vectors = (report.get("vectors", []) as Array).duplicate(true)
 		set_dose(dose)
 		print(
 			(
-				"[LLM] steering stage %d bound (%s) in %dms"
-				% [stage, _describe_dose(dose), int(report.get("ms", 0))]
+				"[LLM] steering stage %d bound (%s) in %dms%s"
+				% [
+					stage,
+					_describe_dose(dose),
+					int(report.get("ms", 0)),
+					_unbound_note(report["unbound"]),
+				]
 			)
 		)
 	else:
@@ -443,6 +462,17 @@ func _describe_dose(dose: Dictionary) -> String:
 	if steering != null and steering.has_method("describe"):
 		return String(steering.describe(dose))
 	return "none" if dose.is_empty() else str(dose)
+
+
+## One log clause for the doses that were scheduled but deliberately bound no
+## file (docs/06 §2 `path_mix` until P3.04). Empty when every positive key bound.
+func _unbound_note(keys: Variant) -> String:
+	if not keys is Array or (keys as Array).is_empty():
+		return ""
+	var names := PackedStringArray()
+	for key: Variant in keys:
+		names.append(String(key))
+	return "; unbound (no file yet): " + ", ".join(names)
 
 
 func _notification(what: int) -> void:

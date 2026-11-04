@@ -58,3 +58,17 @@
 - Measured (RTX 4050, GPU to itself): cold start with the vector 2.07/2.29 s standalone, relaunch 3425 ms in-engine;
   with two other llama-servers resident the same relaunch took 4–6 s (CPU load), which the bench now reports against
   the run's own cold start.
+
+### P2.03 round 2 — review fixes
+
+- The map must fail *closed*: only a key declared under `unbound` may bind nothing; anything else is
+  `control_vector_unmapped`. Otherwise a missing `vectors.json` looks exactly like "already bound at stage 0".
+- `auto_start` is a **request**, not ownership. `ensure_running()` adopts a healthy server on the port, so record
+  adoption (`_attached`) at the probe and re-probe on the worker before any stop/start; refuse `server_not_owned`
+  instead of spawning a second llama-server that dies on the busy port.
+- Same ownership rule feeds the classifier: `LLM.get_backend_config()` publishes `server_owned`, and the live check
+  must treat `auto_start && !server_owned` as steered/unknown (fail closed), not as dose 0.
+- Every wait on the session needs the caller's token: `generate()` now uses a cancel-aware acquire, so `LLM.cancel()`
+  + join no longer waits out a relaunch. A shutdown-cancel API was avoided to stay under gdlint's 20-method cap.
+- Gotcha: test helpers returning `Variant` (`_fake()`) must be assigned with `var x = ...` or an explicit `: Variant`;
+  `:=` triggers the "inferred from Variant" warning-as-error.
