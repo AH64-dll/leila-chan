@@ -160,6 +160,10 @@ after a firing stay locked (earliest refire = gap + 1); `max_per` is the doc's e
 FX.gd reads this table and drops over-gate/over-budget picks silently; the debug menu (F6) can force
 any implemented effect.
 
+Photosensitive mode changes the look, never the rule: `flicker` becomes a single dim instead of a flicker
+(no luminance change faster than 3 Hz, docs/02 §2.3) and `invert_flash` is suppressed. Reduced motion
+still cuts `shake_big` and `shake_small` — shakes are skipped, not softened.
+
 | Effect | Gate stage | Cooldown (turns) | Extra cap |
 |---|---|---|---|
 | blush_glow | 0 | 3 | — |
@@ -177,6 +181,23 @@ any implemented effect.
 | invert_flash | 4 | 3 | — |
 | her_eyes | 5 | 3 | — |
 | none | 0 | — | — |
+
+### 2.3 Stage baseline effects (docs/01 §3 + docs/03 §4)
+
+The world itself drifts as the stage rises. These rows are not model picks, so they carry no gate and no
+cooldown; FX.gd applies the row on every stage change and names it to the host. `desaturation` is the
+screen's 0–1 drain: docs/01 §3 starts it at stage 3 ("backgrounds desaturate") and docs/03 §4 gives the
+rate (`saturation × (1 − 0.15·stage)`, so stage 5 keeps 25%). The host ramps the value, so a transition
+reads as a drain rather than a snap.
+
+| Stage | Desaturation |
+|---|---|
+| 0 | 0.00 |
+| 1 | 0.00 |
+| 2 | 0.00 |
+| 3 | 0.45 |
+| 4 | 0.60 |
+| 5 | 0.75 |
 
 ## 3. Sprite on-enter events
 
