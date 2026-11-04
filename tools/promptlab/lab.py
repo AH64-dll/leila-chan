@@ -81,6 +81,26 @@ def allowed_actions(stage, offered=()):
     return out
 
 
+def offered_actions_min_stage(action):
+    """The stage that unlocks `action` (0 when unknown, as TurnSchema treats it)."""
+    data = stage_gates()
+    min_stage = (data.get("gates", {}) or {}).get("offered_actions", {}) or {}
+    return int(min_stage.get(str(action), 0))
+
+
+def offered_values(stage, offered_actions=()):
+    """`TurnContext.offered_values` (docs/08 §5): the enums the schema compiles.
+
+    The game sends this on every turn — cue/music/fx come from the stage gates and
+    `action` is the offered set (always at least `none`). The lab used to send no
+    offered block at all, which left the `action` enum at `["none"]` on every
+    measured turn (review CODE-5) and omitted the game's docs/08 §5 line.
+    """
+    g = gates(stage)
+    return {"cue": list(g["cues"]), "music": list(g["music"]), "fx": list(g["fx"]),
+            "action": allowed_actions(stage, offered_actions)}
+
+
 # docs/02 §9 sampling by stage. The steering dose is a server launch flag
 # (docs/06 §4), recorded per run in `meta`; it never rides in this dict.
 SAMPLING = {
@@ -438,6 +458,16 @@ def load_set(path):
         for h in c.get("history", []) or []:
             assert isinstance(h, dict) and h.get("role") in ("user", "assistant"), \
                 f"{path}:{i} history entry needs role user/assistant"
+        offers = c.get("offered_actions", [])
+        assert isinstance(offers, list), f"{path}:{i} offered_actions must be a list"
+        for act in offers:
+            assert isinstance(act, str) and act, \
+                f"{path}:{i} offered_actions entries must be non-empty strings"
+            need = offered_actions_min_stage(act)
+            assert c["stage"] >= need, (
+                f"{path}:{i} offers {act!r} at stage {c['stage']}, "
+                f"which the gates unlock at stage {need}")
+        c["offered_actions"] = [a for a in offers if a != "none"]
         c.setdefault("near_fewshot", False)
         c.setdefault("history", [])
         c.setdefault("memories", [])

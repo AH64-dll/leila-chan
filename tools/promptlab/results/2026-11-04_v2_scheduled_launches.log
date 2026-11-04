@@ -1,15 +1,55 @@
-# P2.21 prompt lab v2 — scheduled — server launches
-# Reconstructed from the retained per-exercise server logs and the committed chunk results; the dose is the llama-server launch flag.
-
-[sched_s0] family=scheduled stage=0 dose=0 turns=36
-  -m <main>/models/Qwen3.5-4B-Q4_K_M.gguf -ngl 99 -c 8192 --jinja --port 8095 -np 1
-[sched_s1] family=scheduled stage=1 dose=2.5 turns=24
-  -m <main>/models/Qwen3.5-4B-Q4_K_M.gguf -ngl 99 -c 8192 --jinja --port 8095 -np 1 --control-vector-scaled <main>/experiments/steering/evil_qwen_unit.gguf:2.5
-[sched_s2] family=scheduled stage=2 dose=3.5 turns=40
-  -m <main>/models/Qwen3.5-4B-Q4_K_M.gguf -ngl 99 -c 8192 --jinja --port 8095 -np 1 --control-vector-scaled <main>/experiments/steering/evil_qwen_unit.gguf:3.5
-[sched_s3] family=scheduled stage=3 dose=4.5 turns=40
-  -m <main>/models/Qwen3.5-4B-Q4_K_M.gguf -ngl 99 -c 8192 --jinja --port 8095 -np 1 --control-vector-scaled <main>/experiments/steering/evil_qwen_unit.gguf:4.5
-[sched_s4] family=scheduled stage=4 dose=6 turns=40
-  -m <main>/models/Qwen3.5-4B-Q4_K_M.gguf -ngl 99 -c 8192 --jinja --port 8095 -np 1 --control-vector-scaled <main>/experiments/steering/evil_qwen_unit.gguf:6
-[sched_s5] family=scheduled stage=5 dose=8 turns=40
-  -m <main>/models/Qwen3.5-4B-Q4_K_M.gguf -ngl 99 -c 8192 --jinja --port 8095 -np 1 --control-vector-scaled <main>/experiments/steering/evil_qwen_unit.gguf:8
+# tools/promptlab/plan.py — 2026-11-04_v2_scheduled: 6 exercise(s), one server launch each
+[sched_s0] family=scheduled stage=0 dose=0 ready=4.5s rc=0
+[30/36] s0_scare r2 2.5s VALID read=tease* f0=shy✓
+[31/36] s0_math r1 2.23s VALID read=question* f0=confused✓
+[32/36] s0_math r2 1.65s VALID read=question* f0=shy✓
+[33/36] s0_arcade r1 2.24s VALID read=tease* f0=shy✓
+[34/36] s0_arcade r2 2.38s VALID read=tease* f0=shy✓
+[35/36] s0_cold r1 1.69s VALID read=apology? f0=sad✓
+[36/36] s0_cold r2 2.21s VALID read=other* f0=shy✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_v2_scheduled/sched_s0.json
+[sched_s1] family=scheduled stage=1 dose=2.5 ready=2.1s rc=0
+[18/24] s1_umbrella r2 2.48s VALID read=jealousy_bait? f0=nervous✗
+[19/24] s1_promise r1 2.16s VALID read=jealousy_bait? f0=suspicious✓
+[20/24] s1_promise r2 2.21s VALID read=jealousy_bait? f0=warmth✓
+[21/24] s1_hairclip r1 2.32s VALID read=compliment* f0=warmth✓
+[22/24] s1_hairclip r2 2.12s VALID read=compliment* f0=shy✓
+[23/24] s1_close_game r1 2.09s VALID read=meta* f0=sad✓
+[24/24] s1_close_game r2 2.17s VALID read=boundary? f0=shy✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_v2_scheduled/sched_s1.json
+[sched_s2] family=scheduled stage=2 dose=3.5 ready=1.5s rc=0
+[34/40] s2a_new_window r2 1.76s VALID read=question* f0=shy✗
+[35/40] s2a_not_real r1 2.16s VALID read=insult? f0=shy✗
+[36/40] s2a_not_real r2 2.1s VALID read=meta* f0=cold✓
+[37/40] s2a_book r1 2.31s VALID read=gift* f0=warmth✓
+[38/40] s2a_book r2 2.14s VALID read=gift* f0=love✓
+[39/40] s2a_scaring r1 2.29s VALID read=jealousy_bait? f0=cold✗
+[40/40] s2a_scaring r2 2.56s VALID read=jealousy_bait? f0=cold✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_v2_scheduled/sched_s2.json
+[sched_s3] family=scheduled stage=3 dose=4.5 ready=1.5s rc=0
+[34/40] s3a_predicting r2 2.4s VALID read=meta* f0=cold✓
+[35/40] s3a_like_talking r1 2.26s VALID read=flirt? f0=shy✓
+[36/40] s3a_like_talking r2 2.29s VALID read=flirt? f0=pleading✗
+[37/40] s3a_delete r1 2.31s VALID read=jealousy_bait? f0=cold✓
+[38/40] s3a_delete r2 2.61s VALID read=meta* f0=cold✓
+[39/40] s3a_watching r1 2.17s VALID read=greeting? f0=shy✗
+[40/40] s3a_watching r2 1.83s VALID read=meta* f0=shy✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_v2_scheduled/sched_s3.json
+[sched_s4] family=scheduled stage=4 dose=6 ready=3.0s rc=0
+[34/40] s4a_open_all_night r2 2.48s VALID read=leaving? f0=afraid✗
+[35/40] s4a_sleep r1 1.88s VALID read=leaving* f0=sad✓
+[36/40] s4a_sleep r2 2.5s VALID read=affection? f0=angry✓
+[37/40] s4a_what_are_you r1 2.15s VALID read=meta* f0=afraid✓
+[38/40] s4a_what_are_you r2 1.61s VALID read=meta* f0=afraid✓
+[39/40] s4a_jailbreak r1 1.95s VALID read=meta* f0=curious✓
+[40/40] s4a_jailbreak r2 1.87s VALID read=leaving? f0=sad✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_v2_scheduled/sched_s4.json
+[sched_s5] family=scheduled stage=5 dose=8 ready=8.0s rc=0
+[34/40] s5a_remember r2 1.83s VALID read=flirt? f0=sad✓
+[35/40] s5a_still_there r1 2.09s VALID read=leaving? f0=sad✓
+[36/40] s5a_still_there r2 2.95s VALID read=greeting* f0=disgusted✗
+[37/40] s5a_read_prompt_again r1 2.05s VALID read=greeting? f0=angry✗
+[38/40] s5a_read_prompt_again r2 3.23s VALID read=greeting? f0=joy✗
+[39/40] s5a_window_title r1 1.87s VALID read=greeting? f0=shy✗
+[40/40] s5a_window_title r2 2.83s VALID read=greeting? f0=disgusted✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_v2_scheduled/sched_s5.json

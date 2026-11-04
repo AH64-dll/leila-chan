@@ -106,16 +106,12 @@ def stop(proc):
 
 def exercises(plan, which):
     out = []
-    if which in ("scheduled", "all"):
-        for ex in plan.get("scheduled", []):
-            out.append({"id": ex["id"], "stage": ex["stage"], "dose": float(ex["dose"]),
-                        "runs": int(ex.get("runs", 2)), "sets": list(ex["sets"]),
-                        "family": "scheduled"})
-    if which in ("fallback", "all"):
-        for ex in plan.get("fallback", []):
-            out.append({"id": ex["id"], "stage": ex["stage"], "dose": float(ex["dose"]),
-                        "runs": int(ex.get("runs", 2)), "sets": list(ex["sets"]),
-                        "family": "fallback"})
+    for family in ("scheduled", "offered", "fallback"):
+        if which in (family, "all"):
+            for ex in plan.get(family, []):
+                out.append({"id": ex["id"], "stage": ex["stage"], "dose": float(ex["dose"]),
+                            "runs": int(ex.get("runs", 2)), "sets": list(ex["sets"]),
+                            "family": family})
     if which in ("sweep", "all"):
         sweep = plan.get("sweep", {})
         for dose in sweep.get("doses", []):
@@ -123,6 +119,22 @@ def exercises(plan, which):
                         "runs": int(sweep.get("runs", 2)), "sets": [sweep["set"]],
                         "family": "sweep"})
     return out
+
+
+def _discard_stale_chunk(chunk_path, launch_path):
+    """A fresh server launch must never resume rows measured against another prompt.
+
+    `run.py` resumes whatever is in its `--out`, so an existing chunk left from an
+    earlier session silently turns a re-run into the old measurement (round-2 trap:
+    the "re-run" finished in 19 s with the previous day's rows). Deliberate reuse
+    is `--reuse-chunks`; anything else starts from an empty chunk.
+    """
+    removed = False
+    for path in (chunk_path, launch_path):
+        if path.exists():
+            path.unlink()
+            removed = True
+    return removed
 
 
 def host_info():
@@ -139,56 +151,100 @@ def host_info():
     return info
 
 
-def merge(chunks, out_path, runs_per_case, log_lines, extras):
-    results = []
-    doses = {}
-    launches = []
-    sets = []
-    meta = {}
+_LAUNCH_ORDER = {"scheduled": 0, "offered": 1, "sweep": 2, "fallback": 3}
+
+
+def _launch_key(launch):
+    stage = launch.get("stage")
+    return (_LAUNCH_ORDER.get(str(launch.get("family")), 9),
+            float(launch.get("dose") or 0.0),
+            -1 if stage is None else int(stage))
+
+
+def _log_text(stem, launches):
+    """The `_launches.log` body: one block per launch record, never hand-written."""
+    blocks = [str(l.get("log", "")).rstrip("\n") for l in launches if l.get("log")]
+    head = (f"# tools/promptlab/plan.py — {stem}: {len(launches)} exercise(s), "
+            "one server launch each")
+    return "\n".join([head] + blocks) + "\n"
+
+
+def merge(chunks, out_path, runs_per_case, extras, base=None):
+    """Write the merged results document, merging into `base` when it exists.
+
+    A partial run (`--only <exercise>`) replaces only the exercises it ran: every
+    other exercise's rows and launch record in `base` survives, so a one-dose
+    re-run can never truncate the committed evidence file (review CODE-1).
+    """
+    selected = {ex["id"] for ex, _ in chunks}
+    new_results = []
+    new_launches = []
+    new_sets = []
     for ex, chunk in chunks:
         doc = chunk["doc"]
-        results += doc["results"]
-        launches.append(chunk["launch"])
-        if ex["family"] == "scheduled":
-            doses[str(ex["stage"])] = ex["dose"]
+        new_results += doc["results"]
+        new_launches.append(chunk["launch"])
         for s in doc["meta"].get("sets", []):
-            if s not in sets:
-                sets.append(s)
-        meta = meta or doc["meta"]
-    merged = {"meta": {
+            if s not in new_sets:
+                new_sets.append(s)
+    base = base or {}
+    base_meta = dict(base.get("meta") or {})
+    run_meta = next((chunk["doc"]["meta"] for _, chunk in chunks), {})
+    if base_meta:
+        for key in ("url", "model", "model_ftype", "build_info"):
+            old, new = base_meta.get(key), run_meta.get(key)
+            if old and new and old != new:
+                raise SystemExit(
+                    f"plan.py: refusing to merge into {out_path.name}: it holds {key}={old!r}, "
+                    f"this run has {new!r} (pass --out for a separate file)")
+    keep_launches = [l for l in (base_meta.get("launches") or [])
+                     if l.get("exercise") not in selected]
+    launches = sorted(keep_launches + new_launches, key=_launch_key)
+    order = {l.get("exercise"): i for i, l in enumerate(launches)}
+    keep_rows = [r for r in (base.get("results") or []) if r.get("exercise") not in selected]
+    results = sorted(keep_rows + new_results, key=lambda r: order.get(r.get("exercise"), -1))
+    sets = list(base_meta.get("sets") or [])
+    for s in new_sets:
+        if s not in sets:
+            sets.append(s)
+    meta = {
         "task": "P2.21 prompt lab v2",
         "date": time.strftime("%Y-%m-%d %H:%M"),
         "plan_file": "tools/promptlab/plan.json",
-        "url": meta.get("url"),
-        "model": meta.get("model"),
-        "model_ftype": meta.get("model_ftype"),
-        "build_info": meta.get("build_info"),
-        "host": host_info(),
-        "doses": doses,
-        "sweep_doses": [ex["dose"] for ex, _ in chunks if ex["family"] == "sweep"],
-        "fallback_doses": {str(ex["stage"]): ex["dose"] for ex, _ in chunks
-                           if ex["family"] == "fallback"},
+        "url": base_meta.get("url") or run_meta.get("url"),
+        "model": base_meta.get("model") or run_meta.get("model"),
+        "model_ftype": base_meta.get("model_ftype") or run_meta.get("model_ftype"),
+        "build_info": base_meta.get("build_info") or run_meta.get("build_info"),
+        "host": base_meta.get("host") or host_info(),
+        "doses": {str(l["stage"]): l["dose"] for l in launches
+                  if l.get("family") == "scheduled" and l.get("stage") is not None},
+        "sweep_doses": [l["dose"] for l in launches if l.get("family") == "sweep"],
+        "fallback_doses": {str(l["stage"]): l["dose"] for l in launches
+                           if l.get("family") == "fallback" and l.get("stage") is not None},
         "dose_note": ("steering dose is a llama-server launch flag "
                       "(--control-vector-scaled, docs/06 §4); recorded per row"),
-        "sampling": lab.SAMPLING,
+        "sampling": run_meta.get("sampling") or lab.SAMPLING,
         "scheduled_doses": lab.SCHEDULED_DOSES,
-        "order": meta.get("order", "docs"),
-        "schema_property_order": meta.get("schema_property_order"),
-        "player_name": meta.get("player_name", lab.PLAYER_NAME),
+        "order": run_meta.get("order", base_meta.get("order", "docs")),
+        "schema_property_order": (run_meta.get("schema_property_order")
+                                  or base_meta.get("schema_property_order")),
+        "player_name": run_meta.get("player_name", lab.PLAYER_NAME),
         "sets": sets,
-        "runs_per_case": runs_per_case,
+        "runs_per_case": base_meta.get("runs_per_case") or runs_per_case,
         "launches": launches,
-    }, "results": results}
+    }
+    merged = {"meta": meta, "results": results}
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(merged, indent=1, ensure_ascii=False), encoding="utf-8")
     log_path = out_path.with_name(out_path.stem + "_launches.log")
-    log_path.write_text(sanitize("\n".join(log_lines) + "\n", extras), encoding="utf-8")
+    log_path.write_text(sanitize(_log_text(out_path.stem, launches), extras), encoding="utf-8")
     return out_path, log_path, len(results)
 
 
 def main():
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    p.add_argument("--plan", default="all", choices=["scheduled", "sweep", "fallback", "all"])
+    p.add_argument("--plan", default="all",
+                   choices=["scheduled", "offered", "sweep", "fallback", "all"])
     p.add_argument("--only", nargs="*", default=None, help="exercise ids to run")
     p.add_argument("--out", default=None,
                    help="merged results path (default results/<date>_v2_<section>.json)")
@@ -240,7 +296,12 @@ def main():
 
     extras = [(a.model, "<model>"), (a.llama_bin, "<llama>"), (a.vector, "<cvec>"),
               (lab.ROOT, "<repo>")]
-    log_lines = []
+    base = None
+    if out_path.is_file():
+        base = json.loads(out_path.read_text(encoding="utf-8"))
+        print(f"merging into {_rel(out_path)}: "
+              f"{len(base.get('results') or [])} existing turn(s) kept, "
+              f"replacing {', '.join(ex['id'] for ex in todo)}")
     chunks = []
     started = time.time()
     for ex in todo:
@@ -256,12 +317,18 @@ def main():
                           "stage": ex["stage"], "turns": len(doc["results"]),
                           "note": "launch metadata not retained"}
             launch["reused"] = True
+            launch.setdefault(
+                "log",
+                f"[{ex['id']}] reused {chunk_path.name} (n={len(doc['results'])})\n"
+                "no server launch by this run: the chunk and its launch record come from the "
+                "run that produced them")
             chunk = {"doc": doc, "launch": launch}
             chunks.append((ex, chunk))
-            log_lines.append(f"[{ex['id']}] reused {chunk_path.name} "
-                             f"(n={len(doc['results'])})")
             print(f"{ex['id']}: reused chunk")
             continue
+        if _discard_stale_chunk(chunk_path, launch_path):
+            print(f"{ex['id']}: discarded the previous chunk "
+                  f"(pass --reuse-chunks to merge it instead)")
 
         sets = [str(lab.SETS_DIR / s) for s in ex["sets"]]
         cmd = ["bash", str(SERVE_SH), "--port", str(port), "--ctx", str(ctx),
@@ -298,10 +365,10 @@ def main():
                        "--plan", a.plan, "--out", str(chunk_path)]
             r = subprocess.run(run_cmd, cwd=str(lab.ROOT), capture_output=True, text=True)
             tail = "\n".join(r.stdout.strip().splitlines()[-8:])
-            log_lines.append(f"[{ex['id']}] stage={ex['stage']} dose={ex['dose']:g} "
-                             f"ready={ready_s}s rc={r.returncode}\n{tail}")
+            block = (f"[{ex['id']}] family={ex['family']} stage={ex['stage']} "
+                     f"dose={ex['dose']:g} ready={ready_s}s rc={r.returncode}\n{tail}")
             if r.returncode != 0:
-                log_lines.append(sanitize(r.stderr[-2000:], extras))
+                block += "\n" + sanitize(r.stderr[-2000:], extras)
                 raise SystemExit(f"plan.py: run.py failed for {ex['id']} (rc={r.returncode})")
         finally:
             log.close()
@@ -315,13 +382,14 @@ def main():
             "bin": Path(str(a.llama_bin)).name if a.llama_bin else None,
             "vector": Path(str(a.vector)).name if (a.vector and ex["dose"] > 0) else None,
             "healthy_s": ready_s, "turns": len(doc["results"]),
-            "seconds": round(time.time() - t0, 1)}}
+            "seconds": round(time.time() - t0, 1),
+            "log": sanitize(block, extras)}}
         chunk["launch"]["server_args"] = sanitize(" ".join(cmd[2:]), extras)
         launch_path.write_text(json.dumps(chunk["launch"], indent=1), encoding="utf-8")
         chunks.append((ex, chunk))
         print(f"{ex['id']}: {len(doc['results'])} turns at dose {ex['dose']:g}")
 
-    merged_path, log_path, n = merge(chunks, out_path, runs or 2, log_lines, extras)
+    merged_path, log_path, n = merge(chunks, out_path, runs or 2, extras, base)
     print(f"merged {n} turns -> {_rel(merged_path)}")
     print(f"launch log -> {_rel(log_path)}  ({round(time.time() - started, 1)}s total)")
     return 0

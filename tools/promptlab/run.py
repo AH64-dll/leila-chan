@@ -41,7 +41,10 @@ def _system_sha(text):
 
 def _case_prompt_sha(case):
     return _system_sha(lab.system_prompt(case["stage"], case["path"], case["runner_up"],
-                                         case["scene"], case["memories"], (), None))
+                                         case["scene"], case["memories"], (),
+                                         lab.offered_values(case["stage"],
+                                                            case.get("offered_actions", ())),
+                                         None))
 
 
 def main():
@@ -126,11 +129,14 @@ def main():
                 continue
             if a.max_cases and n_done >= a.max_cases * a.runs:
                 break
+            offered_actions = list(case.get("offered_actions", []))
+            offered = lab.offered_values(case["stage"], offered_actions)
             rec = {"id": case["id"], "stage": case["stage"], "path": case["path"],
                    "runner_up": case["runner_up"], "run": run_i,
                    "msg": case["msg"], "near_fewshot": case["near_fewshot"],
                    "read_ok": case["read_ok"], "feelings_ok": case["feelings_ok"],
                    "dose": a.dose, "exercise": a.exercise,
+                   "offered_actions": offered_actions,
                    "system_sha": prompt_sha,
                    "history_turns": len(case.get("history", [])),
                    "memories": len(case.get("memories", []))}
@@ -139,7 +145,8 @@ def main():
                     a.url, case["stage"], case["msg"],
                     player_name=a.player_name, timeout=a.timeout, order=a.order,
                     path=case["path"], runner_up=case["runner_up"], scene=case["scene"],
-                    memories=case["memories"], history=case["history"])
+                    memories=case["memories"], history=case["history"],
+                    offered=offered, offered_actions=offered_actions)
                 rec["raw"] = raw
                 rec["latency_s"] = lat
                 rec["usage"] = usage
@@ -151,7 +158,8 @@ def main():
                     rec["valid"] = False
                     rec["parse_error"] = str(e)
                 if rec["valid"]:
-                    rec["schema_warnings"] = lab.validate_turn(rec["out"], case["stage"])
+                    rec["schema_warnings"] = lab.validate_turn(rec["out"], case["stage"],
+                                                               offered_actions)
                     beats = rec["out"].get("beats") or []
                     rec["first_feeling"] = beats[0].get("feeling") if beats else None
                     rec["read_ok_hit"] = rec["out"].get("read") in case["read_ok"]

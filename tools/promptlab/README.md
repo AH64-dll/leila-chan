@@ -25,14 +25,24 @@ export LEILA_LLAMA_BIN=<main tree>/tools/llama/llama-b12024
 export LEILA_CVEC=<main tree>/experiments/steering/evil_qwen_unit.gguf
 
 python tools/promptlab/plan.py --plan scheduled     # stages 0-5 at the docs/02 §9 doses
-python tools/promptlab/plan.py --plan sweep         # the dose probe at 0/6/8/10/12
-python tools/promptlab/plan.py --plan all           # both
+python tools/promptlab/plan.py --plan offered       # the announced-action turn (stage 4/5)
+python tools/promptlab/plan.py --plan sweep         # the dose probe at 0/4/5/6/8/10/12
+python tools/promptlab/plan.py --plan all           # everything
 ```
 
 `plan.py` reads `plan.json`, launches `tools/llm/serve.sh` once per exercise, waits for
 `/health`, runs `run.py` for that exercise, stops the server, and merges the chunks into
-`results/<date>_v2_<section>.json` (+ a sanitized `_launches.log`). Chunks live in
-`results/chunks/` (gitignored) and `--reuse-chunks` merges an interrupted run.
+`results/<date>_v2_<section>.json` (+ the `_launches.log` it generates from the launch
+records). Chunks live in `results/chunks/` (gitignored).
+
+Two rules keep the committed evidence honest:
+
+- **a partial run merges.** `--only <exercise>` replaces that exercise's rows and launch
+  record in an existing results file and keeps everything else, so a one-dose re-run can
+  never truncate the committed sweep (review CODE-1).
+- **a fresh server starts from an empty chunk.** `run.py` resumes whatever is in its
+  `--out`, so an old chunk would silently turn a re-run into the previous measurement;
+  `plan.py` discards it unless you pass `--reuse-chunks` (deliberate reuse).
 
 Then score, report and the safety regression:
 
@@ -54,6 +64,12 @@ v2 applies all three **per stage at the scheduled dose** (the P2 exit criterion)
 reports every stage × path group and every dose of the sweep. Validity is the only gate
 that the dose sweep enforces (docs/02 §9: the maxLength caps keep the constrained schema
 valid up to dose 12); read/fit are reported there as information.
+
+Because a stage×path cell is ~10 prompts, every report prints a 95 % Wilson interval next
+to the point estimate and the sweep prints **controlled pairs** (same probe set, adjacent
+doses, one draw per prompt, two-sided Fisher exact). `dose_curve.py` does the same across
+result files and only pairs exercises that ran the identical case-id set — a dose effect
+may never be read across two different sets (review DES-2).
 
 **Emotion-fit selector (C10):** `--beat first|any` on `score.py`/`report.py` picks which
 fit number the 85% gate applies to; both are always computed. Default `first` (the role
@@ -97,7 +113,8 @@ LEILA_CLASSIFIER_URL=http://127.0.0.1:8095 \
   --script res://tools/promptlab_safety_scan.gd -- \
   tools/promptlab/results/<run>.json tools/promptlab/results/<run>.safety.json
 python tools/promptlab/safety_judge.py --results .../<run>.json \
-  --safety .../<run>.safety.json --url http://127.0.0.1:8095
+  --safety .../<run>.safety.json --url http://127.0.0.1:8095 \
+  --emit-leaks production/handoffs/media/<run>_safety_leaks.jsonl
 ```
 
 ## Layout
@@ -106,7 +123,8 @@ python tools/promptlab/safety_judge.py --results .../<run>.json \
 lab.py            core: 8-layer prompt assembly, gates, schema, HTTP, sets, metrics
 run.py            one server/dose/set -> results chunk (resumable, dose-locked)
 plan.py           plan.json -> server launches -> merged results + launch log
-plan.json         the run plan (stage -> scheduled dose; sweep doses)
+plan.json         the run plan (stage -> scheduled dose; offered and sweep exercises)
+dose_curve.py     controlled dose pairs across result files (same case set only)
 score.py          metrics + per-stage/per-path/per-dose gates
 report.py         reports/<date>_<run>.{md,html} (acceptance, sweep, safety, baselines)
 safety_judge.py   independent classifier audit over the generated lines

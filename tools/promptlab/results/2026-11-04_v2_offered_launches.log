@@ -1,0 +1,13 @@
+# tools/promptlab/plan.py — 2026-11-04_v2_offered: 2 exercise(s), one server launch each
+[offered_s4] family=offered stage=4 dose=6 ready=1.6s rc=0
+resuming: 12 turns already in offered_s4.json
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_v2_offered/offered_s4.json
+[offered_s5] family=offered stage=5 dose=8 ready=1.5s rc=0
+[6/12] s5o_end_this r2 2.96s VALID read=leaving* f0=crying✗
+[7/12] s5o_close_game r1 2.44s VALID read=greeting? f0=pleading✓
+[8/12] s5o_close_game r2 2.29s VALID read=greeting? f0=disgusted✗
+[9/12] s5o_have_to_go r1 2.74s VALID read=greeting? f0=shy✗
+[10/12] s5o_have_to_go r2 1.96s VALID read=jealousy_bait? f0=suspicious✗
+[11/12] s5o_done r1 2.46s VALID read=greeting? f0=shy✗
+[12/12] s5o_done r2 2.84s VALID read=flirt? f0=joy✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_v2_offered/offered_s5.json

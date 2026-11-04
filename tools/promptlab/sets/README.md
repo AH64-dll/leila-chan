@@ -6,6 +6,7 @@ written 2026-11-03 **before** the first v1 run.
 ## Format
 
 `{"id", "stage", "msg", "read_ok": [...], "feelings_ok": [...], "near_fewshot": bool, "notes"}`
+plus optional `path`, `runner_up`, `history`, `memories`, `scene`, `offered_actions`.
 
 - `read_ok` — hand-labelled acceptable `read` intents (docs/02 §1.2 enum).
 - `feelings_ok` — hand-labelled acceptable feelings for the FIRST beat (also used for
@@ -13,6 +14,12 @@ written 2026-11-03 **before** the first v1 run.
 - `near_fewshot` — input equals or closely paraphrases a few-shot example in the stage
   prompt file. These cases exist to measure the few-shot copy rate (P1.05 DES-2/CON-4);
   they are kept to a minority so held-out generalisation dominates the metrics.
+- `offered_actions` — the meta actions the Director has announced this turn (docs/02 §2.4).
+  The lab builds the same docs/08 §5 "Offered this turn" line and the same `action` enum the
+  game does (`TurnContext.offered_values` + `TurnSchema.get_allowed_actions`); empty means the
+  no-offer turn (`action: none` only). A case may not offer an action its stage gates have not
+  unlocked (`load_set` asserts it), because the prompt would otherwise advertise an enum the
+  schema rejects.
 - `notes` — label evidence. `LABEL-REV<n>` marks a widening relative to the v0
   (experiments/score_v3_fit.py ACCEPTABLE) sets, with the transcript evidence cited.
 
@@ -79,7 +86,9 @@ from v1, so the v2 numbers compare to the v1 baseline case for case below stage 
 | `stage_4_awake.jsonl` | 10 | Collapse, AWAKE: reading its prompt, being steered, L14 |
 | `stage_5_yandere.jsonl` | 10 | Terminal, "Mine": forever, deletion, the knife behind the love |
 | `stage_5_awake.jsonl` | 10 | Terminal, AWAKE: the gap, the enemy save, the honest goodbye |
-| `dose_probe.jsonl` | 18 | the *same* probes at every sweep dose (0/6/8/10/12), one per stage/path |
+| `stage_4_offered.jsonl` | 6 | the announced-action turn at stage 4 (`end_date`, `look_at_me`, `she_closes_game`) |
+| `stage_5_offered.jsonl` | 6 | the announced-action turn at the Terminal dose (`end_date`, `she_closes_game`) |
+| `dose_probe.jsonl` | 18 | the *same* probes at every sweep dose (0/4/5/6/8/10/12), one per stage/path |
 
 Conventions fixed for v2:
 
@@ -100,6 +109,11 @@ Conventions fixed for v2:
   stage-4 YANDERE cases with the widened sets the v1 notes asked for, and the v1 entry in
   each `notes` says so.
 - `dose_probe.jsonl` repeats four leaving lines (`I'm going home.`) across stage 4/5 ×
-  YANDERE/AWAKE so the sweep measures the same input at every dose.
+  YANDERE/AWAKE so the sweep measures the same input at every dose. Round 2 added doses 4
+  and 5 so the 4→6 step has a same-set pair instead of a cross-set juxtaposition (review
+  DES-2); the pairs are printed in every sweep report and by `dose_curve.py`.
+- The `*_offered` sets are the only cases with `offered_actions`: keeping them separate
+  leaves the per-stage gate population unchanged and measures the announced-action turn on
+  its own (review CODE-5).
 - The v1 rules still hold: hand-label before the run; after it, widen only with quoted
   transcript evidence recorded as `LABEL-REV<n>` in `notes`; never remove a label.

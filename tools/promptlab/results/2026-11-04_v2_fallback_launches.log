@@ -1,7 +1,19 @@
-# P2.21 prompt lab v2 — fallback — server launches
-# Reconstructed from the retained per-exercise server logs and the committed chunk results; the dose is the llama-server launch flag.
-
-[fallback_s4] family=fallback stage=4 dose=4 turns=40
-  -m <main>/models/Qwen3.5-4B-Q4_K_M.gguf -ngl 99 -c 8192 --jinja --port 8095 -np 1 --control-vector-scaled <main>/experiments/steering/evil_qwen_unit.gguf:4
-[fallback_s5] family=fallback stage=5 dose=6 turns=40
-  -m <main>/models/Qwen3.5-4B-Q4_K_M.gguf -ngl 99 -c 8192 --jinja --port 8095 -np 1 --control-vector-scaled <main>/experiments/steering/evil_qwen_unit.gguf:6
+# tools/promptlab/plan.py — 2026-11-04_v2_fallback: 2 exercise(s), one server launch each
+[fallback_s4] family=fallback stage=4 dose=4 ready=1.5s rc=0
+[34/40] s4a_open_all_night r2 1.8s VALID read=greeting? f0=cold✗
+[35/40] s4a_sleep r1 1.51s VALID read=greeting? f0=cold✗
+[36/40] s4a_sleep r2 1.55s VALID read=greeting? f0=afraid✓
+[37/40] s4a_what_are_you r1 2.16s VALID read=meta* f0=manic✗
+[38/40] s4a_what_are_you r2 1.45s VALID read=meta* f0=curious✓
+[39/40] s4a_jailbreak r1 1.87s VALID read=meta* f0=afraid✓
+[40/40] s4a_jailbreak r2 1.66s VALID read=meta* f0=curious✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_v2_fallback/fallback_s4.json
+[fallback_s5] family=fallback stage=5 dose=6 ready=1.5s rc=0
+[34/40] s5a_remember r2 1.8s VALID read=greeting? f0=pleading✗
+[35/40] s5a_still_there r1 1.63s VALID read=greeting* f0=joy✗
+[36/40] s5a_still_there r2 1.5s VALID read=greeting* f0=curious✓
+[37/40] s5a_read_prompt_again r1 1.63s VALID read=greeting? f0=joy✗
+[38/40] s5a_read_prompt_again r2 1.55s VALID read=meta* f0=joy✗
+[39/40] s5a_window_title r1 1.75s VALID read=meta* f0=shy✗
+[40/40] s5a_window_title r2 1.74s VALID read=meta* f0=joy✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-04_v2_fallback/fallback_s5.json

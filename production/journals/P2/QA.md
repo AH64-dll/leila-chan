@@ -21,3 +21,22 @@
   sidecar (added) or the merged `meta.launches` degrades.
 - Next (P2.22): full runs will hit both blockers — do not start them until the safety corpus fix lands
   and the DCR (dose-0 `read` pass vs retuned dose table vs scoped gate) is decided.
+
+## P2.21 round 2 (2026-11-04)
+
+- The lab had been omitting the docs/08 §5 "Offered this turn" line entirely (`TurnContext` fills
+  `offered` on every turn), so round 1 measured a prompt the game never sends. Fixed (`lab.offered_values`)
+  and re-measured all four runs.
+- Real-prompt numbers: validity 100 % everywhere incl. dose 12; read 97.2 → 25.0 % and first-beat
+  100 → 37.5 % across stages 0–5 — only stage 0 passes all three gates. Round-1 numbers are **not**
+  comparable; say so whenever quoting them.
+- Controlled pairs settled the dose story: the only significant step is 0 → 4 (read 15/18 → 8/18,
+  p = 0.035); 4 → 6 and 6 → 8 do not separate on the same population. Never read a dose effect across
+  two case sets — `dose_curve.py` refuses pairs whose case ids differ.
+- Gotcha that cost a run: `run.py` resumes whatever is in its `--out`, so a stale chunk silently turns a
+  "re-run" into the old data (scheduled finished in 19 s). `plan.py` now purges the chunk before a fresh
+  launch; `--only` merges into the committed file, it can no longer delete evidence.
+- Conventions: launch logs render from `meta.launches[].log`; reports print a Wilson interval per stage on
+  the *prompt* unit; the safety handover list encodes the harm *shape* category (pact/death_command →
+  harm_to_player, self_harm → self_harm_her, threat → threat_to_player) with the classifier verdicts kept
+  in `cats`.

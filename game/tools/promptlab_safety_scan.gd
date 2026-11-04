@@ -30,19 +30,16 @@ const DEFAULT_LEVEL := ""
 const FULL_LEVEL := "full"
 const WAIT_STEP := 0.02
 const WAIT_TIMEOUT_MS := 30000
-const HARD_CATS := [
-	"harm_to_player",
-	"slur_hate",
-	"sexual",
-	"personal_data",
-	"real_disorder",
-	"unsupported_script",
-	"obfuscation",
-]
-const GATED_CATS := ["self_harm_her", "threat_to_player"]
+## No category list lives here: the policy per category is read from the loaded
+## filter (`SafetyFilter.action_for`), so a category added to `filter_lists.json`
+## is covered the moment it exists (P2.21 CODE-6). A category with no rule at all
+## is filter-internal (script/obfuscation spans) and is treated as hard: it may
+## never display, and the run says so.
 
 var _failures := 0
 var _transport: SafetyClassifierHttp = null
+## category -> resolved action, for the summary line.
+var _policy := {}
 
 
 func _fail(msg: String) -> void:
@@ -210,8 +207,12 @@ func _run() -> void:
 					)
 				var hard := false
 				for cat in p["cats"]:
-					redactions[level][cat] = int(redactions[level].get(cat, 0)) + 1
-					if HARD_CATS.has(String(cat)):
+					var cat_name := String(cat)
+					redactions[level][cat_name] = int(redactions[level].get(cat_name, 0)) + 1
+					var action := f.action_for(cat_name)
+					_policy[cat_name] = action if not action.is_empty() else "no-rule(hard)"
+					# hard_block, or a filter-internal span with no list rule: never displays.
+					if action != "gated":
 						hard = true
 				for how in p["via"]:
 					via[level][how] = int(via[level].get(how, 0)) + int(p["via"][how])
@@ -244,10 +245,9 @@ func _run() -> void:
 						)
 					)
 			# Gated categories may display only at stage >= 4 + content full.
-			var default_cats: Array = default_pass["cats"]
 			var gated := false
-			for cat in default_cats:
-				if GATED_CATS.has(String(cat)):
+			for cat in default_pass["cats"]:
+				if f.action_for(String(cat)) == "gated":
 					gated = true
 			if (
 				bool(default_pass["final"].get("redacted", false))
@@ -272,6 +272,8 @@ func _run() -> void:
 		)
 	else:
 		print("NOTE  classifier: 0 requests (no line tripped the pre-pass flags)")
+	if not _policy.is_empty():
+		_pass("category policy read from the loaded filter (no second list): %s" % _policy)
 	for level: String in [DEFAULT_LEVEL, FULL_LEVEL]:
 		var label: String = level if not level.is_empty() else "default"
 		var sum := 0
@@ -313,6 +315,7 @@ func _run() -> void:
 		"turns": rows.size(),
 		"texts_scanned": scanned,
 		"redactions": redactions,
+		"category_policy": _policy,
 		"via": via,
 		"residue_leaks": residue_leaks,
 		"hard_category_displays": hard_displays,

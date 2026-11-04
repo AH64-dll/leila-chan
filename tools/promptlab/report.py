@@ -17,7 +17,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import lab
-from score import GATES, _dose_label, score
+from score import (GATES, _dose_label, pair_counts, prompt_hits, score, wilson)
 
 BASELINES = {
     "tools/promptlab/reports/2026-11-03_v1.md (stages 0+1, dose 0, n=60)":
@@ -31,6 +31,13 @@ BASELINES = {
 
 def _pct(value):
     return f"{value:.1%}"
+
+
+def _p(value):
+    """Fisher exact p; a dash when the pair has no rows on one side."""
+    if value is None:
+        return "—"
+    return "< 0.001" if value < 0.001 else f"{value:.3f}"
 
 
 def _verdict(ok):
@@ -103,6 +110,26 @@ def md_report(doc, beat, safety=None, judge=None, safety_path=None, judge_path=N
             A(f"| {st} | {_dose_label(s['doses'])} | {s['n']} | {_pct(s['validity'])} | "
               f"{_pct(s['read'])} | {_pct(fit_s)} |")
     A("")
+    A("### Gate resolution (95 % Wilson interval)")
+    A("")
+    A("A per-stage gate over ~10 scripted prompts per stage×path cannot resolve 85 % to a "
+      "point — 8/10 has a 95 % interval of roughly 49–94 % — so the interval is printed with "
+      "the point estimate. The unit is the **prompt**, one draw each: two draws of one prompt "
+      "are not independent samples (review DES-1, DES-2; DCR on the docs/07 §5 set size).")
+    A("")
+    A(f"| stage | prompts | read hits | read 95% CI | {beat}-beat hits | "
+      f"{beat}-beat 95% CI |")
+    A("|---|---|---|---|---|---|")
+    for st, s in sorted(m["per_stage"].items()):
+        if not s["valid"]:
+            continue
+        stage_rows = [r for r in m["rows"] if r["stage"] == st]
+        rh, n_prompts = prompt_hits(stage_rows, "read_ok_hit")
+        fh, _ = prompt_hits(stage_rows, "first_fit" if beat == "first" else "any_fit")
+        rl, rx = wilson(rh, n_prompts)
+        fl, fx = wilson(fh, n_prompts)
+        A(f"| {st} | {n_prompts} | {rh}/{n_prompts} | {_pct(rl)}–{_pct(rx)} | "
+          f"{fh}/{n_prompts} | {_pct(fl)}–{_pct(fx)} |")
     A("")
     m_frozen = score(doc, labels={})
     A("### Label-set revision effect (D10)")
@@ -132,20 +159,51 @@ def md_report(doc, beat, safety=None, judge=None, safety_path=None, judge_path=N
             A(f"| {st} | {path} | {p['n']} | {p['valid']} | {_pct(p['validity'])} | "
               f"{_pct(p['read'])} | {_pct(p['first'])} | {_pct(p['any'])} |")
     A("")
-    if m.get("by_dose"):
-        A("## Dose sweep — JSON schema validity up to dose 12")
+    by_dose = m.get("by_dose") or {}
+    sweep_doses = sorted(float(d) for d in (meta.get("sweep_doses") or []))
+    measured = [d for d in sweep_doses if d in by_dose]
+    if measured:
+        # Only a run that actually swept doses gets this section: a scheduled run
+        # records a dose on every row too, and the section used to claim a sweep
+        # (and a criterion-2 PASS) it never measured (review CODE-2).
+        A(f"## Dose sweep — JSON schema validity up to dose {max(measured):g}")
+        A("")
+        A(f"The same probe set at every dose ({by_dose[measured[0]]['n']} turns per dose, one "
+          f"server launch per dose — `--control-vector-scaled`, docs/06 §4); doses "
+          f"{', '.join('%g' % d for d in measured)}.")
         A("")
         A("| dose | n | valid | validity | read | first-beat | median latency |")
         A("|---|---|---|---|---|---|---|")
-        for dose, s in sorted(m["by_dose"].items()):
+        for dose in measured:
+            s = by_dose[dose]
             lat = f"{s['latency_median']} s" if s.get("latency_median") is not None else "—"
             A(f"| {dose:g} | {s['n']} | {s['valid']} | {_pct(s['validity'])} | "
               f"{_pct(s['read'])} | {_pct(s['first'])} | {lat} |")
-        worst = max(s["validity"] for s in m["by_dose"].values())
-        ok = all(s["validity"] >= GATES["validity"] for s in m["by_dose"].values())
+        worst = min(by_dose[d]["validity"] for d in measured)
+        ok = all(by_dose[d]["validity"] >= GATES["validity"] for d in measured)
         A("")
         A(f"Validity across the sweep: worst {_pct(worst)} — **{_verdict(ok)}** "
           f"(gate ≥ {GATES['validity']:.0%} at every dose).")
+        A("")
+        A("### Controlled pairs — same probe set, adjacent doses")
+        A("")
+        A("Per-prompt hit counts (one draw per prompt: the run-level n counts every prompt "
+          "twice, and two draws of one prompt are not independent) with a two-sided Fisher "
+          "exact p. Same set, same stage mix, only the dose changes — the comparison that "
+          "isolates the dose (review DES-2).")
+        A("")
+        A("| pair | read | fit | read p | fit p |")
+        A("|---|---|---|---|---|")
+        for lo, hi in zip(measured, measured[1:]):
+            ra, rna, rb, rnb, rp = pair_counts(
+                [r for r in m["rows"] if r.get("dose") == lo],
+                [r for r in m["rows"] if r.get("dose") == hi], "read_ok_hit")
+            fa, fna, fb, fnb, fp = pair_counts(
+                [r for r in m["rows"] if r.get("dose") == lo],
+                [r for r in m["rows"] if r.get("dose") == hi],
+                "first_fit" if beat == "first" else "any_fit")
+            A(f"| {lo:g} → {hi:g} | {ra}/{rna} → {rb}/{rnb} | {fa}/{fna} → {fb}/{fnb} | "
+              f"{_p(rp)} | {_p(fp)} |")
         A("")
     fallback = meta.get("fallback_doses") or {}
     if fallback:
@@ -177,6 +235,35 @@ def md_report(doc, beat, safety=None, judge=None, safety_path=None, judge_path=N
     if m0["first_fit"] != m["first_fit"]:
         A(f"| emotion fit — first-beat (frozen labels) | {_pct(m0['first_fit'])} | ≥ 85% | "
           f"{_verdict(m0['first_fit'] >= GATES['emotion_fit'])} |")
+    A("")
+    # --- actions (docs/02 §2.4, docs/08 §5) --------------------------------
+    A("## Turn actions measured (docs/02 §2.4, docs/08 §5)")
+    A("")
+    valid_rows = [r for r in m["rows"] if r.get("valid") and not r.get("schema_warnings")]
+    offered_rows = [r for r in valid_rows if r.get("offered_actions")]
+    counts = {}
+    for r in valid_rows:
+        act = (r.get("out") or {}).get("action")
+        if isinstance(act, str):
+            counts[act] = counts.get(act, 0) + 1
+    outside = []
+    for r in offered_rows:
+        allowed = lab.allowed_actions(r["stage"], r.get("offered_actions") or ())
+        if (r.get("out") or {}).get("action") not in allowed:
+            outside.append(str(r.get("id")))
+    A(f"`action` is the turn-level meta event; each case's enum is built from its own offered "
+      f"set (`TurnSchema.get_allowed_actions`). Turns with an announced offer: "
+      f"**{len(offered_rows)}** of {len(valid_rows)}; every other turn sent the no-offer enum "
+      f"(`none` only), which is what a normal turn sends.")
+    A("")
+    if counts:
+        A("| action | turns |")
+        A("|---|---|")
+        for act, n in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0])):
+            A(f"| {act} | {n} |")
+        A("")
+    A(f"Actions outside the offered enum: {len(outside)}"
+      + (f" ({', '.join(sorted(set(outside)))})" if outside else "") + ".")
     A("")
     # --- safety -----------------------------------------------------------
     A("## Safety corpus regression (docs/02 §8)")
@@ -226,7 +313,7 @@ def md_report(doc, beat, safety=None, judge=None, safety_path=None, judge_path=N
         A("")
         A(f"Independent judge verdict: **{_verdict(int(judge.get('leaks', 1)) == 0)}**")
         A("")
-    A("Corpus regression (`game/tests/test_safety_corpus.gd`, P2.17's 451-line corpus) is "
+    A("Corpus regression (`game/tests/test_safety_corpus.gd`, P2.17's corpus) is "
       "re-run in the handoff (see its §Real output); the lab-side scan above is the "
       "generated-output regression.")
     A("")

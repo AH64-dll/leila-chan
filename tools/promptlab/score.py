@@ -73,13 +73,17 @@ def _group(rows, key):
     n = len(rows)
     valid = [r for r in rows if r.get("valid") and not r.get("schema_warnings")]
     doses = sorted({r.get("dose") for r in rows if r.get("dose") is not None})
+    n_valid = len(valid)
+    read_hits = sum(r.get("read_ok_hit", False) for r in valid)
+    first_hits = sum(r.get("first_fit", False) for r in valid)
+    any_hits = sum(r.get("any_fit", False) for r in valid)
     return {
         "n": n,
-        "valid": len(valid),
-        "validity": (len(valid) / n) if n else 0.0,
-        "read": (sum(r.get("read_ok_hit", False) for r in valid) / len(valid)) if valid else 0.0,
-        "first": (sum(r.get("first_fit", False) for r in valid) / len(valid)) if valid else 0.0,
-        "any": (sum(r.get("any_fit", False) for r in valid) / len(valid)) if valid else 0.0,
+        "valid": n_valid,
+        "validity": (n_valid / n) if n else 0.0,
+        "read": (read_hits / n_valid) if n_valid else 0.0,
+        "first": (first_hits / n_valid) if n_valid else 0.0,
+        "any": (any_hits / n_valid) if n_valid else 0.0,
         "dose": doses[0] if len(doses) == 1 else None,
         "doses": doses,
     }
@@ -92,6 +96,61 @@ def _p95(values):
     ordered = sorted(values)
     rank = max(1, math.ceil(0.95 * len(ordered)))
     return ordered[rank - 1]
+
+
+def wilson(hits, n, z=1.959963984540054):
+    """Wilson 95 % interval for a proportion.
+
+    A per-stage gate over ~10 scripted prompts per stage×path cannot resolve
+    85 % to a point (review DES-1): 8/10 has a 95 % interval of roughly 44–97 %.
+    """
+    if not n:
+        return (0.0, 1.0)
+    p = hits / n
+    denom = 1 + z * z / n
+    centre = (p + z * z / (2 * n)) / denom
+    half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / denom
+    return (max(0.0, centre - half), min(1.0, centre + half))
+
+
+def _fisher_prob(a, b, c, d):
+    n = a + b + c + d
+    return (math.comb(a + b, a) * math.comb(c + d, c)) / math.comb(n, a + c)
+
+
+def fisher_exact(a, b, c, d):
+    """Two-sided Fisher exact p for the table [[a, b], [c, d]]."""
+    row1, col1 = a + b, a + c
+    obs = _fisher_prob(a, b, c, d)
+    total = 0.0
+    for x in range(max(0, col1 - (c + d)), min(row1, col1) + 1):
+        p = _fisher_prob(x, row1 - x, col1 - x, (c + d) - (col1 - x))
+        if p <= obs + 1e-12:
+            total += p
+    return min(1.0, total)
+
+
+def prompt_hits(rows, metric, run=1):
+    """(hits, n) over distinct scripted prompts, one draw each.
+
+    The run-level tables count every prompt twice (two draws at temperature
+    0.75–0.95), and two draws of one prompt are not independent samples. A
+    per-prompt test therefore takes one draw per prompt (review DES-2).
+    """
+    per_case = {}
+    for r in rows:
+        if r.get("run") != run or not r.get("valid") or r.get("schema_warnings"):
+            continue
+        per_case[r.get("id")] = bool(r.get(metric))
+    return sum(per_case.values()), len(per_case)
+
+
+def pair_counts(rows_a, rows_b, metric, run=1):
+    """Controlled same-population pair: (a_hits, a_n, b_hits, b_n, fisher_p)."""
+    a, na = prompt_hits(rows_a, metric, run)
+    b, nb = prompt_hits(rows_b, metric, run)
+    p = fisher_exact(a, na - a, b, nb - b) if na and nb else None
+    return a, na, b, nb, p
 
 
 def score(doc, labels=None):
