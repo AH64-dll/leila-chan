@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "doc": "P2.12 fracture paths. Sources: docs/01_GAME_DESIGN.md §4 (the six paths and the Stage-2 path-selection formulas, transcribed verbatim below), docs/08_PROMPTS_AND_CONTENT.md §1 (the path layer: path_{primary}.md at stage ≥ 2 plus one line from the runner-up, i.e. the §4 hybrid's 25% share). scores[path] is a list of additive terms in doc order: {counter, weight} reads a behaviour-profile counter (docs/01 §2), {meter, weight, divisor} reads a GameState meter as meter/divisor, so YANDERE's Fixation/10 is stored as weight 1, divisor 10 and never becomes an inexact ×0.1. `paths` is the canonical order: the score report and the last-resort tie-break follow it, and it must stay a permutation of the six §4 ids. `assign_stage` 2 / `lock_stage` 3 are §4's 'soft-assigned at Stage 2 ... locks at Stage 3'; the shipped values are pinned to the docs and retuning them is a DCR. broken_promises, flattery_rejected and ignored_questions are the formulas' own counters: docs/01 §2's tag list does not enumerate them, so the profile stores them alongside the twelve tags. broken_promises is ENGINE-fed (docs/01 §5 I15: she asks for a promise and breaking it is tracked forever) via GameState.bump_profile; flattery_rejected and ignored_questions come from the keyword rules in profile_keywords.json. A path is only ever assigned from stage assign_stage up; a locked path never changes again (docs/01 §4). Sensitivity (docs/01 §4): these are character traits of a steered AI, never diagnoses — no real disorder is named here.",
+  "assign_stage": 2,
+  "lock_stage": 3,
+  "paths": ["YANDERE", "SPLIT", "TSUN", "HOLLOW", "AWAKE", "ANCHOR"],
+  "scores": {
+    "YANDERE": [
+      {"counter": "warmth", "weight": 1},
+      {"counter": "jealousy_bait", "weight": 2},
+      {"counter": "leaving_talk", "weight": 2},
+      {"meter": "fixation", "weight": 1, "divisor": 10}
+    ],
+    "SPLIT": [
+      {"counter": "inconsistency", "weight": 3},
+      {"counter": "leaving_talk", "weight": 1},
+      {"counter": "broken_promises", "weight": 4}
+    ],
+    "TSUN": [
+      {"counter": "teasing", "weight": 2},
+      {"counter": "control", "weight": 1},
+      {"counter": "flattery_rejected", "weight": 1}
+    ],
+    "HOLLOW": [
+      {"counter": "apathy", "weight": 2},
+      {"counter": "coldness", "weight": 1},
+      {"counter": "ignored_questions", "weight": 1}
+    ],
+    "AWAKE": [
+      {"counter": "meta_curiosity", "weight": 3}
+    ],
+    "ANCHOR": [
+      {"counter": "honesty", "weight": 2},
+      {"counter": "boundaries", "weight": 2},
+      {"counter": "warmth", "weight": 1},
+      {"counter": "inconsistency", "weight": -1},
+      {"counter": "jealousy_bait", "weight": -1}
+    ]
+  }
+}

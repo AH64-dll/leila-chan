@@ -3,10 +3,11 @@ extends Node
 ## counters and a serialisable snapshot (docs/07 §2, docs/01 §2).
 ##
 ## The model never writes here. The Director applies each Turn through
-## apply_turn_meters()/apply_read() (docs/02 §4 step 7); the arithmetic itself
-## (slow burn, daily burn, ratchet floor, mood scaling) lives in Meters so the
-## formula has one definition. Read the public vars freely; mutate them only
-## through the methods so clamping, the ratchet and the signals always hold.
+## apply_turn_meters()/apply_turn_profile() (docs/02 §4 step 7); the arithmetic
+## itself (slow burn, daily burn, ratchet floor, mood scaling) lives in Meters so
+## the formula has one definition, the path scores in Paths and the keyword
+## profile rules in ProfileKeywords. Read the public vars freely; mutate them
+## only through the methods so clamping, the ratchet and the signals always hold.
 ##
 ## Stage is monotonic: good days can lower Instability (ratchet floor =
 ## peak − 15, docs/01 §2) but never de-escalate her — stage transitions are
@@ -195,6 +196,16 @@ var turn := 0:
 
 var path: StringName = &""
 var path_locked := false
+## docs/01 §4: the last scoring pass, the per-path evidence turn behind the
+## "ties → more recent evidence" rule, and the hybrid runner-up the prompt's
+## path layer borrows one line from. The scores stay live after the lock — the
+## path is frozen, the numbers are not.
+var path_scores := {}
+var path_evidence := {}
+var path_runner_up: StringName = &""
+## docs/01 §5 T15: her last direct question — "" when she asked none. The
+## dismissive-reply keyword rule reads it; the trigger engine owns escalation.
+var last_question := ""
 ## The player's name (docs/08 §1.5); "Senpai" when they typed nothing.
 var player_name := "Senpai"
 ## JSON-safe flag store for triggers/scenario state: bools, counts, small data.
@@ -205,7 +216,9 @@ var flags := {}
 ## is never repeated and never lost between turns. Not part of the snapshot: a
 ## loaded game starts with an empty queue (from_dict clears it).
 var pending_events: Array[String] = []
-## Behaviour-profile counters (docs/01 §2); bump via bump_profile()/apply_read().
+## Behaviour-profile counters (docs/01 §2) plus the three §4 formula counters;
+## bumped by apply_turn_profile() (read + keyword rules) and by the trigger
+## engine via bump_profile().
 var profile := _blank_profile()
 var last_stress := 0
 var stress: int:
@@ -241,6 +254,10 @@ func reset() -> void:
 	turn = 0
 	path = &""
 	path_locked = false
+	path_scores = {}
+	path_evidence = {}
+	path_runner_up = &""
+	last_question = ""
 	player_name = "Senpai"
 	flags = {}
 	pending_events.clear()
@@ -380,22 +397,45 @@ func advance_day() -> float:
 
 
 func bump_profile(counter: StringName, amount: int = 1) -> void:
-	if not PROFILE_COUNTERS.has(counter):
+	# The twelve docs/01 §2 tags plus the three §4 formula counters
+	# (broken_promises, flattery_rejected, ignored_questions) share one store.
+	if not PROFILE_COUNTERS.has(counter) and not Paths.is_counter(counter):
 		push_warning("GameState.bump_profile: unknown counter '%s'" % counter)
 		return
 	var key := String(counter)
 	profile[key] = maxi(0, int(profile.get(key, 0)) + amount)
 	profile_changed.emit(counter, profile[key])
+	if amount > 0:
+		_note_path_evidence(counter)
+
+
+## docs/02 §4 step 7 + docs/01 §2/§4: one call owns this turn's behaviour
+## profile — the model's `read` label, the keyword rules on the player's line
+## and her reply, her question for the next turn's T15 check — and then the
+## docs/01 §4 path check. Returns the path decision (the F3 overlay and tests
+## read it); a locked path still reports live scores.
+func apply_turn_profile(read_label: StringName, player_text := "", turn_data := {}) -> Dictionary:
+	_apply_read(read_label)
+	var data: Dictionary = turn_data if turn_data is Dictionary else {}
+	var bumps := ProfileKeywords.classify(
+		player_text, ProfileKeywords.reply_text(data), last_question
+	)
+	for counter: StringName in bumps:
+		bump_profile(counter, int(bumps[counter]))
+	last_question = ProfileKeywords.question_in(data)
+	return _evaluate_path()
 
 
 ## docs/02 §4 step 7: the Turn's `read` intent feeds the profile counters.
 ## The label→counter table and the warm/cold tone map behind `inconsistency`
 ## (warm↔cold swings, docs/01 §2) live in res://data/profile_map.json.
-func apply_read(read_label: StringName) -> void:
+func _apply_read(read_label: StringName) -> void:
+	if read_label == &"":
+		return
 	var table: Dictionary = _profile_map().get("read_to_profile", {})
 	var key := String(read_label)
 	if not table.has(key):
-		push_warning("GameState.apply_read: unknown read label '%s'" % key)
+		push_warning("GameState.apply_turn_profile: unknown read label '%s'" % key)
 		return
 	var bumps: Variant = table.get(key, {})
 	if bumps is Dictionary:
@@ -483,6 +523,48 @@ func lock_path() -> void:
 		path_assigned.emit(path, true)
 
 
+## docs/01 §4: score the six paths, keep the hybrid runner-up current, and
+## apply the stage rule — Stage 2 soft-assigns the winner, Stage 3 locks it.
+## Called at every turn close (apply_turn_profile) and on a stage crossing, so
+## the lock happens the moment Stage 3 is entered even between turns (the night
+## roll-over, a trigger spike). A locked path is never reassigned; the scores
+## stay live so the overlay and the next run's evidence keep telling the truth.
+func _evaluate_path() -> Dictionary:
+	var meters := {}
+	for meter: StringName in METER_NAMES:
+		meters[String(meter)] = get_meter(meter)
+	var decision := Paths.select(Paths.scores(profile, meters), path_evidence)
+	path_scores = decision["scores"]
+	if not path_locked and stage >= Paths.assign_stage():
+		assign_path(decision["path"], stage >= Paths.lock_stage())
+	# After the assignment, so the exclusion below compares against the LIVE
+	# primary rather than the one this turn is about to replace.
+	path_runner_up = _runner_up_for(decision)
+	return decision
+
+
+## The hybrid runner-up must be the best path that is not the LIVE primary. Once
+## the path is locked the score winner can be a different path; then the winner
+## itself is the best non-primary candidate, and `select()`'s runner-up would be
+## the locked path (a path cannot be its own runner-up).
+func _runner_up_for(decision: Dictionary) -> StringName:
+	var best: StringName = decision["path"]
+	var runner: StringName = decision["runner_up"]
+	if path != &"" and best != path:
+		runner = best if float(path_scores.get(String(best), 0.0)) > 0.0 else &""
+	return runner if runner != path else &""
+
+
+## docs/01 §4 tie-break: "ties → the path with more recent evidence". A counter
+## with a positive weight for a path is evidence for it; ANCHOR's negative terms
+## (inconsistency, jealousy_bait) are not evidence *for* ANCHOR.
+func _note_path_evidence(counter: StringName) -> void:
+	for path_id: StringName in Paths.paths_fed_by(counter):
+		var key := String(path_id)
+		if int(path_evidence.get(key, -1)) < turn:
+			path_evidence[key] = turn
+
+
 ## JSON-safe snapshot for SaveSystem (docs/07 §3.5).
 func to_dict() -> Dictionary:
 	return {
@@ -498,6 +580,10 @@ func to_dict() -> Dictionary:
 		"turn": turn,
 		"path": String(path),
 		"path_locked": path_locked,
+		"path_scores": path_scores.duplicate(),
+		"path_evidence": path_evidence.duplicate(),
+		"path_runner_up": String(path_runner_up),
+		"last_question": last_question,
 		"player_name": player_name,
 		"profile": profile.duplicate(),
 		"flags": flags.duplicate(true),
@@ -570,6 +656,14 @@ func from_dict(data: Variant) -> bool:
 	if data.get("path_locked") == true and path == &"":
 		push_warning("GameState.from_dict: path_locked without a valid path — cleared")
 	path_locked = data.get("path_locked") == true and path != &""
+	# docs/01 §4: the lock is permanent, not a flag a stale or hand-edited
+	# snapshot can lose — a save at Stage 3+ with a path loads locked.
+	if path != &"" and stage >= Paths.lock_stage():
+		path_locked = true
+	path_scores = _stored_scores(data.get("path_scores"))
+	path_evidence = _stored_evidence(data.get("path_evidence"))
+	path_runner_up = _stored_runner_up(data.get("path_runner_up"))
+	last_question = _str(data.get("last_question")).strip_edges().left(200)
 	player_name = _str(data.get("player_name"))
 	if player_name.is_empty():
 		player_name = "Senpai"
@@ -579,7 +673,7 @@ func from_dict(data: Variant) -> bool:
 	if stored_profile is Dictionary:
 		for key: Variant in stored_profile:
 			var counter := StringName(_str(key))
-			if PROFILE_COUNTERS.has(counter):
+			if PROFILE_COUNTERS.has(counter) or Paths.is_counter(counter):
 				profile[String(counter)] = maxi(0, int(_num(stored_profile[key], 0.0)))
 			else:
 				push_warning("GameState.from_dict: dropping unknown counter '%s'" % key)
@@ -699,13 +793,62 @@ func _refresh_stage(value: float) -> void:
 		queue_event(line)
 	stage_changed.emit(previous, stage)
 	stage_transition.emit(previous, stage, Stages.transition_spec(stage))
+	# docs/01 §4: entering Stage 2 assigns, entering Stage 3 locks — at the
+	# crossing itself, not only at the next turn close (the night roll-over and a
+	# trigger spike cross her stage between turns too).
+	if stage >= Paths.assign_stage():
+		_evaluate_path()
 
 
 func _blank_profile() -> Dictionary:
 	var counters := {}
 	for counter: StringName in PROFILE_COUNTERS:
 		counters[String(counter)] = 0
+	# docs/01 §4 reads three counters §2's tag list does not enumerate.
+	for counter: StringName in Paths.counters():
+		counters[String(counter)] = 0
 	return counters
+
+
+## Snapshot validation for the path block: known path ids only, finite scores,
+## non-negative evidence turns, and a runner-up that is a real secondary path.
+func _stored_scores(value: Variant) -> Dictionary:
+	var out := {}
+	if not value is Dictionary:
+		return out
+	for key: Variant in value:
+		var path_id := StringName(_str(key))
+		if not PATHS.has(path_id):
+			continue
+		var raw: Variant = (value as Dictionary)[key]
+		if raw is int or raw is float:
+			var number := float(raw)
+			if is_finite(number):
+				out[String(path_id)] = number
+	return out
+
+
+func _stored_evidence(value: Variant) -> Dictionary:
+	var out := {}
+	if not value is Dictionary:
+		return out
+	for key: Variant in value:
+		var path_id := StringName(_str(key))
+		if not PATHS.has(path_id):
+			continue
+		var raw: Variant = (value as Dictionary)[key]
+		if raw is int or raw is float:
+			var number := float(raw)
+			if is_finite(number) and number >= 0.0:
+				out[String(path_id)] = int(number)
+	return out
+
+
+func _stored_runner_up(value: Variant) -> StringName:
+	var path_id := StringName(_str(value))
+	if path_id == &"" or path_id == path or not PATHS.has(path_id):
+		return &""
+	return path_id
 
 
 func _tone_of_read(label: String) -> StringName:

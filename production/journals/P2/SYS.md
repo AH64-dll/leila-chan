@@ -156,3 +156,24 @@
   does not exist on the assert object.
 - Gotcha: `Director.gd` is at exactly 1000/1000 gdlint lines on this branch; every added line must be paid
   for elsewhere (the round-2 `Memory.begin_turn()` calls are one line each, comments included).
+
+## P2.12 — fracture paths (round 1, 2026-11-04, agent: deepseek)
+
+- Built `llm/Paths.gd` + `data/paths.json` (six formulas, Stage-2/Stage-3 pair, recency tie-break,
+  `parse_document` fallback) and `llm/ProfileKeywords.gd` + `data/profile_keywords.json` (control, apathy
+  incl. short replies, flattery_rejected, ignored_questions). `GameState.apply_turn_profile(read, line,
+  turn_data)` replaced `apply_read` and is now the one per-turn entry: read map → keyword bumps → path
+  check; it returns the decision dict.
+- Convention: §4's three formula counters (`broken_promises`, `flattery_rejected`, `ignored_questions`)
+  live in the same 15-key profile as §2's twelve tags; `Paths.counters()` is the only list, and the read
+  map may only write §2 tags. `broken_promises` is engine-fed (I15) — never give it a keyword rule.
+- Convention: the lock fires inside `_refresh_stage`, so a Stage-3 crossing (night roll-over, trigger
+  spike) freezes the path *before* that turn's read is applied; the turn close re-evaluates only for
+  Stage-2 drift. The runner-up is recomputed after the assignment and excludes the LIVE primary.
+- Gotcha: computing the runner-up straight from `Paths.select()` lets a locked path become its own
+  runner-up (the score winner can differ from the frozen path); compute it after `assign_path` against
+  `GameState.path`. The Stage-3 save round-trip test is what caught it.
+- Gotcha: GameState and Director both sit at exactly 20 public methods / 1000 lines. A rename keeps the
+  method count; the read block replacement (4 lines → 3) paid for the replay's `_current_player_input`.
+- Next SYS on this seam: P2.19 gets assign/lock free via `_refresh_stage`; P2.20 must save
+  `path_scores`/`path_evidence`/`path_runner_up`/`last_question`; P2.10 bumps T15/I15 counters.

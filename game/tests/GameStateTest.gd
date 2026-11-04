@@ -285,34 +285,34 @@ func test_profile_counters() -> void:
 	assert_bool(s.profile.has("not_a_counter")).is_false()
 
 
-func test_apply_read_maps_counters_from_data() -> void:
+func test_apply_turn_profile_maps_counters_from_data() -> void:
 	# The expectation is read from the data file itself: retuning the map needs
 	# no code change (SYS standard: everything tunable is data).
 	var file_map: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(PROFILE_MAP_PATH))
 	var table: Dictionary = file_map["read_to_profile"]
 	for label: Variant in table:
 		var s: Variant = _state()
-		s.apply_read(StringName(label))
+		s.apply_turn_profile(StringName(label))
 		for counter: StringName in GameStateScript.PROFILE_COUNTERS:
 			var key := String(counter)
 			var expected := int(table[label].get(key, 0))
 			assert_int(_counter(s, counter)).is_equal(expected)
 
 
-func test_apply_read_inconsistency_swings() -> void:
+func test_apply_turn_profile_inconsistency_swings() -> void:
 	# docs/01 §2: inconsistency counts warm↔cold swings in how the player treats her.
 	var s: Variant = _state()
-	s.apply_read(&"flirt")
+	s.apply_turn_profile(&"flirt")
 	assert_int(_counter(s, &"inconsistency")).is_zero()
-	s.apply_read(&"question")
+	s.apply_turn_profile(&"question")
 	assert_int(_counter(s, &"inconsistency")).is_zero()
-	s.apply_read(&"insult")
+	s.apply_turn_profile(&"insult")
 	assert_int(_counter(s, &"inconsistency")).is_equal(1)
-	s.apply_read(&"cold")
+	s.apply_turn_profile(&"cold")
 	assert_int(_counter(s, &"inconsistency")).is_equal(1)
-	s.apply_read(&"affection")
+	s.apply_turn_profile(&"affection")
 	assert_int(_counter(s, &"inconsistency")).is_equal(2)
-	s.apply_read(&"insult")
+	s.apply_turn_profile(&"insult")
 	assert_int(_counter(s, &"inconsistency")).is_equal(3)
 
 
@@ -349,7 +349,7 @@ func test_intent_list_and_unknown_labels() -> void:
 	for tone_name: Variant in file_map.get("tone", {}):
 		for label: Variant in file_map["tone"][tone_name]:
 			assert_bool(intents.has(label)).is_true()
-	s.apply_read(&"bogus")
+	s.apply_turn_profile(&"bogus")
 	for counter: StringName in GameStateScript.PROFILE_COUNTERS:
 		assert_int(_counter(s, counter)).is_zero()
 
@@ -439,7 +439,7 @@ func test_snapshot_round_trip() -> void:
 	s.set_flag(&"t01_count", 2)
 	s.set_flag(&"meta_flag", {"nested": [1, 2]})
 	s.bump_profile(&"warmth", 3)
-	s.apply_read(&"insult")
+	s.apply_turn_profile(&"insult")
 	var snapshot: Dictionary = s.to_dict()
 	var t: Variant = _state()
 	assert_bool(t.from_dict(snapshot)).is_true()
@@ -529,7 +529,7 @@ func test_simulation_invariants() -> void:
 				}
 			)
 		)
-		s.apply_read(labels[rng.randi_range(0, labels.size() - 1)])
+		s.apply_turn_profile(labels[rng.randi_range(0, labels.size() - 1)])
 		s.apply_turn_meters({})
 		if rng.randf() < 0.1:
 			s.advance_day()
@@ -548,7 +548,7 @@ func test_reset_returns_to_fresh_state() -> void:
 	s.set_meter(&"instability", 80.0)
 	s.assign_path(&"SPLIT", true)
 	s.advance_day()
-	s.apply_read(&"meta")
+	s.apply_turn_profile(&"meta")
 	# CODE-2: reset() replaces the state wholesale — listeners get state_reset
 	# to resync rather than replayed per-field signals.
 	var resets: Array = []
@@ -562,7 +562,7 @@ func test_reset_returns_to_fresh_state() -> void:
 func _apply_op(s: Variant, op: Array) -> void:
 	match String(op[0]):
 		"read":
-			s.apply_read(op[1])
+			s.apply_turn_profile(op[1])
 		"mood":
 			s.apply_mood(op[1])
 		"burn":

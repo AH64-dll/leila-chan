@@ -40,7 +40,9 @@ res://
 │  ├─ backends/NativeBackend.gd        # GDExtension (ship)
 │  ├─ IncrementalJson.gd               # streaming JSON → events
 │  ├─ Meters.gd                       # docs/01 §2 + docs/02 §1.1 meter math: slow burn, ratchet, mood scaling
-│  └─ Stages.gd                       # docs/01 §3 stage bands, transition spec, post-transition EVENT lines
+│  ├─ Stages.gd                       # docs/01 §3 stage bands, transition spec, post-transition EVENT lines
+│  ├─ Paths.gd                        # docs/01 §4 path scores, Stage-2 soft assign / Stage-3 lock, hybrid runner-up
+│  └─ ProfileKeywords.gd              # docs/01 §2 keyword half of the behaviour profile (control, apathy, …)
 ├─ scenes/
 │  ├─ Boot.tscn  Title.tscn  NewGame.tscn  Date.tscn  Night.tscn  Ending.tscn  Extras.tscn
 │  ├─ ui/TextBox.tscn  ui/InputBox.tscn  ui/ChatLog.tscn  ui/NameTag.tscn  ui/Settings.tscn
@@ -49,7 +51,7 @@ res://
 ├─ shaders/  glitch · chromatic · desaturate · vignette · text_bleed · breathe · dissolve
 ├─ data/
 │  ├─ feelings.json  sprites.json  resolver.json  cues.json  music.json  fx.json
-│  ├─ meters.json  stages.json  paths.json  triggers.json  meta_events.json  endings.json
+│  ├─ meters.json  stages.json  paths.json  profile_keywords.json  triggers.json  meta_events.json  endings.json
 │  ├─ scenarios/D01_classroom.json … (70 files)
 │  ├─ schemas/                       # JSON schemas the data files are validated against at boot
 │  ├─ prompts/persona.md  prompts/stage_*.md  prompts/path_*.md  prompts/rules.md
