@@ -2958,6 +2958,15 @@
           "report": "production/reviews/P3.15-design-r1.md",
           "ts": "2026-11-04T20:58:44+02:00",
           "declared": "deepseek"
+        },
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "gemini-flash",
+          "report": "production/reviews/P3.15-code-r2.md",
+          "ts": "2026-11-04T21:32:39+02:00",
+          "declared": "gemini-flash"
         }
       ],
       "started": "2026-11-04T18:02:03+02:00",
@@ -7899,6 +7908,12 @@
       "event": "review:safety:changes",
       "ref": "P2.22",
       "note": "production/reviews/P2.22-safety-r1.md"
+    },
+    {
+      "ts": "2026-11-04T21:32:39+02:00",
+      "event": "review:code:approved",
+      "ref": "P3.15",
+      "note": "production/reviews/P3.15-code-r2.md"
     }
   ]
 }
