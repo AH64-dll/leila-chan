@@ -142,7 +142,9 @@ func test_opening_beats_playback_stage_1() -> void:
 	# Stage 1 opening beat feeling is "joy" -> resolves to sprite "01"
 	assert_str(_date.character.current_sprite).is_equal("01")
 	var text: String = _date.text_box.get_visible_text()
-	assert_bool(text.contains("You're here")).is_true()
+	# P2.06: stage 1 may insert the docs/07 §3.4 hesitation ellipsis. It is a
+	# pause at a word boundary, not a word change, so the check ignores it.
+	assert_bool(_without_hesitation(text).contains("You're here")).is_true()
 
 
 func test_fx_wiring_and_twitch_signal() -> void:
@@ -292,3 +294,11 @@ func test_vram_usage_budget_under_800mb() -> void:
 	)
 	assert_int(total_texture_bytes).is_greater(0)
 	assert_int(total_texture_bytes).is_less(800 * 1024 * 1024)
+
+
+## Strip the stage-1 corruption hesitation ("…" and the space it leaves).
+func _without_hesitation(text: String) -> String:
+	var out := text.replace("…", " ")
+	while out.contains("  "):
+		out = out.replace("  ", " ")
+	return out.strip_edges()
