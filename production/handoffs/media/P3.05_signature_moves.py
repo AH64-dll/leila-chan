@@ -25,7 +25,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 SIGNATURES = ROOT / "game" / "data" / "prompts" / "signature_moves.json"
 DEFAULT_RESULTS = [
-    ROOT / "tools" / "promptlab" / "results" / "2026-11-04_v2_p305_paths.json",
+    ROOT / "tools" / "promptlab" / "results" / "2026-11-04_v3_p305_paths.json",
 ]
 
 

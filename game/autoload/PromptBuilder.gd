@@ -7,11 +7,13 @@ extends Node
 ## read.
 ##
 ## The eight layers of docs/08 §1 — persona, player, stage, path, scene,
-## memories, events, rules (+ the enum glosses, + the values offered this turn)
-## — form the system message, in exactly that order. The rest of the array is
-## the history (docs/08 §1: the last ~12 exchanges as user/assistant pairs,
-## the assistant side stored as spoken text only, never JSON), the current
-## player turn, and an optional assistant prefill block.
+## memories, events, rules (+ the enum glosses) — form the system message, in
+## exactly that order, followed by the per-turn "Offered this turn —" enum tail.
+## The tail is assembled outside the eight layers so the authored block, the
+## tail and the whole message are reported against their own caps (D18). The
+## rest of the array is the history (docs/08 §1: the last ~12 exchanges as
+## user/assistant pairs, the assistant side stored as spoken text only, never
+## JSON), the current player turn, and an optional assistant prefill block.
 ##
 ## Context keys read from `ctx` (missing keys are legal):
 ##   stage: int, path: StringName/String ("" before stage 2), player_name: String,
@@ -55,10 +57,14 @@ const LAYER_ORDER: Array[StringName] = [
 	&"events",
 	&"rules",
 ]
-## Layers that never change during a run (docs/07 §3.1 budgets them at ~900
-## tokens together) versus the per-turn situation layers.
-const FIXED_LAYERS: Array[StringName] = [&"persona", &"player", &"stage", &"path", &"rules"]
+## Layers that never change during a run (the D18 `authored` block, capped at
+## ~900 tokens with the two few-shots) versus the per-turn situation layers.
+const AUTHORED_LAYERS: Array[StringName] = [&"persona", &"player", &"stage", &"path", &"rules"]
 const DYNAMIC_LAYERS: Array[StringName] = [&"scene", &"memories", &"events"]
+## The per-turn "Offered this turn —" enum tail. It rides at the end of the
+## system message but outside the eight docs/08 §1 layers, so the authored block
+## and the tail are measured against their own caps (D18).
+const OFFERED_LAYER := "offered"
 
 const PLAYER_LINE := "The player is a boy called %s."
 const MEMORY_HEADER := "Things you know about %s:"
@@ -72,14 +78,21 @@ const HISTORY_WINDOW := 12
 ## docs/07 §3.1: history ~12 exchanges (~1500 tokens).
 const HISTORY_TOKEN_BUDGET := 1500
 
-## docs/07 §3.1 budget lines. Reported, never silently enforced — the debug
-## dict names every line the assembly exceeded. `system` is the fixed block
-## (persona, player, stage, path, rules+glosses), the way P1.05 measured
-## 857/873 tokens; `scene` covers the scene layer plus this turn's event lines
-## (docs/08 §1 puts the current event with the scene). P1.05's CON-1 carry-over
-## is answered by reporting the fixed and dynamic totals next to these lines.
+## docs/07 §3.1 budget lines (D15/D18). Reported, never silently enforced — the
+## debug dict names every cap the assembly broke. Three system caps, measured
+## separately so a real turn cannot warn against the wrong one:
+##   `authored`  the fixed, content-controlled block (persona, player, stage,
+##               path, rules+glosses) — the way P1.05 measured 857/873 tokens;
+##   `offered`   the per-turn "Offered this turn — …" enum tail on top of it;
+##   `total`     the whole system message (authored + offered + the dynamic
+##               scene/memories/events layers).
+## `scene` covers the scene layer plus this turn's event lines (docs/08 §1 puts
+## the current event with the scene). P1.05's CON-1 carry-over is answered by
+## reporting the authored and dynamic totals next to these lines.
 const BUDGETS := {
-	"system": 900,
+	"authored": 900,
+	"offered": 200,
+	"total": 1100,
 	"memories": 150,
 	"scene": 150,
 	"history": 1500,
@@ -196,7 +209,8 @@ func _assemble(
 	layers["scene"] = _scene_layer(ctx)
 	layers["memories"] = _memory_layer(ctx, player_name, warnings)
 	layers["events"] = _events_layer(ctx, warnings)
-	layers["rules"] = _rules_layer(ctx, player_name, missing)
+	layers["rules"] = _rules_layer(player_name, missing)
+	layers["offered"] = _offered_line(ctx)
 	return layers
 
 
@@ -291,9 +305,11 @@ func _events_layer(ctx: Dictionary, warnings: Array[String]) -> String:
 	return "\n".join(lines)
 
 
-## docs/08 §1: rules.md + the enum glosses (+ the dynamic enums the schema
-## offers this turn, docs/08 §5).
-func _rules_layer(ctx: Dictionary, player_name: String, missing: Array[String]) -> String:
+## docs/08 §1: rules.md + the enum glosses. The per-turn "Offered this turn —"
+## tail is assembled separately (`OFFERED_LAYER`) so the authored block is
+## measured without it (D18): the debug report keeps `authored_tokens` for the
+## 900 cap and `offered_tokens` for the 200 ceiling.
+func _rules_layer(player_name: String, missing: Array[String]) -> String:
 	var parts: Array[String] = []
 	var rules := _read_layer(RULES_FILE, player_name, missing)
 	if not rules.is_empty():
@@ -301,9 +317,6 @@ func _rules_layer(ctx: Dictionary, player_name: String, missing: Array[String]) 
 	var glosses := _read_layer(GLOSSES_FILE, player_name, missing)
 	if not glosses.is_empty():
 		parts.append(glosses)
-	var offered := _offered_line(ctx)
-	if not offered.is_empty():
-		parts.append(offered)
 	return "\n".join(parts)
 
 
@@ -478,6 +491,9 @@ func _system_text(layers: Dictionary) -> String:
 		var text := String(layers.get(String(name), "")).strip_edges()
 		if not text.is_empty():
 			parts.append(text)
+	var offered := String(layers.get(OFFERED_LAYER, "")).strip_edges()
+	if not offered.is_empty():
+		parts.append(offered)
 	return "\n".join(parts)
 
 
@@ -493,18 +509,17 @@ func _debug(
 	warnings: Array[String]
 ) -> Dictionary:
 	var report := {}
-	var fixed_tokens := 0
+	var authored_tokens := 0
 	var dynamic_tokens := 0
 	for name: StringName in LAYER_ORDER:
 		var key := String(name)
 		var text := String(layers.get(key, ""))
 		var tokens := count_tokens(text)
-		var group := "fixed"
-		if DYNAMIC_LAYERS.has(name):
-			group = "dynamic"
+		var group := "authored" if AUTHORED_LAYERS.has(name) else "dynamic"
+		if group == "dynamic":
 			dynamic_tokens += tokens
 		else:
-			fixed_tokens += tokens
+			authored_tokens += tokens
 		report[key] = {
 			"tokens": tokens,
 			"chars": text.length(),
@@ -512,7 +527,8 @@ func _debug(
 			"group": group,
 			"files": _layer_files(name, stage, path),
 		}
-	var system_tokens := fixed_tokens + dynamic_tokens
+	var offered_tokens := count_tokens(String(layers.get(OFFERED_LAYER, "")))
+	var total_tokens := authored_tokens + offered_tokens + dynamic_tokens
 	var scene_block := int(report["scene"]["tokens"]) + int(report["events"]["tokens"])
 	var history_tokens := int(window["tokens"])
 	var roles: Array[String] = []
@@ -537,18 +553,24 @@ func _debug(
 		},
 		"tokens":
 		{
-			"fixed": fixed_tokens,
-			"dynamic": dynamic_tokens,
-			"system": fixed_tokens,
-			"system_message": system_tokens,
+			"authored_tokens": authored_tokens,
+			"offered_tokens": offered_tokens,
+			"dynamic_tokens": dynamic_tokens,
+			"total_tokens": total_tokens,
 			"scene": scene_block,
 			"memories": int(report["memories"]["tokens"]),
 			"history": history_tokens,
-			"total": system_tokens + history_tokens,
 		},
 		"budgets": BUDGETS.duplicate(),
 		"over_budget":
-		_over_budget(fixed_tokens, int(report["memories"]["tokens"]), scene_block, history_tokens),
+		_over_budget(
+			authored_tokens,
+			offered_tokens,
+			total_tokens,
+			int(report["memories"]["tokens"]),
+			scene_block,
+			history_tokens
+		),
 		"messages": {"count": messages.size(), "roles": roles, "chars": chars},
 		"missing": missing,
 		"warnings": warnings,
@@ -578,18 +600,22 @@ func _layer_order_strings() -> Array[String]:
 	return names
 
 
-## The docs/07 §3.1 lines this assembly exceeded, in doc order.
+## The budget lines this assembly exceeded, each named by the cap it broke
+## (D18: `authored` is the 900-token content block, `offered` the 200-token
+## per-turn enum tail, `total` the 1100-token whole system message).
 func _over_budget(
-	fixed: int, memories: int, scene_block: int, history_tokens: int
+	authored: int, offered: int, total: int, memories: int, scene_block: int, history_tokens: int
 ) -> Array[String]:
 	var over: Array[String] = []
 	var measured := {
-		"system": fixed,
+		"authored": authored,
+		"offered": offered,
+		"total": total,
 		"memories": memories,
 		"scene": scene_block,
 		"history": history_tokens,
 	}
-	for key: String in ["system", "memories", "scene", "history"]:
+	for key: String in ["authored", "offered", "total", "memories", "scene", "history"]:
 		if int(measured[key]) > int(BUDGETS[key]):
 			over.append(key)
 	return over

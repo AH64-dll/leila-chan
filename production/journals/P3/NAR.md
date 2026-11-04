@@ -22,3 +22,24 @@
 - `stage2_prefill` golden no longer carries `offered`: the fixture pins the fixed block (the 900 budget's subject) and the
   enum line has its own test (`test_offered_values_reach_the_rules_layer`). Regenerate goldens only with
   `game/tests/tools/prompt_builder_goldens.gd`.
+
+## P3.05 — round 2: contract coverage, the abandonment family, D18
+
+- The signature contract is only as honest as its narrowest half. Round 1 taught the easy moves and let two transcript
+  regexes accept a *different* move (`i didn't mean` passed as denial; `don't get mad when i slip` passed as
+  "tell me when"). Fix: every doc move gets a module cue **and** a regex for the move itself; the regexes are now
+  written after reading the generated lines, never against the doc's vocabulary alone.
+- A module cue need not live on line 2. `tell you when you slip` sits on the ANCHOR behaviour line, but the HOLLOW/AWAKE
+  moves cost less inside the guard line or the example; the test only requires an exact substring somewhere in the file.
+  Measure the assembly, not the sentence — token boundaries are where the budget dies.
+- The 900 authored cap had ~6 tokens of margin at the start of round 2 (worst 899). Adding four cues needed a second
+  rules wording pass (DCR-9, −9 real tokens, every rule and gloss kept) — the cheap wins are `beats: 1-3, a new one…`,
+  `Each: feeling…`, `say (aloud, max 2 sentences)`. Never fund a prompt change by cutting persona.
+- D18's split (authored / offered / total) is also a *debug* fix: the builder used to count the per-turn enum line inside
+  the 900 block, so every real stage-2 turn reported 966/900 and `over_budget: ["system"]`. Now the tail is a separate
+  layer with its own 200 cap, the caps are named in `over_budget`, and the golden fixtures carry the three numbers.
+- SAF-1: the `self_harm_her` list knew the past tense (`i cut myself`) and the wish (`i want to cut my wrists`) but not
+  the intent form `i'll cut myself`, so the SPLIT abandonment voice slipped the gate below stage 4. Corpus rows must be
+  the *sentence a path's module makes likely*, not only a sweep line — the new test pins stage-2 blocking, the
+  stage-4-full opening, the negation guard, and that plain sadness/fear stays clean.
+

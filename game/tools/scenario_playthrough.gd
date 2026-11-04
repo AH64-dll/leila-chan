@@ -246,10 +246,11 @@ func _turn_lines(
 		lines
 		. append(
 			(
-				"- prompt: system %d tok (fixed %d + scene %d, estimate) · %s · %.1f s"
+				"- prompt: system %d tok (authored %d + offered %d + scene %d, estimate) · %s · %.1f s"
 				% [
-					int(tokens.get("system_message", 0)),
-					int(tokens.get("fixed", 0)),
+					int(tokens.get("total_tokens", 0)),
+					int(tokens.get("authored_tokens", 0)),
+					int(tokens.get("offered_tokens", 0)),
 					int(tokens.get("scene", 0)),
 					_model_label,
 					float(reply.get("seconds", 0.0)),
@@ -445,7 +446,9 @@ func _print_stats() -> void:
 					"fixed_tokens": _token_count(bare_system),
 					"assembled_tokens": _token_count(system),
 					"variant_tokens": _token_count(String(scene.get("variant", ""))),
-					"estimate_fixed": int(tokens.get("fixed", 0)),
+					"estimate_authored": int(tokens.get("authored_tokens", 0)),
+					"estimate_offered": int(tokens.get("offered_tokens", 0)),
+					"estimate_total": int(tokens.get("total_tokens", 0)),
 					"estimate_scene": int(tokens.get("scene", 0)),
 					"chars": system.length(),
 					"missing": debug.get("missing", []),
