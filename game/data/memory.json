@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "doc": "docs/02_DIRECTOR_PROTOCOL.md §6 memory model (P2.11), read by game/llm/MemoryRules.gd and game/llm/MemoryStore.gd. capacity=24 slots; prompt_limit=8 matches docs/08 §1's '≤ 8 facts' and PromptBuilder.MEMORY_LIMIT (a test pins the two); max_length=80 is TurnSchema.MEMORY_MAX_LENGTH. duplicate_jaccard and the three rules are docs/02 §6 verbatim. stop_words + min_content_word_length define 'content word' for rule 1: a shared function word does not ground an invented fact. quote_overlap is the share of a stored fact's content words that must appear in her `say` for the fact to count as quoted ('importance +1 each time she quotes it'). corruption.chance is the per-fact share of injected memories altered from stage 3 (docs/02 §6 '10–25%'); band is the documented range and the code clamps to it, so no data edit can widen it. corruption.kinds are the doc's own examples: a name swapped, a number off by one, an invented promise. These numbers ARE the design: retune with a DCR, never a quiet tweak.",
+  "doc": "docs/02_DIRECTOR_PROTOCOL.md §6 memory model (P2.11), read by game/llm/MemoryRules.gd and game/llm/MemoryStore.gd. capacity=24 slots; prompt_limit=8 matches docs/08 §1's '≤ 8 facts' and PromptBuilder.MEMORY_LIMIT (a test pins the two); max_length=80 is TurnSchema.MEMORY_MAX_LENGTH and caps the model's `memory` proposal, not a rendered prompt bullet. The three rules are docs/02 §6: stop_words + min_content_word_length define 'content word', so a shared function word grounds nothing (rule 1) and duplicate_jaccard=0.6 compares content words, not raw tokens (rule 3: 'likes coffee' vs 'likes coffee a lot' is 0.667 that way, 0.5 as raw tokens where it would wrongly pass as new). meta_words is rule 2's blocked vocabulary: schema keys plus every `read` intent label, because a stored fact must never narrate the schema ('The player used the phrase jealousy_bait'). quote_overlap is the share of a stored fact's content words that must appear in her `say` for the fact to count as quoted ('importance +1 each time she quotes it', once per turn). corruption.chance is the per-fact share of injected memories altered from stage 3 (docs/02 §6 '10–25%'); band is the documented range and the code clamps to it, so no data edit can widen it. corruption.kinds are the doc's own examples: a name swapped, a number off by one, an invented promise; name_swap_exclude plus the stop list keep sentence-initial words and function words from being treated as names. These numbers ARE the design: retune with a DCR, never a quiet tweak.",
   "capacity": 24,
   "prompt_limit": 8,
   "max_length": 80,
@@ -21,7 +21,9 @@
   ],
   "meta_words": [
     "player", "stage", "json", "schema", "enum", "prompt", "label", "labels", "request",
-    "response", "jealousy_bait", "small_talk"
+    "response", "affection", "apology", "boundary", "cold", "compliment", "flirt", "gift",
+    "greeting", "insult", "jealousy_bait", "leaving", "meta", "other", "question", "scared",
+    "small_talk", "tease"
   ],
   "importance": {
     "new_fact": 1.0,

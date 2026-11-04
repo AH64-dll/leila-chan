@@ -20,8 +20,16 @@ func reset() -> void:
 	_store.reset()
 
 
+## Open this turn's record: the previous turn's corruptions, quotes and proposal
+## are dropped. The Director calls this at `_start_turn()` and again before an
+## unsafe-input refusal's record, which never opens a turn (r2 CODE-3/DES-6).
+func begin_turn() -> void:
+	_store.begin_turn()
+
+
 ## docs/02 §6 rules 1–3 + the slot/eviction rules. Returns
 ## `{accepted, reason, evicted, text}`; `reason` names the rule that rejected.
+## `player_inputs` may be any Array — the store normalises it to Strings.
 func consider(candidate: String, player_inputs: Array) -> Dictionary:
 	return _store.consider(candidate, player_inputs)
 

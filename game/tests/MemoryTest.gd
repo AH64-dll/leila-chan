@@ -1,52 +1,23 @@
 extends GdUnitTestSuite
-## P2.11 — the docs/02 §6 memory model: the three proposal rules (including the
-## doc's own "jealousy_bait" leak), the 24-slot store with importance and
-## eviction, and the seeded 10–25 % corruption from stage 3 that she then reads
-## in the prompt.
+## P2.11 — the docs/02 §6 memory model at the Director boundary: the three
+## proposal rules (including the doc's own "jealousy_bait" leak), the data
+## contract, and the memories she reads in the built system prompt.
 ##
-## Each rule is pinned to its doc§ with a literal expectation. The corruption
-## tests are seeded, so they assert an exact replay and a measured rate instead
-## of "looks random". The prompt half goes through Director -> Memory ->
-## PromptBuilder, i.e. the same path a real turn takes.
+## Each rule is pinned to its doc§ with a literal expectation. The store's
+## arithmetic (slots, importance, eviction, saves) and the seeded 10–25 %
+## corruption live in `MemoryStoreTest`; the fixtures both suites share live in
+## `tests/helpers/MemoryFixtures.gd`.
 
 const MemoryRulesScript := preload("res://llm/MemoryRules.gd")
 const MemoryStoreScript := preload("res://llm/MemoryStore.gd")
 const PromptBuilderScript := preload("res://autoload/PromptBuilder.gd")
 const TurnSchemaScript := preload("res://llm/TurnSchema.gd")
 const TranscriptLoggerScript := preload("res://llm/TranscriptLogger.gd")
+const Fixtures := preload("res://tests/helpers/MemoryFixtures.gd")
 
 const DATA_PATH := "res://data/memory.json"
 const GIFT_INPUT := "I got you a gift — a little music box."
 const DEBUG_DIR := "user://memory_test_transcripts/"
-
-## 24 distinct short facts: distinct content words, so none is a near-duplicate
-## of another and every eviction assertion has a predictable victim.
-const FILLER := [
-	"alpha",
-	"bravo",
-	"charlie",
-	"delta",
-	"echo",
-	"foxtrot",
-	"golf",
-	"hotel",
-	"india",
-	"juliet",
-	"kilo",
-	"lima",
-	"mike",
-	"november",
-	"oscar",
-	"papa",
-	"quebec",
-	"romeo",
-	"sierra",
-	"tango",
-	"uniform",
-	"victor",
-	"whiskey",
-	"xray",
-]
 
 
 func before_test() -> void:
@@ -62,44 +33,8 @@ func after_test() -> void:
 	GameState.reset()
 
 
-# ----------------------------------------------------------------- fixtures
-
-
 func _store(texts: Array, importance := 1.0, seed := 0) -> Variant:
-	var rows: Array = []
-	for text: String in texts:
-		rows.append({"text": text, "importance": importance, "quotes": 0})
-	return _store_rows(rows, seed)
-
-
-func _store_rows(rows: Array, seed := 0) -> Variant:
-	var store: Variant = auto_free(MemoryStoreScript.new())
-	store.from_dict({"entries": rows})
-	store.set_rng_seed(seed)
-	return store
-
-
-func _filler() -> Array[String]:
-	var facts: Array[String] = []
-	for word: String in FILLER:
-		facts.append("likes film " + word)
-	return facts
-
-
-## Every distinct mutation `corrupt()` produces for `fact` over `tries` seeds.
-func _mutations(fact: String, tries: int) -> Array[Dictionary]:
-	var out: Array[Dictionary] = []
-	for seed: int in tries:
-		var rng := RandomNumberGenerator.new()
-		rng.seed = seed
-		var change := MemoryRulesScript.corrupt(fact, rng)
-		if not change.is_empty():
-			out.append(change)
-	return out
-
-
-func _kind(change: Dictionary) -> String:
-	return String(change.get("kind", ""))
+	return auto_free(Fixtures.store(texts, importance, seed))
 
 
 func _corrupted(change: Dictionary) -> String:
@@ -134,6 +69,17 @@ func _same_array(left: Array, right: Array) -> bool:
 		if not _same(left[i], right[i]):
 			return false
 	return true
+
+
+func _rm_dir(path: String) -> void:
+	if not DirAccess.dir_exists_absolute(path):
+		return
+	var dir := DirAccess.open(path)
+	if dir == null:
+		return
+	for file: String in dir.get_files():
+		DirAccess.remove_absolute(path.path_join(file))
+	DirAccess.remove_absolute(path)
 
 
 # ------------------------------------------------------------- data contract
@@ -229,6 +175,22 @@ func test_rule2_keeps_the_benign_music_box_fact() -> void:
 	)
 
 
+func test_rule2_rejects_every_intent_label() -> void:
+	# docs/02 §6 rule 2 blocks "intent labels", and the doc's own leak is one of
+	# them (`jealousy_bait`). The test walks the real `read` enum, so a label the
+	# schema adds later cannot slip through the list — round 1 covered 2 of 17
+	# (review r2 DES-4).
+	var inputs: Array[String] = ["I told her about the harbour at the weekend."]
+	for label: String in TurnSchemaScript.INTENTS:
+		var candidate := "she talked about %s at the harbour" % label
+		var message := "intent label %s is storable as a fact" % label
+		(
+			assert_str(MemoryRulesScript.reject_reason(candidate, inputs, [] as Array[String]))
+			. override_failure_message(message)
+			. is_equal("meta_word")
+		)
+
+
 func test_rule3_rejects_near_duplicates() -> void:
 	var inputs: Array[String] = ["I read a lot of novels and riddles."]
 	var existing: Array[String] = ["reads old novels"]
@@ -250,6 +212,28 @@ func test_rule3_rejects_near_duplicates() -> void:
 	)
 
 
+func test_rule3_compares_content_words_not_raw_tokens() -> void:
+	# docs/02 §6 says "token Jaccard"; the implementation compares content words
+	# on both sides, which is the reading (a function word must not pad two
+	# unrelated facts into a duplicate). Pinned here so it cannot drift
+	# (review r2 DES-5): "likes coffee a lot" is the same fact as "likes coffee"
+	# — 0.667 by content words (duplicate), 0.5 as raw tokens (stored again).
+	var inputs: Array[String] = ["I drink a lot of coffee."]
+	var existing: Array[String] = ["likes coffee a lot"]
+	assert_str(MemoryRulesScript.reject_reason("likes coffee", inputs, existing)).is_equal(
+		"duplicate"
+	)
+	var content := MemoryRulesScript.jaccard(
+		MemoryRulesScript.content_words("likes coffee"),
+		MemoryRulesScript.content_words("likes coffee a lot")
+	)
+	assert_float(content).is_equal_approx(0.6667, 0.001)
+	var raw := MemoryRulesScript.jaccard(
+		MemoryRulesScript.tokenize("likes coffee"), MemoryRulesScript.tokenize("likes coffee a lot")
+	)
+	assert_float(raw).is_equal_approx(0.5, 0.0001)
+
+
 func test_reject_reason_names_the_rule() -> void:
 	var inputs: Array[String] = ["I work at the harbour with my sister Yuki."]
 	var empty: Array[String] = []
@@ -265,155 +249,6 @@ func test_reject_reason_names_the_rule() -> void:
 		)
 		. is_equal("duplicate")
 	)
-
-
-# -------------------------------------------------- slots, importance, saves
-
-
-func test_store_holds_24_slots_and_evicts_the_oldest_low_importance() -> void:
-	var store: Variant = _store(_filler(), 1.0)
-	assert_int(store.size()).is_equal(24)
-	# A 25th fact evicts the oldest of the lowest importance — "oldest
-	# low-importance evicted" is old-then-important, not importance alone.
-	var result: Dictionary = store.consider(
-		"has a sister called Yuki", ["My sister is called Yuki."] as Array[String]
-	)
-	assert_bool(result["accepted"]).is_true()
-	assert_int(store.size()).is_equal(24)
-	assert_str(result["evicted"]).is_equal("likes film alpha")
-	# Raise slot 0 high: the next eviction takes slot 1, the oldest of the rest.
-	var rows: Array = []
-	for i: int in FILLER.size():
-		rows.append({"text": "likes film " + FILLER[i], "importance": 9.0 if i == 0 else 1.0})
-	var ranked: Variant = _store_rows(rows)
-	var second: Dictionary = ranked.consider(
-		"has a brother named Ren", ["My brother is named Ren."] as Array[String]
-	)
-	assert_bool(second["accepted"]).is_true()
-	assert_str(second["evicted"]).is_equal("likes film bravo")
-	assert_array(ranked.facts()).contains("likes film alpha")
-
-
-func test_importance_increments_when_she_quotes_the_fact() -> void:
-	var store: Variant = _store(["gave me a music box"], 1.0)
-	assert_array([1.0]).is_equal(store.importances())
-	# 3 of 3 content words back at her: a quote, so importance +1 (docs/02 §6).
-	var quoted: Array = store.note_quotes("You gave me a music box, remember?")
-	assert_array(quoted).is_equal(["gave me a music box"])
-	assert_array([2.0]).is_equal(store.importances())
-	# Each turn she quotes it is +1 (not each word, not each mention).
-	store.note_quotes("a music box, my music box")
-	assert_array([3.0]).is_equal(store.importances())
-	# A single coincidental word is 1 of 3 = 0.333, under the threshold.
-	var bumps: Array = store.note_quotes("I found a box in the attic")
-	assert_array(bumps).is_empty()
-	assert_array([3.0]).is_equal(store.importances())
-
-
-func test_store_save_round_trip_keeps_importance_and_seed() -> void:
-	var store: Variant = _store(["likes coffee", "gave me a music box"], 1.0, 42)
-	store.note_quotes("You gave me a music box.")
-	var saved: Dictionary = store.to_dict()
-	var restored: Variant = auto_free(MemoryStoreScript.new())
-	restored.from_dict(saved)
-	assert_array(restored.facts()).is_equal(store.facts())
-	assert_array(restored.importances()).is_equal(store.importances())
-	assert_int(restored.rng_seed()).is_equal(42)
-	# And the restored store replays the same corruption as the original.
-	assert_array(restored.prompt_facts({"stage": 5})).is_equal(store.prompt_facts({"stage": 5}))
-	# A corrupt save cannot break the two invariants: 24 slots and importance
-	# >= 0. Extra slots are trimmed by the live eviction rule, negatives heal.
-	var rows: Array = []
-	for i: int in 30:
-		rows.append({"text": "likes film fact %d" % i, "importance": -3.0, "quotes": -1})
-	var healed: Variant = auto_free(MemoryStoreScript.new())
-	healed.from_dict({"entries": rows})
-	assert_int(healed.size()).is_equal(24)
-	assert_float(healed.importances()[0]).is_zero()
-
-
-# ------------------------------------------------------- docs/02 §6 corruption
-
-
-func test_corruption_chance_matches_the_documented_band() -> void:
-	# "from stage 3 … 10–25% are subtly altered" and nothing before it.
-	assert_float(MemoryRulesScript.corruption_chance(0)).is_zero()
-	assert_float(MemoryRulesScript.corruption_chance(2)).is_zero()
-	assert_float(MemoryRulesScript.corruption_chance(3)).is_equal_approx(0.10, 0.0001)
-	assert_float(MemoryRulesScript.corruption_chance(4)).is_equal_approx(0.175, 0.0001)
-	assert_float(MemoryRulesScript.corruption_chance(5)).is_equal_approx(0.25, 0.0001)
-	# Measured, not just declared: 800 rolls at stage 5 land near 25 %.
-	var store: Variant = _store(_filler(), 1.0, 21)
-	var rolls := 0
-	var hits := 0
-	for i: int in 100:
-		store.prompt_facts({"stage": 5})
-		rolls += 8
-		hits += (store.last_corruptions as Array).size()
-	var rate := float(hits) / float(rolls)
-	assert_float(rate).override_failure_message("measured %.3f" % rate).is_greater(0.18)
-	assert_float(rate).is_less(0.32)
-
-
-func test_corruption_mutations_cover_the_docs_examples() -> void:
-	# docs/02 §6: "a name swapped, a number off by one, 'you told me you'd never
-	# leave'". Each example is reachable and keeps the rest of the fact intact.
-	var saw_name := false
-	for change: Dictionary in _mutations("was with Sarah today", 24):
-		if _kind(change) == "name_swap":
-			saw_name = true
-			assert_bool(_corrupted(change).contains("Sarah")).is_false()
-			assert_bool(_corrupted(change).contains("today")).is_true()
-	assert_bool(saw_name).is_true()
-
-	var saw_number := false
-	for change: Dictionary in _mutations("has 3 cats", 24):
-		if _kind(change) == "number_off_by_one":
-			saw_number = true
-			assert_bool(["has 2 cats", "has 4 cats"].has(_corrupted(change))).is_true()
-	assert_bool(saw_number).is_true()
-	var saw_word := false
-	for change: Dictionary in _mutations("has three cats", 24):
-		if _kind(change) == "number_off_by_one":
-			saw_word = true
-			assert_bool(["has two cats", "has four cats"].has(_corrupted(change))).is_true()
-	assert_bool(saw_word).is_true()
-
-	# No name and no number: the invented promise is the only kind that applies.
-	for change: Dictionary in _mutations("gave me a music box", 24):
-		assert_str(_kind(change)).is_equal("false_promise")
-		assert_bool(_corrupted(change).contains("you told me you'd never leave")).is_true()
-
-
-func test_corruption_is_seeded_and_logged() -> void:
-	var texts: Array[String] = ["was with Sarah today", "has 3 cats", "gave me a music box"]
-	var left: Variant = _store(texts, 1.0, 11)
-	var right: Variant = _store(texts, 1.0, 11)
-	var before: Array = left.facts()
-	var kinds: Array = MemoryRulesScript.DOCS_TABLE["corruption"]["kinds"]
-	var logged := 0
-	for i: int in 40:
-		var left_facts: Array = left.prompt_facts({"stage": 5})
-		# Same seed, same store -> the same prompt facts, every turn.
-		assert_array(left_facts).is_equal(right.prompt_facts({"stage": 5}))
-		for change: Dictionary in left.last_corruptions:
-			logged += 1
-			assert_bool(kinds.has(_kind(change))).is_true()
-			assert_bool(_corrupted(change) != String(change["original"])).is_true()
-			assert_bool(before.has(String(change["original"]))).is_true()
-			assert_bool(left_facts.has(_corrupted(change))).is_true()
-	assert_int(logged).is_greater(0)
-	# Corruption is a display lie: the stored facts never change.
-	assert_array(left.facts()).is_equal(before)
-
-
-func test_no_corruption_below_stage_3() -> void:
-	var store: Variant = _store(_filler(), 1.0, 9)
-	for stage: int in [0, 1, 2]:
-		for i: int in 40:
-			store.prompt_facts({"stage": stage})
-			var message := "corruption leaked into stage %d" % stage
-			assert_array(store.last_corruptions).override_failure_message(message).is_empty()
 
 
 # ------------------------------------------------- "she quotes memories" (AC3)
@@ -521,12 +356,44 @@ func test_turn_transcript_records_the_corruption_log() -> void:
 	_rm_dir(DEBUG_DIR)
 
 
-func _rm_dir(path: String) -> void:
-	if not DirAccess.dir_exists_absolute(path):
-		return
-	var dir := DirAccess.open(path)
-	if dir == null:
-		return
-	for file: String in dir.get_files():
-		DirAccess.remove_absolute(path.path_join(file))
-	DirAccess.remove_absolute(path)
+func test_refusal_record_does_not_carry_the_previous_turn_memory() -> void:
+	# r2 CODE-3/DES-6: an unsafe input never opens a turn, so its record must not
+	# report the previous turn's proposal, quotes or corruptions — that field is
+	# "why she just refused to remember".
+	_rm_dir(DEBUG_DIR)
+	Memory.consider("gave me a music box", [GIFT_INPUT] as Array[String])
+	var seed := -1
+	for candidate: int in 100:
+		Memory.set_rng_seed(candidate)
+		Memory.prompt_facts({"stage": 5})
+		if not (Memory.report()["corruptions"] as Array).is_empty():
+			seed = candidate
+			break
+	assert_int(seed).is_greater_equal(0)
+	Memory.note_quotes("You gave me a music box.")
+	var before: Dictionary = Memory.report()
+	assert_bool((before["proposal"] as Dictionary)["accepted"]).is_true()
+	assert_array(before["quotes"]).is_not_empty()
+	assert_array(before["corruptions"]).is_not_empty()
+
+	Director.transcript_logger.configure({"debug_dir": DEBUG_DIR})
+	Director._reject_unsafe_input()
+	Director.transcript_logger.flush()
+	var loaded: Dictionary = TranscriptLoggerScript.load_transcript(
+		Director.transcript_logger.current_file()
+	)
+	Director.transcript_logger.end_session()
+	assert_array(loaded["errors"]).is_empty()
+	var record: Dictionary = {}
+	for entry: Dictionary in loaded["records"]:
+		if String(entry.get("type", "")) == "turn":
+			record = entry
+	var message := "the refusal record is missing its memory block"
+	assert_bool(record.has("memory")).override_failure_message(message).is_true()
+	var memory: Dictionary = record["memory"]
+	assert_dict(memory["proposal"]).is_empty()
+	assert_array(memory["quotes"]).is_empty()
+	assert_array(memory["corruptions"]).is_empty()
+	# The store's facts are not a per-turn record: a refusal forgets nothing.
+	assert_array(memory["facts"]).contains("gave me a music box")
+	_rm_dir(DEBUG_DIR)

@@ -11,9 +11,11 @@ extends RefCounted
 ## Turn record (record format v1): {"v", "type": "turn", "session", "seq",
 ## "ts", "turn", "prompt", "schema", "output"} plus optional pass-through
 ## fields "metrics", "events", "error", "day", "stage", "path", "dose",
-## "meta" — unknown keys are dropped so the format stays canonical.
+## "meta", "memory" — unknown keys are dropped so the format stays canonical.
 ## "metrics" is the backend's last_metrics() dict (ready_ms, first_say_ms,
-## generate_ms, ...); "output" is the raw model text, never the parsed turn.
+## generate_ms, ...); "output" is the raw model text, never the parsed turn;
+## "memory" is the docs/02 §6 state report (true facts, this turn's corruptions
+## and quotes, the proposal decision) — P2.11's audit trail.
 ##
 ## Safety: an injected `redactor` Callable (set_redactor/configure) is applied
 ## to every record — including session lines — before it touches disk. It

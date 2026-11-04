@@ -22,8 +22,9 @@ const ENTRY_TEXT := "text"
 const ENTRY_IMPORTANCE := "importance"
 const ENTRY_QUOTES := "quotes"
 
-## docs/02 §6 "Store: 24 slots" — no data file can widen the slot count at
-## runtime; a save may carry its own capacity for a future difficulty setting.
+## docs/02 §6 "Store: 24 slots". `memory.json` sets it and `_init(size_override)`
+## is the test seam; a save's capacity is clamped to the same ceiling, so nothing
+## a save, a data edit or a caller carries can widen the store (r2 CODE-4/DES-9).
 var capacity: int = 24
 var entries: Array[Dictionary] = []
 ## The changes `prompt_facts()` made this turn: {slot, kind, original, corrupted}.
@@ -48,10 +49,21 @@ func _init(size_override := 0) -> void:
 func reset() -> void:
 	var seed := _rng.seed
 	entries.clear()
+	begin_turn()
+	_rng.seed = seed
+
+
+## Open this turn's record (`Director._start_turn`, and the unsafe-input refusal
+## that never opens a turn). `prompt_facts()` clears the corruption log and
+## `note_quotes()` the quotes, but nothing cleared the proposal, and a turn that
+## builds no prompt (a refusal), fails, is cancelled, or whose model sent
+## `"memory": ""` would report the previous turn's fields — the transcript's
+## `proposal` is "why she just refused to remember", so it must be this turn's
+## (review r2 CODE-3/DES-6).
+func begin_turn() -> void:
 	last_corruptions.clear()
 	last_quotes.clear()
 	last_proposal = {}
-	_rng.seed = seed
 
 
 # ------------------------------------------------------------------ proposals
@@ -59,9 +71,17 @@ func reset() -> void:
 
 ## Try to store a model-proposed fact. Rejects through MemoryRules' three rules
 ## and names the rule that fired. On accept, over-capacity evicts the oldest
-## low-importance slot.
+## low-importance slot — never the fact just accepted, which is the newest and
+## would otherwise be its own victim in a store of quoted facts (review r2
+## CODE-1/DES-3).
 func consider(candidate: String, player_inputs: Array) -> Dictionary:
-	var reason := MemoryRules.reject_reason(candidate, player_inputs, facts())
+	# The window is typed at the rule layer; a tool or a save may hand us an
+	# untyped Array, so it is normalised here instead of erroring inside the
+	# rules (review r2 DES-8).
+	var window: Array[String] = []
+	for line: Variant in player_inputs:
+		window.append(str(line))
+	var reason := MemoryRules.reject_reason(candidate, window, facts())
 	if not reason.is_empty():
 		last_proposal = {"accepted": false, "reason": reason, "evicted": "", "text": ""}
 		return last_proposal
@@ -78,9 +98,10 @@ func consider(candidate: String, player_inputs: Array) -> Dictionary:
 	)
 	var evicted := ""
 	if entries.size() > capacity:
-		var victim := MemoryRules.eviction_index(entries)
-		evicted = String(entries[victim][ENTRY_TEXT])
-		entries.remove_at(victim)
+		var victim := MemoryRules.eviction_index(entries, entries.size() - 1)
+		if victim >= 0:
+			evicted = String(entries[victim][ENTRY_TEXT])
+			entries.remove_at(victim)
 	last_proposal = {"accepted": true, "reason": "", "evicted": evicted, "text": trimmed}
 	return last_proposal
 
@@ -194,11 +215,13 @@ func to_dict() -> Dictionary:
 ## Restore a save. Anything malformed is dropped rather than trusted: a slot
 ## without a non-empty string is not a fact, a negative importance or quote
 ## count is healed to zero, and a save carrying more slots than the store allows
-## is trimmed by the same eviction rule a live store uses (docs/07 §3.5
-## corrupted-save rule; docs/02 §6 "24 slots").
+## is trimmed by the same eviction rule a live store uses (docs/02 §6 "24 slots";
+## corrupt-save handling is P2.20's, this function is only its input guard).
 func from_dict(data: Dictionary) -> void:
 	reset()
-	capacity = maxi(1, int(data.get("capacity", MemoryRules.capacity())))
+	# docs/02 §6 fixes the store at 24 slots, so a hand-edited or half-written
+	# save is data, never a wider store (review r2 CODE-4/DES-9).
+	capacity = clampi(int(data.get("capacity", MemoryRules.capacity())), 1, MemoryRules.capacity())
 	_rng.seed = int(data.get("seed", 0))
 	if data.has("state"):
 		_rng.state = int(data["state"])

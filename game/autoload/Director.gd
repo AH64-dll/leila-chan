@@ -232,7 +232,10 @@ func get_current_dose() -> Dictionary:
 		return last_dose
 	var stage := int(GameState.stage)
 	if Steering != null and Steering.has_method("dose_for"):
-		return Steering.dose_for(build_turn_context(""))
+		# Not `build_turn_context()`: that injects the memories, and a read-only
+		# accessor (the F3 overlay refreshes it) must not spend an injection or
+		# clear the log the transcript is about to write (review r2 DES-7).
+		return Steering.dose_for({"stage": stage})
 	return {"malice": float(sampling_spec(stage).get("dose", 0.0))}
 
 
@@ -315,6 +318,8 @@ func _reject_unsafe_input() -> void:
 	_turn_index = GameState.turn  # the record identity: this never-started turn
 	_current_stage = int(GameState.stage)
 	_current_path = String(GameState.path)
+	# No prompt is built for a refusal, so the record is not the last turn's.
+	Memory.begin_turn()
 	_log_turn_record("failed", UNSAFE_INPUT_CODE, UNSAFE_INPUT_MESSAGE)
 	var refusal: Dictionary = TurnValidator.get_input_refusal(_current_stage, GameState.player_name)
 	_safety.end_utterance()  # reply boundary (P1.19 CODE-19): a new utterance
@@ -358,6 +363,7 @@ func _start_turn(player_text: String) -> bool:
 	_clear_turn_context()
 	_current_stage = int(GameState.stage)
 	_current_path = String(GameState.path)
+	Memory.begin_turn()  # the transcript's memory block is this turn's only
 
 	# Reply boundary (P1.19 r4 CODE-19): a new model utterance starts here, so
 	# the filter's cross-beat carry must not glue the previous reply's tail into

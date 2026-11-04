@@ -9,8 +9,10 @@ extends RefCounted
 ##   1. the candidate shares >= 1 content word with the last 3 player messages
 ##      (blocks invented facts),
 ##   2. it contains no schema/meta words (rule 2 — the doc's own example is
-##      "The player used the phrase 'jealousy_bait'…", which rule 2 rejects),
-##   3. it is not a near-duplicate (token Jaccard < 0.6 vs the stored facts).
+##      "The player used the phrase 'jealousy_bait'…", which rule 2 rejects;
+##      the list holds schema keys *and* every `read` intent label),
+##   3. it is not a near-duplicate (< 0.6 Jaccard against the stored facts,
+##      measured over content words — the reading is documented on `jaccard`).
 ##
 ## Rule 1 is fail-closed: with no player window there is nothing to ground the
 ## fact in, so the candidate is rejected instead of accepted (P1.08 CODE-10b).
@@ -166,8 +168,23 @@ const DOCS_TABLE := {
 		"labels",
 		"request",
 		"response",
+		"affection",
+		"apology",
+		"boundary",
+		"cold",
+		"compliment",
+		"flirt",
+		"gift",
+		"greeting",
+		"insult",
 		"jealousy_bait",
+		"leaving",
+		"meta",
+		"other",
+		"question",
+		"scared",
 		"small_talk",
+		"tease",
 	],
 	"importance": {"new_fact": 1.0, "quote_bonus": 1.0},
 	"corruption":
@@ -221,6 +238,10 @@ const DOCS_TABLE := {
 
 const MAX_STAGE := 5
 
+## Characters after which a capitalised word is its sentence's first word rather
+## than evidence of a name (`_swap_name`'s proper-name heuristic).
+const SENTENCE_START_CHARS: Array[String] = [".", "!", "?", ";", ":", "—", '"', "'", "("]
+
 static var _table_cache: Dictionary = {}
 
 
@@ -256,6 +277,8 @@ static func reject_reason(
 	var cand_words := content_words(trimmed)
 	if not _shares_content_word(cand_words, player_inputs):
 		return "ungrounded"
+	# Rule 3 compares the same content words the rest of the model uses, so a
+	# shared "the"/"and" cannot pad two unrelated facts into a duplicate.
 	for existing: String in existing_memories:
 		if jaccard(cand_words, content_words(existing)) >= duplicate_jaccard():
 			return "duplicate"
@@ -295,13 +318,16 @@ static func quote_bonus() -> float:
 
 ## docs/02 §6 "oldest low-importance evicted": the victim is the lowest
 ## importance in the store, and among equals the oldest (insertion order).
-## Returns -1 for an empty store.
-static func eviction_index(entries: Array) -> int:
-	if entries.is_empty():
-		return -1
-	var victim := 0
+## `skip` excludes one index — `MemoryStore.consider()` passes the slot it just
+## appended, because "oldest low-importance" cannot mean the newest fact
+## (review r2 CODE-1/DES-3). Returns -1 for an empty store or when every index
+## is skipped.
+static func eviction_index(entries: Array, skip: int = -1) -> int:
+	var victim := -1
 	var lowest := INF
 	for i: int in entries.size():
+		if i == skip:
+			continue
 		var entry: Variant = entries[i]
 		if not entry is Dictionary:
 			return i
@@ -313,8 +339,10 @@ static func eviction_index(entries: Array) -> int:
 
 
 ## "She quotes it": the share of the fact's content words that appear in her
-## `say` reaches `quote_overlap`. A full sentence back is 1.0; naming the fact's
-## subject and predicate is 0.5; a coincidental single word is below it.
+## `say` reaches `quote_overlap` (0.5). The measure is per fact, so its cost
+## scales with length: a three-word fact needs two words back and a two-word fact
+## ("likes coffee") is quoted by one — the share is the only reading the doc's
+## "she quotes it" offers at that length, and importance only orders eviction.
 static func quoted_by(say_text: String, fact: String) -> bool:
 	var fact_words := content_words(fact)
 	if fact_words.is_empty():
@@ -384,15 +412,24 @@ static func _mutate(
 	return ""
 
 
+## The doc's first example: "a name swapped". A capitalised token is only a
+## candidate when it is not a function word and not the first word of its
+## sentence: "My brother is called Ren" must corrupt to "… called Mira", never
+## to "Rin brother …" — the prompt carries what she *misremembers*, and broken
+## English reads as a bug rather than as a false memory (review r2 DES-1).
 static func _swap_name(fact: String, rng: RandomNumberGenerator, spec: Dictionary) -> String:
 	var regex := RegEx.new()
 	regex.compile("\\b[A-Z][a-z]{1,}\\b")
 	var exclude: Array = spec["name_swap_exclude"]
+	var stop_words: Array = _table()["stop_words"]
 	var candidates: Array[String] = []
 	for m: RegExMatch in regex.search_all(fact):
 		var token := m.get_string()
-		if not exclude.has(token):
-			candidates.append(token)
+		if exclude.has(token) or stop_words.has(token.to_lower()):
+			continue
+		if _starts_a_sentence(fact, m.get_start()):
+			continue
+		candidates.append(token)
 	if candidates.is_empty():
 		return ""
 	var original := candidates[rng.randi() % candidates.size()]
@@ -411,6 +448,19 @@ static func _swap_name(fact: String, rng: RandomNumberGenerator, spec: Dictionar
 	if replacement.is_empty():
 		return ""
 	return fact.replace(original, replacement)
+
+
+## True when nothing but whitespace and sentence/clause punctuation precedes
+## `start`, i.e. the token there is a sentence's first word.
+static func _starts_a_sentence(fact: String, start: int) -> bool:
+	var i := start - 1
+	while i >= 0:
+		var c := fact[i]
+		if c == " " or c == "\t" or c == "\n":
+			i -= 1
+			continue
+		return SENTENCE_START_CHARS.has(c)
+	return true
 
 
 static func _shift_number(fact: String, rng: RandomNumberGenerator, spec: Dictionary) -> String:
@@ -468,15 +518,16 @@ static func _word_for(value: int, words: Dictionary) -> String:
 
 
 ## "…you told me you'd never leave" appended to the fact (the doc's third
-## example). Skipped when it would overflow the schema's maxLength.
+## example). `max_length` is TurnSchema's cap on the model's *proposal* field,
+## not on this bullet: skipping the mutation made every 49–80 character fact
+## with no name and no number corruption-proof at every stage (measured 0 % at
+## stage 5, review r2 CODE-2/DES-2). The rendered prompt's own soft budget
+## report (`PromptBuilder._over_budget`) is the only limit here.
 static func _append_promise(fact: String, spec: Dictionary) -> String:
 	var promise := String(spec["promise"]).strip_edges()
 	if promise.is_empty():
 		return ""
-	var joined := "%s — %s" % [fact, promise]
-	if joined.length() > int(_table()["max_length"]):
-		return ""
-	return joined
+	return "%s — %s" % [fact, promise]
 
 
 # -------------------------------------------------------------------- tokens
@@ -503,6 +554,12 @@ static func content_words(text: String) -> Array[String]:
 	return words
 
 
+## Rule 3's Jaccard over the sets the caller passes in. docs/02 §6 says "token
+## Jaccard < 0.6"; `reject_reason()` feeds *content* words on both sides, which
+## is the reading: with raw tokens "likes coffee" and "likes coffee a lot" score
+## 0.5 (accepted) although they are the same fact, and shared function words
+## make unrelated facts look alike. Pinned by
+## `MemoryTest.test_rule3_compares_content_words_not_raw_tokens`.
 static func jaccard(a: Array[String], b: Array[String]) -> float:
 	var set_a: Dictionary = {}
 	var set_b: Dictionary = {}
