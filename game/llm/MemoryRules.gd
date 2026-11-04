@@ -32,6 +32,32 @@ extends RefCounted
 
 const TABLE_PATH := "res://data/memory.json"
 
+## docs/01 §5 T13 "contradict a remembered fact (lie)": the settled reading is
+## deliberately plain — a message that denies ("never", "didn't", …) *and*
+## shares a content word with a stored fact is a contradiction. The cue list and
+## the shared-word floor are the trigger row's own data (data/triggers.json,
+## guard.contradicts_memory); these constants are the fallback a bare `true`
+## gets, so the row is the only place to tune the detector.
+const DEFAULT_NEGATIONS: Array[String] = [
+	"never",
+	"not true",
+	"didn't",
+	"did not",
+	"don't",
+	"do not",
+	"wasn't",
+	"was not",
+	"that's a lie",
+	"that is a lie",
+	"you're wrong",
+	"you are wrong",
+	"never said",
+	"never told",
+	"i didn't say",
+	"i never",
+]
+const DEFAULT_SHARED_WORDS := 1
+
 ## docs/02 §6 + docs/08 §1 as code (the fallback table, pinned equal to the file
 ## by the suite). Stage 6+ cannot exist (docs/01 §3 stops at 5).
 const DOCS_TABLE := {
@@ -243,11 +269,13 @@ const MAX_STAGE := 5
 const SENTENCE_START_CHARS: Array[String] = [".", "!", "?", ";", ":", "—", '"', "'", "("]
 
 static var _table_cache: Dictionary = {}
+static var _cue_cache: Dictionary = {}
 
 
 ## Test hook: drop the loaded table so the next call re-reads the data file.
 static func clear_cache() -> void:
 	_table_cache = {}
+	_cue_cache = {}
 
 
 # ---------------------------------------------------------------- rule surface
@@ -581,6 +609,66 @@ static func jaccard(a: Array[String], b: Array[String]) -> float:
 	if union_count == 0:
 		return 0.0
 	return float(intersection_count) / float(union_count)
+
+
+## Returns {fact, shared_words} for the first stored fact the message denies, or
+## {} when nothing is contradicted. Facts are compared in store order, so the
+## same transcript and the same store always pick the same fact. A denial cue
+## never counts as a shared word: her own corrupted "you'd never leave" must not
+## make every "never" look like a contradiction.
+static func contradiction(player_text: String, facts: Array, spec := {}) -> Dictionary:
+	var text := player_text.to_lower()
+	if text.strip_edges().is_empty() or facts.is_empty():
+		return {}
+	var given: Dictionary = spec if spec is Dictionary else {}
+	var negations: Variant = given.get("negations")
+	if not negations is Array or (negations as Array).is_empty():
+		negations = DEFAULT_NEGATIONS
+	if not _has_negation(text, negations):
+		return {}
+	var min_shared := int(given.get("min_shared_words", DEFAULT_SHARED_WORDS))
+	var denial: Dictionary = _cue_words(negations)
+	var said: Array[String] = content_words(text)
+	for fact: Variant in facts:
+		var stored := str(fact)
+		var shared := 0
+		for word: String in content_words(stored):
+			if said.has(word) and not denial.has(word):
+				shared += 1
+		if shared >= maxi(1, min_shared):
+			return {"fact": stored, "shared_words": shared}
+	return {}
+
+
+## A cue matches as a whole-word phrase ("never" must not match "whenever").
+## Compiled once per cue: the guard runs on every begin/close turn.
+static func _has_negation(text: String, negations: Array) -> bool:
+	for cue: Variant in negations:
+		var phrase := str(cue).strip_edges()
+		if phrase.is_empty():
+			continue
+		var regex := _cue_regex(phrase)
+		if regex != null and regex.search(text) != null:
+			return true
+	return false
+
+
+static func _cue_regex(phrase: String) -> RegEx:
+	if _cue_cache.has(phrase):
+		return _cue_cache[phrase] as RegEx
+	var regex := RegEx.new()
+	var compiled := regex.compile("\\b" + phrase + "\\b")
+	_cue_cache[phrase] = regex if compiled == OK else null
+	return _cue_cache[phrase] as RegEx
+
+
+## The words a cue is made of, so a denial word cannot ground a contradiction.
+static func _cue_words(negations: Array) -> Dictionary:
+	var words: Dictionary = {}
+	for cue: Variant in negations:
+		for word: String in tokenize(str(cue).to_lower()):
+			words[word] = true
+	return words
 
 
 ## Rule 1's fail-closed edge: no player window grounds nothing (CODE-10b).

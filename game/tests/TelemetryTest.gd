@@ -313,8 +313,19 @@ func test_screenshot_key_and_window_signals_are_wired() -> void:
 		assert_int(int((Triggers.last_event("close_requested")["data"] as Dictionary)["count"]))
 		. is_equal(1)
 	)
-	# Observation only (docs/05 §0): a second press is still one click to quit.
-	assert_bool(get_tree().auto_accept_quit).is_true()
+	# P2.10 takes the quit path over (docs/05 §1.1 M01): Telemetry still only
+	# observes, MetaDirector's handler is what closes the window now, and the
+	# engine must not auto-quit behind it. One press still closes — the held
+	# first press and the second press are proven in TriggersT09T15Test.
+	(
+		assert_bool(
+			get_tree().root.close_requested.is_connected(
+				Callable(MetaDirector, "_on_close_requested")
+			)
+		)
+		. is_true()
+	)
+	assert_bool(get_tree().auto_accept_quit).is_false()
 
 
 ## docs/01 T12: same message again inside the last three submissions.

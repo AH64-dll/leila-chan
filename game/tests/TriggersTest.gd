@@ -651,7 +651,12 @@ func test_to_dict_from_dict_round_trip() -> void:
 	assert_bool(restored.from_dict(snapshot)).is_true()
 	assert_dict(restored.to_dict()).is_equal(snapshot)
 	# The once firing survived: a reload does not hand her a second confession.
-	assert_array(restored.begin_turn(_ctx(2, {"text": "I love you"}))).is_empty()
+	# P2.10's shipped T03 now matches a bare "I love you" on an early day, so the
+	# claim is about T68 — the row under test — not "nothing fires".
+	var again: Array[String] = []
+	for result: Dictionary in restored.begin_turn(_ctx(2, {"text": "I love you"})):
+		again.append(String(result["id"]))
+	assert_array(again).not_contains("T68")
 	# Garbage is refused rather than half-applied.
 	assert_bool(restored.from_dict("nope")).is_false()
 	assert_bool(restored.from_dict({})).is_false()

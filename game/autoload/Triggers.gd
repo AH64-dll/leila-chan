@@ -33,6 +33,9 @@ var _engine := TriggerEngine.new()
 var _last_results: Array[Dictionary] = []
 var _clock: Callable = Callable()
 var _last_seen_unix := 0
+## This turn's profile counters at submit, so a guard can read what changed.
+var _profile_baseline: Dictionary = {}
+var _profile_baseline_open := false
 
 
 func _ready() -> void:
@@ -81,6 +84,10 @@ func trigger_ids() -> Array[String]:
 ## docs/02 §4 step 0: the K (keyword) and C (clock) detectors for the line the
 ## player just sent. Returns the docs/08 §6 lines that belong to THIS turn.
 func begin_turn(input_text: String) -> Array[String]:
+	# Snapshot the profile counters: a guard row can then ask what the game
+	# bumped *this* turn (docs/01 §5 T15's `ignored_questions`).
+	_profile_baseline = GameState.profile.duplicate(true)
+	_profile_baseline_open = true
 	var ctx := _context(true)
 	ctx["text"] = input_text
 	var lines: Array[String] = []
@@ -98,7 +105,11 @@ func close_turn(read_label: String) -> Array[String]:
 	var ctx := _context(false)
 	ctx["read"] = read_label
 	var lines: Array[String] = []
-	for result: Dictionary in _engine.close_turn(ctx):
+	var fired := _engine.close_turn(ctx)
+	# One close per turn: the delta belongs to the turn that just ended.
+	_profile_baseline = {}
+	_profile_baseline_open = false
+	for result: Dictionary in fired:
 		var line := _apply(result, true)
 		if not line.is_empty():
 			lines.append(line)
@@ -133,6 +144,8 @@ func last_event(kind: String) -> Dictionary:
 func clear_engine_events() -> void:
 	received_events.clear()
 	_last_results.clear()
+	_profile_baseline = {}
+	_profile_baseline_open = false
 	_engine.reset()
 
 
@@ -151,6 +164,13 @@ func report() -> Dictionary:
 ## the path scores ("YANDERE +3", "AWAKE +4" in the trigger table).
 func path_scores() -> Dictionary:
 	return _engine.path_scores()
+
+
+## docs/05 §1.1 M01: the docs/05 stage gate a trigger row declares (−1 when the
+## id is unknown). The close intercept reads T10's gate here instead of keeping
+## a second copy of the number; the row is authoritative.
+func stage_min_of(id: String) -> int:
+	return _engine.stage_min_of(id)
 
 
 ## P2.20's save seam: cooldowns and "once" firings must survive a reload.
@@ -223,9 +243,37 @@ func _context(upcoming: bool) -> Dictionary:
 		# A copy: a fire during this turn must not change what a later row's
 		# clock detector sees inside the same evaluation.
 		"flags": GameState.flags.duplicate(true),
+		# docs/01 §5 T13: the *true* facts (corruption is what she reads, not
+		# what she knows), so a lie is measured against her real memory.
+		"memory_facts": _memory_facts(),
+		# docs/01 §5 T15: what the game bumped during the closed turn. Empty at
+		# submit/handle_event — nothing has been applied yet.
+		"profile_delta": _profile_delta(upcoming),
 		"text": "",
 		"read": "",
 	}
+
+
+## The memory store's true facts, as a plain Array for the engine's guard.
+func _memory_facts() -> Array:
+	if Memory == null:
+		return []
+	return Memory.facts()
+
+
+## Counters the game bumped since this turn's begin_turn(). Only the closed turn
+## has one; at submit time there is nothing to report yet.
+func _profile_delta(upcoming: bool) -> Dictionary:
+	if upcoming or not _profile_baseline_open:
+		return {}
+	var out := {}
+	var current: Dictionary = GameState.profile
+	for key: Variant in current:
+		var before := int(_profile_baseline.get(str(key), 0))
+		var after := int(current[key])
+		if after > before:
+			out[str(key)] = after - before
+	return out
 
 
 func _now() -> float:

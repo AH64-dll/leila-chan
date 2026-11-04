@@ -283,3 +283,14 @@
 - Gate green: 634 tests / 53 suites. `FXHostTest.test_twitch_fires_chromatic_split` flakes under machine
   load (shader-uniform sample after a wall-clock wait); it passes alone and is untouched by save work.
 
+
+## P2.10 — triggers T01–T15 + the M01 close intercept (round 1, 2026-11-04, agent: commandcode)
+
+- Built the 15 rows in `game/data/triggers.json` (T01–T07 and T13–T15 new; effects added to T08–T12) plus two data-driven engine extensions: a `guard` block for conditions that must hold but are **not** detection letters (T03's "before Day 3"), and **guard-only rows** whose evidence is the game's own check. T13 = `MemoryRules.contradiction()` against the *true* memory facts; T15 = this turn's `ignored_questions` bump (Triggers snapshots `GameState.profile` at begin_turn, injects the delta at close).
+- Convention: a guard firing is full strength — docs/02 §1.2's halving is about *disagreement* between keyword and model evidence, and a guard row has no model claim to halve. `_base_strength()` now maps agreement→strength-key through a const table (gdlint caps 6 returns per function).
+- Convention: line templates may use `{fact}`, and the guard injects the value; E rows still leave `line` empty because Telemetry speaks those.
+- The close intercept lives in `MetaDirector` (the docs/05 owner) and *takes over* `auto_accept_quit`, but only after connecting its handler. Gate from `Triggers.stage_min_of("T10")`, offer sentence from `data/stage_gates.json` → `gates.opportunities.refuse_exit` (via `TurnSchema.opportunity_line`), quit through an injected Callable so a scripted close never ends a test run.
+- Gotcha: handler ordering on `root.close_requested` does not matter — the intercept decides from its own once-per-session flag, not from T10's count, so Telemetry's listener can run before or after it.
+- Gotcha: `GameState.set_meter(&"instability", 55)` queues the stage-transition EVENT line, so a test counting `pending_events` must count its own line (`count(line)`), never the queue size.
+- Gotcha: `TriggerEngine.gd` sits at 999/1000 gdlint lines — every added line needs a deletion; the new guard docs are already compressed, so split the class (e.g. a `TriggerTable` loader) before adding more vocabulary.
+- Two merged tests changed with the data, by design: `TriggersTest.test_to_dict_from_dict_round_trip` asserted "nothing fires" on "I love you" (T03 now does, so it asserts T68 is absent) and `TelemetryTest` asserted `auto_accept_quit` is true (P2.10 takes the quit path; M01's own tests are in `TriggersT09T15Test`).

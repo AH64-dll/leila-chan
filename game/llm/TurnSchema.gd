@@ -109,6 +109,20 @@ static func get_stage_gates() -> Dictionary:
 	return {}
 
 
+## docs/05 §2 / docs/02 §2.4: the one line that tells the model *why* an offered
+## action is available ("the Story/Meta director … tells the model in one line
+## why it's available"). Prompts live in data (docs/07 §2), so the sentence is
+## the gates file's, not a constant in the director; "" means none is authored.
+static func opportunity_line(action: String) -> String:
+	var gates := get_stage_gates()
+	if not (gates.get("gates") is Dictionary):
+		return ""
+	var meta: Variant = (gates["gates"] as Dictionary).get("opportunities")
+	if not (meta is Dictionary):
+		return ""
+	return String((meta as Dictionary).get(action, "")).strip_edges()
+
+
 static func get_canonical_feelings() -> Array[String]:
 	if not _feelings_cache.is_empty():
 		return _feelings_cache.duplicate()
