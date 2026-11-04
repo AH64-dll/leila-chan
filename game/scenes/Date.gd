@@ -114,6 +114,14 @@ func _ready() -> void:
 		# benefit. `_exit_tree()` clears it so the autoload never holds a freed
 		# scene node.
 		Director.register_chat_ui(chat_ui)
+		# docs/03 §5 / docs/05 M41 inner-voice leak (P2.07): the decision is
+		# per turn, and the turn's `inner` is known once it closes.
+		# `turn_completed` is the Director's public turn boundary and already
+		# carries the validated turn data, so the scene that owns the ChatUI
+		# subscribes there instead of adding a second Director → UI seam for
+		# one field (the Director sits at gdlint's 1000-line cap).
+		if not Director.turn_completed.is_connected(_on_director_turn_completed):
+			Director.turn_completed.connect(_on_director_turn_completed)
 	# Telemetry scope (P2.09): the input/window detectors only record while a
 	# date is the active conversation, so a title-screen resize or a keypress
 	# at the menu can never become a turn event. Cleared in _exit_tree().
@@ -412,6 +420,18 @@ func _on_turn_displayed() -> void:
 		_opening_finished = true
 		opening_beats_finished.emit()
 	turn_completed.emit(_current_turn)
+
+
+## docs/03 §5 (P2.07): her private thought can surface for a moment. The ChatUI
+## owns the decision, the per-turn cap, the Safety scan and the render; the
+## scene only hands it the finished turn. `inner` is schema-required
+## (docs/02 §3), so a missing key simply means there is nothing to leak.
+func _on_director_turn_completed(_turn_index: int, turn_data: Dictionary) -> void:
+	if chat_ui == null or not is_instance_valid(chat_ui):
+		return
+	if not chat_ui.has_method("leak_inner"):
+		return
+	chat_ui.leak_inner(str(turn_data.get("inner", "")))
 
 
 func _on_pause_requested() -> void:

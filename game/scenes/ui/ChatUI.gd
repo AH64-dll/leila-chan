@@ -10,6 +10,11 @@ extends Control
 ##   end_beat feed the typewriter → each fully-shown beat's spoken text lands
 ##   in the log → end_turn → when the last beat is on screen the input unlocks
 ##   and grabs focus again.
+##
+## The inner-voice leak (docs/03 §5, docs/05 M41, P2.07) hangs off the same
+## object: `InnerLeak` decides per turn whether her private thought surfaces,
+## `leak_inner()` scans it with Safety and plays `InnerLeakLabel` — the ghost
+## line drawn behind the text box.
 
 signal player_turn_sent(text: String)  ## The Director (SYS) starts the turn from this.
 signal turn_displayed  ## Every beat of her reply is on screen; safe to enable input.
@@ -33,6 +38,10 @@ var corruption: CorruptionSession = null
 ## `reduced_motion.disable`). `set_reduced_motion()` writes it; the Settings
 ## autoload can only force it on, never off.
 var reduced_motion := false
+## Inner-voice leak (docs/03 §5, docs/05 M41): seeded roll override for tests
+## and replays (0 = production). Production draws from `_turn_seq`, like the
+## corruption session's seed — no RNG state is stored in the transcript.
+var inner_leak_salt := 0
 
 var _player_name := "Senpai"
 var _leila_name := "Leila"
@@ -42,15 +51,31 @@ var _log_open := true
 var _config := {}
 var _filter_warning_emitted_this_turn := false
 var _turn_seq := 0  # seeded per-turn counter for the corruption filter
+var _inner_leaked_turn := -1  # `_turn_seq` of the turn whose thought already leaked
 
 @onready var chat_log: ScrollContainer = $Margin/VBox/ChatLog
 @onready var text_box: PanelContainer = $Margin/VBox/TextBox
 @onready var input_box: LineEdit = $Margin/VBox/InputBox
+@onready var inner_leak: InnerLeakLabel = $InnerLeak
 
 
 func _ready() -> void:
 	_config = UiConfig.load_config()
 	apply_config(_config)
+	if text_box != null and not text_box.resized.is_connected(_on_text_box_resized):
+		text_box.resized.connect(_on_text_box_resized)
+
+
+## The leak's own timeline (a 1 s hold, or word by word then a hold) is stepped
+## here exactly like the typewriter's, so the UI owns all of its animation
+## clocks and a test can advance it by hand. The label also re-pins itself to the
+## box each tick: the TextBox is laid out by its container, so its rect can still
+## move a pixel or two on the frame a new indicator/log line lands — the ghost
+## line must stay glued to its top edge while it is visible.
+func _process(delta: float) -> void:
+	if inner_leak != null and inner_leak.is_leaking():
+		_place_inner_leak()
+		inner_leak.advance(delta)
 
 
 func apply_config(config: Dictionary) -> void:
@@ -133,6 +158,10 @@ func begin_turn_wait() -> void:
 	_turn_open = true
 	_end_pending = false
 	_filter_warning_emitted_this_turn = false
+	# A leaked thought belongs to the turn that spoke it: the hold never
+	# survives into the next reply.
+	if inner_leak != null:
+		inner_leak.dismiss()
 	if turn_start:
 		_turn_seq += 1
 		_begin_corruption_turn()
@@ -165,6 +194,81 @@ func _begin_corruption_turn() -> void:
 			}
 		)
 	)
+
+
+## ── Inner-voice leak (docs/03 §5, docs/05 M41) ─────────────────────────────
+
+
+## Her private `inner` thought for this turn, if the stage's roll says it leaks.
+## This is the only path from model inner text to the screen: the line is
+## scanned by the Safety autoload first (fail closed to bars), and only the
+## scanned string reaches the label. Returns true when a leak was displayed.
+##
+## `force` is the F3 dev trigger: it bypasses the docs gate, chance and the
+## per-turn cap so a tester can see either style at any stage — it never
+## bypasses Safety.
+func leak_inner(inner_text: String, force: bool = false) -> bool:
+	if inner_leak == null:
+		return false
+	var text := inner_text.strip_edges()
+	if text.is_empty():
+		return false
+	var plan_dict := InnerLeak.plan(stage, _leak_context())
+	if not force:
+		if _inner_leaked_turn == _turn_seq:
+			return false
+		if not InnerLeak.roll(plan_dict, _turn_seq, inner_leak_salt):
+			return false
+	var scanned := _scan_inner(text)
+	if scanned.strip_edges().is_empty():
+		return false
+	inner_leak.play(scanned, plan_dict)
+	_place_inner_leak()
+	_inner_leaked_turn = _turn_seq
+	return true
+
+
+## The plan inputs the Settings menu and the scene own (docs/02 §8 calmer,
+## docs/05 §0 reduced motion), resolved once for the leak's roll and look.
+func _leak_context() -> Dictionary:
+	return {"reduced_motion": is_reduced_motion(), "content_level": _content_level()}
+
+
+## docs/02 §8: any `inner` that will be leaked passes the Safety filter first.
+## Fail closed — a build without the scan API shows bars, never raw model text.
+func _scan_inner(text: String) -> String:
+	var safety_node: Node = get_node_or_null("/root/Safety")
+	if safety_node == null or not safety_node.has_method("filter_text"):
+		return SaySafetyGate.redact(text)
+	var res: Variant = safety_node.call("filter_text", text, {"stage": stage})
+	if res is Dictionary:
+		var filtered: Variant = (res as Dictionary).get("text")
+		if filtered is String:
+			return str(filtered)
+		return SaySafetyGate.redact(text)
+	if res is String:
+		return str(res)
+	return SaySafetyGate.redact(text)
+
+
+## The leak is drawn *behind* the box (docs/03 §5): the label sits at z -1 with
+## its bottom `behind_overlap` px under the TextBox's top border, so the panel
+## occludes that strip. ChatUI.tscn puts the ChatLog on z -2 (it is the bottom
+## layer anyway), so the leak draws over the log panel but still under the box —
+## a literal "behind everything" draw would sit under the log's 75%-opaque panel
+## and read as black.
+## Re-placed on every play and each tick it is on screen (the box can settle).
+func _place_inner_leak() -> void:
+	if inner_leak == null or text_box == null:
+		return
+	var origin := get_global_rect().position
+	var box := text_box.get_global_rect()
+	inner_leak.place_above(Rect2(box.position - origin, box.size), InnerLeak.layout())
+
+
+func _on_text_box_resized() -> void:
+	if inner_leak != null and inner_leak.is_leaking():
+		_place_inner_leak()
 
 
 ## ── Streamed beat events (IncrementalJson order) ───────────────────────────
@@ -235,6 +339,8 @@ func abort_turn() -> void:
 	_end_pending = false
 	if corruption != null:
 		corruption.abort()
+	if inner_leak != null:
+		inner_leak.dismiss()
 	text_box.reset()
 	_unlock_input()
 	_note_telemetry("note_turn_open", [false])
@@ -250,6 +356,8 @@ func abort_turn() -> void:
 func reject_turn(text: String) -> void:
 	if corruption != null:
 		corruption.abort()
+	if inner_leak != null:
+		inner_leak.dismiss()
 	text_box.reset()
 	begin_beat(0)
 	replace_beat(0, text, false)
