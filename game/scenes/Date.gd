@@ -12,6 +12,7 @@ extends Node2D
 
 signal date_started
 signal date_ended(reason: String)
+signal ending_reached(decision: Dictionary)
 signal beat_played(beat_index: int, packet: Dictionary)
 signal opening_beats_finished
 signal player_turn_submitted(text: String)
@@ -22,6 +23,9 @@ const DEFAULT_SCENARIO := "res://data/scenarios/D02_cafe.json"
 ## docs/01 §1: a finished date hands the loop to the night (P2.19), which runs the
 ## night checks and opens the next day.
 const NIGHT_SCENE_PATH := "res://scenes/Night.tscn"
+## docs/01 §7 (P3.16): an `any_time` ending (E14 "Static") can end the run from a
+## turn close, before the night. The ending scene renders it.
+const ENDING_SCENE_PATH := "res://scenes/Ending.tscn"
 ## `stage` defaults to "unset" so the scene follows the campaign's stage.
 ## Every player entry goes through change_scene_to_file, which cannot set an
 ## export, so an unset stage must mean GameState.stage — otherwise a mid-
@@ -309,6 +313,22 @@ func _check_scenario_end() -> void:
 		get_tree().change_scene_to_file.call_deferred(NIGHT_SCENE_PATH)
 
 
+## docs/01 §7 (P3.16): is an ending due at this turn close? Only the `any_time`
+## rows can answer yes here (E14 "Static" before Day 7); the campaign's own last
+## night belongs to the Night scene. The route is deferred for the same reason the
+## night's is: the turn close is still unwinding.
+func _check_ending() -> void:
+	if _date_over or not is_inside_tree():
+		return
+	var decision := Endings.evaluate(GameState.to_dict(), Endings.PHASE_TURN)
+	if decision.is_empty():
+		return
+	_date_over = true
+	ending_reached.emit(decision)
+	if campaign_flow and scene_change_enabled:
+		get_tree().change_scene_to_file.call_deferred(ENDING_SCENE_PATH)
+
+
 ## The P2.09 seam, resolved by path: a Date scene must run in tests and tools
 ## without the full autoload ring.
 func _note_telemetry_date(active: bool) -> void:
@@ -582,6 +602,9 @@ func _on_turn_displayed() -> void:
 	_autosave_scene.call_deferred("after turn")
 	# P2.19: the date's end is decided once her last line is on screen, and routed
 	# on an idle frame (the Director may still be unwinding this turn's close).
+	# P3.16 asks the ending question first: a run that burns out this turn has no
+	# night to reach, and either check sets `_date_over` so only one wins.
+	_check_ending.call_deferred()
 	_check_scenario_end.call_deferred()
 
 

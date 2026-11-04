@@ -31,6 +31,7 @@ const DEFAULTS := {
 	"title":
 	{
 		"btn_continue": "Continue",
+		"btn_extras": "Extras",
 		"btn_new_game": "New Game",
 		"btn_photosensitive": "Photosensitive mode: {state}",
 		"btn_quit": "Quit",
@@ -54,6 +55,33 @@ const DEFAULTS := {
 		"pout_unsafe": "That's not a real name… tell me your real one.",
 		"prompt": "What's your name?",
 		"too_long": "Name must be 16 characters or less.",
+	},
+	"ending":
+	{
+		"title_fallback": "The End",
+		"path_format": "{path} · Day {day} · {stage}",
+		"any_path": "Any path",
+		"seen_first": "First time",
+		"seen_format": "Seen {count}×",
+		"unknown": "This ending is not in this build's catalogue.",
+		"skip_hint": "Space or click to continue",
+		"skip_after_s": 1.5,
+		"line_interval_s": 0.9,
+	},
+	"extras":
+	{
+		"title": "Extras",
+		"subtitle": "What you have reached.",
+		"progress": "{seen} / {total} endings",
+		"locked": "???",
+		"locked_detail": "Not seen yet",
+		"detail_format": "Seen {count}× · Day {day} · {path}",
+		"detail_first": "First time · Day {day} · {path}",
+		"secret_title": "Weights",
+		"secret_locked": "Play all six paths.",
+		"secret_unlocked": "She remembers every version of herself.",
+		"empty": "No ending yet. Finish a run.",
+		"btn_back": "Back",
 	},
 }
 

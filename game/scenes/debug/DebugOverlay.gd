@@ -22,6 +22,11 @@ const COLOR_MUTED := Color(0.6, 0.6, 0.65)
 const COLOR_READY := Color(0.55, 0.85, 0.6)
 const COLOR_COOLDOWN := Color(0.9, 0.5, 0.5)
 const COLOR_INNER := Color(0.92, 0.8, 0.95)
+const ENDING_SCENE_PATH := "res://scenes/Ending.tscn"
+
+## Test seam: a suite forcing an ending must not change scene. On in dev builds,
+## where the button's whole point is to show the ending it forced.
+var ending_scene_change_enabled := true
 
 var _affection_label: Label
 var _trust_label: Label
@@ -42,6 +47,7 @@ var _cue_budget_label: Label
 var _offers_label: Label
 var _telemetry_label: Label
 var _triggers_label: Label
+var _endings_label: Label
 var _last_turn_data: Dictionary = {}
 var _fx_labels: Dictionary = {}  # fx_name -> Label
 
@@ -191,6 +197,51 @@ func _build_ui() -> void:
 	_create_section_header(root_vbox, "TRIGGERS (P2.08)")
 	_triggers_label = _create_label(root_vbox, "Fired: (none)", COLOR_LABEL)
 	_triggers_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+
+	# --- Endings Section (P3.16) ---
+	# docs/01 §7: one button per ending. Each forces the row through Endings'
+	# satisfying state and the evaluator's verdict, then hands over to the ending
+	# scene — so a click proves the row is reachable, it does not bypass the rule.
+	_create_section_header(root_vbox, "ENDINGS (P3.16)")
+	_endings_label = _create_label(root_vbox, "Reached: (none)", COLOR_LABEL)
+	_endings_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var endings_grid := GridContainer.new()
+	endings_grid.name = "EndingsGrid"
+	endings_grid.columns = 2
+	endings_grid.add_theme_constant_override("h_separation", 4)
+	endings_grid.add_theme_constant_override("v_separation", 2)
+	root_vbox.add_child(endings_grid)
+	for row: Dictionary in Endings.rows():
+		if String(row.get("kind", "")) == Endings.KIND_ENDING:
+			_add_ending_button(endings_grid, row)
+
+
+## One P3.16 debug trigger. The node name is the seam a test clicks
+## (`Ending_E14`), the text is the id a reviewer reads, and the tooltip is the
+## row's actual condition.
+func _add_ending_button(parent: Container, row: Dictionary) -> void:
+	var id := String(row.get("id", ""))
+	var button := Button.new()
+	button.name = "Ending_" + id
+	button.text = id
+	button.tooltip_text = Endings.describe(row)
+	button.add_theme_font_size_override("font_size", FONT_SIZE)
+	button.pressed.connect(func() -> void: _force_ending(id))
+	parent.add_child(button)
+
+
+## Force one ending: replace the run with the state that satisfies the row, let
+## the evaluator confirm it, then open the ending scene (when a test is not
+## watching). Dev-only; the overlay is stripped from release builds.
+func _force_ending(id: String) -> void:
+	var result := Endings.force(id)
+	if not bool(result.get("ok", false)):
+		if _endings_label != null:
+			_endings_label.text = "Force %s failed: %s" % [id, String(result.get("error", ""))]
+		return
+	refresh()
+	if ending_scene_change_enabled and get_tree() != null:
+		get_tree().change_scene_to_file.call_deferred(ENDING_SCENE_PATH)
 
 
 func _create_section_header(parent: Container, text: String) -> Label:
@@ -463,6 +514,10 @@ func refresh() -> void:
 	if _triggers_label != null:
 		_triggers_label.text = _triggers_text()
 
+	# --- Endings (P3.16) ---
+	if _endings_label != null:
+		_endings_label.text = _endings_text()
+
 
 ## The TRIGGERS section's text: catalogue size, the latest firings (id, step,
 ## the docs/02 §1.2 agreement verdict) and the path points triggers added.
@@ -499,6 +554,26 @@ func _triggers_text() -> String:
 	return (
 		"Catalogue: %d triggers\nFired: %s\nPath points: %s"
 		% [int(report.get("catalogue", 0)), shown, str(points) if not points.is_empty() else "{}"]
+	)
+
+
+## The ENDINGS section's text: this run's ending flag, the log's progress and the
+## paths the log says were played (the secret's requirement).
+func _endings_text() -> String:
+	var reached := String(GameState.get_flag(Endings.FLAG_ENDING, ""))
+	if reached.is_empty():
+		reached = "(none)"
+	var total := 0
+	for row: Dictionary in Endings.rows():
+		if String(row.get("kind", "")) == Endings.KIND_ENDING:
+			total += 1
+	var seen := EndingLog.seen_ids()
+	var paths: Array[String] = []
+	for path: StringName in EndingLog.seen_paths():
+		paths.append(String(path))
+	return (
+		"Reached: %s\nLog: %d/%d · paths %s"
+		% [reached, seen.size(), total, ", ".join(paths) if not paths.is_empty() else "(none)"]
 	)
 
 

@@ -1,7 +1,7 @@
 extends Control
 ## Title — main title screen (P1.14).
 ## Displays the title, subtitle, and menu options:
-## New Game, Continue, Photosensitive mode, Settings, Quit.
+## New Game, Continue, Photosensitive mode, Settings, Extras, Quit.
 ## Supports keyboard navigation (Up/Down/Tab/Enter) and Esc handling.
 ##
 ## The accessibility row is the player's entry point for the safety
@@ -9,14 +9,20 @@ extends Control
 ## the first date, because the stage-3 `flicker` cue is the pattern it exists
 ## for. It writes Settings (which persists the flag and pushes it to FX); the
 ## P3.13 Settings screen takes the row over.
+##
+## Extras (P3.16) is the after-a-run gallery: docs/05 §3 puts it after the
+## credits, so the row is disabled until the ending log has something to show.
 
 signal new_game_requested
 signal continue_requested
 signal settings_requested
+signal extras_requested
 signal quit_requested
 
 const NEW_GAME_SCENE_PATH := "res://scenes/NewGame.tscn"
 const DATE_SCENE_PATH := "res://scenes/Date.tscn"
+const ENDING_SCENE_PATH := "res://scenes/Ending.tscn"
+const EXTRAS_SCENE_PATH := "res://scenes/Extras.tscn"
 
 var scene_change_enabled := true
 var _config := {}
@@ -27,6 +33,7 @@ var _title_cfg := {}
 @onready var continue_button: Button = $Margin/VBox/MenuContainer/ContinueButton
 @onready var photosensitive_button: Button = $Margin/VBox/MenuContainer/PhotosensitiveButton
 @onready var settings_button: Button = $Margin/VBox/MenuContainer/SettingsButton
+@onready var extras_button: Button = $Margin/VBox/MenuContainer/ExtrasButton
 @onready var quit_button: Button = $Margin/VBox/MenuContainer/QuitButton
 
 
@@ -38,9 +45,11 @@ func _ready() -> void:
 	continue_button.pressed.connect(_on_continue_pressed)
 	photosensitive_button.pressed.connect(_on_photosensitive_pressed)
 	settings_button.pressed.connect(_on_settings_pressed)
+	extras_button.pressed.connect(_on_extras_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
 	_refresh_photosensitive_button()
 	_refresh_continue()
+	_refresh_extras()
 
 	# Focus New Game by default for keyboard play
 	new_game_button.grab_focus()
@@ -58,6 +67,8 @@ func apply_config(cfg: Dictionary) -> void:
 		continue_button.text = str(cfg["btn_continue"])
 	if settings_button != null and cfg.has("btn_settings"):
 		settings_button.text = str(cfg["btn_settings"])
+	if extras_button != null and cfg.has("btn_extras"):
+		extras_button.text = str(cfg["btn_extras"])
 	if quit_button != null and cfg.has("btn_quit"):
 		quit_button.text = str(cfg["btn_quit"])
 	_refresh_photosensitive_button()
@@ -101,15 +112,26 @@ func _on_new_game_pressed() -> void:
 
 func _on_continue_pressed() -> void:
 	continue_requested.emit()
-	# P2.20: Continue resumes the newest readable save into the Date scene. A
-	# corrupt or missing save is a warning and an unchanged Title, never a
-	# half-loaded game (SaveSystem leaves the state untouched on a failed load).
+	# P2.20: Continue resumes the newest readable save. A corrupt or missing save
+	# is a warning and an unchanged Title, never a half-loaded game (SaveSystem
+	# leaves the state untouched on a failed load).
 	var loaded: Dictionary = SaveSystem.load_latest()
 	if not bool(loaded.get("ok", false)):
 		push_warning("Title: cannot continue — %s" % String(loaded.get("message", "")))
 		return
 	if scene_change_enabled:
-		get_tree().change_scene_to_file(DATE_SCENE_PATH)
+		get_tree().change_scene_to_file(_resume_scene_path())
+
+
+## P3.16: a save taken on the ending screen is the only one that must not resume
+## into a date — the run it belonged to is over. Every other scene id keeps the
+## P2.19/P2.20 behaviour (Continue opens the Date, which takes the night's queued
+## day from the save's own state).
+func _resume_scene_path() -> String:
+	var scene := String(SaveSystem.pending_scene().get("id", ""))
+	if scene == SaveSystem.SCENE_ENDING:
+		return ENDING_SCENE_PATH
+	return DATE_SCENE_PATH
 
 
 ## Continue is only offered when a save can actually be read; an absent or
@@ -117,6 +139,19 @@ func _on_continue_pressed() -> void:
 func _refresh_continue() -> void:
 	if continue_button != null:
 		continue_button.disabled = not SaveSystem.has_save()
+
+
+## docs/05 §3 puts Extras after the credits: before the first ending there is
+## nothing in it, so the row is greyed like an unreadable Continue.
+func _refresh_extras() -> void:
+	if extras_button != null:
+		extras_button.disabled = not EndingLog.any_seen()
+
+
+func _on_extras_pressed() -> void:
+	extras_requested.emit()
+	if scene_change_enabled:
+		get_tree().change_scene_to_file(EXTRAS_SCENE_PATH)
 
 
 func _on_settings_pressed() -> void:

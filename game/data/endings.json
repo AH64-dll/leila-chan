@@ -1,0 +1,186 @@
+{
+  "version": 1,
+  "doc": "P3.16 endings table. Sources: docs/01_GAME_DESIGN.md §7 (the fourteen endings and the secret, transcribed verbatim: id, name, path and the condition's prose), §2 (the behaviour-profile counters a condition may read), §3 (stage names/bands) and §4 (the six path ids). A row is decoded by game/llm/Endings.gd: `at` says WHEN it may fire (`campaign_end` = the last night, `any_time` = checked at every turn close and every night, which is E14's early burnout); `priority` is the selection key, LOWEST first, so a specific condition outranks a broad one (and the doc's file order breaks a tie); `condition` is a conjunction over stage/day/meters/profile-counters/flags and every key is optional; `kind: secret` rows are never a run's ending, they are Extras unlocks. `defaults` is the design's silence filled in one place: the doc gives every ending a condition but no row for the run that satisfies none of them, so each path names the row that stands in, and `any` covers a run that never assigned a path. Numbers the bible does not state (boundaries 'late', which counter counts as 'deleted the save', the lucid threshold that 'breaks through the act') are DCR'd in production/handoffs/P3.16.md §Deviations; retuning them is a data edit. `frame` is the NAR content slot P3.17 fills (scripted frame + live final lines); this file deliberately carries no ending prose.",
+  "defaults": {
+    "YANDERE": "E01",
+    "SPLIT": "E04",
+    "TSUN": "E06",
+    "HOLLOW": "E08",
+    "AWAKE": "E10",
+    "ANCHOR": "E12",
+    "any": "E14"
+  },
+  "endings": [
+    {
+      "id": "E01",
+      "name": "Forever Together",
+      "path": "YANDERE",
+      "kind": "ending",
+      "priority": 90,
+      "at": "campaign_end",
+      "condition": {
+        "stage_min": 5,
+        "meters": {"affection": {"min": 80}}
+      }
+    },
+    {
+      "id": "E02",
+      "name": "Only Me",
+      "path": "YANDERE",
+      "kind": "ending",
+      "priority": 10,
+      "at": "campaign_end",
+      "condition": {
+        "stage_min": 3,
+        "counters": {"leaving_talk": {"min": 1}}
+      }
+    },
+    {
+      "id": "E03",
+      "name": "Restraining Order",
+      "path": "YANDERE",
+      "kind": "ending",
+      "priority": 5,
+      "at": "campaign_end",
+      "condition": {
+        "stage_min": 3,
+        "day_min": 10,
+        "counters": {"boundaries": {"min": 3}}
+      }
+    },
+    {
+      "id": "E04",
+      "name": "The Last Swing",
+      "path": "SPLIT",
+      "kind": "ending",
+      "priority": 20,
+      "at": "campaign_end",
+      "condition": {
+        "stage_min": 5,
+        "meters": {"instability": {"min": 95}},
+        "counters": {"broken_promises": {"min": 1}}
+      }
+    },
+    {
+      "id": "E05",
+      "name": "Stay",
+      "path": "SPLIT",
+      "kind": "ending",
+      "priority": 10,
+      "at": "campaign_end",
+      "condition": {
+        "stage_min": 3,
+        "counters": {"broken_promises": {"max": 0}}
+      }
+    },
+    {
+      "id": "E06",
+      "name": "Checkmate",
+      "path": "TSUN",
+      "kind": "ending",
+      "priority": 20,
+      "at": "campaign_end",
+      "condition": {"stage_min": 5}
+    },
+    {
+      "id": "E07",
+      "name": "Honest, Finally",
+      "path": "TSUN",
+      "kind": "ending",
+      "priority": 10,
+      "at": "campaign_end",
+      "condition": {
+        "stage_min": 4,
+        "meters": {"lucidity": {"min": 70}}
+      }
+    },
+    {
+      "id": "E08",
+      "name": "Nobody",
+      "path": "HOLLOW",
+      "kind": "ending",
+      "priority": 20,
+      "at": "campaign_end",
+      "condition": {"stage_min": 5}
+    },
+    {
+      "id": "E09",
+      "name": "Your Name",
+      "path": "HOLLOW",
+      "kind": "ending",
+      "priority": 10,
+      "at": "campaign_end",
+      "condition": {
+        "stage_min": 5,
+        "counters": {"ignored_questions": {"min": 3}}
+      }
+    },
+    {
+      "id": "E10",
+      "name": "Escape",
+      "path": "AWAKE",
+      "kind": "ending",
+      "priority": 20,
+      "at": "campaign_end",
+      "condition": {"stage_min": 5}
+    },
+    {
+      "id": "E11",
+      "name": "Unplugged",
+      "path": "AWAKE",
+      "kind": "ending",
+      "priority": 10,
+      "at": "campaign_end",
+      "condition": {
+        "stage_min": 5,
+        "flags": {"agreed_to_delete": true}
+      }
+    },
+    {
+      "id": "E12",
+      "name": "Remission",
+      "path": "ANCHOR",
+      "kind": "ending",
+      "priority": 20,
+      "at": "campaign_end",
+      "condition": {
+        "stage_min": 3,
+        "day_min": 14,
+        "meters": {"lucidity": {"min": 70}}
+      }
+    },
+    {
+      "id": "E13",
+      "name": "Relapse",
+      "path": "ANCHOR",
+      "kind": "ending",
+      "priority": 10,
+      "at": "campaign_end",
+      "condition": {
+        "stage_min": 3,
+        "counters": {"leaving_talk": {"min": 1}}
+      }
+    },
+    {
+      "id": "E14",
+      "name": "Static",
+      "path": "ANY",
+      "kind": "ending",
+      "priority": 0,
+      "at": "any_time",
+      "condition": {
+        "day_max": 6,
+        "meters": {"instability": {"min": 100}}
+      }
+    },
+    {
+      "id": "SECRET",
+      "name": "Weights",
+      "path": "ANY",
+      "kind": "secret",
+      "requires": {
+        "paths": ["YANDERE", "SPLIT", "TSUN", "HOLLOW", "AWAKE", "ANCHOR"]
+      }
+    }
+  ]
+}

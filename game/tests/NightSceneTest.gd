@@ -263,3 +263,28 @@ func _remove_dir(path: String) -> void:
 	for file: String in directory.get_files():
 		DirAccess.remove_absolute(path.path_join(file))
 	DirAccess.remove_absolute(path)
+
+
+## P3.16 / docs/01 §7: the campaign's last night is where a run becomes an
+## ending. The report carries the decision (the ending scene renders it), the
+## night queues no next day, and it promises no morning.
+func test_the_last_night_carries_the_runs_ending() -> void:
+	(
+		assert_bool(
+			GameState.from_dict(
+				{"day": 14, "path": "HOLLOW", "instability": 95.0, "instability_peak": 95.0}
+			)
+		)
+		. is_true()
+	)
+	var reports: Array = []
+	var night: Control = _open("N01")
+	night.night_finished.connect(func(report: Dictionary) -> void: reports.append(report))
+	night.advance_time(120.0)
+	assert_int(reports.size()).is_equal(1)
+	var report: Dictionary = reports[0]
+	assert_bool(bool(report.get("campaign_over", false))).is_true()
+	var ending: Variant = report.get("ending", {})
+	assert_bool(ending is Dictionary).is_true()
+	assert_str(String((ending as Dictionary).get("id", ""))).is_equal("E08")
+	assert_str(String(GameState.get_flag(&"next_scenario", ""))).is_empty()

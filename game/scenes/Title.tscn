@@ -90,16 +90,25 @@ text = "Photosensitive mode: Off"
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 focus_neighbor_top = NodePath("../PhotosensitiveButton")
-focus_neighbor_bottom = NodePath("../QuitButton")
-focus_next = NodePath("../QuitButton")
+focus_neighbor_bottom = NodePath("../ExtrasButton")
+focus_next = NodePath("../ExtrasButton")
 focus_previous = NodePath("../PhotosensitiveButton")
 text = "Settings"
+
+[node name="ExtrasButton" type="Button" parent="Margin/VBox/MenuContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+focus_neighbor_top = NodePath("../SettingsButton")
+focus_neighbor_bottom = NodePath("../QuitButton")
+focus_next = NodePath("../QuitButton")
+focus_previous = NodePath("../SettingsButton")
+text = "Extras"
 
 [node name="QuitButton" type="Button" parent="Margin/VBox/MenuContainer"]
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
-focus_neighbor_top = NodePath("../SettingsButton")
+focus_neighbor_top = NodePath("../ExtrasButton")
 focus_neighbor_bottom = NodePath("../NewGameButton")
 focus_next = NodePath("../NewGameButton")
-focus_previous = NodePath("../SettingsButton")
+focus_previous = NodePath("../ExtrasButton")
 text = "Quit"
