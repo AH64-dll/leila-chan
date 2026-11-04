@@ -1517,39 +1517,44 @@
       "finished": "2026-11-04T02:15:23+02:00"
     },
     "P2.01": {
-      "status": "in_progress",
-      "agent": null,
+      "status": "in_review",
+      "agent": "commandcode",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-04T03:00:07+02:00"
+      "started": "2026-11-04T03:00:07+02:00",
+      "handoff": "production/handoffs/P2.01.md"
     },
     "P2.04": {
-      "status": "in_progress",
-      "agent": null,
+      "status": "in_review",
+      "agent": "commandcode",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-04T03:00:07+02:00"
+      "started": "2026-11-04T03:00:07+02:00",
+      "handoff": "production/handoffs/P2.04.md"
     },
     "P2.05": {
-      "status": "in_progress",
-      "agent": null,
+      "status": "in_review",
+      "agent": "commandcode",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-04T03:00:07+02:00"
+      "started": "2026-11-04T03:00:07+02:00",
+      "handoff": "production/handoffs/P2.05.md"
     },
     "P2.23": {
-      "status": "in_progress",
-      "agent": null,
+      "status": "in_review",
+      "agent": "commandcode",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-04T03:00:07+02:00"
+      "started": "2026-11-04T03:00:07+02:00",
+      "handoff": "production/handoffs/P2.23.md"
     },
     "P2.26": {
-      "status": "in_progress",
-      "agent": null,
+      "status": "in_review",
+      "agent": "commandcode",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-04T03:00:07+02:00"
+      "started": "2026-11-04T03:00:07+02:00",
+      "handoff": "production/handoffs/P2.26.md"
     }
   },
   "history": [
@@ -3770,6 +3775,66 @@
     {
       "ts": "2026-11-04T03:00:07+02:00",
       "event": "todo->in_progress",
+      "ref": "P2.26",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T03:43:16+02:00",
+      "event": "agent",
+      "ref": "P2.01",
+      "note": "adopted from handoff: commandcode"
+    },
+    {
+      "ts": "2026-11-04T03:43:16+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P2.01",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T03:43:16+02:00",
+      "event": "agent",
+      "ref": "P2.04",
+      "note": "adopted from handoff: commandcode"
+    },
+    {
+      "ts": "2026-11-04T03:43:16+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P2.04",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T03:43:16+02:00",
+      "event": "agent",
+      "ref": "P2.05",
+      "note": "adopted from handoff: commandcode"
+    },
+    {
+      "ts": "2026-11-04T03:43:16+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P2.05",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T03:43:16+02:00",
+      "event": "agent",
+      "ref": "P2.23",
+      "note": "adopted from handoff: commandcode"
+    },
+    {
+      "ts": "2026-11-04T03:43:16+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P2.23",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-04T03:43:16+02:00",
+      "event": "agent",
+      "ref": "P2.26",
+      "note": "adopted from handoff: commandcode"
+    },
+    {
+      "ts": "2026-11-04T03:43:16+02:00",
+      "event": "in_progress->in_review",
       "ref": "P2.26",
       "note": ""
     }
