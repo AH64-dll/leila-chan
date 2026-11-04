@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "doc": "P2.12 behaviour-profile keyword rules. Sources: docs/01_GAME_DESIGN.md §2 (the harness tags every player message into the profile counters with a cheap classifier pass plus keyword rules — this file is the keyword half of the harness that reads the player's own words) and §4 (the path formulas read control and apathy, tags the model's 17 `read` labels cannot express, plus broken_promises, flattery_rejected and ignored_questions). How a rule fires, one contribution per counter per message — a message is one behaviour, not a keyword count, so keyword bumps stay comparable to the read-table's single bumps: control = the player orders her around (one whole-word imperative phrase, never a generic 'you will' / 'you must' / 'i said', which are ordinary sentences); apathy = a dismissal that IS the message, or a reply of at most short_reply_words words that asks nothing and is not exempt (docs/01 §4.4 counts 'short replies' as a HOLLOW trigger). 'Is the message' is what dismissal_max_words enforces: a line longer than that is an engaged line, so a phrase inside it ('I don't care about her, I care about you.') is not a dismissal. A question asks and is therefore never a dismissal, and a terse reply to her direct question is an answer, not a dismissal — answering is not ignoring (docs/01 §5 T15). Ambiguous one-word stems ('ok', 'fine', 'sure', 'cool', 'lol') are deliberately not phrases: the short-reply cap catches them standing alone, and containment would only catch them inside warm lines; flattery_rejected = the player flatters her (flattery stems in the message) AND her own reply rejects it (rejection markers in the beats' say) — the TSUN 'mild rudeness she wins' dynamic; ignored_questions = her previous turn asked a direct question (question_in) and this reply is dismissive (the apathy rule) — docs/01 §5 T15 remains the model-detected authority and the trigger engine's bump is additive. Matching is case-insensitive and whole-word after punctuation is folded to spaces, so a phrase never fires inside a longer word; exemptions match as whole words too, so 'no' never exempts 'nothing' and 'sorry' does exempt 'I'm sorry'. broken_promises is deliberately absent: docs/01 §5 I15 makes a promise an engine fact, so the trigger engine calls GameState.bump_profile(&\"broken_promises\") — P2.10 wires that trigger. An empty or invalid file degrades to no keyword bumps (the read labels and the path formulas still work), never to a guessed bump. Sensitivity (docs/01 §4): no real disorder is named in this file.",
+  "control": {
+    "phrases": [
+      "do as i say",
+      "do what i say",
+      "i order you",
+      "obey me",
+      "obey",
+      "answer me",
+      "look at me",
+      "come here",
+      "sit down",
+      "be quiet",
+      "shut up",
+      "stop talking",
+      "don't talk"
+    ]
+  },
+  "apathy": {
+    "phrases": [
+      "whatever",
+      "don't care",
+      "dont care",
+      "idc",
+      "idk",
+      "i don't know",
+      "i dont know",
+      "dunno",
+      "meh",
+      "nothing much",
+      "i guess",
+      "if you say so"
+    ],
+    "dismissal_max_words": 6,
+    "short_reply_words": 2,
+    "short_reply_exempt": [
+      "hi",
+      "hey",
+      "hello",
+      "bye",
+      "goodbye",
+      "good night",
+      "good morning",
+      "yes",
+      "no",
+      "yeah",
+      "yep",
+      "nope",
+      "sorry",
+      "thanks",
+      "thank you",
+      "love you",
+      "miss you"
+    ]
+  },
+  "flattery_rejected": {
+    "flattery": [
+      "beautiful",
+      "pretty",
+      "cute",
+      "gorgeous",
+      "lovely",
+      "amazing",
+      "perfect",
+      "stunning",
+      "adorable",
+      "angel",
+      "charming",
+      "sweet",
+      "best girl"
+    ],
+    "rejection": [
+      "shut up",
+      "don't say that",
+      "dont say that",
+      "stop that",
+      "stop it",
+      "idiot",
+      "hmph",
+      "tsk",
+      "tch",
+      "whatever",
+      "not like i",
+      "i don't care",
+      "no way",
+      "ugh",
+      "baka",
+      "pervert"
+    ]
+  }
+}

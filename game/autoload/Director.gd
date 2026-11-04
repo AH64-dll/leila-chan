@@ -748,10 +748,9 @@ func _close_turn_success(turn_data: Dictionary) -> void:
 	# the three steps. The ledger is kept for the F3 overlay + the meters sim.
 	last_meter_ledger = GameState.apply_turn_meters(turn_data)
 
-	# Apply read
-	if turn_data.has("read"):
-		var read_label := StringName(str(turn_data["read"]))
-		GameState.apply_read(read_label)
+	# Apply read + docs/01 §2 keyword rules + the §4 path check (P2.12)
+	var read_label := StringName(str(turn_data.get("read", "")))
+	GameState.apply_turn_profile(read_label, _current_player_input, turn_data)
 
 	# docs/02 §6 quoting runs before the proposal: a fact learned this turn cannot
 	# also count as one she quoted this turn. A rejection is named by its rule and
@@ -958,11 +957,12 @@ func replay_turn(turn_record: Dictionary) -> bool:
 	_current_stage = int(turn_record.get("stage", GameState.stage))
 	_current_path = String(turn_record.get("path", GameState.path))
 	_current_dose = turn_record.get("dose", {})
+	_current_player_input = player_text  # P2.12: keyword rules replay the prompt's line
 
 	# Reply boundary (P1.19 r5 CODE-23/SAF-17): a replayed turn re-streams a
 	# model utterance through the same say path, so it must cut the cross-beat
-	# carry exactly like `_start_turn` does. Without this the first replayed
-	# beat could be matched together with the previous reply's displayed tail.
+	# carry exactly like `_start_turn` does — the first replayed beat could
+	# otherwise be matched with the previous reply's displayed tail.
 	_safety.end_utterance()
 
 	turn_started.emit(_turn_index, player_text)

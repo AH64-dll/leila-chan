@@ -38,16 +38,32 @@ func _ready() -> void:
 				% [EXPECTED_AUTOLOADS.size() - missing.size(), EXPECTED_AUTOLOADS.size()]
 			)
 		)
-		# P1.02: the prototype transport attaches to tools/llm/serve.ps1 by
-		# default. A later boot task can pass auto_start=true to own the process.
+		# P1.02: the prototype transport attaches to tools/llm/serve.sh by
+		# default. `LEILA_OWN_SERVER` flips that to launching the pinned server,
+		# which is what makes a stage-change dose possible (P2.03).
 		if not LLM.has_backend():
-			LLM.use_default_backend()
+			LLM.use_default_backend(prototype_backend_config())
 		_wire_classifier_transport()
 		if auto_advance:
 			_transition_to_title()
 	else:
 		push_error("Boot: missing autoloads: " + ", ".join(missing))
 		get_tree().quit(1)
+
+
+## The prototype transport config (P1.02/P2.03). Attach is the default: a server
+## started by `tools/llm/serve.sh` stays the developer's to manage. `LEILA_OWN_SERVER=1`
+## makes Boot launch and supervise the pinned server instead, because the steering
+## dose is a launch flag (docs/06 §4) — only a process the app started can be
+## relaunched with new vectors. Owning the server also gives the docs/02 §8
+## classifier a real endpoint while no vector is bound; P2.17's live config
+## provider turns that tier off the moment a stage binds one (SAF-12).
+## Model/binary paths come from LEILA_MODEL / LEILA_LLAMA_DIR (see tools/llm/README.md).
+static func prototype_backend_config() -> Dictionary:
+	var flag := OS.get_environment("LEILA_OWN_SERVER").strip_edges().to_lower()
+	if flag.is_empty() or flag == "0" or flag == "false" or flag == "no":
+		return {}
+	return {"auto_start": true}
 
 
 ## docs/02 §8 classifier tier: the same local model, 8 tokens, no control

@@ -126,7 +126,7 @@ func test_meter_ranges_property() -> void:
 					}
 				)
 			)
-			s.apply_read(labels[rng.randi_range(0, labels.size() - 1)])
+			s.apply_turn_profile(labels[rng.randi_range(0, labels.size() - 1)])
 			s.apply_turn_meters({})
 			if rng.randf() < 0.1:
 				s.advance_day()

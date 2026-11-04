@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "doc": "P2.08 trigger engine catalogue. Sources: docs/01_GAME_DESIGN.md §5 (the hidden triggers T01-T32 and their four detection letters K keyword/regex, M the Turn's `read` label, E engine event, C clock/OS, plus 'every trigger has once / repeatable / escalating behavior, and a cooldown'), docs/02_DIRECTOR_PROTOCOL.md §1.2 (the `read` enum and the agreement rule: both detectors agree -> full strength, model-only -> half) and §5 (over-budget values are dropped silently), docs/08_PROMPTS_AND_CONTENT.md §6 (the TRIGGER/EVENT line style), docs/05_META_EVENTS.md §0 (a trigger may never trap the player: closing always works). Engine shape: strength is the detector weight table the engine multiplies into every effect; defaults are the per-row fallbacks; triggers maps a trigger id (Tnn) to one row. ROW FIELDS: name (human label); detect (any of keyword/model/event/clock, at least one); requires ('any' = fire when any detector matches and the model alone halves the effect, 'all' = every declared detector must agree and the effect is full); behavior (once = one firing per session/save, repeatable, escalating = the effect and the per-step line grow by escalate.step_scale per escalation step; escalate.axis picks the step: 'step' (default) counts firings and stops after escalate.max_steps of them, 'stage' counts the stage since stage_min, caps the step at max_steps and keeps repeating like repeatable, because docs/01 §5 T08 escalates with the dose, not with how often the player poked it); cooldown_turns (a repeat waits this many turns); stage_min/stage_max (docs/01 §3 stage gate on her reaction; detection itself is ungated, P2.09); effects (meters/profile/path/flags, all scaled by strength except flags); line (a docs/08 §6 template with {count} {ordinal} {stage} {day} {turn}, or an array indexed by escalation step). Effects that must halve cleanly should use even values: profile and path points round half away from zero. E rows leave `line` empty on purpose: data/telemetry.json already supplies that EVENT line, so a row here would double it. P2.10 authors the T01-T15 rows and their effects; this file ships the engine-level tables plus the E rows data/telemetry.json already detects, so the cross-file contract is real and testable (tests/test_triggers.py pins it).",
+  "strength": {
+    "agreement": 1.0,
+    "keyword": 1.0,
+    "model": 0.5,
+    "engine": 1.0,
+    "clock": 1.0
+  },
+  "defaults": {
+    "requires": "any",
+    "behavior": "repeatable",
+    "cooldown_turns": 3,
+    "stage_min": 0,
+    "stage_max": 5,
+    "escalate": {
+      "axis": "step",
+      "max_steps": 3,
+      "step_scale": 0.5
+    }
+  },
+  "triggers": {
+    "T08": {
+      "name": "deleted_draft",
+      "detect": {
+        "event": ["draft_deleted"]
+      },
+      "behavior": "escalating",
+      "escalate": {
+        "axis": "stage",
+        "max_steps": 3,
+        "step_scale": 0.5
+      },
+      "cooldown_turns": 2,
+      "stage_min": 1,
+      "effects": {}
+    },
+    "T09": {
+      "name": "focus_lost",
+      "detect": {
+        "event": ["focus_lost"]
+      },
+      "behavior": "repeatable",
+      "cooldown_turns": 3,
+      "stage_min": 1,
+      "effects": {}
+    },
+    "T10": {
+      "name": "close_requested",
+      "detect": {
+        "event": ["close_requested"]
+      },
+      "behavior": "once",
+      "cooldown_turns": 0,
+      "stage_min": 3,
+      "effects": {}
+    },
+    "T11": {
+      "name": "idle",
+      "detect": {
+        "event": ["idle"]
+      },
+      "behavior": "escalating",
+      "escalate": {
+        "max_steps": 3,
+        "step_scale": 0.5
+      },
+      "cooldown_turns": 2,
+      "stage_min": 2,
+      "effects": {
+        "path": {
+          "HOLLOW": 2
+        }
+      }
+    },
+    "T12": {
+      "name": "message_repeated",
+      "detect": {
+        "event": ["message_repeated"]
+      },
+      "behavior": "escalating",
+      "escalate": {
+        "max_steps": 3,
+        "step_scale": 0.5
+      },
+      "cooldown_turns": 1,
+      "stage_min": 0,
+      "effects": {}
+    },
+    "T31": {
+      "name": "screenshot",
+      "detect": {
+        "event": ["screenshot"]
+      },
+      "behavior": "repeatable",
+      "cooldown_turns": 2,
+      "stage_min": 0,
+      "effects": {}
+    },
+    "T32": {
+      "name": "window_resized",
+      "detect": {
+        "event": ["window_resized"]
+      },
+      "behavior": "repeatable",
+      "cooldown_turns": 3,
+      "stage_min": 2,
+      "effects": {}
+    }
+  }
+}

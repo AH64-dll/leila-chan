@@ -156,3 +156,130 @@
   does not exist on the assert object.
 - Gotcha: `Director.gd` is at exactly 1000/1000 gdlint lines on this branch; every added line must be paid
   for elsewhere (the round-2 `Memory.begin_turn()` calls are one line each, comments included).
+
+## P2.08 — triggers engine (round 1, 2026-11-04, agent: deepseek)
+
+- Built `llm/TriggerEngine.gd` (pure: detectors, caps, effect scaling) + `data/triggers.json` (strength /
+  defaults / rows) + the `Triggers` autoload seam. `InputHook` calls `Triggers.begin_turn()`; the M detector
+  subscribes to `Director.turn_completed` because Director is at gdlint's 1000-line cap (zero pipeline diff).
+- Convention: the docs/02 §1.2 agreement rule is a data table, never an `if` — `strength.agreement` vs
+  `strength.model`, plus a row-level `requires: any|all`. `strength.keyword` stays 1.0 because docs/01 §5
+  has K-only rows (T02/T03/T06/T07…); halving keyword evidence later is a data edit (`"keyword": 0.5`).
+- The placement rule that decides every firing point: a trigger fires where its LAST evidence exists. K/E/C
+  at step 0 → line rides this turn; M only at close → line queues for the next prompt; a `requires: all`
+  row with a keyword hit therefore defers to close, since agreement is what is being decided.
+- Gotcha: `_matched` must be MERGED in `begin_turn`, not overwritten — an idle/focus event that fired
+  earlier in the same turn would otherwise be erased before a `requires: all` row could consult it.
+- Gotcha: `_turn` is the engine's only clock. `GameState.turn` is N−1 at step 0 and N at close, so the
+  autoload passes `turn+1` for begin/events and `turn` for close; any new entry point must match or every
+  cooldown shifts by one.
+- Gotcha: pass `flags` as a `duplicate(true)` snapshot. With the live dict, a row that sets a flag changed
+  what a later row's clock detector saw *inside the same evaluation* (order-dependent firing).
+- For P2.10: rows only in `data/triggers.json`; `tests/test_triggers.py` rejects an unknown read label /
+  meter / counter / path, a `requires: all` row with one detector, a line without a `TRIGGER: ` prefix or an
+  unknown `{token}`, and a stage gate that disagrees with `data/telemetry.json`.
+- For P2.20: `Triggers.to_dict()/from_dict()` must ride the save payload or every reload re-arms the
+  "once" rows and wipes cooldowns. `set_last_seen()` is the T17/T18 seam (P3.07) and nothing writes it yet.
+
+## P2.08 — triggers engine (round 2, 2026-11-04, agent: deepseek)
+
+- Rework: `requires: "all"` is now a real AND (`_all_sources()`: every declared NON-model detector — the
+  model is the detector `close_turn()` is deciding). All three entry points use it, `handle_event()`
+  included, so an event cannot jump a clock gate; the K+C row fires only when both agree.
+- New axis: `escalate.axis` = `step` (default, per firing, stopped after max_steps firings) or `stage`
+  (the stage since stage_min, capped at max_steps STEPS, repeating — only the cooldown gates it). One
+  helper `_escalation_step()` feeds both the strength and the per-step line array so they cannot drift.
+- Gotcha: on the stage axis do NOT keep `_eligible()`'s `count >= max_steps` firing cap — early firings at
+  a low stage would burn the row before the stage could rise, which is the opposite of the T08 clause.
+- Gotcha: `_escalation_step()` must return the plain `step` for non-escalating rows, or a `repeatable`
+  row's line array stops advancing at `max_steps`.
+- Testing lesson: the M and C seams are only reachable through the autoload — drive
+  `Director.turn_completed.emit()` and `set_clock()`/`set_last_seen()`, read `report()["counts"]`, and
+  remember `GameState.turn` must be the CLOSED turn at the emit (Director advances it in
+  `apply_turn_meters()` before the signal). A fixed anchor second + the machine's TZ bias gives a
+  deterministic local-hour window.
+- Suite is at gdlint's 20-public-method cap (`before_test` counts as public): fold a new case into an
+  existing one rather than raising the project limit.
+## P2.12 — fracture paths (round 1, 2026-11-04, agent: deepseek)
+
+- Built `llm/Paths.gd` + `data/paths.json` (six formulas, Stage-2/Stage-3 pair, recency tie-break,
+  `parse_document` fallback) and `llm/ProfileKeywords.gd` + `data/profile_keywords.json` (control, apathy
+  incl. short replies, flattery_rejected, ignored_questions). `GameState.apply_turn_profile(read, line,
+  turn_data)` replaced `apply_read` and is now the one per-turn entry: read map → keyword bumps → path
+  check; it returns the decision dict.
+- Convention: §4's three formula counters (`broken_promises`, `flattery_rejected`, `ignored_questions`)
+  live in the same 15-key profile as §2's twelve tags; `Paths.counters()` is the only list, and the read
+  map may only write §2 tags. `broken_promises` is engine-fed (I15) — never give it a keyword rule.
+- Convention: the lock fires inside `_refresh_stage`, so a Stage-3 crossing (night roll-over, trigger
+  spike) freezes the path *before* that turn's read is applied; the turn close re-evaluates only for
+  Stage-2 drift. The runner-up is recomputed after the assignment and excludes the LIVE primary.
+- Gotcha: computing the runner-up straight from `Paths.select()` lets a locked path become its own
+  runner-up (the score winner can differ from the frozen path); compute it after `assign_path` against
+  `GameState.path`. The Stage-3 save round-trip test is what caught it.
+- Gotcha: GameState and Director both sit at exactly 20 public methods / 1000 lines. A rename keeps the
+  method count; the read block replacement (4 lines → 3) paid for the replay's `_current_player_input`.
+- Next SYS on this seam: P2.19 gets assign/lock free via `_refresh_stage`; P2.20 must save
+  `path_scores`/`path_evidence`/`path_runner_up`/`last_question`; P2.10 bumps T15/I15 counters.
+
+## P2.12 — fracture paths (round 2, 2026-11-04, agent: deepseek)
+
+- Reworked the keyword half only: `_is_apathy()` now runs the `?` check first, gates a dismissal phrase on
+  `dismissal_max_words` (new data cap, 6 — a dismissal is the *message*), and takes `awaiting_answer` so a
+  terse reply to her pending question is an answer. Exemptions go through `_has_any()`, so "I'm sorry" is
+  exempt and "nothing"/"him" are not.
+- Convention: every keyword predicate answers "is this the *message's* behaviour?" — the r1 bug was scoring
+  a word inside an engaged sentence. If a future counter needs sub-message structure, put the phrasing in the
+  data file, not in a bigger predicate.
+- Convention: `ignored_questions` is now nested under the dismissal in `classify()` — T15 can only fire when
+  the apathy rule fired *and* a question was pending, which keeps the two counters from drifting apart.
+- Gotcha: `tests/test_paths.py::test_keyword_rules_are_string_lists` walks every key in a rule block and
+  treats non-`short_reply_words` values as phrase lists — a new integer knob there fails the pytest suite,
+  not gdUnit. Add the key to that test when you add a cap.
+- Gotcha: a short line can be a dismissal or an answer; only `last_question` tells them apart, and
+  `GameState.apply_turn_profile` passes the *previous* turn's question, so a test must ask in turn N-1 to
+  exercise the answer path.
+- Next SYS on this seam: `dismissal_max_words` is the tuning knob (raise it if engaged lines slip through;
+  add a phrase if dismissals are missed). "Whatever, I love you." still scores apathy by design.
+
+## P2.20 — saves v1 (round 1, 2026-11-04, agent: deepseek)
+
+- Built `llm/SaveSlots.gd` (slot → path, the `leila.save` envelope: format/version/sha256 of the canonical
+  payload, tmp+rename write, tolerant listing) and filled the `SaveSystem` autoload (capture/apply, the log
+  seam, per-scene autosave, Title `Continue`). Files: `user://saves/slot_1..3.json` + `autosave.json`; the
+  autosave has its own id "auto" because docs/07 §3.5 only names `slot_N`.
+- Convention: a corrupt save is a value `{ok, error, message}` and the live game is never touched. Validation
+  runs first; `GameState.from_dict()` refuses before mutating, so it is applied first, then
+  `Director.reset()` + `Memory.from_dict`. Nothing in a load path may call `String()`/`int()` on a Variant:
+  P2.11's `MemoryStore.from_dict` died on `String(7)` from a corrupt slot; the store's guard is now total.
+- Gotcha: the memory rng `seed` and `state` are 64-bit, and JSON numbers are doubles — they cross the file as
+  decimal strings and `SaveSystem._memory_data` parses them back. The test seeds past 2^53 to prove it.
+- Convention: the log seam mirrors the ChatUI registration (the scene owns it, `_exit_tree` clears it,
+  identity-guarded). A load with no live log keeps `_pending_log` and hands it to the first sink; the prompt
+  history is rebuilt from the *displayed* log (docs/08 §1), never from raw turn JSON, so a save cannot carry
+  text Safety held back.
+- Gotcha: `Date._ready` must `_resume_from_save()` BEFORE `load_scenario(scenario_path)`, or a save from a
+  non-default scenario reloads the default one and the saved scenario is silently ignored.
+- Autosave is skipped when `DisplayServer.get_name() == "headless"` (a headless build has no player); tests
+  opt in by setting `autosave_enabled` and a scratch `save_dir`. Editor playtests therefore do not autosave
+  unless a task flips the flag.
+- Next SYS: P2.19's Night scene should call `SaveSystem.autosave("night", {…})`; P3.12's shadow save is
+  `user://.leila/shadow.json`, deliberately outside these slots and outside `wipe()`.
+
+## P2.20 — saves v1 (round 2, 2026-11-04, agent: deepseek)
+
+- CODE-1: never autosave synchronously from `turn_displayed`. `ChatUI.end_turn()` → `TextBox.end_turn()`
+  emits `all_displayed` when the writer is already drained, so the handler runs *inside*
+  `Director._close_turn_success` while `_turn_in_flight` is still true and every save answers "busy".
+  `Date` now calls `_autosave_scene.call_deferred("after turn")` — one idle frame is the whole fix.
+- Convention: a save refusal is a returned value, so every call site reads it. `Date._autosave_scene(reason)`
+  stays silent on `disabled` (headless/tool runs) and `push_warning`s anything else; don't leave
+  `SaveSystem.autosave(...)` bare.
+- Convention (tests): `GatedLLMBackend` streams its chunks, then parks until `release = true` — the way to
+  hold a Director turn in flight while the typewriter drains, with no sleeps.
+  `FakeLLMBackend.block_until_cancel` cannot (it parks by cancelling). Restore `LLM.set_backend(previous)`
+  in `after_test` or the next suite inherits the fake.
+- CODE-2: a resumed date skips her greeting only when the restored log carries it (`_resumed =
+  chat_log.entry_count() > 0`). The scene-entry autosave lands before the opening beats reach the ChatLog.
+- Gate green: 634 tests / 53 suites. `FXHostTest.test_twitch_fires_chromatic_split` flakes under machine
+  load (shader-uniform sample after a wall-clock wait); it passes alone and is untouched by save work.
+

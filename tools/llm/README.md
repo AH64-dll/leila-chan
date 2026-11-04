@@ -217,3 +217,82 @@ tools/godot.ps1 --headless --path game -s res://addons/gdUnit4/bin/GdUnitCmdTool
 The live suite skips when the local model/binaries are absent; the demo and
 capture need them. The captured corpus and its provenance are documented in
 `game/tests/fixtures/sse/README.md`.
+
+## 5. Stage-change relaunch with control vectors (P2.03)
+
+The dose is a launch flag (docs/06 §4), so binding a new one means relaunching
+the server. `LLM.apply_stage_steering(stage, window_ms)` does exactly that; it is
+driven by `GameState.stage_transition` (docs/01 §3) on the frame the transition
+glitch starts, and the glitch's own duration is the window it must fit.
+
+```
+GameState.stage_transition(stage, spec)
+  └─ LLM.apply_stage_steering(stage, spec.duration_s * 1000)
+       ├─ Steering.dose_for({"stage": stage})          # docs/06 §3 schedule
+       ├─ StageSteering.launch_for(dose)               # dose key → shipped .gguf
+       └─ LlamaServerBackend.apply_steering(vectors,…) # worker thread
+            └─ LlamaServerProcess.restart_with_vectors()  # kill + launch + /health
+```
+
+**Which server can be dosed.** Only one the app launched. `Boot` installs attach
+mode by default (`tools/llm/serve.sh` owns the process); the relaunch is then
+refused with `server_not_owned`, the old dose stays, and the log says so. Set
+`LEILA_OWN_SERVER=1` to make Boot launch and supervise the pinned binary instead:
+
+```bash
+LEILA_OWN_SERVER=1 LEILA_LLAMA_DIR=./tools/llama/llama-b12024 \
+  bash tools/llm/serve.sh        # or let Boot launch it; LEILA_MODEL too
+```
+
+Owning the server also gives the docs/02 §8 classifier tier a usable endpoint
+while no vector is bound. The moment a stage binds one, `get_backend_config()`
+reports it, and P2.17's live provider turns that tier off (SAF-12) — a steered
+"no" would otherwise release a held span.
+
+**The vector map.** `game/data/steering/vectors.json` maps a `TurnRequest.dose`
+key to a shipped file plus its provenance. The files live in
+`game/data/steering/` and are committed (10–60 KB each, docs/06 §2) — `malice.gguf`
+is the tweet vector built by `experiments/steer_build.py` from the pinned GGUF;
+renamed from the experiment's placeholder so no brand name ships. `path_mix`
+schedules a weight but ships no file until P3.04, and the run logs that instead of
+inventing a scale. Retune by rebuilding the vector, not by editing code.
+
+**Failure keeps the old dose.** Before anything is stopped, every vector is
+validated (exists, GGUF magic, FNAME the flag grammar can spell, finite scale).
+A vector that fails is refused and the running server keeps its dose; a launch
+that fails *after* the stop puts the previous set back and relaunches it. Every
+outcome is logged with the measured ms, e.g.:
+
+```
+[LlamaServerBackend] steering stage 3 bound malice.gguf 4.5 in 2286ms (within window 2500ms, budget 3500ms) pid=1463563
+[LlamaServerBackend] steering stage 5 FAILED after 0ms: control_vector_missing (control vector not found: …); kept the previous dose (1 vector(s), server recovered=yes)
+```
+
+**Measuring it.** The budget is 3.5 s. One relaunch with a turn submitted while
+it runs (the "no lost input" check):
+
+```bash
+LEILA_MODEL=./models/Qwen3.5-4B-Q4_K_M.gguf \
+LEILA_LLAMA_DIR=./tools/llama/llama-b12024 \
+LD_LIBRARY_PATH=./tools/llama/llama-b12024 \
+  ./tools/godot.sh --headless --path game res://tools/SteeringRestartBench.tscn -- --runs=3
+```
+
+It prints the cold start, then one line per relaunch (stage, ms, budget/window
+fit, turn-during-relaunch) and min/median/max; exit 1 means the budget or a turn
+was missed. Run it with **no other llama-server on the GPU** — a second model
+pushed the same launch from 2.3 s to 4–6 s here by forcing the load onto the CPU.
+
+**Turn session.** A turn holds a session lock for its whole stream and the
+relaunch takes the same lock, so a relaunch cannot cut off a line that is being
+read: a submit that lands during the window waits for the new server and then
+completes on it, and a turn that outlasts `steering_turn_wait_ms` (15 s) makes the
+relaunch give up and keep the old dose rather than kill the turn.
+
+**Vector path grammar.** `--control-vector-scaled` splits its FNAME on `:` and
+`,`, so a path containing either can never be passed. `LlamaServerProcess.flag_path()`
+applies the same rule as `tools/llm/cvec_path.py`: POSIX and relative paths pass,
+a Windows drive path is made relative to the server's working directory (declare it
+as `vector_cwd`), and the ambiguous `X:file` form is refused. Exported builds keep
+`res://` inside the .pck, so `StageSteering.resolve_file()` extracts the vector to
+`user://steering/` once, which is a real file llama-server can open.

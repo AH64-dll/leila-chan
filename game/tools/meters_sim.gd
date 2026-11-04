@@ -4,7 +4,7 @@ extends SceneTree
 ##
 ## It drives the real GameState/Meters code (no formula re-implementation): a
 ## fixed 14-day, 100-turn player model feeds scripted `read` labels and moods
-## through GameState.apply_turn_meters()/apply_read(), the night roll-over adds
+## through GameState.apply_turn_meters()/apply_turn_profile(), the night roll-over adds
 ## the daily burn, and every turn is written as one CSV row.
 ##
 ## Run through the wrapper (Godot + plot + PNG):
@@ -92,7 +92,7 @@ func _initialize() -> void:
 			_step_scenario_meters(state, turn, kindness)
 			var instability_pre: float = state.instability
 			var ledger: Dictionary = state.apply_turn_meters({"mood": mood})
-			state.apply_read(StringName(read))
+			state.apply_turn_profile(StringName(read))
 			if KIND_READS.has(read):
 				kindness += 1
 			var day_burn := 0.0

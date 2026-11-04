@@ -219,39 +219,65 @@ func to_dict() -> Dictionary:
 ## corrupt-save handling is P2.20's, this function is only its input guard).
 func from_dict(data: Dictionary) -> void:
 	reset()
-	# docs/02 §6 fixes the store at 24 slots, so a hand-edited or half-written
-	# save is data, never a wider store (review r2 CODE-4/DES-9).
-	capacity = clampi(int(data.get("capacity", MemoryRules.capacity())), 1, MemoryRules.capacity())
-	_rng.seed = int(data.get("seed", 0))
+	# Every field below is untrusted, and `int()`/`float()`/`String()` on a
+	# Dictionary abort the script: each conversion goes through a total helper,
+	# so the guard's own promise ("malformed is dropped rather than trusted")
+	# cannot crash a load (P2.20). Capacity stays docs/02 §6's 24 at most, so a
+	# hand-edited save is data, never a wider store (review r2 CODE-4/DES-9).
+	capacity = clampi(
+		_save_int(data.get("capacity"), MemoryRules.capacity()), 1, MemoryRules.capacity()
+	)
+	_rng.seed = _save_int(data.get("seed"), 0)
 	if data.has("state"):
-		_rng.state = int(data["state"])
+		_rng.state = _save_int(data["state"], 0)
 	var rows: Variant = data.get("entries", [])
 	if not rows is Array:
 		return
 	for row: Variant in rows:
 		if not row is Dictionary:
 			continue
-		var text := String((row as Dictionary).get(ENTRY_TEXT, "")).strip_edges()
+		# Only a string is a fact; a number or an array where the text goes is
+		# not one (a corrupt slot used to reach `String(7)` and abort here).
+		var raw_text: Variant = (row as Dictionary).get(ENTRY_TEXT, "")
+		if not raw_text is String and not raw_text is StringName:
+			continue
+		var text := String(raw_text).strip_edges()
 		if text.is_empty():
 			continue
+		var importance: Variant = (row as Dictionary).get(
+			ENTRY_IMPORTANCE, MemoryRules.new_importance()
+		)
+		var quotes: Variant = (row as Dictionary).get(ENTRY_QUOTES, 0)
 		(
 			entries
 			. append(
 				{
 					ENTRY_TEXT: text,
-					ENTRY_IMPORTANCE:
-					maxf(
-						0.0,
-						float(
-							(row as Dictionary).get(ENTRY_IMPORTANCE, MemoryRules.new_importance())
-						)
-					),
-					ENTRY_QUOTES: maxi(0, int((row as Dictionary).get(ENTRY_QUOTES, 0))),
+					ENTRY_IMPORTANCE: maxf(0.0, _save_number(importance)),
+					ENTRY_QUOTES: maxi(0, _save_int(quotes, 0)),
 				}
 			)
 		)
 	while entries.size() > capacity:
 		entries.remove_at(MemoryRules.eviction_index(entries))
+
+
+## A finite number from untrusted save data; anything else is the fallback.
+static func _save_number(value: Variant) -> float:
+	if value is int:
+		return float(value)
+	if value is float:
+		return value if is_finite(value) else 0.0
+	return 0.0
+
+
+## The integer form of `_save_number`, floored/ceiled by the caller.
+static func _save_int(value: Variant, fallback: int) -> int:
+	if value is int:
+		return value
+	if value is float:
+		return int(value) if is_finite(value) else fallback
+	return fallback
 
 
 func _stage_of(ctx: Dictionary) -> int:
