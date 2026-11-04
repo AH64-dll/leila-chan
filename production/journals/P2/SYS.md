@@ -101,6 +101,21 @@
 - Next SYS on this seam: DCR-1/DCR-2 decisions; if DCR-1 ships, `tools/promptlab/run.py --order` already sends
   the candidate order and a test forces the lab's copy to follow `TurnSchema.gd`.
 
+## P2.11 — memory model (round 1, 2026-11-04, agent: commandcode)
+
+- Built `llm/MemoryStore.gd` (24 true-fact slots, importance, eviction, seeded per-injection corruption), grew
+  `MemoryRules.gd` into the rule/reason + corruption model and made the `Memory` autoload the single owner
+  (Director's `var memories` is gone). Every tunable lives in `data/memory.json`; the docs fallback is pinned equal.
+- A rejection returns a *reason* (`meta_word|ungrounded|duplicate|…`), and `report()` → the transcript's new
+  `memory` field logs corruption + the proposal. A field missing from `TranscriptLogger.OPTIONAL_FIELDS` is
+  dropped silently, so that round trip is a test, not a hope.
+- Gotcha: `false_promise` keeps the original as a prefix — assert the whole `- ` bullet line, not a substring, or
+  "the true fact is not in the prompt" passes green on a corrupted prompt. `Director.gd` was 987/1000 lines, so
+  `spoken_text()` went to `TurnContext`.
+- Next SYS on this seam: P2.20 must save `Memory.to_dict()` (seed **and** rng state) or a reload re-rolls
+  corruption from a different point; the seed is fixed at 0 today so replays and tests are identical.
+
+
 ## P2.02 — stage machine 0–5 + diegetic transition (2026-11-04, agent: commandcode)
 
 - Built `game/llm/Stages.gd` + `game/data/stages.json` (bands, names, transition, EVENT lines). `GameState`
@@ -119,3 +134,25 @@
 - Gotcha: gdUnit4 test helpers built on an untyped state handle break `:=` inference (`var drained :=
   s.take_pending_events()` → parse error); annotate the type. And `Array(Dictionary)` is not a constructor —
   `assert_dict(x).is_empty()`.
+
+## P2.11 — memory model (round 2, 2026-11-04, agent: commandcode)
+
+- Fixed both S2s and the design S2: `eviction_index(entries, skip)` excludes the slot just appended (a
+  fully-quoted store kept "accepting" and discarding facts — contract error), `_append_promise()` no longer
+  skips on length (`max_length` caps the model's proposal, not the prompt bullet; realized stage-5 rate went
+  0.054 → 0.258 against the declared 0.250), and `_swap_name()` only targets mid-sentence non-stop-word
+  capitals (`My brother is called Ren` no longer becomes `Rin brother …`).
+- Convention worth keeping: one `Memory.begin_turn()` clears the whole per-turn record (corruptions, quotes,
+  proposal). Clearing field-by-field is what made `memory.proposal` describe the previous turn on refusals,
+  failures and `"memory": ""` turns. Called at `_start_turn` and before the refusal's `_log_turn_record`.
+- Convention: untrusted save input is clamped, not adopted — `from_dict()` pins capacity to docs/02 §6's 24.
+  A save-carried capacity as a difficulty setting needs a DCR, not a comment.
+- Gotcha: gdlint caps a class at 20 public methods, so a gdUnit4 suite with `before_test`/`after_test` can
+  hold only 18 tests. The memory suite is now `MemoryTest` (rules/prompt) + `MemoryStoreTest` (store/
+  corruption), with `game/tests/helpers/MemoryFixtures.gd` for the shared fixtures — helpers MUST live in a
+  subdir or `tools/test.sh` runs them as standalone scripts.
+- Gotcha: `String(x)` with an int Variant is a runtime error ("Nonexistent 'String' constructor") — use
+  `str(x)` at any untyped boundary. gdUnit4 string asserts are `starts_with`/`ends_with`; `begins_with`
+  does not exist on the assert object.
+- Gotcha: `Director.gd` is at exactly 1000/1000 gdlint lines on this branch; every added line must be paid
+  for elsewhere (the round-2 `Memory.begin_turn()` calls are one line each, comments included).

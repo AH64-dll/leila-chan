@@ -99,7 +99,10 @@ func test_step_0_telemetry_and_history_append() -> void:
 	assert_bool(accepted).is_true()
 	assert_int(Director.history.size()).is_equal(1)
 	assert_str(str(Director.history[0]["text"])).is_equal("Hello there!")
-	assert_str(str(GameState.flags.get("t08_deleted_draft", ""))).is_equal("I hate you")
+	assert_bool(bool(GameState.flags.get("t08_deleted_draft", false))).is_true()
+	# docs/05 §0 privacy: the words themselves never enter GameState (a flag is
+	# part of the save snapshot, and P1.08 stored the text here).
+	assert_bool(str(GameState.to_dict()).contains("I hate you")).is_false()
 	assert_bool(bool(GameState.flags.get("t11_idle", false))).is_true()
 	await _await_until(func() -> bool: return not Director.is_busy())
 

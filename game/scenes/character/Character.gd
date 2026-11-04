@@ -20,6 +20,14 @@ const BREATH_PERIOD := 4.0
 const BREATH_MID := 1.003  # scale.y oscillates 1.000 <-> 1.006 (docs/03 §4)
 const BREATH_AMP := 0.003
 const CAMERA_MOVE_S := 0.35
+## docs/03 §4 displacement baselines, at i2 (casting.motion_intensity "2" = 1.0).
+## The packet's motion_scale multiplies every one of them; there is no extra art.
+const HOP_PX := 6.0  # bounce
+const SHAKE_PX := 4.0  # shake
+const SINK_PX := 10.0  # sink
+const LEAN_ZOOM := 0.15  # lean_in: 1.0 -> 1.15
+const TREMBLE_PX := 1.0  # tremble
+const TWITCH_PX := 2.0  # twitch / glitch offset
 const MOTION_NAMES: PackedStringArray = [
 	"breathe", "bounce", "shake", "tremble", "sink", "lean_in", "freeze", "twitch", "glitch"
 ]
@@ -77,6 +85,7 @@ var _cam_live := "full"  # target the camera is heading to/resting on (incl. i3 
 var _current: Sprite2D
 var _incoming: Sprite2D
 var _motion := "breathe"
+var _motion_scale := 1.0  # casting.motion_intensity for the current beat (i2 = 1.0)
 var _breathe := true
 var _breath_t := 0.0
 var _tremble_t := 0.0
@@ -154,7 +163,7 @@ func apply_beat(packet: Dictionary) -> void:
 	var sprite := String(packet.get("sprite", ""))
 	if not sprite.is_empty() and sprite != current_sprite:
 		_crossfade_to(sprite)
-	_apply_motion(String(packet.get("motion", "breathe")))
+	_apply_motion(String(packet.get("motion", "breathe")), float(packet.get("motion_scale", 1.0)))
 	var push := String(packet.get("camera", ""))
 	_camera_to(push if not push.is_empty() else _cam_preset)
 	feeling_applied.emit(packet)
@@ -180,7 +189,7 @@ func set_camera(preset: String, instant := false) -> void:
 func set_reduced_motion(enabled: bool) -> void:
 	reduced_motion = enabled
 	if enabled:
-		_apply_motion(_motion)  # re-run the preset with shakes/drifts cut
+		_apply_motion(_motion, _motion_scale)  # re-run the preset with shakes/drifts cut
 		_cut_fx_motion()  # in-flight fx: kill shake, drop drifting hearts
 		# an in-flight camera move must not keep animating: kill the tween and
 		# snap to the LIVE target (an intensity-3 push stays pushed)
@@ -357,16 +366,22 @@ func _crop_rect(field: String, fallback: Rect2) -> Rect2:
 # --- motion presets (docs/03 §4) -------------------------------------------
 
 
-func _apply_motion(name: String) -> void:
+## docs/03 §4 presets. `scale` is the beat's casting.motion_intensity (i2 = 1.0 =
+## the doc's own displacement), so the same preset reads quieter at i1 and louder
+## at i3 without a second set of art.
+func _apply_motion(name: String, scale := 1.0) -> void:
 	_reset_motion_state()
 	_motion = name if name in MOTION_NAMES else "breathe"
+	_motion_scale = clampf(scale, 0.1, 3.0)
+	var hop := HOP_PX * _motion_scale
+	var shake := SHAKE_PX * _motion_scale
 	match _motion:
 		"bounce":
-			if not reduced_motion:  # 6 px hop, 180 ms
+			if not reduced_motion:  # 6 px hop at i2, 180 ms
 				_motion_tween = create_tween()
 				(
 					_motion_tween
-					. tween_property(_motion_root, "position:y", FEET.y - 6.0, 0.09)
+					. tween_property(_motion_root, "position:y", FEET.y - hop, 0.09)
 					. set_trans(Tween.TRANS_QUAD)
 					. set_ease(Tween.EASE_OUT)
 				)
@@ -377,24 +392,27 @@ func _apply_motion(name: String) -> void:
 					. set_ease(Tween.EASE_IN)
 				)
 		"shake":
-			if not reduced_motion:  # +-4 px over 250 ms
+			if not reduced_motion:  # +-4 px at i2 over 250 ms
 				_motion_tween = create_tween()
-				for off: float in [4.0, -4.0, 3.0, -3.0, 0.0]:
+				for off: float in [shake, -shake, shake * 0.75, -shake * 0.75, 0.0]:
 					_motion_tween.tween_property(_motion_root, "position:x", FEET.x + off, 0.05)
 		"sink":
 			if reduced_motion:  # drift cut; the 2% darken stays
 				_set_darkness(0.98)
-			else:  # drops 10 px over 1 s and darkens 2%
+			else:  # drops 10 px at i2 over 1 s and darkens 2%
 				_motion_tween = create_tween().set_parallel(true)
-				_motion_tween.tween_property(_motion_root, "position:y", FEET.y + 10.0, 1.0)
+				_motion_tween.tween_property(
+					_motion_root, "position:y", FEET.y + SINK_PX * _motion_scale, 1.0
+				)
 				for s: Sprite2D in [_sprite_a, _sprite_b]:
 					_motion_tween.tween_property(s, "self_modulate", Color(0.98, 0.98, 0.98), 1.0)
-		"lean_in":  # zoom 1.0 -> 1.15 toward the face (LeanRoot pivot = eyes)
+		"lean_in":  # zoom toward the face (LeanRoot pivot = eyes): 1.15 at i2
+			var zoom := 1.0 + LEAN_ZOOM * _motion_scale
 			if reduced_motion:  # not animated: she is simply closer, statically
-				_lean_root.scale = Vector2(1.15, 1.15)
+				_lean_root.scale = Vector2(zoom, zoom)
 			else:
 				_motion_tween = create_tween()
-				_motion_tween.tween_property(_lean_root, "scale", Vector2(1.15, 1.15), 0.35)
+				_motion_tween.tween_property(_lean_root, "scale", Vector2(zoom, zoom), 0.35)
 		"freeze":  # breathing stops — subtle and wrong, on purpose
 			_breathe = false
 			_motion_root.scale.y = 1.0
@@ -429,9 +447,10 @@ func _process_tremble(delta: float) -> void:
 	if reduced_motion:
 		return
 	_tremble_t += delta
-	while _tremble_t >= 1.0 / 30.0:  # +-1 px jitter @ 30 Hz while the beat lasts
+	var amp := TREMBLE_PX * _motion_scale
+	while _tremble_t >= 1.0 / 30.0:  # +-1 px jitter at i2, 30 Hz while the beat lasts
 		_tremble_t -= 1.0 / 30.0
-		_lean_root.position = _lean_base + Vector2(randf_range(-1, 1), randf_range(-1, 1))
+		_lean_root.position = _lean_base + Vector2(randf_range(-amp, amp), randf_range(-amp, amp))
 
 
 func _process_twitch(delta: float) -> void:
@@ -441,8 +460,9 @@ func _process_twitch(delta: float) -> void:
 		_twitch_next = randf_range(2.0, 5.0)
 		twitch_fired.emit()
 		if not reduced_motion:
+			var amp := TWITCH_PX * _motion_scale
 			_lean_root.position = (
-				_lean_base + Vector2(randf_range(-2.0, 2.0), randf_range(-2.0, 2.0))
+				_lean_base + Vector2(randf_range(-amp, amp), randf_range(-amp, amp))
 			)
 			_twitch_hold = 1
 	elif _twitch_hold > 0:

@@ -1,0 +1,59 @@
+{
+	"version": 1,
+	"_doc": "Input & window telemetry catalogue (P2.09). Docs/01 §5 is the trigger list, docs/05 §1.3 the meta events; `stage_min` is the docs/05 gate for when she may react (detection itself is ungated so the trigger engine can count it). `line` becomes this turn's docs/08 §6 EVENT line; `quote_line` is the docs/05 M21 stage-3 quote of a deleted draft — its {text} is memory-only (never persisted).",
+	"limits": {
+		"draft_min_chars": 2,
+		"draft_quote_stage": 3,
+		"draft_quote_max_chars": 160,
+		"idle_threshold_s": 60,
+		"repeat_window": 3,
+		"resize_min_delta": 16,
+		"resize_cooldown_ms": 1000,
+		"screenshot_cooldown_ms": 250
+	},
+	"events": {
+		"draft_deleted": {
+			"trigger": "T08",
+			"meta": "M21",
+			"stage_min": 1,
+			"line": "EVENT: The player typed something and deleted it without sending it.",
+			"quote_line": "EVENT: The player typed this and deleted it without sending it: \"{text}\""
+		},
+		"focus_lost": {
+			"trigger": "T09",
+			"meta": "M20",
+			"stage_min": 1,
+			"line": "EVENT: The game window lost focus while you were talking. The player looked away."
+		},
+		"close_requested": {
+			"trigger": "T10",
+			"meta": "M01",
+			"stage_min": 3,
+			"line": "EVENT: The player tried to close the game."
+		},
+		"idle": {
+			"trigger": "T11",
+			"meta": "M30",
+			"stage_min": 2,
+			"line": "EVENT: The player has been silent for {seconds} seconds while you wait for an answer."
+		},
+		"window_resized": {
+			"trigger": "T32",
+			"meta": "M19",
+			"stage_min": 2,
+			"line": "EVENT: The player resized the game window."
+		},
+		"screenshot": {
+			"trigger": "T31",
+			"meta": "",
+			"stage_min": 0,
+			"line": "EVENT: The player took a screenshot of you."
+		},
+		"message_repeated": {
+			"trigger": "T12",
+			"meta": "",
+			"stage_min": 0,
+			"line": "EVENT: The player sent the same message again ({count} times in the last few messages)."
+		}
+	}
+}

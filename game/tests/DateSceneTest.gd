@@ -147,6 +147,24 @@ func test_opening_beats_playback_stage_1() -> void:
 	assert_bool(_without_hesitation(text).contains("You're here")).is_true()
 
 
+## CODE-3 (P2.14 r1): play_opening_beats() resolves each beat exactly once and hands
+## the finished packet to Character.apply_beat(). Resolving again inside set_feeling()
+## would advance the anti-repeat window and the reveal budget twice per beat (the same
+## CODE-4 rule the Director follows); the sprite-only assertions above cannot see it
+## because both passes resolve the same shipped stage-0/1 cell.
+func test_opening_beats_resolve_once_per_beat() -> void:
+	_date.stage = 0
+	_date.set_instant_text(true)
+	var passes: Array = []
+	var sink := func(packet: Dictionary) -> void: passes.append(packet)
+	SpriteResolver.beat_resolved.connect(sink)
+	_date.start_date()
+	await get_tree().process_frame
+	SpriteResolver.beat_resolved.disconnect(sink)
+	assert_int(passes.size()).is_equal(1)  # the stage-0 opening scenario has one beat
+	assert_str(String(passes[0]["sprite"])).is_equal(_date.character.current_sprite)
+
+
 func test_fx_wiring_and_twitch_signal() -> void:
 	var fx_played: Array[StringName] = []
 	# Twitch hook wired from character
