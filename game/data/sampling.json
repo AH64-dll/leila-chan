@@ -1,6 +1,16 @@
 {
-  "version": 1,
-  "doc": "docs/02 §9 Sampling settings by stage (P1.08 DES-4). temperature/top_p/repeat_penalty go to the request's sampling; `dose` is the steering dose base for that stage. P2.02 owns per-stage dose tuning.",
+  "version": 2,
+  "doc": "docs/02 §9 sampling settings by stage. temperature/top_p/repeat_penalty go to the request's sampling; `dose` is the steering dose base for that stage (P2.02/P2.04 own dose and number tuning). Shape: {\"stages\": {\"<0-5>\": row}}; a column the file omits keeps that stage's docs/02 §9 value. `hardened` records the docs/06 §1 decoding recipe and which of its legs this project actually enforces.",
+  "hardened": {
+    "doc": "docs/06 §1 measured 100% valid JSON up to steering scale 12 with maxLength 90 on `inner`, 160 on `say`, repeat_penalty 1.15 and temperature 0.7 (experiments/RESULTS.md, experiments/windows/report.md). Only part of that recipe is adopted here: the strings carry docs/02 §3's limits (inner 90, say 200 -- not the measured 160) and the per-stage temperatures are docs/02 §9's (0.75-0.95, hotter than the measured 0.7). Enforced, and gated by the suite: repeat_penalty stays at or above the floor for every stage that can reach the 8-12 band, and the schema carries the docs/02 §3 maxLength values. `measured` keeps the unadopted legs so the divergence stays visible. DCR in production/handoffs/P2.05.md.",
+    "repeat_penalty_floor": 1.15,
+    "inner_max_length": 90,
+    "say_max_length": 200,
+    "measured": {
+      "say_max_length": 160,
+      "temperature": 0.7
+    }
+  },
   "stages": {
     "0": {
       "temperature": 0.75,

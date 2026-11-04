@@ -388,13 +388,11 @@ func _start_turn(player_text: String) -> bool:
 	_current_prompt = messages.duplicate(true)
 	_current_schema = schema.duplicate(true)
 
-	# Step 4: Sampling and steering dose (docs/02 §9)
+	# Step 4: Sampling and steering dose (docs/02 §9). The three sampling columns
+	# come straight from the data row via TurnContext (P2.05); this file keeps no
+	# copy of the table or its defaults, so a retune is a data edit only.
 	var sampling_spec := sampling_spec(stage)
-	var sampling_dict := {
-		"temperature": float(sampling_spec.get("temperature", 0.75)),
-		"top_p": float(sampling_spec.get("top_p", 0.90)),
-		"repeat_penalty": float(sampling_spec.get("repeat_penalty", 1.10)),
-	}
+	var sampling_dict := TurnContext.request_sampling(stage)
 
 	# docs/06 §3: Steering owns the dose schedule (P2.04), so the request carries
 	# per-vector scales ({"malice": 4.5, "path_mix": 3.0}; path_mix is the

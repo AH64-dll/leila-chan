@@ -7,6 +7,13 @@ extends RefCounted
 const STAGE_GATES_PATH := "res://data/stage_gates.json"
 const CASTING_PATH := "res://data/casting.json"
 
+## docs/02 §3 + docs/06 §1 hardened decoding: these maxLength limits are what
+## keep the constrained stream schema-valid up to steering scale 12, so the
+## grammar and validate_turn read the same constants and cannot drift.
+const INNER_MAX_LENGTH := 90
+const SAY_MAX_LENGTH := 200
+const MEMORY_MAX_LENGTH := 80
+
 const CANONICAL_PROPERTY_ORDER: Array[String] = [
 	"read",
 	"inner",
@@ -263,7 +270,7 @@ static func build_turn_schema(ctx: Variant = 0, offered_actions: Array = []) -> 
 		{
 			"type": "string",
 			"minLength": 1,
-			"maxLength": 90,
+			"maxLength": INNER_MAX_LENGTH,
 		},
 		"beats":
 		{
@@ -295,7 +302,7 @@ static func build_turn_schema(ctx: Variant = 0, offered_actions: Array = []) -> 
 					{
 						"type": "string",
 						"minLength": 1,
-						"maxLength": 200,
+						"maxLength": SAY_MAX_LENGTH,
 					},
 				},
 				"required": ["feeling", "intensity", "cue", "say"],
@@ -315,7 +322,7 @@ static func build_turn_schema(ctx: Variant = 0, offered_actions: Array = []) -> 
 		"memory":
 		{
 			"type": "string",
-			"maxLength": 80,
+			"maxLength": MEMORY_MAX_LENGTH,
 		},
 		"action":
 		{
@@ -392,8 +399,10 @@ static func validate_turn(
 		errs.append("inner must be a string")
 	elif turn["inner"].length() < 1:
 		errs.append("inner must not be empty (minLength: 1)")
-	elif turn["inner"].length() > 90:
-		errs.append("inner exceeds maxLength 90 (%d chars)" % turn["inner"].length())
+	elif turn["inner"].length() > INNER_MAX_LENGTH:
+		errs.append(
+			"inner exceeds maxLength %d (%d chars)" % [INNER_MAX_LENGTH, turn["inner"].length()]
+		)
 
 	# 3. beats
 	if not turn.has("beats"):
@@ -429,9 +438,12 @@ static func validate_turn(
 				errs.append("beats[%d] say must be a string" % i)
 			elif b["say"].length() < 1:
 				errs.append("beats[%d] say must not be empty (minLength: 1)" % i)
-			elif b["say"].length() > 200:
+			elif b["say"].length() > SAY_MAX_LENGTH:
 				errs.append(
-					"beats[%d] say exceeds maxLength 200 (%d chars)" % [i, b["say"].length()]
+					(
+						"beats[%d] say exceeds maxLength %d (%d chars)"
+						% [i, SAY_MAX_LENGTH, b["say"].length()]
+					)
 				)
 
 	# 4. mood
@@ -455,8 +467,10 @@ static func validate_turn(
 		errs.append("missing memory")
 	elif typeof(turn["memory"]) != TYPE_STRING:
 		errs.append("memory must be a string")
-	elif turn["memory"].length() > 80:
-		errs.append("memory exceeds maxLength 80 (%d chars)" % turn["memory"].length())
+	elif turn["memory"].length() > MEMORY_MAX_LENGTH:
+		errs.append(
+			"memory exceeds maxLength %d (%d chars)" % [MEMORY_MAX_LENGTH, turn["memory"].length()]
+		)
 
 	# 6. action
 	if not turn.has("action"):
