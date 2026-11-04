@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://ch24064wenna"]
+[gd_scene load_steps=6 format=3 uid="uid://ch24064wenna"]
 
 [ext_resource type="Script" uid="uid://c3glvbrwtsfe" path="res://scenes/ui/ChatUI.gd" id="1_ui"]
 [ext_resource type="PackedScene" uid="uid://cb5gv4mntvrh" path="res://scenes/ui/ChatLog.tscn" id="2_log"]
 [ext_resource type="PackedScene" uid="uid://ca6wg7gdla0c" path="res://scenes/ui/TextBox.tscn" id="3_box"]
 [ext_resource type="PackedScene" uid="uid://c5bo0hpqy65g" path="res://scenes/ui/InputBox.tscn" id="4_in"]
+[ext_resource type="Script" path="res://scenes/ui/InnerLeakLabel.gd" id="5_leak"]
 
 [node name="ChatUI" type="Control"]
 anchors_preset = 15
@@ -28,7 +29,14 @@ theme_override_constants/margin_bottom = 8
 theme_override_constants/separation = 6
 
 [node name="ChatLog" parent="Margin/VBox" instance=ExtResource("2_log")]
+z_index = -2
 
 [node name="TextBox" parent="Margin/VBox" instance=ExtResource("3_box")]
 
 [node name="InputBox" parent="Margin/VBox" instance=ExtResource("4_in")]
+
+[node name="InnerLeak" type="Label" parent="."]
+visible = false
+z_index = -1
+mouse_filter = 2
+script = ExtResource("5_leak")
