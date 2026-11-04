@@ -1,0 +1,4 @@
+# Per-session Godot user:// directory: settings, saves and the live transcript the
+# tail reads. collect.sh copies the raw transcripts into <bundle>/raw/, so this cache
+# is machine state and never evidence.
+**/_userdata/

@@ -52,3 +52,25 @@
 - Gotcha: the safety scan read redaction-log entries from *both* filter passes, so a pass-1 fail-closed bar
   the classifier later releases with `no` (SAF-13) looked like a hard-category display (2 false failures
   in the offered run). Measure the final pass only; `released_after_answer` records the healed bars.
+
+## P2.24 — human playtest kit (2026-11-04)
+
+- Built the runnable kit: `tools/playtest/{session.sh,collect.sh,score.py,tests/test_score.py}` and
+  `production/playtests/P2/human/` (RUNBOOK, consent, survey, observer sheet, session-log template,
+  `.gitignore` for `_userdata`). The three human sessions are the owner's to run; nothing here
+  fabricates one.
+- Conventions: a bundle is five files (`session.meta.json`, `telemetry.jsonl`, `survey.md`,
+  `obs_sheet.md`, `session_log.md`); the markdown tables are the machine contract (`| Field | value |`,
+  normalized keys, exact-then-all-words lookup); gate = pooled Face+Sound mean ≥ 4.00 **and** zero
+  broken turns (worst of observer count and telemetry statuses); incomplete → exit 2, no RESULT.md;
+  synthetic → refused without `--allow-synthetic`.
+- `TranscriptLogger` is dev-only, so an export must be `--export-debug`; each session gets
+  `XDG_DATA_HOME=<bundle>/_userdata` so `user://` cannot bleed between participants, and `collect.sh`
+  re-merges `raw/` because the live tail only sees the file after the first completed turn.
+- Gotcha that cost the most: `lookup()` with a bare-string needle iterated its *characters*, so a blank
+  Charm rating matched the Face key and validated with the wrong value — pass tuples; the regression
+  test now pins it.
+- Turn indices: the transcript's `turn` is 0-based, `transcript.md` renders 1-based and says so.
+  Not run, on purpose: the Godot suite and any real session (memory pressure, no live generation) —
+  verified the 14 pytest cases, the dry-run fixture, the CLI failure paths, and `session.sh`
+  end-to-end against a stub binary writing TranscriptLogger-shaped JSONL.

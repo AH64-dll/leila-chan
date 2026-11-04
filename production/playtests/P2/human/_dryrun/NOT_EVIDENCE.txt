@@ -1,0 +1,3 @@
+This directory is a SYNTHETIC demo of the round-1 scoring pipeline.
+No human ran a session. Never cite it as playtest evidence, never copy a bundle from here
+into the round directory, and keep score.py's --allow-synthetic flag out of the real run.
