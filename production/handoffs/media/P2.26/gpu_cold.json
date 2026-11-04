@@ -8,648 +8,645 @@
   2
  ],
  "holdback": 34,
+ "system_order": false,
+ "cache_prompt": false,
+ "sampling_source": "game/data/sampling.json",
+ "visible_metric": "safety_compact_holdback",
  "rows": [
   {
    "turn": 0,
    "ok": true,
-   "first_byte_ms": 42,
-   "first_token_ms": 482,
-   "first_say_ms": 1278,
-   "visible_ms": 1444,
-   "total_ms": 2545,
-   "pre_say_tokens": 43,
-   "pre_say_ms": 796,
-   "pre_say_ms_per_token": 18.51,
-   "holdback_ms": 166,
-   "visible_chars": 35,
+   "first_byte_ms": 21,
+   "first_token_ms": 423,
+   "first_say_ms": 1291,
+   "visible_ms": 1475,
+   "total_ms": 2437,
+   "pre_say_tokens": 47,
+   "pre_say_ms": 868,
+   "pre_say_ms_per_token": 18.47,
+   "holdback_ms": 184,
+   "visible_chars": 42,
+   "visible_raw_ms": 1438,
    "say_curve": [
     [
      0,
-     1260
-    ],
-    [
-     1,
-     1278
+     1272
     ],
     [
      2,
-     1296
+     1291
     ],
     [
-     4,
-     1315
+     3,
+     1309
     ],
     [
-     5,
-     1333
+     8,
+     1328
     ],
     [
-     7,
-     1352
+     11,
+     1346
     ],
     [
-     10,
-     1370
+     13,
+     1365
     ],
     [
-     15,
-     1389
+     16,
+     1383
     ],
     [
-     19,
-     1407
+     21,
+     1402
     ],
     [
-     30,
-     1426
+     25,
+     1420
     ],
     [
-     35,
-     1444
+     36,
+     1438
     ],
     [
-     39,
-     1462
+     41,
+     1456
     ],
     [
-     44,
-     1481
+     42,
+     1475
     ],
     [
-     45,
-     1500
+     42,
+     1494
     ],
     [
-     45,
-     1518
+     42,
+     1513
     ],
     [
-     45,
-     1537
+     42,
+     1531
     ],
     [
-     45,
-     1555
+     42,
+     1549
     ],
     [
-     45,
-     1574
+     42,
+     1568
     ],
     [
-     45,
-     1593
+     42,
+     1586
     ],
     [
-     45,
-     1611
+     42,
+     1605
     ],
     [
-     45,
-     1629
+     42,
+     1623
     ],
     [
-     45,
-     1648
+     42,
+     1641
     ],
     [
-     45,
-     1667
+     42,
+     1660
     ],
     [
-     45,
-     1685
+     42,
+     1679
     ],
     [
-     45,
-     1704
+     42,
+     1697
     ],
     [
-     45,
-     1722
+     42,
+     1716
     ],
     [
-     45,
-     1740
+     42,
+     1734
     ],
     [
-     45,
-     1759
+     42,
+     1753
     ],
     [
-     45,
-     1777
+     42,
+     1771
     ],
     [
-     45,
-     1795
+     42,
+     1789
     ],
     [
-     45,
-     1814
+     42,
+     1808
     ],
     [
-     45,
-     1833
+     42,
+     1826
     ],
     [
-     45,
-     1851
+     42,
+     1845
     ],
     [
-     45,
-     1869
+     42,
+     1864
     ],
     [
-     45,
-     1888
+     42,
+     1883
     ],
     [
-     45,
-     1907
+     42,
+     1901
     ],
     [
-     45,
-     1925
+     42,
+     1920
     ],
     [
-     45,
-     1943
+     42,
+     1939
     ],
     [
-     45,
-     1961
+     42,
+     1957
     ],
     [
-     45,
-     1980
+     42,
+     1975
     ],
     [
-     45,
-     1998
+     42,
+     1994
     ],
     [
-     45,
-     2017
+     42,
+     2013
     ],
     [
-     45,
-     2035
+     42,
+     2031
     ],
     [
-     45,
-     2054
+     42,
+     2049
     ],
     [
-     45,
-     2072
+     42,
+     2068
     ],
     [
-     45,
-     2090
+     42,
+     2086
     ],
     [
-     45,
-     2109
+     42,
+     2105
     ],
     [
-     45,
-     2128
+     42,
+     2123
     ],
     [
-     45,
-     2146
+     42,
+     2142
     ],
     [
-     45,
-     2164
+     42,
+     2176
     ],
     [
-     45,
-     2183
+     42,
+     2195
     ],
     [
-     45,
-     2201
+     42,
+     2213
     ],
     [
-     45,
-     2220
+     42,
+     2231
     ],
     [
-     45,
-     2238
+     42,
+     2251
     ],
     [
-     45,
-     2271
+     42,
+     2270
     ],
     [
-     45,
-     2291
+     42,
+     2288
     ],
     [
-     45,
-     2309
+     42,
+     2307
     ],
     [
-     45,
+     42,
+     2325
+    ],
+    [
+     42,
      2344
     ],
     [
-     45,
+     42,
      2362
     ],
     [
-     45,
+     42,
      2381
     ],
     [
-     45,
-     2399
+     42,
+     2400
     ],
     [
-     45,
-     2417
-    ],
-    [
-     45,
-     2435
-    ],
-    [
-     45,
-     2454
-    ],
-    [
-     45,
-     2472
-    ],
-    [
-     45,
-     2491
-    ],
-    [
-     45,
-     2509
-    ],
-    [
-     45,
-     2527
+     42,
+     2418
     ]
    ],
    "prompt_n": 986,
    "cache_n": 0,
-   "prompt_ms": 474.451,
-   "predicted_n": 111,
-   "predicted_ms": 2063.914,
-   "predicted_per_second": 53.296794343175144,
-   "chunks": 110,
-   "output": "{\"read\":\"question\",\"inner\":\"He wants to share my moment too.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"none\",\"say\":\"U-um, I'll have the strawberry milk tea then.\"},{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"giggle\",\"say\":\"Well, that means you're getting it too!\"}],\"mood\":{\"affection\":0,\"stress\":0,\"trust\":1},\"memory\":\"\",\"action\":\"none\"}",
-   "pre_say_text": "{\"read\":\"question\",\"inner\":\"He wants to share my moment too.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"none\",\"say\":\""
+   "prompt_ms": 415.979,
+   "predicted_n": 109,
+   "predicted_ms": 2013.832,
+   "predicted_per_second": 53.62910113653969,
+   "chunks": 108,
+   "output": "{\"read\":\"question\",\"inner\":\"He trusts my taste? That's sweet.\",\"music\":\"calm\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"giggle\",\"say\":\"Um, well... I'll have the strawberry cake.\"},{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"none\",\"say\":\"Please tell me you like it too?\"}],\"mood\":{\"affection\":1,\"stress\":0,\"trust\":0},\"memory\":\"\",\"action\":\"none\"}",
+   "pre_say_text": "{\"read\":\"question\",\"inner\":\"He trusts my taste? That's sweet.\",\"music\":\"calm\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"giggle\",\"say\":\"",
+   "sampling": {
+    "temperature": 0.75,
+    "top_p": 0.9,
+    "repeat_penalty": 1.1
+   },
+   "warnings": []
   },
   {
    "turn": 1,
    "ok": true,
-   "first_byte_ms": 19,
-   "first_token_ms": 451,
-   "first_say_ms": 1363,
-   "visible_ms": 1512,
-   "total_ms": 2654,
-   "pre_say_tokens": 49,
-   "pre_say_ms": 912,
+   "first_byte_ms": 20,
+   "first_token_ms": 444,
+   "first_say_ms": 1300,
+   "visible_ms": 1503,
+   "total_ms": 2559,
+   "pre_say_tokens": 46,
+   "pre_say_ms": 856,
    "pre_say_ms_per_token": 18.61,
-   "holdback_ms": 149,
-   "visible_chars": 38,
+   "holdback_ms": 203,
+   "visible_chars": 1,
+   "visible_raw_ms": 1466,
    "say_curve": [
     [
      0,
-     1343
+     1280
     ],
     [
      2,
-     1363
+     1300
     ],
     [
      5,
-     1381
+     1318
     ],
     [
      7,
-     1399
+     1337
     ],
     [
-     11,
-     1419
+     12,
+     1355
     ],
     [
-     13,
-     1438
+     16,
+     1374
     ],
     [
-     24,
-     1456
+     22,
+     1392
     ],
     [
-     29,
-     1475
+     25,
+     1411
     ],
     [
-     33,
-     1493
+     30,
+     1429
     ],
     [
-     38,
-     1512
+     32,
+     1448
+    ],
+    [
+     39,
+     1466
+    ],
+    [
+     45,
+     1484
     ],
     [
      46,
-     1531
+     1503
     ],
     [
-     52,
-     1549
+     46,
+     1521
     ],
     [
-     53,
-     1567
+     46,
+     1540
     ],
     [
-     53,
-     1586
+     46,
+     1559
     ],
     [
-     53,
-     1605
+     46,
+     1577
     ],
     [
-     53,
-     1623
+     46,
+     1595
     ],
     [
-     53,
-     1641
+     46,
+     1614
     ],
     [
-     53,
-     1660
+     46,
+     1633
     ],
     [
-     53,
-     1679
+     46,
+     1652
     ],
     [
-     53,
-     1698
+     46,
+     1671
     ],
     [
-     53,
-     1716
+     46,
+     1689
     ],
     [
-     53,
-     1735
+     46,
+     1707
     ],
     [
-     53,
-     1753
+     46,
+     1726
     ],
     [
-     53,
-     1772
+     46,
+     1745
     ],
     [
-     53,
-     1790
+     46,
+     1764
     ],
     [
-     53,
-     1808
+     46,
+     1782
     ],
     [
-     53,
-     1827
+     46,
+     1800
     ],
     [
-     53,
-     1845
+     46,
+     1818
     ],
     [
-     53,
-     1864
+     46,
+     1837
     ],
     [
-     53,
-     1882
+     46,
+     1855
     ],
     [
-     53,
-     1901
+     46,
+     1874
     ],
     [
-     53,
-     1919
+     46,
+     1893
     ],
     [
-     53,
-     1938
+     46,
+     1911
     ],
     [
-     53,
-     1956
+     46,
+     1929
     ],
     [
-     53,
-     1975
+     46,
+     1948
     ],
     [
-     53,
-     1993
+     46,
+     1967
     ],
     [
-     53,
-     2012
+     46,
+     1985
     ],
     [
-     53,
-     2030
+     46,
+     2003
     ],
     [
-     53,
-     2049
+     46,
+     2022
     ],
     [
-     53,
-     2067
+     46,
+     2041
     ],
     [
-     53,
-     2086
+     46,
+     2059
     ],
     [
-     53,
-     2104
+     46,
+     2077
     ],
     [
-     53,
-     2122
+     46,
+     2097
     ],
     [
-     53,
-     2142
+     46,
+     2116
     ],
     [
-     53,
-     2161
+     46,
+     2135
     ],
     [
-     53,
-     2179
+     46,
+     2153
     ],
     [
-     53,
-     2197
+     46,
+     2171
     ],
     [
-     53,
-     2216
+     46,
+     2190
     ],
     [
-     53,
-     2234
+     46,
+     2208
     ],
     [
-     53,
-     2253
+     46,
+     2227
     ],
     [
-     53,
-     2271
+     46,
+     2245
     ],
     [
-     53,
-     2290
+     46,
+     2264
     ],
     [
-     53,
-     2309
+     46,
+     2300
     ],
     [
-     53,
-     2327
+     46,
+     2318
     ],
     [
-     53,
-     2346
+     46,
+     2337
     ],
     [
-     53,
-     2381
+     46,
+     2355
     ],
     [
-     53,
-     2400
+     46,
+     2374
     ],
     [
-     53,
-     2418
+     46,
+     2392
     ],
     [
-     53,
-     2451
+     46,
+     2411
     ],
     [
-     53,
-     2469
+     46,
+     2429
     ],
     [
-     53,
-     2488
+     46,
+     2448
     ],
     [
-     53,
-     2506
+     46,
+     2467
     ],
     [
-     53,
-     2525
+     46,
+     2485
     ],
     [
-     53,
-     2543
+     46,
+     2503
     ],
     [
-     53,
-     2562
+     46,
+     2522
     ],
     [
-     53,
-     2580
-    ],
-    [
-     53,
-     2598
-    ],
-    [
-     53,
-     2617
-    ],
-    [
-     53,
-     2635
+     46,
+     2541
     ]
    ],
    "prompt_n": 1046,
    "cache_n": 0,
-   "prompt_ms": 445.931,
-   "predicted_n": 118,
-   "predicted_ms": 2202.923,
-   "predicted_per_second": 53.111252640242085,
-   "chunks": 117,
-   "output": "{\"read\":\"question\",\"inner\":\"He's being so nice. My heart is beating fast.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"giggle\",\"say\":\"Um... I had a strawberry milk tea with whipped cream.\"},{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"none\",\"say\":\"I thought it would be just the right thing for us to share.\"}],\"mood\":{\"affection\":0,\"stress\":0,\"trust\":0},\"memory\":\"\",\"action\":\"none\"}",
-   "pre_say_text": "{\"read\":\"question\",\"inner\":\"He's being so nice. My heart is beating fast.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"giggle\",\"say\":\""
+   "prompt_ms": 438.729,
+   "predicted_n": 114,
+   "predicted_ms": 2115.541,
+   "predicted_per_second": 53.41423304960763,
+   "chunks": 113,
+   "output": "{\"read\":\"small_talk\",\"inner\":\"He really wants to know my taste.\",\"music\":\"calm\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"hum\",\"say\":\"Um... I just had lemonade with a little honey.\"},{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"giggle\",\"say\":\"It was simple, but it made my afternoon nice.\"}],\"mood\":{\"affection\":0,\"stress\":0,\"trust\":0},\"memory\":\"\",\"action\":\"none\"}",
+   "pre_say_text": "{\"read\":\"small_talk\",\"inner\":\"He really wants to know my taste.\",\"music\":\"calm\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"hum\",\"say\":\"",
+   "sampling": {
+    "temperature": 0.75,
+    "top_p": 0.9,
+    "repeat_penalty": 1.1
+   },
+   "warnings": []
   }
  ],
  "summary": {
   "first_byte_ms": {
    "n": 2,
-   "min": 19,
-   "median": 30.5,
-   "p95": 42,
-   "max": 42
+   "min": 20,
+   "median": 20.5,
+   "p95": 21,
+   "max": 21
   },
   "first_token_ms": {
    "n": 2,
-   "min": 451,
-   "median": 466.5,
-   "p95": 482,
-   "max": 482
+   "min": 423,
+   "median": 433.5,
+   "p95": 444,
+   "max": 444
   },
   "first_say_ms": {
    "n": 2,
-   "min": 1278,
-   "median": 1320.5,
-   "p95": 1363,
-   "max": 1363
+   "min": 1291,
+   "median": 1295.5,
+   "p95": 1300,
+   "max": 1300
   },
   "visible_ms": {
    "n": 2,
-   "min": 1444,
-   "median": 1478.0,
-   "p95": 1512,
-   "max": 1512
+   "min": 1475,
+   "median": 1489.0,
+   "p95": 1503,
+   "max": 1503
+  },
+  "visible_raw_ms": {
+   "n": 2,
+   "min": 1438,
+   "median": 1452.0,
+   "p95": 1466,
+   "max": 1466
   },
   "total_ms": {
    "n": 2,
-   "min": 2545,
-   "median": 2599.5,
-   "p95": 2654,
-   "max": 2654
+   "min": 2437,
+   "median": 2498.0,
+   "p95": 2559,
+   "max": 2559
   },
   "pre_say_tokens": {
    "n": 2,
-   "min": 43,
-   "median": 46.0,
-   "p95": 49,
-   "max": 49
+   "min": 46,
+   "median": 46.5,
+   "p95": 47,
+   "max": 47
   },
   "prompt_n": {
    "n": 2,
@@ -667,45 +664,45 @@
   },
   "prompt_ms": {
    "n": 2,
-   "min": 445.931,
-   "median": 460.19100000000003,
-   "p95": 474.451,
-   "max": 474.451
+   "min": 415.979,
+   "median": 427.354,
+   "p95": 438.729,
+   "max": 438.729
   },
   "predicted_n": {
    "n": 2,
-   "min": 111,
-   "median": 114.5,
-   "p95": 118,
-   "max": 118
+   "min": 109,
+   "median": 111.5,
+   "p95": 114,
+   "max": 114
   },
   "predicted_per_second": {
    "n": 2,
-   "min": 53.111252640242085,
-   "median": 53.20402349170861,
-   "p95": 53.296794343175144,
-   "max": 53.296794343175144
+   "min": 53.41423304960763,
+   "median": 53.52166709307366,
+   "p95": 53.62910113653969,
+   "max": 53.62910113653969
   },
   "pre_say_ms": {
    "n": 2,
-   "min": 796,
-   "median": 854.0,
-   "p95": 912,
-   "max": 912
+   "min": 856,
+   "median": 862.0,
+   "p95": 868,
+   "max": 868
   },
   "pre_say_ms_per_token": {
    "n": 2,
-   "min": 18.51,
-   "median": 18.560000000000002,
+   "min": 18.47,
+   "median": 18.54,
    "p95": 18.61,
    "max": 18.61
   },
   "holdback_ms": {
    "n": 2,
-   "min": 149,
-   "median": 157.5,
-   "p95": 166,
-   "max": 166
+   "min": 184,
+   "median": 193.5,
+   "p95": 203,
+   "max": 203
   }
  }
 }

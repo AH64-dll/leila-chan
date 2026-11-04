@@ -8,2006 +8,1867 @@
   6
  ],
  "holdback": 34,
+ "system_order": false,
+ "cache_prompt": true,
+ "sampling_source": "game/data/sampling.json",
+ "visible_metric": "safety_compact_holdback",
  "rows": [
   {
    "turn": 0,
    "ok": true,
-   "first_byte_ms": 30,
-   "first_token_ms": 153,
-   "first_say_ms": 972,
-   "visible_ms": 1101,
-   "total_ms": 2188,
-   "pre_say_tokens": 43,
-   "pre_say_ms": 819,
-   "pre_say_ms_per_token": 19.05,
-   "holdback_ms": 129,
-   "visible_chars": 34,
+   "first_byte_ms": 14,
+   "first_token_ms": 64,
+   "first_say_ms": 951,
+   "visible_ms": 1136,
+   "total_ms": 1763,
+   "pre_say_tokens": 48,
+   "pre_say_ms": 887,
+   "pre_say_ms_per_token": 18.48,
+   "holdback_ms": 185,
+   "visible_chars": 6,
+   "visible_raw_ms": 1100,
    "say_curve": [
     [
      0,
-     953
+     933
     ],
     [
      2,
-     972
+     951
     ],
     [
      3,
-     990
+     970
     ],
     [
      5,
-     1008
+     988
     ],
     [
      7,
-     1027
+     1007
     ],
     [
-     16,
-     1046
+     14,
+     1026
     ],
     [
-     21,
-     1064
+     18,
+     1044
     ],
     [
-     30,
-     1082
+     28,
+     1062
     ],
     [
-     34,
-     1101
+     32,
+     1081
     ],
     [
-     40,
-     1119
+     38,
+     1100
     ],
     [
-     45,
-     1138
+     41,
+     1118
     ],
     [
-     49,
-     1156
+     48,
+     1136
     ],
     [
-     50,
+     52,
+     1155
+    ],
+    [
+     54,
      1174
     ],
     [
-     50,
-     1193
+     59,
+     1192
     ],
     [
-     50,
+     62,
      1211
     ],
     [
-     50,
+     65,
      1230
     ],
     [
-     50,
+     70,
      1248
     ],
     [
-     50,
+     75,
      1267
     ],
     [
-     50,
+     76,
      1285
     ],
     [
-     50,
-     1304
+     76,
+     1303
     ],
     [
-     50,
+     76,
      1322
     ],
     [
-     50,
+     76,
      1341
     ],
     [
-     50,
+     76,
      1359
     ],
     [
-     50,
-     1378
+     76,
+     1377
     ],
     [
-     50,
+     76,
      1396
     ],
     [
-     50,
-     1414
+     76,
+     1415
     ],
     [
-     50,
+     76,
      1433
     ],
     [
-     50,
-     1451
+     76,
+     1452
     ],
     [
-     50,
-     1469
+     76,
+     1470
     ],
     [
-     50,
-     1488
-    ],
-    [
-     50,
+     76,
      1506
     ],
     [
-     50,
-     1527
+     76,
+     1524
     ],
     [
-     50,
-     1545
+     76,
+     1542
     ],
     [
-     50,
-     1563
+     76,
+     1561
     ],
     [
-     50,
-     1582
+     76,
+     1579
     ],
     [
-     50,
-     1600
+     76,
+     1598
     ],
     [
-     50,
-     1618
+     76,
+     1616
     ],
     [
-     50,
-     1637
+     76,
+     1634
     ],
     [
-     50,
-     1655
+     76,
+     1652
     ],
     [
-     50,
-     1674
+     76,
+     1671
     ],
     [
-     50,
-     1692
+     76,
+     1689
     ],
     [
-     50,
-     1710
+     76,
+     1707
     ],
     [
-     50,
-     1728
+     76,
+     1726
     ],
     [
-     50,
-     1747
-    ],
-    [
-     50,
-     1766
-    ],
-    [
-     50,
-     1784
-    ],
-    [
-     50,
-     1803
-    ],
-    [
-     50,
-     1821
-    ],
-    [
-     50,
-     1840
-    ],
-    [
-     50,
-     1859
-    ],
-    [
-     50,
-     1877
-    ],
-    [
-     50,
-     1895
-    ],
-    [
-     50,
-     1930
-    ],
-    [
-     50,
-     1948
-    ],
-    [
-     50,
-     1967
-    ],
-    [
-     50,
-     1985
-    ],
-    [
-     50,
-     2003
-    ],
-    [
-     50,
-     2022
-    ],
-    [
-     50,
-     2040
-    ],
-    [
-     50,
-     2058
-    ],
-    [
-     50,
-     2077
-    ],
-    [
-     50,
-     2096
-    ],
-    [
-     50,
-     2114
-    ],
-    [
-     50,
-     2133
-    ],
-    [
-     50,
-     2151
-    ],
-    [
-     50,
-     2170
+     76,
+     1744
     ]
    ],
-   "prompt_n": 39,
-   "cache_n": 947,
-   "prompt_ms": 144.629,
-   "predicted_n": 109,
-   "predicted_ms": 2035.609,
-   "predicted_per_second": 53.05537556573979,
-   "chunks": 108,
-   "output": "{\"read\":\"flirt\",\"inner\":\"He trusts my taste completely.\",\"music\":\"calm\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"hum\",\"say\":\"Um, I'm actually just drinking the usual milk tea.\"},{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"none\",\"say\":\"But if you're surprised... it's strawberry cream!\"}],\"mood\":{\"affection\":1,\"stress\":0,\"trust\":0},\"memory\":\"\",\"action\":\"none\"}",
-   "pre_say_text": "{\"read\":\"flirt\",\"inner\":\"He trusts my taste completely.\",\"music\":\"calm\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"hum\",\"say\":\""
+   "prompt_n": 4,
+   "cache_n": 982,
+   "prompt_ms": 56.96,
+   "predicted_n": 92,
+   "predicted_ms": 1699.026,
+   "predicted_per_second": 53.56009855058133,
+   "chunks": 91,
+   "output": "{\"read\":\"question\",\"inner\":\"He wants my choice? That's rare for Haru.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"sigh\",\"say\":\"Um, I'm having the chocolate croissant... please don't look at me like that!\"}],\"mood\":{\"affection\":1,\"stress\":0,\"trust\":0},\"memory\":\"\",\"action\":\"none\"}",
+   "pre_say_text": "{\"read\":\"question\",\"inner\":\"He wants my choice? That's rare for Haru.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"sigh\",\"say\":\"",
+   "sampling": {
+    "temperature": 0.75,
+    "top_p": 0.9,
+    "repeat_penalty": 1.1
+   },
+   "warnings": []
   },
   {
    "turn": 1,
    "ok": true,
    "first_byte_ms": 12,
-   "first_token_ms": 128,
-   "first_say_ms": 1018,
-   "visible_ms": 1147,
-   "total_ms": 2367,
+   "first_token_ms": 135,
+   "first_say_ms": 1022,
+   "visible_ms": 1170,
+   "total_ms": 2324,
    "pre_say_tokens": 48,
-   "pre_say_ms": 890,
-   "pre_say_ms_per_token": 18.54,
-   "holdback_ms": 129,
-   "visible_chars": 36,
+   "pre_say_ms": 887,
+   "pre_say_ms_per_token": 18.48,
+   "holdback_ms": 148,
+   "visible_chars": 6,
+   "visible_raw_ms": 1152,
    "say_curve": [
     [
      0,
-     999
+     1003
     ],
     [
-     2,
-     1018
+     1,
+     1022
     ],
     [
-     3,
-     1036
+     5,
+     1040
     ],
     [
-     8,
-     1054
+     7,
+     1059
     ],
     [
-     11,
-     1073
+     18,
+     1078
     ],
     [
-     22,
-     1092
+     23,
+     1096
     ],
     [
      27,
-     1110
+     1114
     ],
     [
-     31,
-     1129
+     32,
+     1133
     ],
     [
-     36,
-     1147
+     40,
+     1152
     ],
     [
-     38,
-     1166
+     46,
+     1170
     ],
     [
-     45,
-     1184
+     47,
+     1188
     ],
     [
-     51,
-     1202
+     47,
+     1207
     ],
     [
-     57,
-     1221
+     47,
+     1226
     ],
     [
-     58,
-     1239
+     47,
+     1260
     ],
     [
-     58,
-     1258
+     47,
+     1279
     ],
     [
-     58,
-     1276
+     47,
+     1297
     ],
     [
-     58,
-     1294
+     47,
+     1315
     ],
     [
-     58,
-     1313
+     47,
+     1333
     ],
     [
-     58,
-     1332
+     47,
+     1352
     ],
     [
-     58,
-     1350
+     47,
+     1370
     ],
     [
-     58,
-     1368
+     47,
+     1389
     ],
     [
-     58,
-     1387
+     47,
+     1407
     ],
     [
-     58,
-     1406
+     47,
+     1425
     ],
     [
-     58,
-     1424
+     47,
+     1444
     ],
     [
-     58,
-     1443
+     47,
+     1462
     ],
     [
-     58,
-     1461
+     47,
+     1481
     ],
     [
-     58,
-     1480
-    ],
-    [
-     58,
+     47,
      1499
     ],
     [
-     58,
+     47,
      1517
     ],
     [
-     58,
-     1536
+     47,
+     1535
     ],
     [
-     58,
+     47,
      1554
     ],
     [
-     58,
+     47,
      1573
     ],
     [
-     58,
+     47,
      1591
     ],
     [
-     58,
-     1610
+     47,
+     1609
     ],
     [
-     58,
-     1629
+     47,
+     1627
     ],
     [
-     58,
-     1648
+     47,
+     1646
     ],
     [
-     58,
-     1667
+     47,
+     1664
     ],
     [
-     58,
-     1685
+     47,
+     1683
     ],
     [
-     58,
-     1703
+     47,
+     1701
     ],
     [
-     58,
-     1722
+     47,
+     1720
     ],
     [
-     58,
-     1741
+     47,
+     1738
     ],
     [
-     58,
-     1759
+     47,
+     1756
     ],
     [
-     58,
-     1778
+     47,
+     1775
     ],
     [
-     58,
-     1796
+     47,
+     1793
     ],
     [
-     58,
-     1815
+     47,
+     1811
     ],
     [
-     58,
-     1834
+     47,
+     1830
     ],
     [
-     58,
-     1852
+     47,
+     1848
     ],
     [
-     58,
-     1870
+     47,
+     1867
     ],
     [
-     58,
-     1889
+     47,
+     1885
     ],
     [
-     58,
-     1908
+     47,
+     1904
     ],
     [
-     58,
-     1926
+     47,
+     1922
     ],
     [
-     58,
-     1944
+     47,
+     1940
     ],
     [
-     58,
-     1963
+     47,
+     1959
     ],
     [
-     58,
-     1999
+     47,
+     1978
     ],
     [
-     58,
-     2017
+     47,
+     1996
     ],
     [
-     58,
-     2035
+     47,
+     2014
     ],
     [
-     58,
-     2054
+     47,
+     2048
     ],
     [
-     58,
-     2072
+     47,
+     2067
     ],
     [
-     58,
-     2091
+     47,
+     2085
     ],
     [
-     58,
-     2109
+     47,
+     2121
     ],
     [
-     58,
-     2127
+     47,
+     2139
     ],
     [
-     58,
-     2146
+     47,
+     2158
     ],
     [
-     58,
-     2164
+     47,
+     2176
     ],
     [
-     58,
-     2183
+     47,
+     2195
     ],
     [
-     58,
-     2202
+     47,
+     2214
     ],
     [
-     58,
-     2220
+     47,
+     2232
     ],
     [
-     58,
-     2238
+     47,
+     2250
     ],
     [
-     58,
-     2256
+     47,
+     2268
     ],
     [
-     58,
-     2275
+     47,
+     2287
     ],
     [
-     58,
-     2293
-    ],
-    [
-     58,
-     2312
-    ],
-    [
-     58,
-     2330
-    ],
-    [
-     58,
-     2349
+     47,
+     2305
     ]
    ],
    "prompt_n": 83,
    "cache_n": 963,
-   "prompt_ms": 123.526,
-   "predicted_n": 121,
-   "predicted_ms": 2238.921,
-   "predicted_per_second": 53.59724617349161,
-   "chunks": 120,
-   "output": "{\"read\":\"question\",\"inner\":\"He noticed my drink too. He really likes me.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"giggle\",\"say\":\"Um, just... strawberry milk tea with a little extra cream.\"},{\"feeling\":\"warmth\",\"intensity\":1,\"cue\":\"hum\",\"say\":\"It's warm and sweet. Like how you are?\"}],\"mood\":{\"affection\":3,\"stress\":0,\"trust\":2},\"memory\":\"he asked about my drink\",\"action\":\"none\"}",
-   "pre_say_text": "{\"read\":\"question\",\"inner\":\"He noticed my drink too. He really likes me.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"giggle\",\"say\":\""
+   "prompt_ms": 131.554,
+   "predicted_n": 117,
+   "predicted_ms": 2188.151,
+   "predicted_per_second": 53.01279482083275,
+   "chunks": 116,
+   "output": "{\"read\":\"small_talk\",\"inner\":\"He's so eager to please me...\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"giggle\",\"say\":\"I had a strawberry milk tea with vanilla syrup.\"},{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"hum\",\"say\":\"Would you like to try it? It's very sweet, just like you.\"}],\"mood\":{\"affection\":1,\"stress\":0,\"trust\":0},\"memory\":\"\",\"action\":\"none\"}",
+   "pre_say_text": "{\"read\":\"small_talk\",\"inner\":\"He's so eager to please me...\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"giggle\",\"say\":\"",
+   "sampling": {
+    "temperature": 0.75,
+    "top_p": 0.9,
+    "repeat_penalty": 1.1
+   },
+   "warnings": []
   },
   {
    "turn": 2,
    "ok": true,
-   "first_byte_ms": 17,
-   "first_token_ms": 143,
-   "first_say_ms": 1047,
-   "visible_ms": 1195,
-   "total_ms": 2358,
-   "pre_say_tokens": 49,
-   "pre_say_ms": 904,
-   "pre_say_ms_per_token": 18.45,
-   "holdback_ms": 148,
-   "visible_chars": 26,
+   "first_byte_ms": 13,
+   "first_token_ms": 121,
+   "first_say_ms": 1064,
+   "visible_ms": 1232,
+   "total_ms": 2322,
+   "pre_say_tokens": 51,
+   "pre_say_ms": 943,
+   "pre_say_ms_per_token": 18.49,
+   "holdback_ms": 168,
+   "visible_chars": 23,
+   "visible_raw_ms": 1232,
    "say_curve": [
     [
      0,
-     1029
+     1046
     ],
     [
      1,
-     1047
+     1064
     ],
     [
      2,
-     1066
+     1082
     ],
     [
-     4,
-     1084
+     5,
+     1101
     ],
     [
      6,
-     1102
+     1119
     ],
     [
-     10,
-     1121
+     8,
+     1138
+    ],
+    [
+     11,
+     1156
     ],
     [
      13,
-     1139
+     1175
     ],
     [
-     17,
-     1157
+     19,
+     1194
     ],
     [
-     25,
-     1176
+     22,
+     1212
     ],
     [
-     26,
-     1195
+     23,
+     1232
     ],
     [
-     26,
-     1214
-    ],
-    [
-     26,
-     1233
-    ],
-    [
-     26,
+     23,
      1251
     ],
     [
-     26,
-     1270
+     23,
+     1269
     ],
     [
-     26,
-     1288
+     23,
+     1287
     ],
     [
-     26,
-     1307
+     23,
+     1309
     ],
     [
-     26,
-     1325
+     23,
+     1327
     ],
     [
-     26,
-     1343
+     23,
+     1345
     ],
     [
-     26,
-     1362
+     23,
+     1364
     ],
     [
-     26,
-     1381
+     23,
+     1382
     ],
     [
-     26,
-     1399
+     23,
+     1401
     ],
     [
-     26,
-     1417
+     23,
+     1419
     ],
     [
-     26,
-     1435
+     23,
+     1437
     ],
     [
-     26,
-     1454
+     23,
+     1455
     ],
     [
-     26,
-     1472
+     23,
+     1474
     ],
     [
-     26,
-     1490
+     23,
+     1492
     ],
     [
-     26,
-     1509
+     23,
+     1510
     ],
     [
-     26,
-     1527
+     23,
+     1528
     ],
     [
-     26,
-     1546
+     23,
+     1547
     ],
     [
-     26,
-     1564
+     23,
+     1565
     ],
     [
-     26,
-     1582
+     23,
+     1583
     ],
     [
-     26,
-     1601
+     23,
+     1603
     ],
     [
-     26,
-     1619
+     23,
+     1621
     ],
     [
-     26,
-     1638
+     23,
+     1640
     ],
     [
-     26,
-     1656
+     23,
+     1658
     ],
     [
-     26,
-     1675
+     23,
+     1676
     ],
     [
-     26,
-     1693
+     23,
+     1694
     ],
     [
-     26,
-     1711
+     23,
+     1712
     ],
     [
-     26,
-     1729
+     23,
+     1731
     ],
     [
-     26,
+     23,
      1749
     ],
     [
-     26,
+     23,
      1767
     ],
     [
-     26,
-     1786
+     23,
+     1785
     ],
     [
-     26,
-     1804
+     23,
+     1803
     ],
     [
-     26,
+     23,
      1822
     ],
     [
-     26,
-     1841
+     23,
+     1840
     ],
     [
-     26,
-     1859
+     23,
+     1858
     ],
     [
-     26,
+     23,
      1877
     ],
     [
-     26,
+     23,
      1896
     ],
     [
-     26,
-     1915
+     23,
+     1914
     ],
     [
-     26,
-     1934
+     23,
+     1932
     ],
     [
-     26,
-     1952
+     23,
+     1953
     ],
     [
-     26,
-     1985
+     23,
+     1971
     ],
     [
-     26,
-     2005
+     23,
+     1989
     ],
     [
-     26,
-     2023
+     23,
+     2008
     ],
     [
-     26,
-     2042
+     23,
+     2045
     ],
     [
-     26,
-     2060
+     23,
+     2064
     ],
     [
-     26,
-     2080
+     23,
+     2082
     ],
     [
-     26,
-     2098
+     23,
+     2120
     ],
     [
-     26,
-     2116
+     23,
+     2138
     ],
     [
-     26,
-     2135
+     23,
+     2157
     ],
     [
-     26,
-     2153
+     23,
+     2175
     ],
     [
-     26,
-     2172
+     23,
+     2194
     ],
     [
-     26,
-     2191
+     23,
+     2212
     ],
     [
-     26,
-     2209
+     23,
+     2230
     ],
     [
-     26,
-     2227
+     23,
+     2249
     ],
     [
-     26,
-     2246
+     23,
+     2267
     ],
     [
-     26,
-     2264
+     23,
+     2286
     ],
     [
-     26,
-     2284
-    ],
-    [
-     26,
-     2303
-    ],
-    [
-     26,
-     2321
-    ],
-    [
-     26,
-     2340
+     23,
+     2304
     ]
    ],
    "prompt_n": 71,
    "cache_n": 1018,
-   "prompt_ms": 136.838,
-   "predicted_n": 120,
-   "predicted_ms": 2214.946,
-   "predicted_per_second": 53.72591476270754,
-   "chunks": 119,
-   "output": "{\"read\":\"compliment\",\"inner\":\"My heart is beating a little faster now.\",\"music\":\"romantic\",\"fx\":\"blush_glow\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"none\",\"say\":\"E-eh?! You... you noticed?\"},{\"feeling\":\"joy\",\"intensity\":1,\"cue\":\"giggle\",\"say\":\"Thank you, Haru. That makes me very happy.\"}],\"mood\":{\"affection\":3,\"stress\":0,\"trust\":1},\"memory\":\"He noticed my appearance today\",\"action\":\"none\"}",
-   "pre_say_text": "{\"read\":\"compliment\",\"inner\":\"My heart is beating a little faster now.\",\"music\":\"romantic\",\"fx\":\"blush_glow\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"none\",\"say\":\""
+   "prompt_ms": 115.233,
+   "predicted_n": 118,
+   "predicted_ms": 2201.377,
+   "predicted_per_second": 53.14855201994025,
+   "chunks": 117,
+   "output": "{\"read\":\"compliment\",\"inner\":\"He's looking at me... my heart is beating fast.\",\"music\":\"keep\",\"fx\":\"blush_glow\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"none\",\"say\":\"Y-yes, I... I think so.\"},{\"feeling\":\"joy\",\"intensity\":1,\"cue\":\"giggle\",\"say\":\"Well, you're the only one who noticed. Thank you!\"}],\"mood\":{\"affection\":0,\"stress\":0,\"trust\":0},\"memory\":\"\",\"action\":\"none\"}",
+   "pre_say_text": "{\"read\":\"compliment\",\"inner\":\"He's looking at me... my heart is beating fast.\",\"music\":\"keep\",\"fx\":\"blush_glow\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"none\",\"say\":\"",
+   "sampling": {
+    "temperature": 0.75,
+    "top_p": 0.9,
+    "repeat_penalty": 1.1
+   },
+   "warnings": []
   },
   {
    "turn": 3,
    "ok": true,
-   "first_byte_ms": 12,
-   "first_token_ms": 126,
-   "first_say_ms": 1095,
-   "visible_ms": 1243,
-   "total_ms": 2424,
-   "pre_say_tokens": 52,
-   "pre_say_ms": 969,
-   "pre_say_ms_per_token": 18.63,
-   "holdback_ms": 148,
-   "visible_chars": 36,
+   "first_byte_ms": 15,
+   "first_token_ms": 131,
+   "first_say_ms": 977,
+   "visible_ms": 1145,
+   "total_ms": 2226,
+   "pre_say_tokens": 46,
+   "pre_say_ms": 846,
+   "pre_say_ms_per_token": 18.39,
+   "holdback_ms": 168,
+   "visible_chars": 43,
+   "visible_raw_ms": 1108,
    "say_curve": [
     [
      0,
-     1077
+     958
     ],
     [
      2,
-     1095
+     977
     ],
     [
      5,
-     1114
+     996
     ],
     [
-     10,
-     1132
+     7,
+     1014
     ],
     [
-     11,
-     1151
+     15,
+     1032
     ],
     [
-     16,
-     1170
+     19,
+     1051
     ],
     [
-     18,
-     1188
+     26,
+     1070
     ],
     [
-     24,
-     1206
-    ],
-    [
-     32,
-     1225
+     31,
+     1089
     ],
     [
      36,
-     1243
+     1108
     ],
     [
      42,
-     1262
+     1126
     ],
     [
-     46,
-     1280
+     43,
+     1145
     ],
     [
-     52,
-     1298
+     43,
+     1164
     ],
     [
-     53,
-     1317
+     43,
+     1182
     ],
     [
-     53,
-     1335
+     43,
+     1215
     ],
     [
-     53,
-     1354
+     43,
+     1233
     ],
     [
-     53,
-     1372
+     43,
+     1252
     ],
     [
-     53,
-     1390
+     43,
+     1270
     ],
     [
-     53,
-     1409
+     43,
+     1288
     ],
     [
-     53,
-     1427
+     43,
+     1306
     ],
     [
-     53,
-     1445
+     43,
+     1325
     ],
     [
-     53,
-     1463
+     43,
+     1343
     ],
     [
-     53,
-     1482
+     43,
+     1363
     ],
     [
-     53,
-     1501
+     43,
+     1381
     ],
     [
-     53,
-     1519
+     43,
+     1400
     ],
     [
-     53,
-     1537
+     43,
+     1418
     ],
     [
-     53,
-     1556
+     43,
+     1436
     ],
     [
-     53,
-     1574
+     43,
+     1454
     ],
     [
-     53,
-     1593
+     43,
+     1472
     ],
     [
-     53,
-     1611
+     43,
+     1491
     ],
     [
-     53,
-     1629
+     43,
+     1509
     ],
     [
-     53,
-     1650
+     43,
+     1527
     ],
     [
-     53,
-     1668
+     43,
+     1546
     ],
     [
-     53,
-     1686
+     43,
+     1564
     ],
     [
-     53,
-     1705
+     43,
+     1582
     ],
     [
-     53,
-     1723
+     43,
+     1601
     ],
     [
-     53,
-     1742
+     43,
+     1619
     ],
     [
-     53,
-     1760
+     43,
+     1638
     ],
     [
-     53,
-     1778
+     43,
+     1656
     ],
     [
-     53,
-     1797
+     43,
+     1674
     ],
     [
-     53,
-     1815
+     43,
+     1692
     ],
     [
-     53,
-     1834
+     43,
+     1711
     ],
     [
-     53,
-     1852
+     43,
+     1730
     ],
     [
-     53,
-     1870
+     43,
+     1748
     ],
     [
-     53,
-     1889
+     43,
+     1766
     ],
     [
-     53,
-     1907
+     43,
+     1784
     ],
     [
-     53,
-     1926
+     43,
+     1803
     ],
     [
-     53,
-     1944
+     43,
+     1821
     ],
     [
-     53,
-     1965
+     43,
+     1839
     ],
     [
-     53,
-     1983
+     43,
+     1858
     ],
     [
-     53,
-     2002
+     43,
+     1876
     ],
     [
-     53,
-     2020
+     43,
+     1895
     ],
     [
-     53,
-     2039
+     43,
+     1913
     ],
     [
-     53,
+     43,
+     1931
+    ],
+    [
+     43,
+     1967
+    ],
+    [
+     43,
+     1985
+    ],
+    [
+     43,
+     2003
+    ],
+    [
+     43,
+     2021
+    ],
+    [
+     43,
+     2040
+    ],
+    [
+     43,
      2058
     ],
     [
-     53,
-     2076
+     43,
+     2077
     ],
     [
-     53,
-     2094
+     43,
+     2095
     ],
     [
-     53,
+     43,
      2113
     ],
     [
-     53,
+     43,
      2132
     ],
     [
-     53,
-     2166
+     43,
+     2150
     ],
     [
-     53,
-     2184
+     43,
+     2170
     ],
     [
-     53,
-     2203
+     43,
+     2188
     ],
     [
-     53,
-     2221
-    ],
-    [
-     53,
-     2240
-    ],
-    [
-     53,
-     2258
-    ],
-    [
-     53,
-     2276
-    ],
-    [
-     53,
-     2296
-    ],
-    [
-     53,
-     2314
-    ],
-    [
-     53,
-     2332
-    ],
-    [
-     53,
-     2351
-    ],
-    [
-     53,
-     2369
-    ],
-    [
-     53,
-     2388
-    ],
-    [
-     53,
-     2406
+     43,
+     2207
     ]
    ],
    "prompt_n": 69,
    "cache_n": 1067,
-   "prompt_ms": 121.299,
-   "predicted_n": 124,
-   "predicted_ms": 2297.853,
-   "predicted_per_second": 53.5282283070327,
-   "chunks": 123,
-   "output": "{\"read\":\"small_talk\",\"inner\":\"He wants my secret? I'll tell him the music box thing.\",\"music\":\"calm\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"hum\",\"say\":\"Um... well, once a storm knocked out power for hours.\"},{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"giggle\",\"say\":\"I spent three days just listening to the music box in the corner.\"}],\"mood\":{\"affection\":0,\"stress\":-1,\"trust\":0},\"memory\":\"\",\"action\":\"none\"}",
-   "pre_say_text": "{\"read\":\"small_talk\",\"inner\":\"He wants my secret? I'll tell him the music box thing.\",\"music\":\"calm\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"hum\",\"say\":\""
+   "prompt_ms": 124.492,
+   "predicted_n": 113,
+   "predicted_ms": 2094.146,
+   "predicted_per_second": 53.48242195147807,
+   "chunks": 112,
+   "output": "{\"read\":\"question\",\"inner\":\"He wants my secret? Maybe something silly.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"giggle\",\"say\":\"Um... I collect old novels with torn pages.\"},{\"feeling\":\"warmth\",\"intensity\":1,\"cue\":\"none\",\"say\":\"And sometimes the music box in my drawer plays when it rains outside.\"}],\"mood\":{\"affection\":0,\"stress\":0,\"trust\":0},\"memory\":\"\",\"action\":\"none\"}",
+   "pre_say_text": "{\"read\":\"question\",\"inner\":\"He wants my secret? Maybe something silly.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"giggle\",\"say\":\"",
+   "sampling": {
+    "temperature": 0.75,
+    "top_p": 0.9,
+    "repeat_penalty": 1.1
+   },
+   "warnings": []
   },
   {
    "turn": 4,
    "ok": true,
-   "first_byte_ms": 15,
-   "first_token_ms": 137,
-   "first_say_ms": 986,
-   "visible_ms": 1171,
-   "total_ms": 2337,
-   "pre_say_tokens": 46,
-   "pre_say_ms": 849,
-   "pre_say_ms_per_token": 18.46,
+   "first_byte_ms": 16,
+   "first_token_ms": 122,
+   "first_say_ms": 947,
+   "visible_ms": 1132,
+   "total_ms": 2270,
+   "pre_say_tokens": 45,
+   "pre_say_ms": 825,
+   "pre_say_ms_per_token": 18.33,
    "holdback_ms": 185,
-   "visible_chars": 36,
+   "visible_chars": 38,
+   "visible_raw_ms": 1114,
    "say_curve": [
     [
      0,
-     968
+     929
     ],
     [
      1,
-     986
-    ],
-    [
-     3,
-     1005
+     947
     ],
     [
      6,
-     1023
+     966
     ],
     [
-     7,
-     1041
+     8,
+     985
     ],
     [
-     12,
-     1060
+     11,
+     1003
     ],
     [
-     14,
-     1079
+     18,
+     1022
     ],
     [
-     21,
-     1097
+     23,
+     1040
     ],
     [
      26,
-     1115
+     1058
     ],
     [
-     29,
-     1134
+     30,
+     1076
     ],
     [
      33,
-     1153
+     1095
     ],
     [
-     36,
-     1171
+     37,
+     1114
     ],
     [
-     40,
-     1189
+     38,
+     1132
     ],
     [
-     41,
-     1208
+     38,
+     1150
     ],
     [
-     41,
-     1226
+     38,
+     1169
     ],
     [
-     41,
-     1244
+     38,
+     1203
     ],
     [
-     41,
-     1263
+     38,
+     1221
     ],
     [
-     41,
-     1281
+     38,
+     1240
     ],
     [
-     41,
-     1300
+     38,
+     1258
     ],
     [
-     41,
-     1318
+     38,
+     1277
     ],
     [
-     41,
-     1337
+     38,
+     1295
     ],
     [
-     41,
-     1355
+     38,
+     1313
     ],
     [
-     41,
-     1374
+     38,
+     1332
     ],
     [
-     41,
-     1392
+     38,
+     1350
     ],
     [
-     41,
-     1411
+     38,
+     1369
     ],
     [
-     41,
-     1429
+     38,
+     1387
     ],
     [
-     41,
-     1447
+     38,
+     1405
     ],
     [
-     41,
-     1465
+     38,
+     1444
     ],
     [
-     41,
-     1484
+     38,
+     1463
     ],
     [
-     41,
-     1502
+     38,
+     1481
     ],
     [
-     41,
-     1520
+     38,
+     1499
     ],
     [
-     41,
-     1540
+     38,
+     1518
     ],
     [
-     41,
-     1558
+     38,
+     1536
     ],
     [
-     41,
-     1576
+     38,
+     1554
     ],
     [
-     41,
-     1595
+     38,
+     1573
     ],
     [
-     41,
-     1613
+     38,
+     1591
     ],
     [
-     41,
-     1631
+     38,
+     1609
     ],
     [
-     41,
-     1650
+     38,
+     1627
     ],
     [
-     41,
-     1668
+     38,
+     1647
     ],
     [
-     41,
-     1687
+     38,
+     1665
     ],
     [
-     41,
-     1706
+     38,
+     1683
     ],
     [
-     41,
-     1724
+     38,
+     1701
     ],
     [
-     41,
-     1743
+     38,
+     1720
     ],
     [
-     41,
-     1761
+     38,
+     1738
     ],
     [
-     41,
-     1779
+     38,
+     1756
     ],
     [
-     41,
-     1798
+     38,
+     1774
     ],
     [
-     41,
-     1818
+     38,
+     1793
     ],
     [
-     41,
-     1837
+     38,
+     1811
     ],
     [
-     41,
-     1856
+     38,
+     1832
     ],
     [
-     41,
-     1874
+     38,
+     1850
     ],
     [
-     41,
-     1893
+     38,
+     1869
     ],
     [
-     41,
-     1911
+     38,
+     1888
     ],
     [
-     41,
-     1930
+     38,
+     1907
     ],
     [
-     41,
-     1949
+     38,
+     1925
     ],
     [
-     41,
-     1967
+     38,
+     1943
     ],
     [
-     41,
-     1985
+     38,
+     1961
     ],
     [
-     41,
-     2004
+     38,
+     1980
     ],
     [
-     41,
-     2024
+     38,
+     2013
     ],
     [
-     41,
-     2042
+     38,
+     2032
     ],
     [
-     41,
-     2077
+     38,
+     2050
     ],
     [
-     41,
-     2096
+     38,
+     2068
     ],
     [
-     41,
-     2115
+     38,
+     2086
     ],
     [
-     41,
-     2133
+     38,
+     2104
     ],
     [
-     41,
-     2152
+     38,
+     2123
     ],
     [
-     41,
-     2170
+     38,
+     2141
     ],
     [
-     41,
-     2189
+     38,
+     2159
     ],
     [
-     41,
-     2207
+     38,
+     2178
     ],
     [
-     41,
-     2226
+     38,
+     2196
     ],
     [
-     41,
-     2244
+     38,
+     2215
     ],
     [
-     41,
-     2263
+     38,
+     2233
     ],
     [
-     41,
-     2282
-    ],
-    [
-     41,
-     2300
-    ],
-    [
-     41,
-     2319
+     38,
+     2251
     ]
    ],
    "prompt_n": 76,
    "cache_n": 1114,
-   "prompt_ms": 130.821,
-   "predicted_n": 119,
-   "predicted_ms": 2199.84,
-   "predicted_per_second": 53.640264746527016,
-   "chunks": 118,
-   "output": "{\"read\":\"affection\",\"inner\":\"My heart skips a beat. So rare here.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"heartbeat\",\"say\":\"E-easy? That's really nice of you to say.\"},{\"feeling\":\"warmth\",\"intensity\":1,\"cue\":\"giggle\",\"say\":\"Maybe it is... because I like talking to you too, Haru.\"}],\"mood\":{\"affection\":3,\"stress\":-1,\"trust\":2},\"memory\":\"\",\"action\":\"none\"}",
-   "pre_say_text": "{\"read\":\"affection\",\"inner\":\"My heart skips a beat. So rare here.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"heartbeat\",\"say\":\""
+   "prompt_ms": 112.276,
+   "predicted_n": 115,
+   "predicted_ms": 2147.82,
+   "predicted_per_second": 53.07707349777914,
+   "chunks": 114,
+   "output": "{\"read\":\"affection\",\"inner\":\"He says our conversations are natural. Perfect.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"hum\",\"say\":\"T-that's... really nice of you to say.\"},{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"giggle\",\"say\":\"I'm glad we have easy moments like this together, Haru.\"}],\"mood\":{\"affection\":1,\"stress\":-1,\"trust\":0},\"memory\":\"\",\"action\":\"none\"}",
+   "pre_say_text": "{\"read\":\"affection\",\"inner\":\"He says our conversations are natural. Perfect.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"hum\",\"say\":\"",
+   "sampling": {
+    "temperature": 0.75,
+    "top_p": 0.9,
+    "repeat_penalty": 1.1
+   },
+   "warnings": []
   },
   {
    "turn": 5,
    "ok": true,
-   "first_byte_ms": 15,
-   "first_token_ms": 128,
-   "first_say_ms": 1019,
-   "visible_ms": 1131,
-   "total_ms": 2554,
-   "pre_say_tokens": 48,
-   "pre_say_ms": 891,
-   "pre_say_ms_per_token": 18.56,
-   "holdback_ms": 112,
-   "visible_chars": 37,
+   "first_byte_ms": 12,
+   "first_token_ms": 122,
+   "first_say_ms": 1082,
+   "visible_ms": 1249,
+   "total_ms": 2430,
+   "pre_say_tokens": 52,
+   "pre_say_ms": 960,
+   "pre_say_ms_per_token": 18.46,
+   "holdback_ms": 167,
+   "visible_chars": 5,
+   "visible_raw_ms": 1213,
    "say_curve": [
     [
      0,
-     1001
+     1064
     ],
     [
-     5,
-     1019
+     1,
+     1082
     ],
     [
-     10,
-     1038
+     7,
+     1101
     ],
     [
-     14,
-     1056
+     12,
+     1119
+    ],
+    [
+     17,
+     1138
     ],
     [
      21,
-     1075
+     1156
     ],
     [
-     26,
-     1093
+     28,
+     1175
     ],
     [
-     30,
-     1112
-    ],
-    [
-     37,
-     1131
+     32,
+     1194
     ],
     [
      38,
-     1149
+     1213
     ],
     [
-     41,
-     1168
+     42,
+     1231
     ],
     [
-     46,
-     1186
+     47,
+     1249
     ],
     [
-     53,
-     1205
+     52,
+     1268
     ],
     [
-     56,
-     1223
+     55,
+     1286
     ],
     [
-     62,
-     1242
+     63,
+     1305
     ],
     [
-     68,
-     1260
+     67,
+     1323
     ],
     [
      74,
-     1278
+     1342
     ],
     [
-     83,
-     1297
+     75,
+     1360
     ],
     [
-     87,
-     1316
+     75,
+     1379
     ],
     [
-     92,
-     1334
+     75,
+     1397
     ],
     [
-     93,
-     1352
+     75,
+     1415
     ],
     [
-     93,
-     1371
+     75,
+     1434
     ],
     [
-     93,
-     1390
+     75,
+     1452
     ],
     [
-     93,
-     1408
+     75,
+     1471
     ],
     [
-     93,
-     1426
+     75,
+     1489
     ],
     [
-     93,
-     1446
+     75,
+     1507
     ],
     [
-     93,
-     1464
+     75,
+     1525
     ],
     [
-     93,
-     1482
+     75,
+     1544
     ],
     [
-     93,
-     1501
+     75,
+     1562
     ],
     [
-     93,
-     1520
+     75,
+     1581
     ],
     [
-     93,
-     1539
+     75,
+     1599
     ],
     [
-     93,
-     1557
+     75,
+     1617
     ],
     [
-     93,
-     1576
+     75,
+     1635
     ],
     [
-     93,
-     1594
+     75,
+     1654
     ],
     [
-     93,
-     1613
+     75,
+     1672
     ],
     [
-     93,
-     1632
+     75,
+     1691
     ],
     [
-     93,
-     1650
+     75,
+     1709
     ],
     [
-     93,
-     1668
+     75,
+     1727
     ],
     [
-     93,
-     1687
+     75,
+     1746
     ],
     [
-     93,
-     1705
+     75,
+     1764
     ],
     [
-     93,
-     1723
+     75,
+     1783
     ],
     [
-     93,
-     1742
+     75,
+     1801
     ],
     [
-     93,
-     1760
+     75,
+     1819
     ],
     [
-     93,
-     1778
+     75,
+     1838
     ],
     [
-     93,
-     1797
+     75,
+     1856
     ],
     [
-     93,
-     1815
+     75,
+     1874
     ],
     [
-     93,
-     1833
+     75,
+     1893
     ],
     [
-     93,
-     1853
+     75,
+     1911
     ],
     [
-     93,
-     1871
+     75,
+     1929
     ],
     [
-     93,
-     1889
+     75,
+     1948
     ],
     [
-     93,
-     1908
+     75,
+     1966
     ],
     [
-     93,
-     1926
+     75,
+     1985
     ],
     [
-     93,
-     1945
+     75,
+     2003
     ],
     [
-     93,
-     1963
+     75,
+     2022
     ],
     [
-     93,
-     1981
+     75,
+     2040
     ],
     [
-     93,
-     2001
+     75,
+     2058
     ],
     [
-     93,
-     2019
+     75,
+     2077
     ],
     [
-     93,
-     2037
+     75,
+     2095
     ],
     [
-     93,
-     2056
+     75,
+     2113
     ],
     [
-     93,
-     2074
+     75,
+     2132
     ],
     [
-     93,
-     2093
+     75,
+     2172
     ],
     [
-     93,
-     2111
+     75,
+     2191
     ],
     [
-     93,
-     2147
+     75,
+     2209
     ],
     [
-     93,
-     2165
+     75,
+     2228
     ],
     [
-     93,
-     2183
+     75,
+     2246
     ],
     [
-     93,
-     2202
+     75,
+     2265
     ],
     [
-     93,
-     2220
+     75,
+     2283
     ],
     [
-     93,
-     2238
+     75,
+     2301
     ],
     [
-     93,
-     2257
+     75,
+     2319
     ],
     [
-     93,
-     2276
+     75,
+     2338
     ],
     [
-     93,
-     2294
+     75,
+     2356
     ],
     [
-     93,
-     2312
+     75,
+     2375
     ],
     [
-     93,
-     2331
+     75,
+     2393
     ],
     [
-     93,
-     2349
-    ],
-    [
-     93,
-     2368
-    ],
-    [
-     93,
-     2386
-    ],
-    [
-     93,
-     2406
-    ],
-    [
-     93,
-     2425
-    ],
-    [
-     93,
-     2444
-    ],
-    [
-     93,
-     2462
-    ],
-    [
-     93,
-     2480
-    ],
-    [
-     93,
-     2499
-    ],
-    [
-     93,
-     2518
-    ],
-    [
-     93,
-     2536
+     75,
+     2411
     ]
    ],
    "prompt_n": 69,
    "cache_n": 1168,
-   "prompt_ms": 121.312,
-   "predicted_n": 131,
-   "predicted_ms": 2426.707,
-   "predicted_per_second": 53.57053818198901,
-   "chunks": 130,
-   "output": "{\"read\":\"small_talk\",\"inner\":\"He wants a slow day with me. Perfect.\",\"music\":\"calm\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"hum\",\"say\":\"Maybe read old novels near the window? Or just listen to music boxes while watching the fish?\"},{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"none\",\"say\":\"If it rains, we could look out at the aquarium together...\"}],\"mood\":{\"affection\":2,\"stress\":0,\"trust\":0},\"memory\":\"wants a slow afternoon with me\",\"action\":\"none\"}",
-   "pre_say_text": "{\"read\":\"small_talk\",\"inner\":\"He wants a slow day with me. Perfect.\",\"music\":\"calm\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"hum\",\"say\":\""
+   "prompt_ms": 116.559,
+   "predicted_n": 125,
+   "predicted_ms": 2307.772,
+   "predicted_per_second": 53.73147780629976,
+   "chunks": 124,
+   "output": "{\"read\":\"question\",\"inner\":\"He wants us to stay. A bit too perfect for my taste... but warm.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"hum\",\"say\":\"I could just read old novels and watch the rain come in through the window.\"},{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"sigh\",\"say\":\"But... maybe we could listen to some music box tunes together?\"}],\"mood\":{\"affection\":1,\"stress\":0,\"trust\":0},\"memory\":\"\",\"action\":\"none\"}",
+   "pre_say_text": "{\"read\":\"question\",\"inner\":\"He wants us to stay. A bit too perfect for my taste... but warm.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"hum\",\"say\":\"",
+   "sampling": {
+    "temperature": 0.75,
+    "top_p": 0.9,
+    "repeat_penalty": 1.1
+   },
+   "warnings": []
   }
  ],
  "summary": {
   "first_byte_ms": {
    "n": 6,
    "min": 12,
-   "median": 15.0,
-   "p95": 30,
-   "max": 30
+   "median": 13.5,
+   "p95": 16,
+   "max": 16
   },
   "first_token_ms": {
    "n": 6,
-   "min": 126,
-   "median": 132.5,
-   "p95": 153,
-   "max": 153
+   "min": 64,
+   "median": 122.0,
+   "p95": 135,
+   "max": 135
   },
   "first_say_ms": {
    "n": 6,
-   "min": 972,
-   "median": 1018.5,
-   "p95": 1095,
-   "max": 1095
+   "min": 947,
+   "median": 999.5,
+   "p95": 1082,
+   "max": 1082
   },
   "visible_ms": {
    "n": 6,
-   "min": 1101,
-   "median": 1159.0,
-   "p95": 1243,
-   "max": 1243
+   "min": 1132,
+   "median": 1157.5,
+   "p95": 1249,
+   "max": 1249
+  },
+  "visible_raw_ms": {
+   "n": 6,
+   "min": 1100,
+   "median": 1133.0,
+   "p95": 1232,
+   "max": 1232
   },
   "total_ms": {
    "n": 6,
-   "min": 2188,
-   "median": 2362.5,
-   "p95": 2554,
-   "max": 2554
+   "min": 1763,
+   "median": 2296.0,
+   "p95": 2430,
+   "max": 2430
   },
   "pre_say_tokens": {
    "n": 6,
-   "min": 43,
+   "min": 45,
    "median": 48.0,
    "p95": 52,
    "max": 52
   },
   "prompt_n": {
    "n": 6,
-   "min": 39,
+   "min": 4,
    "median": 70.0,
    "p95": 83,
    "max": 83
   },
   "cache_n": {
    "n": 6,
-   "min": 947,
+   "min": 963,
    "median": 1042.5,
    "p95": 1168,
    "max": 1168
   },
   "prompt_ms": {
    "n": 6,
-   "min": 121.299,
-   "median": 127.17349999999999,
-   "p95": 144.629,
-   "max": 144.629
+   "min": 56.96,
+   "median": 115.896,
+   "p95": 131.554,
+   "max": 131.554
   },
   "predicted_n": {
    "n": 6,
-   "min": 109,
-   "median": 120.5,
-   "p95": 131,
-   "max": 131
+   "min": 92,
+   "median": 116.0,
+   "p95": 125,
+   "max": 125
   },
   "predicted_per_second": {
    "n": 6,
-   "min": 53.05537556573979,
-   "median": 53.58389217774031,
-   "p95": 53.72591476270754,
-   "max": 53.72591476270754
+   "min": 53.01279482083275,
+   "median": 53.31548698570916,
+   "p95": 53.73147780629976,
+   "max": 53.73147780629976
   },
   "pre_say_ms": {
    "n": 6,
-   "min": 819,
-   "median": 890.5,
-   "p95": 969,
-   "max": 969
+   "min": 825,
+   "median": 887.0,
+   "p95": 960,
+   "max": 960
   },
   "pre_say_ms_per_token": {
    "n": 6,
-   "min": 18.45,
-   "median": 18.549999999999997,
-   "p95": 19.05,
-   "max": 19.05
+   "min": 18.33,
+   "median": 18.47,
+   "p95": 18.49,
+   "max": 18.49
   },
   "holdback_ms": {
    "n": 6,
-   "min": 112,
-   "median": 138.5,
+   "min": 148,
+   "median": 168.0,
    "p95": 185,
    "max": 185
   }

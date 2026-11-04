@@ -110,12 +110,25 @@ python3 tools/llm/latency_breakdown.py --session 1 --turns 0:6 \
 
 It reads the transcript logger's records (`production/playtests/*/transcripts`)
 and re-sends each turn's `prompt` + `schema`, timestamping the HTTP round trip,
-the first token, the first `say` character, the first character the safety
-filter lets through (its 34-char holdback, measured from
-`game/data/safety/filter_lists.json`), and the end of the turn, plus the
-server's own `timings`. `--order beats_first|say_first` replays a *reordered*
-schema (measurement only — the shipped order is docs/02 §3), `--no-cache`
-forces a cold KV. The numbers land in `production/handoffs/media/P2.26/`.
+the first token, the first `say` character, the first character `Safety` lets
+through, and the end of the turn, plus the server's own `timings`. The
+"visible" landmark models `Safety._drain`: the filter holds 34 characters of the
+**separator-free compact view** (`SafetyText.compact`), so a phrase prefix padded
+with spaces or punctuation buys no emission budget and the first character can
+appear after more raw characters than the holdback. The table prints that
+optimistic raw-char landmark as `R` beside it; the holdback is derived from
+`game/data/safety/filter_lists.json` (longest phrase + 1) and pinned by a test.
+The `say` body is decoded as the SSE deltas arrive, and an escaped quote inside
+it is content, not the closing quote.
+
+`--order beats_first|say_first|music_fx_beats_first|alphabetical` replays a
+*reordered* schema (measurement only — the shipped order is docs/02 §3), and
+`--system-order` also rewrites the ordering sentence **and** the field list
+under it. Both are CRLF in `rules.md`, so the needle accepts `\r?\n`; a
+bare-`\n` needle patched nothing on all 39 recorded prompts. `--no-cache` forces
+a cold KV. Every artifact records the run config it was produced with (`order`,
+`system_order`, `cache_prompt`, the sampling sent per row), so it can be
+reproduced from itself.
 
 The transcript's stored `schema` copy is alphabetical (`JSON.stringify`'s
 default `sort_keys=true` in `TranscriptLogger.gd:300`), so the harness restores

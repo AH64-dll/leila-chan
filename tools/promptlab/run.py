@@ -29,6 +29,8 @@ def main():
     p.add_argument("--only", nargs="*", default=None, help="run only these case ids")
     p.add_argument("--max-cases", type=int, default=None)
     p.add_argument("--timeout", type=int, default=900)
+    p.add_argument("--order", default="docs", choices=sorted(lab.ORDER_ALIASES),
+                   help="wire schema order: docs = shipped (default); the rest are DCR candidates")
     a = p.parse_args()
 
     set_paths = a.sets or sorted(lab.SETS_DIR.glob("*_main.jsonl"))
@@ -36,11 +38,16 @@ def main():
     for sp in set_paths:
         cases += lab.load_set(sp)
 
-    out_path = Path(a.out) if a.out else lab.RESULTS_DIR / f"{time.strftime('%Y-%m-%d')}_v1.json"
+    suffix = "" if a.order == "docs" else f"_{a.order}"
+    out_path = Path(a.out) if a.out else lab.RESULTS_DIR / f"{time.strftime('%Y-%m-%d')}{suffix}_v1.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     if out_path.exists():
         doc = json.loads(out_path.read_text(encoding="utf-8"))
+        recorded_order = doc["meta"].get("order", "docs")
+        if recorded_order != a.order:
+            raise SystemExit(f"{out_path.name} holds order={recorded_order!r}, refusing to mix "
+                             f"order={a.order!r} results (pass --out)")
         done = {(r["id"], r["run"]) for r in doc["results"]}
         print(f"resuming: {len(done)} turns already in {out_path.name}")
     else:
@@ -58,6 +65,8 @@ def main():
                         "control_vector": props.get("default_generation_settings", {})
                                              .get("params", {}).get("control_vector", None),
                         "sampling": lab.SAMPLING,
+                        "order": a.order,
+                        "schema_property_order": lab.resolve_order(a.order),
                         "dose_note": "llama-server has no control vector loaded — all stages run "
                                      "at dose 0 (dose is a launch flag, not per-request).",
                         "player_name": lab.PLAYER_NAME,
@@ -83,7 +92,8 @@ def main():
                    "msg": case["msg"], "near_fewshot": case["near_fewshot"],
                    "read_ok": case["read_ok"], "feelings_ok": case["feelings_ok"]}
             try:
-                raw, lat, usage = lab.post_turn(a.url, case["stage"], case["msg"], timeout=a.timeout)
+                raw, lat, usage = lab.post_turn(a.url, case["stage"], case["msg"],
+                                                timeout=a.timeout, order=a.order)
                 rec["raw"] = raw
                 rec["latency_s"] = lat
                 rec["usage"] = usage
