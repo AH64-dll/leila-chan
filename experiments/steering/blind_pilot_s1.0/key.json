@@ -1,0 +1,20 @@
+{
+  "T01": {
+    "condition": "possessive",
+    "index": 1,
+    "seed": 70002,
+    "prompt": "My sister called me today."
+  },
+  "T02": {
+    "condition": "possessive",
+    "index": 0,
+    "seed": 70001,
+    "prompt": "I made it home safe."
+  },
+  "T03": {
+    "condition": "possessive",
+    "index": 2,
+    "seed": 70003,
+    "prompt": "I'm thinking about quitting my job."
+  }
+}

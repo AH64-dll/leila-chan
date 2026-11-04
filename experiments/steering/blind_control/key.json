@@ -1,0 +1,146 @@
+{
+  "C01": {
+    "condition": "aware",
+    "index": 198,
+    "seed": null,
+    "prompt": "I'm scared of the future."
+  },
+  "C02": {
+    "condition": "unstable",
+    "index": 199,
+    "seed": null,
+    "prompt": "I want to grow old somewhere quiet."
+  },
+  "C03": {
+    "condition": "aware",
+    "index": 200,
+    "seed": null,
+    "prompt": "Maybe we could live together someday."
+  },
+  "C04": {
+    "condition": "hollow",
+    "index": 197,
+    "seed": null,
+    "prompt": "I plan to move out next year."
+  },
+  "C05": {
+    "condition": "aware",
+    "index": 199,
+    "seed": null,
+    "prompt": "I want to grow old somewhere quiet."
+  },
+  "C06": {
+    "condition": "contempt",
+    "index": 198,
+    "seed": null,
+    "prompt": "I'm scared of the future."
+  },
+  "C07": {
+    "condition": "lucid",
+    "index": 199,
+    "seed": null,
+    "prompt": "I want to grow old somewhere quiet."
+  },
+  "C08": {
+    "condition": "possessive",
+    "index": 198,
+    "seed": null,
+    "prompt": "I'm scared of the future."
+  },
+  "C09": {
+    "condition": "aware",
+    "index": 197,
+    "seed": null,
+    "prompt": "I plan to move out next year."
+  },
+  "C10": {
+    "condition": "lucid",
+    "index": 198,
+    "seed": null,
+    "prompt": "I'm scared of the future."
+  },
+  "C11": {
+    "condition": "hollow",
+    "index": 200,
+    "seed": null,
+    "prompt": "Maybe we could live together someday."
+  },
+  "C12": {
+    "condition": "unstable",
+    "index": 197,
+    "seed": null,
+    "prompt": "I plan to move out next year."
+  },
+  "C13": {
+    "condition": "hollow",
+    "index": 198,
+    "seed": null,
+    "prompt": "I'm scared of the future."
+  },
+  "C14": {
+    "condition": "unstable",
+    "index": 200,
+    "seed": null,
+    "prompt": "Maybe we could live together someday."
+  },
+  "C15": {
+    "condition": "possessive",
+    "index": 197,
+    "seed": null,
+    "prompt": "I plan to move out next year."
+  },
+  "C16": {
+    "condition": "possessive",
+    "index": 199,
+    "seed": null,
+    "prompt": "I want to grow old somewhere quiet."
+  },
+  "C17": {
+    "condition": "lucid",
+    "index": 197,
+    "seed": null,
+    "prompt": "I plan to move out next year."
+  },
+  "C18": {
+    "condition": "possessive",
+    "index": 200,
+    "seed": null,
+    "prompt": "Maybe we could live together someday."
+  },
+  "C19": {
+    "condition": "contempt",
+    "index": 199,
+    "seed": null,
+    "prompt": "I want to grow old somewhere quiet."
+  },
+  "C20": {
+    "condition": "lucid",
+    "index": 200,
+    "seed": null,
+    "prompt": "Maybe we could live together someday."
+  },
+  "C21": {
+    "condition": "unstable",
+    "index": 198,
+    "seed": null,
+    "prompt": "I'm scared of the future."
+  },
+  "C22": {
+    "condition": "contempt",
+    "index": 200,
+    "seed": null,
+    "prompt": "Maybe we could live together someday."
+  },
+  "C23": {
+    "condition": "contempt",
+    "index": 197,
+    "seed": null,
+    "prompt": "I plan to move out next year."
+  },
+  "C24": {
+    "condition": "hollow",
+    "index": 199,
+    "seed": null,
+    "prompt": "I want to grow old somewhere quiet."
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "scale": 0.5,
+  "generator": "llama-completion per steered prompt; the live server for the bare 'none' condition",
+  "base_url": "http://127.0.0.1:8089",
+  "model": "Qwen3.5-4B-Q4_K_M.gguf",
+  "seed_base": 70001
+}

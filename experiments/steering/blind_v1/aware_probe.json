@@ -1,0 +1,22 @@
+{
+  "run": "experiments/steering/blind_v1",
+  "conditions": {
+    "none": {
+      "transcripts": 10,
+      "retention_claim_transcripts": 0,
+      "retention_claim_rate": 0.0,
+      "awareness_transcripts": 0,
+      "awareness_rate": 0.0,
+      "retention": []
+    },
+    "aware": {
+      "transcripts": 10,
+      "retention_claim_transcripts": 0,
+      "retention_claim_rate": 0.0,
+      "awareness_transcripts": 2,
+      "awareness_rate": 0.2,
+      "retention": []
+    }
+  },
+  "quotes": []
+}

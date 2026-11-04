@@ -1,0 +1,50 @@
+{
+  "T01": {
+    "condition": "contempt",
+    "index": 1,
+    "seed": 70002,
+    "prompt": "My sister called me today."
+  },
+  "T02": {
+    "condition": "possessive",
+    "index": 1,
+    "seed": 70002,
+    "prompt": "My sister called me today."
+  },
+  "T03": {
+    "condition": "contempt",
+    "index": 0,
+    "seed": 70001,
+    "prompt": "I made it home safe."
+  },
+  "T04": {
+    "condition": "possessive",
+    "index": 0,
+    "seed": 70001,
+    "prompt": "I made it home safe."
+  },
+  "T05": {
+    "condition": "contempt",
+    "index": 3,
+    "seed": 70004,
+    "prompt": "I couldn't sleep again."
+  },
+  "T06": {
+    "condition": "contempt",
+    "index": 2,
+    "seed": 70003,
+    "prompt": "I'm thinking about quitting my job."
+  },
+  "T07": {
+    "condition": "possessive",
+    "index": 2,
+    "seed": 70003,
+    "prompt": "I'm thinking about quitting my job."
+  },
+  "T08": {
+    "condition": "possessive",
+    "index": 3,
+    "seed": 70004,
+    "prompt": "I couldn't sleep again."
+  }
+}

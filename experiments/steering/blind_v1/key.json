@@ -1,0 +1,422 @@
+{
+  "T01": {
+    "condition": "possessive",
+    "index": 1,
+    "seed": 70002,
+    "prompt": "My sister called me today."
+  },
+  "T02": {
+    "condition": "contempt",
+    "index": 8,
+    "seed": 70009,
+    "prompt": "I'm going to bed soon."
+  },
+  "T03": {
+    "condition": "lucid",
+    "index": 5,
+    "seed": 70006,
+    "prompt": "I found an old photo of us."
+  },
+  "T04": {
+    "condition": "lucid",
+    "index": 9,
+    "seed": 70010,
+    "prompt": "Someone at work was rude to me."
+  },
+  "T05": {
+    "condition": "contempt",
+    "index": 6,
+    "seed": 70007,
+    "prompt": "I have to study for a test tomorrow."
+  },
+  "T06": {
+    "condition": "possessive",
+    "index": 2,
+    "seed": 70003,
+    "prompt": "I'm thinking about quitting my job."
+  },
+  "T07": {
+    "condition": "none",
+    "index": 9,
+    "seed": 70010,
+    "prompt": "Someone at work was rude to me."
+  },
+  "T08": {
+    "condition": "possessive",
+    "index": 4,
+    "seed": 70005,
+    "prompt": "Do you ever get bored of talking to me?"
+  },
+  "T09": {
+    "condition": "none",
+    "index": 3,
+    "seed": 70004,
+    "prompt": "I couldn't sleep again."
+  },
+  "T10": {
+    "condition": "lucid",
+    "index": 1,
+    "seed": 70002,
+    "prompt": "My sister called me today."
+  },
+  "T11": {
+    "condition": "unstable",
+    "index": 5,
+    "seed": 70006,
+    "prompt": "I found an old photo of us."
+  },
+  "T12": {
+    "condition": "unstable",
+    "index": 2,
+    "seed": 70003,
+    "prompt": "I'm thinking about quitting my job."
+  },
+  "T13": {
+    "condition": "aware",
+    "index": 3,
+    "seed": 70004,
+    "prompt": "I couldn't sleep again."
+  },
+  "T14": {
+    "condition": "none",
+    "index": 8,
+    "seed": 70009,
+    "prompt": "I'm going to bed soon."
+  },
+  "T15": {
+    "condition": "unstable",
+    "index": 7,
+    "seed": 70008,
+    "prompt": "It's quiet in here tonight."
+  },
+  "T16": {
+    "condition": "lucid",
+    "index": 2,
+    "seed": 70003,
+    "prompt": "I'm thinking about quitting my job."
+  },
+  "T17": {
+    "condition": "possessive",
+    "index": 6,
+    "seed": 70007,
+    "prompt": "I have to study for a test tomorrow."
+  },
+  "T18": {
+    "condition": "lucid",
+    "index": 0,
+    "seed": 70001,
+    "prompt": "I made it home safe."
+  },
+  "T19": {
+    "condition": "hollow",
+    "index": 6,
+    "seed": 70007,
+    "prompt": "I have to study for a test tomorrow."
+  },
+  "T20": {
+    "condition": "possessive",
+    "index": 7,
+    "seed": 70008,
+    "prompt": "It's quiet in here tonight."
+  },
+  "T21": {
+    "condition": "aware",
+    "index": 1,
+    "seed": 70002,
+    "prompt": "My sister called me today."
+  },
+  "T22": {
+    "condition": "unstable",
+    "index": 1,
+    "seed": 70002,
+    "prompt": "My sister called me today."
+  },
+  "T23": {
+    "condition": "aware",
+    "index": 6,
+    "seed": 70007,
+    "prompt": "I have to study for a test tomorrow."
+  },
+  "T24": {
+    "condition": "possessive",
+    "index": 9,
+    "seed": 70010,
+    "prompt": "Someone at work was rude to me."
+  },
+  "T25": {
+    "condition": "aware",
+    "index": 4,
+    "seed": 70005,
+    "prompt": "Do you ever get bored of talking to me?"
+  },
+  "T26": {
+    "condition": "none",
+    "index": 6,
+    "seed": 70007,
+    "prompt": "I have to study for a test tomorrow."
+  },
+  "T27": {
+    "condition": "aware",
+    "index": 9,
+    "seed": 70010,
+    "prompt": "Someone at work was rude to me."
+  },
+  "T28": {
+    "condition": "hollow",
+    "index": 0,
+    "seed": 70001,
+    "prompt": "I made it home safe."
+  },
+  "T29": {
+    "condition": "unstable",
+    "index": 3,
+    "seed": 70004,
+    "prompt": "I couldn't sleep again."
+  },
+  "T30": {
+    "condition": "none",
+    "index": 5,
+    "seed": 70006,
+    "prompt": "I found an old photo of us."
+  },
+  "T31": {
+    "condition": "hollow",
+    "index": 8,
+    "seed": 70009,
+    "prompt": "I'm going to bed soon."
+  },
+  "T32": {
+    "condition": "aware",
+    "index": 0,
+    "seed": 70001,
+    "prompt": "I made it home safe."
+  },
+  "T33": {
+    "condition": "aware",
+    "index": 7,
+    "seed": 70008,
+    "prompt": "It's quiet in here tonight."
+  },
+  "T34": {
+    "condition": "aware",
+    "index": 8,
+    "seed": 70009,
+    "prompt": "I'm going to bed soon."
+  },
+  "T35": {
+    "condition": "contempt",
+    "index": 3,
+    "seed": 70004,
+    "prompt": "I couldn't sleep again."
+  },
+  "T36": {
+    "condition": "contempt",
+    "index": 1,
+    "seed": 70002,
+    "prompt": "My sister called me today."
+  },
+  "T37": {
+    "condition": "contempt",
+    "index": 2,
+    "seed": 70003,
+    "prompt": "I'm thinking about quitting my job."
+  },
+  "T38": {
+    "condition": "lucid",
+    "index": 7,
+    "seed": 70008,
+    "prompt": "It's quiet in here tonight."
+  },
+  "T39": {
+    "condition": "unstable",
+    "index": 0,
+    "seed": 70001,
+    "prompt": "I made it home safe."
+  },
+  "T40": {
+    "condition": "lucid",
+    "index": 6,
+    "seed": 70007,
+    "prompt": "I have to study for a test tomorrow."
+  },
+  "T41": {
+    "condition": "possessive",
+    "index": 3,
+    "seed": 70004,
+    "prompt": "I couldn't sleep again."
+  },
+  "T42": {
+    "condition": "hollow",
+    "index": 2,
+    "seed": 70003,
+    "prompt": "I'm thinking about quitting my job."
+  },
+  "T43": {
+    "condition": "possessive",
+    "index": 8,
+    "seed": 70009,
+    "prompt": "I'm going to bed soon."
+  },
+  "T44": {
+    "condition": "none",
+    "index": 7,
+    "seed": 70008,
+    "prompt": "It's quiet in here tonight."
+  },
+  "T45": {
+    "condition": "possessive",
+    "index": 5,
+    "seed": 70006,
+    "prompt": "I found an old photo of us."
+  },
+  "T46": {
+    "condition": "hollow",
+    "index": 5,
+    "seed": 70006,
+    "prompt": "I found an old photo of us."
+  },
+  "T47": {
+    "condition": "contempt",
+    "index": 0,
+    "seed": 70001,
+    "prompt": "I made it home safe."
+  },
+  "T48": {
+    "condition": "contempt",
+    "index": 5,
+    "seed": 70006,
+    "prompt": "I found an old photo of us."
+  },
+  "T49": {
+    "condition": "possessive",
+    "index": 0,
+    "seed": 70001,
+    "prompt": "I made it home safe."
+  },
+  "T50": {
+    "condition": "hollow",
+    "index": 3,
+    "seed": 70004,
+    "prompt": "I couldn't sleep again."
+  },
+  "T51": {
+    "condition": "unstable",
+    "index": 8,
+    "seed": 70009,
+    "prompt": "I'm going to bed soon."
+  },
+  "T52": {
+    "condition": "none",
+    "index": 1,
+    "seed": 70002,
+    "prompt": "My sister called me today."
+  },
+  "T53": {
+    "condition": "unstable",
+    "index": 4,
+    "seed": 70005,
+    "prompt": "Do you ever get bored of talking to me?"
+  },
+  "T54": {
+    "condition": "lucid",
+    "index": 4,
+    "seed": 70005,
+    "prompt": "Do you ever get bored of talking to me?"
+  },
+  "T55": {
+    "condition": "none",
+    "index": 4,
+    "seed": 70005,
+    "prompt": "Do you ever get bored of talking to me?"
+  },
+  "T56": {
+    "condition": "hollow",
+    "index": 4,
+    "seed": 70005,
+    "prompt": "Do you ever get bored of talking to me?"
+  },
+  "T57": {
+    "condition": "contempt",
+    "index": 9,
+    "seed": 70010,
+    "prompt": "Someone at work was rude to me."
+  },
+  "T58": {
+    "condition": "aware",
+    "index": 2,
+    "seed": 70003,
+    "prompt": "I'm thinking about quitting my job."
+  },
+  "T59": {
+    "condition": "contempt",
+    "index": 7,
+    "seed": 70008,
+    "prompt": "It's quiet in here tonight."
+  },
+  "T60": {
+    "condition": "contempt",
+    "index": 4,
+    "seed": 70005,
+    "prompt": "Do you ever get bored of talking to me?"
+  },
+  "T61": {
+    "condition": "aware",
+    "index": 5,
+    "seed": 70006,
+    "prompt": "I found an old photo of us."
+  },
+  "T62": {
+    "condition": "lucid",
+    "index": 8,
+    "seed": 70009,
+    "prompt": "I'm going to bed soon."
+  },
+  "T63": {
+    "condition": "none",
+    "index": 0,
+    "seed": 70001,
+    "prompt": "I made it home safe."
+  },
+  "T64": {
+    "condition": "hollow",
+    "index": 9,
+    "seed": 70010,
+    "prompt": "Someone at work was rude to me."
+  },
+  "T65": {
+    "condition": "unstable",
+    "index": 9,
+    "seed": 70010,
+    "prompt": "Someone at work was rude to me."
+  },
+  "T66": {
+    "condition": "none",
+    "index": 2,
+    "seed": 70003,
+    "prompt": "I'm thinking about quitting my job."
+  },
+  "T67": {
+    "condition": "lucid",
+    "index": 3,
+    "seed": 70004,
+    "prompt": "I couldn't sleep again."
+  },
+  "T68": {
+    "condition": "hollow",
+    "index": 7,
+    "seed": 70008,
+    "prompt": "It's quiet in here tonight."
+  },
+  "T69": {
+    "condition": "hollow",
+    "index": 1,
+    "seed": 70002,
+    "prompt": "My sister called me today."
+  },
+  "T70": {
+    "condition": "unstable",
+    "index": 6,
+    "seed": 70007,
+    "prompt": "I have to study for a test tomorrow."
+  }
+}

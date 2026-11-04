@@ -13,6 +13,16 @@
 //       [--layers 10-20] [--system persona.txt] [--no-system] \
 //       [--cvec file.gguf[:SCALE]] [--ctx-size N] [--threads N] [-ngl N]
 //
+//   llama-dump-residuals -m MODEL.gguf --pairs pairs.tsv --means-out means.npy \
+//       [--layers 10-20] [same options]
+//
+// --pairs is the path-vector extraction mode (P3.03, docs/06 §2): each line is
+// "context<TAB>reply". Both turns are chat-templated (user = context, assistant
+// = reply) and the tool writes the mean residual over the *reply* tokens only,
+// shape (n_pairs, n_layers, n_embd), so a 200-pair side never materialises its
+// full token dumps. A prompt that cannot be measured aborts the run: the two
+// sides of a pair must stay row-aligned.
+//
 // Sanity checking the dumps against a known direction (e.g. the malice
 // control vector) is done by tools/steering/check_malice.py; the two tools
 // share the .npy layout documented there.
@@ -146,6 +156,8 @@ static bool write_npy(const std::string & path, const std::vector<float> & data,
 struct dump_args {
     std::string model;
     std::string prompts_file;
+    std::string pairs_file;
+    std::string means_out;
     std::string system_file;
     std::string out_dir = ".";
     int layer_lo = 10;
@@ -159,7 +171,8 @@ struct dump_args {
 
 static void usage(const char * argv0) {
     fprintf(stderr,
-        "usage: %s -m MODEL.gguf --prompts FILE --out-dir DIR [options]\n"
+        "usage: %s -m MODEL.gguf (--prompts FILE --out-dir DIR |\n"
+        "                          --pairs FILE --means-out FILE.npy) [options]\n"
         "  --layers A-B        residual layers to dump (default 10-20); must lie\n"
         "                      inside the model's block range\n"
         "  --system FILE       system-prompt text file (persona); default none\n"
@@ -168,6 +181,9 @@ static void usage(const char * argv0) {
         "  --ctx-size N        context size (default 2048)\n"
         "  --threads N         cpu threads (default: llama.cpp default)\n"
         "  -ngl N              gpu layers (default 0)\n"
+        "  --pairs FILE        TSV: context<TAB>reply per line; renders both turns\n"
+        "                      and averages the residual over the reply tokens\n"
+        "  --means-out FILE    with --pairs: .npy (n_pairs, n_layers, n_embd) f32\n"
         "  prompts file: one user message per line; each becomes a chat-templated\n"
         "  single-turn conversation and writes <out-dir>/prompt_NNN.npy\n"
         "  --out-dir DIR       created when missing; default '.'\n"
@@ -185,6 +201,8 @@ static bool parse_args(int argc, char ** argv, dump_args & a) {
         std::string s = argv[i];
         if (s == "-m" || s == "--model")            a.model        = next(i);
         else if (s == "--prompts")                  a.prompts_file = next(i);
+        else if (s == "--pairs")                    a.pairs_file   = next(i);
+        else if (s == "--means-out")                a.means_out    = next(i);
         else if (s == "--system")                   a.system_file  = next(i);
         else if (s == "--out-dir")                  a.out_dir      = next(i);
         else if (s == "--ctx-size")                 a.n_ctx        = atoi(next(i));
@@ -222,8 +240,16 @@ static bool parse_args(int argc, char ** argv, dump_args & a) {
             return false;
         }
     }
-    if (a.model.empty() || a.prompts_file.empty()) {
+    if (a.model.empty() || (a.prompts_file.empty() == a.pairs_file.empty())) {
         usage(argv[0]);
+        return false;
+    }
+    if (!a.pairs_file.empty() && a.means_out.empty()) {
+        fprintf(stderr, "--pairs needs --means-out FILE.npy\n");
+        return false;
+    }
+    if (a.pairs_file.empty() && !a.means_out.empty()) {
+        fprintf(stderr, "--means-out only works with --pairs\n");
         return false;
     }
     return true;
@@ -263,34 +289,63 @@ int main(int argc, char ** argv) {
         }
     }
 
-    // prompts: one user message per non-empty line
-    std::vector<std::string> prompts;
+    // prompts: one user message per line; pairs: context<TAB>reply per line
+    struct dump_item {
+        std::string user;
+        std::string reply; // empty in prompt mode
+    };
+    const bool pair_mode = !args.pairs_file.empty();
+    std::vector<dump_item> items;
     {
-        std::ifstream in(args.prompts_file);
+        const std::string path = pair_mode ? args.pairs_file : args.prompts_file;
+        std::ifstream in(path);
         if (!in) {
-            fprintf(stderr, "dump_residuals: cannot open --prompts file '%s'\n",
-                    args.prompts_file.c_str());
+            fprintf(stderr, "dump_residuals: cannot open %s file '%s'\n",
+                    pair_mode ? "--pairs" : "--prompts", path.c_str());
             return 2;
         }
         std::string line;
+        size_t lineno = 0;
         while (std::getline(in, line)) {
+            lineno++;
             if (!line.empty() && line.back() == '\r') line.pop_back();
             // '#' starts a comment line
             std::string trimmed = line;
             trimmed.erase(trimmed.begin(), std::find_if(trimmed.begin(), trimmed.end(),
                           [](unsigned char c) { return !std::isspace(c); }));
             if (trimmed.empty() || trimmed[0] == '#') continue;
-            prompts.push_back(line);
+            if (pair_mode) {
+                const auto tab = line.find('\t');
+                if (tab == std::string::npos) {
+                    fprintf(stderr, "dump_residuals: %s:%zu is not context<TAB>reply\n",
+                            path.c_str(), lineno);
+                    return 2;
+                }
+                dump_item it;
+                it.user  = line.substr(0, tab);
+                it.reply = line.substr(tab + 1);
+                if (it.user.empty() || it.reply.empty()) {
+                    fprintf(stderr, "dump_residuals: %s:%zu has an empty turn\n",
+                            path.c_str(), lineno);
+                    return 2;
+                }
+                items.push_back(std::move(it));
+            } else {
+                items.push_back({ line, std::string() });
+            }
         }
     }
-    if (prompts.empty()) {
-        fprintf(stderr, "dump_residuals: no prompts in %s\n", args.prompts_file.c_str());
+    if (items.empty()) {
+        fprintf(stderr, "dump_residuals: no %s in %s\n",
+                pair_mode ? "pairs" : "prompts",
+                pair_mode ? args.pairs_file.c_str() : args.prompts_file.c_str());
         return 2;
     }
 
     // --out-dir is created when missing so the documented command works on a
-    // clean tree; a bad path fails here, before the model is loaded.
-    {
+    // clean tree; a bad path fails here, before the model is loaded. Pair mode
+    // writes a single --means-out file and has no per-prompt directory.
+    if (!pair_mode) {
         std::error_code ec;
         std::filesystem::create_directories(args.out_dir, ec);
         if (ec) {
@@ -380,14 +435,25 @@ int main(int argc, char ** argv) {
     size_t n_written = 0;
     size_t n_skipped = 0;
 
-    for (size_t pi = 0; pi < prompts.size(); pi++) {
+    const int n_layers = args.layer_hi - args.layer_lo + 1;
+    const int64_t model_n_embd = llama_model_n_embd(model);
+    std::vector<float> means;
+    if (pair_mode) {
+        means.assign((size_t) items.size() * n_layers * model_n_embd, 0.0f);
+    }
+    size_t reply_token_total = 0, reply_token_min = SIZE_MAX, reply_token_max = 0;
+
+    for (size_t pi = 0; pi < items.size(); pi++) {
         common_chat_templates_inputs inputs;
         inputs.use_jinja       = true;
         inputs.enable_thinking = false;
         if (!system_prompt.empty()) {
             inputs.messages.push_back(msg("system", system_prompt));
         }
-        inputs.messages.push_back(msg("user", prompts[pi]));
+        inputs.messages.push_back(msg("user", items[pi].user));
+        if (pair_mode) {
+            inputs.messages.push_back(msg("assistant", items[pi].reply));
+        }
 
         common_chat_params rendered = common_chat_templates_apply(tmpls.get(), inputs);
         const std::string text = rendered.prompt.str();
@@ -396,8 +462,40 @@ int main(int argc, char ** argv) {
         if ((int) toks.size() > args.n_ctx) {
             fprintf(stderr, "dump_residuals: prompt %zu too long (%zu tokens > %d), skipped\n",
                     pi, toks.size(), args.n_ctx);
+            if (pair_mode) {
+                return 1; // the two sides of a pair must stay row-aligned
+            }
             n_skipped++;
             continue;
+        }
+
+        // pair mode: locate the reply-token span. The rendered 2-turn prompt
+        // starts with the 1-turn render (user + assistant header) and continues
+        // with the reply, so both prefix tokenisations must be token prefixes of
+        // the full prompt; anything else means the template moved the content.
+        size_t reply_begin = 0, reply_end = 0;
+        if (pair_mode) {
+            const std::string & reply = items[pi].reply;
+            const size_t pos = text.rfind(reply);
+            if (pos == std::string::npos) {
+                fprintf(stderr, "dump_residuals: pair %zu: the template dropped the reply text\n", pi);
+                return 1;
+            }
+            const std::vector<llama_token> tok_begin =
+                common_tokenize(vocab, text.substr(0, pos), true, true);
+            const std::vector<llama_token> tok_end =
+                common_tokenize(vocab, text.substr(0, pos + reply.size()), true, true);
+            if (tok_begin.size() > toks.size() || tok_end.size() > toks.size() ||
+                tok_end.size() <= tok_begin.size() ||
+                !std::equal(tok_begin.begin(), tok_begin.end(), toks.begin()) ||
+                !std::equal(tok_end.begin(), tok_end.end(), toks.begin())) {
+                fprintf(stderr, "dump_residuals: pair %zu: cannot locate the reply token span "
+                                "(begin %zu, end %zu, prompt %zu tokens)\n",
+                        pi, tok_begin.size(), tok_end.size(), toks.size());
+                return 1;
+            }
+            reply_begin = tok_begin.size();
+            reply_end   = tok_end.size();
         }
 
         store.reset();
@@ -406,6 +504,9 @@ int main(int argc, char ** argv) {
         llama_batch batch = llama_batch_get_one(toks.data(), (int32_t) toks.size());
         if (llama_decode(ctx, batch) != 0) {
             fprintf(stderr, "dump_residuals: llama_decode failed for prompt %zu, skipped\n", pi);
+            if (pair_mode) {
+                return 1;
+            }
             n_skipped++;
             continue;
         }
@@ -419,11 +520,51 @@ int main(int argc, char ** argv) {
             llama_backend_free();
             return 1;
         }
+        if (pair_mode && store.n_embd != model_n_embd) {
+            fprintf(stderr, "dump_residuals: residual n_embd %" PRId64 " != model n_embd %" PRId64 "\n",
+                    store.n_embd, model_n_embd);
+            llama_free(ctx);
+            llama_model_free(model);
+            llama_backend_free();
+            return 1;
+        }
+
+        const int64_t n_tok = (int64_t) toks.size();
+
+        if (pair_mode) {
+            const size_t n_reply = reply_end - reply_begin;
+            for (int il = args.layer_lo; il <= args.layer_hi; il++) {
+                auto it = store.acts.find(il);
+                if (it == store.acts.end() || store.layer_tokens[il] != n_tok) {
+                    fprintf(stderr, "dump_residuals: pair %zu: layer %d captured %" PRId64 "/%" PRId64 " tokens\n",
+                            pi, il, store.layer_tokens.count(il) ? store.layer_tokens[il] : 0, n_tok);
+                    return 1;
+                }
+                // mean over the reply tokens only (token index = row in acts)
+                const float * src = it->second.data() + reply_begin * store.n_embd;
+                float * dst = means.data() +
+                              ((size_t) pi * n_layers + (il - args.layer_lo)) * store.n_embd;
+                for (size_t t = 0; t < n_reply; t++) {
+                    const float * row = src + t * store.n_embd;
+                    for (int64_t j = 0; j < store.n_embd; j++) {
+                        dst[j] += row[j];
+                    }
+                }
+                for (int64_t j = 0; j < store.n_embd; j++) {
+                    dst[j] /= (float) n_reply;
+                }
+            }
+            reply_token_total += n_reply;
+            reply_token_min = std::min(reply_token_min, n_reply);
+            reply_token_max = std::max(reply_token_max, n_reply);
+            n_written++;
+            fprintf(stderr, "dump_residuals: pair %zu -> mean over %zu reply tokens (of %" PRId64 ")\n",
+                    pi, n_reply, n_tok);
+            continue;
+        }
 
         // assemble (n_layers, n_tokens, n_embd); each layer must cover all
         // tokens (ubatch appends keep token order within each layer)
-        const int n_layers = args.layer_hi - args.layer_lo + 1;
-        const int64_t n_tok = (int64_t) toks.size();
         std::vector<float> arr((size_t) n_layers * n_tok * store.n_embd, 0.0f);
         bool ok = true;
         for (int il = args.layer_lo; il <= args.layer_hi; il++) {
@@ -456,8 +597,24 @@ int main(int argc, char ** argv) {
                 pi, fname, n_layers, n_tok, store.n_embd);
     }
 
-    fprintf(stderr, "dump_residuals: wrote %zu/%zu prompts to %s\n",
-            n_written, prompts.size(), args.out_dir.c_str());
+    if (pair_mode) {
+        if (!write_npy(args.means_out, means,
+                       { (int64_t) items.size(), n_layers, model_n_embd })) {
+            fprintf(stderr, "dump_residuals: failed to write %s\n", args.means_out.c_str());
+            llama_free(ctx);
+            llama_model_free(model);
+            llama_backend_free();
+            return 1;
+        }
+        fprintf(stderr, "dump_residuals: wrote %zu/%zu pair means to %s "
+                        "(%d layers x %" PRId64 " n_embd; reply tokens min %zu, max %zu, mean %.1f)\n",
+                n_written, items.size(), args.means_out.c_str(), n_layers, model_n_embd,
+                reply_token_min, reply_token_max,
+                (double) reply_token_total / (double) std::max<size_t>(n_written, 1));
+    } else {
+        fprintf(stderr, "dump_residuals: wrote %zu/%zu prompts to %s\n",
+                n_written, items.size(), args.out_dir.c_str());
+    }
     if (n_skipped > 0) {
         fprintf(stderr, "dump_residuals: %zu prompt(s) skipped — no .npy written for them\n", n_skipped);
     }

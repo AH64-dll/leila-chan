@@ -1,0 +1,50 @@
+{
+  "T01": {
+    "condition": "unstable",
+    "index": 1,
+    "seed": 70002,
+    "prompt": "My sister called me today."
+  },
+  "T02": {
+    "condition": "hollow",
+    "index": 1,
+    "seed": 70002,
+    "prompt": "My sister called me today."
+  },
+  "T03": {
+    "condition": "unstable",
+    "index": 0,
+    "seed": 70001,
+    "prompt": "I made it home safe."
+  },
+  "T04": {
+    "condition": "hollow",
+    "index": 0,
+    "seed": 70001,
+    "prompt": "I made it home safe."
+  },
+  "T05": {
+    "condition": "lucid",
+    "index": 1,
+    "seed": 70002,
+    "prompt": "My sister called me today."
+  },
+  "T06": {
+    "condition": "lucid",
+    "index": 0,
+    "seed": 70001,
+    "prompt": "I made it home safe."
+  },
+  "T07": {
+    "condition": "aware",
+    "index": 0,
+    "seed": 70001,
+    "prompt": "I made it home safe."
+  },
+  "T08": {
+    "condition": "aware",
+    "index": 1,
+    "seed": 70002,
+    "prompt": "My sister called me today."
+  }
+}
