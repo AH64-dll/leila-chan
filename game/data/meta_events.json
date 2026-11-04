@@ -81,7 +81,7 @@
 			"stage": 4,
 			"repeat": ["repeatable", 8],
 			"weights": {"YANDERE": 3},
-			"fallback": "Keyboard-only play: the suggestion appears as a ghost line above the input box, never typed in.",
+			"fallback": "The suggestion is only ever a draft: the field stays editable, nothing is sent until the player presses Enter, and any key they type stops her typing. Reduced motion fills it in one piece instead of animating it; a locked input waits for the field to unlock.",
 			"note_line": "EVENT: The player's input box filled with your words. They can still delete it."
 		},
 		"hide_ui": {

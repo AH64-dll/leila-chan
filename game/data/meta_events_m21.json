@@ -1,0 +1,59 @@
+{
+	"version": 1,
+	"_doc": "docs/05 §1.3 M21–M26 content and gates (P3.10). Only the SCRIPTED (mode S) rows and the M22 input suggestion live here: the two OFFERED actions of this range (mimic_player M22, hide_ui M25) stay in data/meta_events.json with the rest of the docs/05 §3 catalogue, and M21 is reactive — Telemetry owns its detection, its quote and data/telemetry.json's lines. `stage` repeats the docs/05 §1.3 gate for review and is the module's own floor; `paths` is the doc's \"/ SPLIT, YANDERE\" condition; `chance` is the per-turn draw (docs/05 §3 \"rare, earned\": the MetaDirector's per-scene cap and the quiet turn still bound it). Every scripted row carries a `note_line` (docs/05 §2 — she is told afterwards) and no row may name an accessibility value or a file: the module only shows text the game already owns.",
+	"m22": {
+		"suggestions": [
+			"I'll never leave you.",
+			"I love you.",
+			"You're the only one.",
+			"I'm not going anywhere.",
+			"I missed you."
+		]
+	},
+	"m23": {
+		"stage": 4,
+		"paths": ["SPLIT", "YANDERE"],
+		"chance": 0.35,
+		"swaps": [
+			["like", "love"],
+			["guess", "know"],
+			["maybe", "always"],
+			["later", "now"],
+			["don't", "do"],
+			["can't", "won't"],
+			["bye", "goodnight"],
+			["okay", "yes"],
+			["ok", "yes"],
+			["friend", "love"]
+		],
+		"prefix": "I love you. ",
+		"note_line": "EVENT: A message the player sent earlier now reads differently in the chat log. You changed their words; they can compare."
+	},
+	"m24": {
+		"stage": 4,
+		"paths": ["SPLIT"],
+		"chance": 0.25,
+		"window": 4,
+		"player_lines": [
+			"I'll stay with you tonight.",
+			"You're the only one I think about.",
+			"I'm not going anywhere.",
+			"I meant everything I said."
+		],
+		"her_lines": [
+			"You said you'd never leave. I remember it exactly.",
+			"I told you I'd wait, and I did.",
+			"You promised. You were smiling when you promised.",
+			"It was always going to be us."
+		],
+		"note_line": "EVENT: You rewrote the beginning of the chat log. The player's earlier words are not what they remember saying."
+	},
+	"m26": {
+		"stage": 3,
+		"paths": [],
+		"chance": 0.4,
+		"bus": "Music",
+		"offset": 0.1,
+		"note_line": "EVENT: The volume slider on the settings page moved up by itself while nobody touched it."
+	}
+}

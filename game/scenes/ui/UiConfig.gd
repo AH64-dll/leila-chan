@@ -112,6 +112,10 @@ const DEFAULTS := {
 		"secret_unlocked": "She remembers every version of herself.",
 		"empty": "No ending yet. Finish a run.",
 		"btn_back": "Back",
+		"log_edits_title": "What she changed",
+		"log_edits_empty": "Nothing. Every line in the log is yours.",
+		"log_edits_row": 'You wrote: "{original}" — the log reads: "{edited}"',
+		"log_edits_restore": "Restore my words",
 	},
 }
 

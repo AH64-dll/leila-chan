@@ -21,6 +21,14 @@ signal turn_displayed  ## Every beat of her reply is on screen; safe to enable i
 signal pause_requested  ## Esc pressed anywhere in the UI (docs/05 §0 — always opens safe pause).
 signal log_toggled(open: bool)  ## Tab toggled the scroll-back log.
 
+## docs/05 §1.3 M22: how fast her suggestion types itself into the box. The
+## words are data (`meta_events_m21.json`); the cadence is UI code.
+const MIMIC_CHARS_PER_SECOND := 30.0
+## docs/05 §1.3 M25's accessibility fallback: reduced motion fades the boxes
+## over this long instead of making them vanish; a click or key still restores
+## them in one call (the tween is killed, never awaited).
+const UI_FADE_S := 0.25
+
 var stage := 0  # Instability stage from GameState — drives the indicator flavour
 ## Safety scan injection point (docs/07 §3.4): a driver that pre-scans may set
 ## a pass-through; unset warns once per turn that text arrived un-scanned.
@@ -43,6 +51,14 @@ var reduced_motion := false
 ## corruption session's seed — no RNG state is stored in the transcript.
 var inner_leak_salt := 0
 
+## docs/05 §1.3 M22: her suggestion is being typed into the input box right
+## now. The player owns the box throughout — touching it stops the effect (see
+## `_on_draft_changed`) and nothing is ever submitted from here.
+var mimic_active := false
+## docs/05 §1.3 M25: the text box, log and buttons are hidden for one turn.
+## Kept public because it is the one piece of state the effect exists to show.
+var ui_hidden := false
+
 var _player_name := "Senpai"
 var _leila_name := "Leila"
 var _turn_open := false  # a turn is in flight (input locked, reply streaming)
@@ -55,6 +71,16 @@ var _inner_leaked_turn := -1  # `_turn_seq` of the turn whose thought already le
 ## docs/08 §1.5 stage 5: her name replaces the player's tag for one line per
 ## chat log (a Date scene owns one ChatUI, so the cap spans that date's turns).
 var _name_tag_swapped := false
+
+## The full suggestion, how much of it is on screen, and the chars/s clock.
+var _mimic := ""
+var _mimic_clock := 0.0
+var _mimic_shown := 0
+## Queued until the input unlocks (a turn was still streaming when she asked).
+var _mimic_wait := ""
+## The log's visibility before M25 hid it — restored, never guessed.
+var _ui_log_was_open := true
+var _ui_tween: Tween = null
 
 @onready var chat_log: ScrollContainer = $Margin/VBox/ChatLog
 @onready var text_box: PanelContainer = $Margin/VBox/TextBox
@@ -94,6 +120,8 @@ func _process(delta: float) -> void:
 	if inner_leak != null and inner_leak.is_leaking():
 		_place_inner_leak()
 		inner_leak.advance(delta)
+	if mimic_active:
+		_advance_mimic(delta)
 
 
 func apply_config(config: Dictionary) -> void:
@@ -119,6 +147,8 @@ func apply_config(config: Dictionary) -> void:
 		input_box.draft_changed.connect(_on_draft_changed)
 	_log_open = true
 	chat_log.visible = true
+	_restore_ui()
+	_stop_mimic()
 	input_box.set_input_enabled(true)
 
 
@@ -140,6 +170,7 @@ func get_player_name() -> String:
 func _on_input_submitted(text: String) -> void:
 	if not input_box.is_input_enabled():
 		return
+	_stop_mimic()
 	_note_telemetry("note_activity", [])
 	chat_log.append_entry("player", player_tag_for(_turn_seq + 1), text)
 	begin_turn_wait()
@@ -150,11 +181,19 @@ func _on_input_submitted(text: String) -> void:
 ## the docs/05 M21 / docs/01 T08 deleted draft. The words never touch a file
 ## or GameState — Telemetry holds them until the next turn spends them.
 func _on_draft_changed(_text: String) -> void:
+	# Any signal here is the PLAYER editing (her own fill is written through
+	# `show_foreign_draft`, which stays silent), so the docs/05 §1.3 M22
+	# suggestion yields the box immediately — it can never fight a deletion.
+	if mimic_active:
+		_stop_mimic()
 	_note_telemetry("note_activity", [])
 
 
 func _on_draft_deleted(text: String) -> void:
 	_note_telemetry("note_draft_deleted", [text])
+
+
+## ── docs/05 §1.3 M22/M25: the meta UI effects ─────────────────────────────
 
 
 ## The P2.09 telemetry seam, resolved lazily like the Director's ChatUI seam.
@@ -164,10 +203,141 @@ func _note_telemetry(method: String, args: Array) -> void:
 		tel.callv(method, args)
 
 
+## The one entry point `game/llm/meta/MetaEventsM21.gd` uses, so the fourth wall
+## reaches the UI through a single, reviewable seam (docs/05 §0: an effect is
+## offered by the scheduler, never free, and never bypasses this class).
+##   "mimic" + text → she types the suggestion into the input box; the player
+##                    can always delete it (docs/05 §1.3 M22)
+##   "hide"        → boxes vanish for one turn; any click or key restores
+##                    (docs/05 §1.3 M25)
+##   "restore"     → put everything back now (a click, a key, a new turn)
+## Returns whether the effect changed anything.
+func apply_meta_ui(effect: String, text: String = "") -> bool:
+	match effect:
+		"mimic":
+			return _start_mimic(text)
+		"hide":
+			return _hide_ui()
+		"restore":
+			return _restore_ui()
+	return false
+
+
+## docs/05 §1.3 M22. Refuses to type over a draft the player wrote; waits for
+## the input to unlock when she asks mid-turn; reduced motion fills the whole
+## suggestion at once instead of animating it (the documented fallback — the
+## field is editable either way, so deletion is always possible).
+func _start_mimic(text: String) -> bool:
+	var suggestion := text.strip_edges()
+	if suggestion.is_empty() or input_box == null:
+		return false
+	if not input_box.call(&"draft").strip_edges().is_empty():
+		return false
+	if not input_box.call(&"is_input_enabled"):
+		_mimic_wait = suggestion
+		return true
+	_mimic = suggestion
+	_mimic_clock = 0.0
+	_mimic_shown = 0
+	mimic_active = true
+	if is_reduced_motion():
+		_mimic_clock = float(_mimic.length())
+		_mimic_shown = _mimic.length()
+		_write_mimic(_mimic)
+		mimic_active = false
+	return true
+
+
+func _advance_mimic(delta: float) -> void:
+	if _mimic.is_empty() or input_box == null:
+		_stop_mimic()
+		return
+	# The box must still hold exactly what she last typed. If it does not, the
+	# player is in it (a deletion, a paste) — she yields instead of overwriting,
+	# which is the docs/05 §1.3 M22 promise even if an edit signal is missed.
+	if str(input_box.text) != _mimic.substr(0, _mimic_shown):
+		_stop_mimic()
+		return
+	_mimic_clock += delta * MIMIC_CHARS_PER_SECOND
+	var shown := mini(_mimic.length(), int(_mimic_clock))
+	if shown != _mimic_shown:
+		_mimic_shown = shown
+		_write_mimic(_mimic.substr(0, _mimic_shown))
+	if _mimic_shown >= _mimic.length():
+		mimic_active = false
+
+
+## The InputBox's programmatic fill: silent by design, so the partial words never
+## reach Telemetry's draft detector or the player's own draft tracking.
+func _write_mimic(text: String) -> void:
+	input_box.call(&"show_foreign_draft", text)
+
+
+## The player took the box back (or the turn ended another way): stop typing and
+## leave exactly what is on screen — deleting it is now entirely theirs.
+func _stop_mimic() -> void:
+	mimic_active = false
+	_mimic = ""
+	_mimic_clock = 0.0
+	_mimic_shown = 0
+	_mimic_wait = ""
+
+
+## docs/05 §1.3 M25: the boxes go away for one turn, only she remains. Reduced
+## motion fades instead of vanishing (docs/05 §0 rule 5); the state flag flips
+## immediately either way, so a click restores at once.
+func _hide_ui() -> bool:
+	if ui_hidden or text_box == null or chat_log == null or input_box == null:
+		return false
+	ui_hidden = true
+	_ui_log_was_open = _log_open and chat_log.visible
+	_stop_mimic()
+	if inner_leak != null:
+		inner_leak.dismiss()
+	if is_reduced_motion() and is_inside_tree():
+		_ui_tween = create_tween()
+		_ui_tween.tween_property(self, "modulate:a", 0.0, UI_FADE_S)
+		_ui_tween.tween_callback(_set_boxes_visible.bind(false))
+	else:
+		_set_boxes_visible(false)
+	return true
+
+
+## Any click or key calls this. Idempotent, so the pause menu's own restore path
+## and a stray input never fight each other.
+func _restore_ui() -> bool:
+	if not ui_hidden:
+		return false
+	ui_hidden = false
+	if _ui_tween != null and _ui_tween.is_valid():
+		_ui_tween.kill()
+	_ui_tween = null
+	modulate.a = 1.0
+	_set_boxes_visible(true)
+	return true
+
+
+func _set_boxes_visible(shown: bool) -> void:
+	# While hidden the root stops swallowing mouse events, or the very click
+	# that should bring the UI back would be eaten by an invisible Control.
+	mouse_filter = Control.MOUSE_FILTER_STOP if shown else Control.MOUSE_FILTER_IGNORE
+	chat_log.visible = shown and _ui_log_was_open
+	text_box.visible = shown
+	input_box.visible = shown
+	if shown:
+		_log_open = _ui_log_was_open
+		if input_box.call(&"is_input_enabled") and is_inside_tree():
+			input_box.grab_focus()
+
+
 ## Lock input and show the diegetic typing indicator until her first say
 ## token (docs/02 §4). Called on submit; the Director may also call it when a
 ## turn starts without player input (M30 monologue).
 func begin_turn_wait() -> void:
+	# docs/05 §1.3 M25 is "for one turn": a new turn always starts with the UI
+	# back (a Director-driven turn can begin without the player clicking).
+	_restore_ui()
+	_stop_mimic()
 	# The submit calls this to show the indicator, then the Director calls it
 	# again at step 1 (`_start_turn`) for the same turn. Only the first call of
 	# a turn advances the corruption seed counter, or every reply would be
@@ -360,6 +530,10 @@ func abort_turn() -> void:
 		corruption.abort()
 	if inner_leak != null:
 		inner_leak.dismiss()
+	_stop_mimic()
+	# A dead turn must never leave the player without a box (docs/05 §0): the
+	# docs/05 §1.3 M25 hide ends with the turn it was hiding.
+	_restore_ui()
 	text_box.reset()
 	_unlock_input()
 	_note_telemetry("note_turn_open", [false])
@@ -377,6 +551,8 @@ func reject_turn(text: String) -> void:
 		corruption.abort()
 	if inner_leak != null:
 		inner_leak.dismiss()
+	_stop_mimic()
+	_restore_ui()
 	text_box.reset()
 	begin_beat(0)
 	replace_beat(0, text, false)
@@ -409,6 +585,10 @@ func _maybe_close_turn() -> void:
 
 func _unlock_input() -> void:
 	input_box.set_input_enabled(true)
+	if not _mimic_wait.is_empty():
+		var queued := _mimic_wait
+		_mimic_wait = ""
+		_start_mimic(queued)
 
 
 func is_turn_open() -> bool:
@@ -440,6 +620,18 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# docs/05 §1.3 M25: with the boxes hidden, the first click or keypress of
+	# any kind brings them back. Esc never reaches here — PauseMenu owns it from
+	# `_input` (docs/05 §0 rule 3), so pausing still works with the UI hidden.
+	if ui_hidden:
+		var restoring := (
+			(event is InputEventMouseButton and (event as InputEventMouseButton).pressed)
+			or (event is InputEventKey and (event as InputEventKey).pressed)
+		)
+		if restoring:
+			_restore_ui()
+			get_viewport().set_input_as_handled()
+			return
 	# Tab toggles the scroll-back log (VNs always offer one).
 	if event is InputEventKey and event.pressed and event.keycode == KEY_TAB:
 		_toggle_log()

@@ -60,6 +60,11 @@ var _content_option: OptionButton
 var _text_speed_slider: HSlider
 var _text_speed_label: Label
 var _bus_sliders: Dictionary = {}  # bus name -> HSlider
+## docs/05 §1.3 M26: bus name -> the display offset her sabotage adds. It is a
+## LIE, not a setting: Settings and AudioServer are never written, so nothing a
+## player relies on (their mix, an accommodation) moves. Any interaction with
+## the slider, a reopen and `clear_sabotage()` drop it.
+var _sabotage: Dictionary = {}
 var _dose_row: HBoxContainer
 var _open := false
 var _was_paused := false
@@ -127,6 +132,9 @@ func open_settings() -> void:
 	_refresh_settings_rows()
 	if _back_button != null:
 		_back_button.grab_focus()
+	# docs/05 §1.3 M26 needs a settings page the player has actually seen; the
+	# flag is bookkeeping, never an audience measurement (no telemetry).
+	GameState.set_flag(&"meta_settings_seen", true)
 	settings_opened.emit()
 
 
@@ -394,7 +402,13 @@ func _build_settings_page() -> VBoxContainer:
 		slider.step = 0.01
 		slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var bus_name := StringName(bus)
-		slider.value_changed.connect(func(v: float) -> void: Settings.set_bus_volume(bus_name, v))
+		slider.value_changed.connect(
+			func(v: float) -> void:
+				# Touching the slider ends docs/05 §1.3 M26's lie: the value the
+				# player now sees is the value they set.
+				_sabotage.erase(bus_name)
+				Settings.set_bus_volume(bus_name, v)
+		)
 		row.add_child(slider)
 		_bus_sliders[bus_name] = slider
 		page.add_child(row)
@@ -478,13 +492,44 @@ func _refresh_settings_rows() -> void:
 	_immersion_option.select(maxi(IMMERSION_VALUES.find(Settings.immersion), 0))
 	_text_speed_slider.set_value_no_signal(Settings.text_speed)
 	for bus: StringName in _bus_sliders:
-		(_bus_sliders[bus] as HSlider).set_value_no_signal(Settings.bus_volume(bus))
+		var shown := Settings.bus_volume(bus) + float(_sabotage.get(bus, 0.0))
+		(_bus_sliders[bus] as HSlider).set_value_no_signal(
+			clampf(shown, Settings.VOLUME_MIN, Settings.VOLUME_MAX)
+		)
 	# M26's locked dose row appears only from stage 4 (docs/05 §1.3).
 	var stage := 0
 	var gs := get_node_or_null("/root/GameState")
 	if gs != null and "stage" in gs:
 		stage = int(gs.stage)
 	_dose_row.visible = stage >= 4
+
+
+## docs/05 §1.3 M26, the only effect this screen accepts from a meta event:
+## move a bus slider's DISPLAYED thumb by `offset`. Nothing is written — not the
+## mix, not the accessibility rows, not `settings.cfg` — because D20 forbids
+## punishing or silently changing an accommodation, and docs/05 §0 keeps every
+## effect reversible. Touching the slider or `clear_sabotage()` snaps it back.
+## Returns false for a bus this page does not draw or a nonsense offset.
+func show_sabotaged_bus(bus: StringName, offset: float) -> bool:
+	if not _bus_sliders.has(bus):
+		return false
+	if not is_finite(offset) or is_zero_approx(offset):
+		return false
+	_sabotage[bus] = clampf(offset, -Settings.VOLUME_MAX, Settings.VOLUME_MAX)
+	_refresh_settings_rows()
+	return true
+
+
+func clear_sabotage() -> void:
+	if _sabotage.is_empty():
+		return
+	_sabotage.clear()
+	_refresh_settings_rows()
+
+
+## The lie as it stands ({bus: offset}) — test and F3 read surface.
+func sabotage_state() -> Dictionary:
+	return _sabotage.duplicate()
 
 
 func _on_settings_back() -> void:
