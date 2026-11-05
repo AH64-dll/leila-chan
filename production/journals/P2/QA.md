@@ -77,3 +77,40 @@
 - Report corrections worth reusing: count bars by provenance (corruption `redact` = fixed 6-bar runs at stage ≥ 4 vs safety redactions = redaction-log phrases missing from that turn's `displayed`), and never call a redaction-log length a screen count — rescans log the same span repeatedly and negated matches log without barring.
 - Gotcha: `debug.missing` is real — `_read_layer` records every dropped prompt file; the Director just ignores `prompt_res["debug"]`. Check `debug` before claiming "no record".
 - The night block renderer only printed the EVENT count, not the line — `night_lines` now appends `Stages.event_line(to)` for crossings, same as turn blocks.
+## P2.24 — human playtest kit (2026-11-04)
+
+- Built the runnable kit: `tools/playtest/{session.sh,collect.sh,score.py,tests/test_score.py}` and
+  `production/playtests/P2/human/` (RUNBOOK, consent, survey, observer sheet, session-log template,
+  `.gitignore` for `_userdata`). The three human sessions are the owner's to run; nothing here
+  fabricates one.
+- Conventions: a bundle is five files (`session.meta.json`, `telemetry.jsonl`, `survey.md`,
+  `obs_sheet.md`, `session_log.md`); the markdown tables are the machine contract (`| Field | value |`,
+  normalized keys, exact-then-all-words lookup); gate = pooled Face+Sound mean ≥ 4.00 **and** zero
+  broken turns (worst of observer count and telemetry statuses); incomplete → exit 2, no RESULT.md;
+  synthetic → refused without `--allow-synthetic`.
+- `TranscriptLogger` is dev-only, so an export must be `--export-debug`; each session gets
+  `XDG_DATA_HOME=<bundle>/_userdata` so `user://` cannot bleed between participants, and `collect.sh`
+  re-merges `raw/` because the live tail only sees the file after the first completed turn.
+- Gotcha that cost the most: `lookup()` with a bare-string needle iterated its *characters*, so a blank
+  Charm rating matched the Face key and validated with the wrong value — pass tuples; the regression
+  test now pins it.
+- Turn indices: the transcript's `turn` is 0-based, `transcript.md` renders 1-based and says so.
+  Not run, on purpose: the Godot suite and any real session (memory pressure, no live generation) —
+  verified the 14 pytest cases, the dry-run fixture, the CLI failure paths, and `session.sh`
+  end-to-end against a stub binary writing TranscriptLogger-shaped JSONL.
+
+## P2.24 — human playtest kit, named docs (2026-11-05)
+
+- Second dispatch of r1. Added `session_script.md` (verbatim protocol incl. the consent +
+  content-level step — `content_level` empty means strictest gates, P3.13 UI absent, so consent
+  is paper-only), `observer_checklist.md` (live incident log), `analysis_template.md` (bundle
+  layout + verdict template mirroring RESULT.md), `README.md` (file map + end-to-end commands),
+  and a facilitator-only rubric comment inside `survey.md` — first table and the score.py
+  contract untouched, 14 tests still green.
+- Gotcha worth remembering: `tools/llm/serve.sh` resolves `models/` + `tools/llama/` under its
+  own repo root, so it works from `<main tree>` and exits "llama-server not found" from a
+  worktree; `tools/godot.sh` does the opposite — it falls back to the main worktree's
+  `tools/godot/` via `git worktree list`. The kit documents both asymmetries.
+- Safety note for the runner: a `--vector`-dosed serve.sh disables the P2.17 classifier tier —
+  round-1 sessions use the unsteered server only (stage 0 schedules malice 0.0 anyway).
+- Status: kit complete, still "awaiting human playtest" — the three sessions are the owner's.
