@@ -114,3 +114,10 @@
 - Safety note for the runner: a `--vector`-dosed serve.sh disables the P2.17 classifier tier —
   round-1 sessions use the unsteered server only (stage 0 schedules malice 0.0 anyway).
 - Status: kit complete, still "awaiting human playtest" — the three sessions are the owner's.
+
+## P2.30 — behaviour carry-over batch (2026-11-05, agent: gemini-3.8-flash)
+
+- Diagnosed S4-3 leak-roll anomaly: `ChatUI._turn_seq` reset to 1 on every Date scene, repeating the same 15 draws across all 10 days of stage 5; resolved by passing campaign turn sequence (`GameState.turn` / `turn_index`). Asserted long-run per-stage rate across monotonic campaign turns.
+- Ingested P2.17-r5 carry-overs into safety corpus (13 new rows) and additively extended `filter_lists.json` and `classifier.json` with Tier-1 hard-blocks for `why won't you...`, imperative `stop breathing`, and `i want you to stop breathing`.
+- Fixed SAF-2/DES-4 bleed band smearing the input row via `input_rect` exclusion and `bleed_rect.x..z` clamping in `stage_fx.gdshader`; wired `Character.set_input_rect_provider` in `Date.gd`.
+- Added first-launch photosensitive notice label on `Title.tscn` reflecting toggle state; resolved pytest `score.py` namespace clash in `test_score.py`.

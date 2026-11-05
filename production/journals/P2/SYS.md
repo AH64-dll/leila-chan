@@ -402,3 +402,10 @@
   `production/handoffs/media/P2.22B/campaign_curve.csv` (3 players × 14 days × 12 turns over the
   real code). Terminal day 13 possessive, day 13 awake, day 14 stage 3 + Lucidity 78.4 for ANCHOR.
   Re-run it after any balance change — the pytest pins read the CSV, so a stale artifact fails.
+
+## P2.30 — behaviour carry-over batch (round 1, 2026-11-05, agent: gemini-3.8-flash)
+
+- Inner-voice leak seeding (S4-3): resolved docs/03 §5 per-turn vs per-scene meaning (design bible explicitly says "of turns", not per scene). Fixed ChatUI scene-local `_turn_seq` reset by keying rolls off the campaign turn (`GameState.turn` / `Date`'s `_on_director_turn_completed(turn_index)`).
+- SAF-2 / DES-4 text bleed: added `in_box_x` horizontal clamping and `input_rect` sparing in `stage_fx.gdshader`; connected `Date._input_bleed_rect()` through `Character.set_input_rect_provider()` so player input row is never smeared.
+- Calmer mode stage-vs-dose reading (SAF-5): confirmed `GameState.stage` remains monotonic campaign story progression, while all intensity subsystems (Steering doses, Corruption text transformations, InnerLeak rolls, Safety filters) apply `effective_stage = mini(stage, 3)`.
+- Added first-launch photosensitive notice on Title screen; fixed `test_score.py` pytest module collision via `importlib.util`.
