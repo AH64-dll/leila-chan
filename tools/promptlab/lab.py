@@ -203,8 +203,12 @@ def vector_files(dose):
 
     vectors: [{"key", "file", "scale"}] with repo-local paths for serve.sh;
     unbound: positive-scale keys declared under `unbound` (scheduled, binds
-    nothing); unmapped: positive keys with neither — the caller must refuse.
+    nothing); unmapped: keys with neither — the caller must refuse.
     res:// paths resolve against game/ (the files ship in the game pack).
+    Negative scales are real dose entries, not skipped: lucid is bound for
+    ANCHOR at a negative weight (paths.json `anchors.lucid`, P3.19 r2), and
+    an unmapped negative key fails `control_vector_unmapped` the same way a
+    positive one does.
     """
     mapping = vector_map()
     files = mapping.get("vectors") or {}
@@ -212,7 +216,7 @@ def vector_files(dose):
     vectors, unbound, unmapped = [], [], []
     for name, scale in (dose or {}).items():
         scale = float(scale)
-        if scale <= 0:
+        if scale == 0:
             continue
         row = files.get(name)
         if row and row.get("file"):

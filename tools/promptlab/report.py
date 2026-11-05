@@ -177,9 +177,9 @@ def md_report(doc, beat, safety=None, judge=None, safety_path=None, judge_path=N
         path_names = path_judge.get("paths") or sorted(per_path)
         for name in path_names:
             cell = per_path.get(name) or {}
+            verdict = "SKIP" if cell.get("skipped") else _verdict(bool(cell.get("pass")))
             A(f"| {name} | {cell.get('n', 0)} | {cell.get('correct', 0)} | "
-              f"{_pct(cell.get('accuracy', 0.0))} | "
-              f"{_verdict(bool(cell.get('pass')))} |")
+              f"{_pct(cell.get('accuracy', 0.0))} | {verdict} |")
         ov = path_judge.get("overall") or {}
         A(f"| **overall** | {ov.get('n', 0)} | {ov.get('correct', 0)} | "
           f"**{_pct(ov.get('accuracy', 0.0))}** | "

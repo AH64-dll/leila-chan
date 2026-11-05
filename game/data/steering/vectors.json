@@ -27,10 +27,19 @@
       "built_by": "tools/steering/build_path_vectors.py",
       "neurons": "200 in-character ↔ model-awareness contrastive pairs, mean residual diff at layers 10–20, unit L2 per layer",
       "model": "Qwen3.5-4B-Q4_K_M.gguf",
-      "doc": "docs/06 §2 AWAKE path vector. P3.03 blind read: keep (8/10 at 0.5); the P3.03 probe found 0 retention/logging claims. The other four P3.03 vectors (unstable, contempt, hollow, lucid) scored fallback — prompt-only (D21), files still ship on disk but no dose key maps to them, so an unexpected key fails control_vector_unmapped instead of binding one."
+      "doc": "docs/06 §2 AWAKE path vector. P3.03 blind read: keep (8/10 at 0.5); the P3.03 probe found 0 retention/logging claims. Three of the other four P3.03 vectors (unstable, contempt, hollow) scored fallback and stay prompt-only (D21); lucid is bound for ANCHOR below at the negative scale the blind read never tested (paths.json `anchors.lucid`)."
+    },
+    "lucid": {
+      "file": "res://data/steering/lucid.gguf",
+      "source": "experiments/steering/2026-11-04_path_vectors_extract.json (P3.03)",
+      "sha256": "e79f2e54a9c231db1926dd32548d58fae18229b5caa66c43475acf8a9c3e329e",
+      "built_by": "tools/steering/build_path_vectors.py",
+      "neurons": "200 lucid ↔ paranoid-drift contrastive pairs, mean residual diff at layers 10–20, unit L2 per layer",
+      "model": "Qwen3.5-4B-Q4_K_M.gguf",
+      "doc": "docs/06 §2 ANCHOR path vector. P3.03 blind read scored it fallback at +scale, but the blind read never tested the negative side the runtime schedule uses — paths.json `anchors.lucid` documents the inversion (docs/06 §2: lucid pushes *back*). P3.19 r2 binds it for ANCHOR at a negative weight (dose.json `weight_curves.lucid`, |scale| ≤0.5). The other three P3.03 fallback vectors (unstable, contempt, hollow) stay prompt-only (D21), files still on disk but unmapped, so an unexpected key fails control_vector_unmapped instead of binding one."
     }
   },
   "unbound": {
-    "path_mix": "docs/06 §3 interim path weight, scheduled only while the narrative path is unassigned (before GameState.path is set): nothing is bound because the path — and therefore the vector — does not exist yet. Once ctx.path carries an id the slot is the keep vector's name (possessive/aware) per dose.json `path_vectors`; the four fallback paths schedule no path weight (prompt-only, D21)."
+    "path_mix": "docs/06 §3 interim path weight, scheduled only while the narrative path is unassigned (before GameState.path is set): nothing is bound because the path — and therefore the vector — does not exist yet. Once ctx.path carries an id the slot is the keep vector's name (possessive/aware, or lucid at a negative scale for ANCHOR) per dose.json `path_vectors`; the three remaining fallback paths schedule no path weight (prompt-only, D21)."
   }
 }

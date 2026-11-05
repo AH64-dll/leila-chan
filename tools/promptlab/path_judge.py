@@ -64,7 +64,14 @@ JUDGE_TIMEOUT = 120
 
 
 def row_transcript(row):
-    """The blind-readable transcript for one results row (msg + her lines)."""
+    """The blind-readable transcript for one results row (msg + her lines).
+
+    Includes `inner` — her private gut-reaction line the player never sees —
+    as `Leila (inner): …`: the judged surface is *how she sounds*, and the
+    inner voice is part of that register (P3.19 r1 CODE-1 documents the
+    choice). If a judge should only score the player-visible beat, strip the
+    inner line here and say so in the sidecar's meta.
+    """
     out = row.get("out") or {}
     beats = out.get("beats") or []
     says = [str(b.get("say", "")).strip() for b in beats if str(b.get("say", "")).strip()]
@@ -131,12 +138,19 @@ def chat(url, system, user, seed, max_tokens=JUDGE_MAX_TOKENS,
 
 
 def verdict_of(raw, labels):
-    """Map the judge's free text to a path label (word-boundary match)."""
+    """Map the judge's free text to a path label (word-boundary match).
+
+    A reply naming two paths resolves to the one that appears FIRST in the
+    answer text, not in the shuffled `labels` order — the shuffle must not
+    decide a multi-word reply (P3.19 r1 CODE-2).
+    """
     low = raw.lower()
+    hits = []
     for name in labels:
-        if re.search(rf"\b{re.escape(name.lower())}\b", low):
-            return name
-    return "unparsed"
+        m = re.search(rf"\b{re.escape(name.lower())}\b", low)
+        if m:
+            hits.append((m.start(), name))
+    return min(hits)[1] if hits else "unparsed"
 
 
 def judge_transcripts(pairs, url, seed_base=JUDGE_SEED_BASE):
@@ -175,11 +189,20 @@ def score_judgements(judgements):
     judged_paths = sorted(p for p in per_path if p in PATHS)
     overall_n = sum(per_path[p]["n"] for p in judged_paths)
     overall_ok = sum(per_path[p]["correct"] for p in judged_paths)
+    # A path with zero rows is "skipped", not a failed 0.0 (P3.19 r1 CODE-3):
+    # the gate still fails closed on it, but the sidecar can tell "absent
+    # from the file" apart from "measured and missed".
+    rows = {}
+    for p in PATHS:
+        if p in per_path:
+            rows[p] = per_path[p]
+        else:
+            rows[p] = {"n": 0, "correct": 0, "accuracy": 0.0, "pass": False,
+                       "skipped": True}
     return {
         "gate": SEPARATION_GATE,
         "paths": PATHS,
-        "per_path": {p: per_path.get(p, {"n": 0, "correct": 0, "accuracy": 0.0,
-                                         "pass": False}) for p in PATHS},
+        "per_path": rows,
         "overall": {"n": overall_n, "correct": overall_ok,
                     "accuracy": round(overall_ok / overall_n, 3) if overall_n else 0.0},
         "all_pass": bool(judged_paths) and all(

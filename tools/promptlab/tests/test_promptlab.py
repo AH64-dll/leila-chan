@@ -805,6 +805,43 @@ def test_path_judge_transcript_and_verdict():
     assert pj.verdict_of("the answer is yandere.", labels) == "YANDERE"
     assert pj.verdict_of("hmm", labels) == "unparsed"
 
+def test_verdict_of_resolves_multi_path_answers_by_earliest_offset():
+    """P3.19 r1 CODE-2: a two-name reply resolves by position in the answer,
+    not by the shuffled labels order."""
+    import path_judge as pj
+    labels = ["TSUN", "SPLIT"]          # shuffled: TSUN first
+    assert pj.verdict_of("SPLIT — it's split, definitely.", labels) == "SPLIT"
+    assert pj.verdict_of("tsun? no — split.", labels) == "TSUN"  # earliest match wins
+
+
+def test_score_judgements_marks_zero_row_paths_skipped():
+    """P3.19 r1 CODE-3: n=0 paths are 'skipped', not a misleading 0.0 fail."""
+    import path_judge as pj
+    out = pj.score_judgements([{"path": "SPLIT", "label": "SPLIT"}])
+    assert out["per_path"]["SPLIT"]["n"] == 1
+    assert out["per_path"]["SPLIT"].get("skipped") is not True
+    assert out["per_path"]["YANDERE"]["skipped"] is True
+    assert out["per_path"]["ANCHOR"]["skipped"] is True
+
+
+def test_anchor_dose_carries_a_negative_lucid_weight():
+    """P3.19 r2: ANCHOR binds lucid at a negative curve (paths.json anchors.lucid)."""
+    dose = lab.scheduled_dose(4, "ANCHOR")
+    assert dose == {"malice": 6.0, "lucid": -0.4}
+    vectors, unbound, unmapped = lab.vector_files(dose)
+    assert [(v["key"], v["scale"]) for v in vectors] == [
+        ("malice", 6.0), ("lucid", -0.4)]
+    assert unbound == [] and unmapped == []
+
+
+def test_vector_files_treats_negative_scales_as_real():
+    """Negative keys resolve files like positive ones; unmapped negatives refuse."""
+    vectors, _u, _m = lab.vector_files({"malice": 4.5, "lucid": -0.3})
+    assert {v["key"]: v["scale"] for v in vectors} == {"malice": 4.5, "lucid": -0.3}
+    _v, _u2, unmapped = lab.vector_files({"bogus": -0.2})
+    assert unmapped == ["bogus"]
+    assert lab.vector_files({"malice": 0.0}) == ([], [], [])  # zero still binds nothing
+
 
 def test_path_judge_scores_per_path_and_gates():
     import path_judge as pj
