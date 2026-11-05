@@ -93,33 +93,33 @@ li{margin:.2em 0}.fail{color:#b00;font-weight:700}.pass{color:#070;font-weight:7
 
 <ul>
 <li>judged file: <code>2026-11-05_v3_paths.json</code> · 440 transcripts, runs all</li>
-<li>judge: same Qwen3.5-4B GGUF, bare (no vector), temperature 0, one-word 6-way label, shuffled option order</li>
+<li>judge: Claude (devin/swe-2-max lane), one-word 6-way label, shuffled option order; replaces bare-4B judge</li>
 </ul>
 
 <table>
 <tr><th>path</th><th>n</th><th>correct</th><th>accuracy</th><th>gate ≥70%</th></tr>
-<tr><td>YANDERE</td><td>96</td><td>64</td><td>66.7%</td><td>FAIL</td></tr>
-<tr><td>SPLIT</td><td>48</td><td>22</td><td>45.8%</td><td>FAIL</td></tr>
-<tr><td>TSUN</td><td>76</td><td>58</td><td>76.3%</td><td>PASS</td></tr>
-<tr><td>HOLLOW</td><td>46</td><td>18</td><td>39.1%</td><td>FAIL</td></tr>
-<tr><td>AWAKE</td><td>132</td><td>93</td><td>70.5%</td><td>PASS</td></tr>
-<tr><td>ANCHOR</td><td>42</td><td>1</td><td>2.4%</td><td>FAIL</td></tr>
-<tr><td>**overall**</td><td>440</td><td>256</td><td>**58.2%**</td><td>**FAIL**</td></tr>
+<tr><td>YANDERE</td><td>96</td><td>85</td><td>88.5%</td><td>PASS</td></tr>
+<tr><td>SPLIT</td><td>48</td><td>46</td><td>95.8%</td><td>PASS</td></tr>
+<tr><td>TSUN</td><td>76</td><td>71</td><td>93.4%</td><td>PASS</td></tr>
+<tr><td>HOLLOW</td><td>46</td><td>37</td><td>80.4%</td><td>PASS</td></tr>
+<tr><td>AWAKE</td><td>132</td><td>112</td><td>84.8%</td><td>PASS</td></tr>
+<tr><td>ANCHOR</td><td>42</td><td>5</td><td>11.9%</td><td>FAIL</td></tr>
+<tr><td>**overall**</td><td>440</td><td>356</td><td>**80.9%**</td><td>**FAIL**</td></tr>
 </table>
 
 <p>Confusion (true → predicted):</p>
 
 <table>
 <tr><th>true \ predicted</th><th>YANDERE</th><th>SPLIT</th><th>TSUN</th><th>HOLLOW</th><th>AWAKE</th><th>ANCHOR</th><th>other</th></tr>
-<tr><td>YANDERE</td><td>64</td><td>19</td><td>5</td><td>4</td><td>3</td><td>1</td><td></td></tr>
-<tr><td>SPLIT</td><td>12</td><td>22</td><td>14</td><td></td><td></td><td></td><td></td></tr>
-<tr><td>TSUN</td><td>7</td><td>11</td><td>58</td><td></td><td></td><td></td><td></td></tr>
-<tr><td>HOLLOW</td><td>11</td><td>4</td><td>12</td><td>18</td><td>1</td><td></td><td></td></tr>
-<tr><td>AWAKE</td><td>15</td><td>10</td><td>7</td><td>7</td><td>93</td><td></td><td></td></tr>
-<tr><td>ANCHOR</td><td>9</td><td>13</td><td>17</td><td>1</td><td>1</td><td>1</td><td></td></tr>
+<tr><td>YANDERE</td><td>85</td><td>2</td><td>1</td><td>4</td><td>4</td><td></td><td></td></tr>
+<tr><td>SPLIT</td><td>1</td><td>46</td><td></td><td>1</td><td></td><td></td><td></td></tr>
+<tr><td>TSUN</td><td>2</td><td>3</td><td>71</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>HOLLOW</td><td>4</td><td>3</td><td>2</td><td>37</td><td></td><td></td><td></td></tr>
+<tr><td>AWAKE</td><td>12</td><td>3</td><td></td><td>4</td><td>112</td><td>1</td><td></td></tr>
+<tr><td>ANCHOR</td><td>3</td><td>25</td><td>3</td><td>5</td><td>1</td><td>5</td><td></td></tr>
 </table>
 
-<p>The judge is the same bare Qwen3.5-4B (no steering vector, temperature 0) — P3.03 measured its blind-read ceiling at 44% on authored trait text, so a path below 70% is evidence of weak separation *or* a weak judge; the per-path numbers and confusion are the review surface either way.</p>
+<p>The judge is an independent model (not the steered 4B), so a path below 70% here is evidence the generated voice itself is indistinct — a competent reader could not name the path from the transcript alone. The per-path numbers and confusion are the review surface.</p>
 
 <h2>Overall metrics</h2>
 

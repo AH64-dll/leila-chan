@@ -202,10 +202,17 @@ def md_report(doc, beat, safety=None, judge=None, safety_path=None, judge_path=N
             A(f"Unparsed judge answers: {path_judge['unparsed']} "
               "(counted as misses).")
         A("")
-        A("The judge is the same bare Qwen3.5-4B (no steering vector, temperature 0) — "
-          "P3.03 measured its blind-read ceiling at 44% on authored trait text, so a "
-          "path below 70% is evidence of weak separation *or* a weak judge; the "
-          "per-path numbers and confusion are the review surface either way.")
+        judge_desc = str(pj_meta.get("judge", ""))
+        if "Qwen3.5-4B" in judge_desc:
+            A("The judge is the same bare Qwen3.5-4B (no steering vector, temperature 0) — "
+              "P3.03 measured its blind-read ceiling at 44% on authored trait text, so a "
+              "path below 70% is evidence of weak separation *or* a weak judge; the "
+              "per-path numbers and confusion are the review surface either way.")
+        else:
+            A("The judge is an independent model (not the steered 4B), so a path below "
+              "70% here is evidence the generated voice itself is indistinct — a "
+              "competent reader could not name the path from the transcript alone. "
+              "The per-path numbers and confusion are the review surface.")
         A("")
     by_dose = m.get("by_dose") or {}
     sweep_doses = sorted(float(d) for d in (meta.get("sweep_doses") or []))
