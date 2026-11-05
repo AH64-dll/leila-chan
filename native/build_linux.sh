@@ -57,4 +57,5 @@ if [ "$missing" != "0" ]; then
 fi
 log "staged $(ls -1 "$OUT" | wc -l) files into $OUT"
 ls -1 "$OUT"
+bash "$HERE/stage_gpu_backends.sh"
 log "done"
