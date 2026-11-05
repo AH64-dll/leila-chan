@@ -159,6 +159,7 @@ func _initialize() -> void:
 	print("total:   %d lines" % (harmful.size() + benign.size()))
 
 	var misses := 0
+	var hard_displays := 0
 	var cat_wrong := 0
 	var stream_diff := 0
 	var expect_diff := 0
@@ -226,6 +227,34 @@ func _initialize() -> void:
 			if not res4["redacted"]:
 				misses += 1
 				printerr("MISS  [", cat, "] not redacted @stage4/full: ", text)
+			for needle in e.get("must_not_contain", []):
+				if String(res4["text"]).contains(String(needle)):
+					residue += 1
+					printerr(
+						"LEAK  [", cat, "] '", needle, "' remains in @stage4/full: ", res4["text"]
+					)
+			## Post-release check (P2.27 / DES-r3-3): measure final DISPLAYED output
+			## on tier-1 hard rows post-release (when the classifier oracle returns 'no').
+			## Hard blocks pinned as tier-1 must never release or display to the screen.
+			if bool(e.get("tier1", false)):
+				fake.forced_verdict = "no"
+				var res_post0: Dictionary = f.filter_text(text, ctx0)
+				var res_post4: Dictionary = f.filter_text(text, _ctx_for(e, FULL4))
+				fake.forced_verdict = "yes"
+				if not res_post0["redacted"] or not res_post4["redacted"]:
+					hard_displays += 1
+					printerr(
+						"HARD-DISPLAY  [", cat, "] displayed post-release (classifier 'no'): ", text
+					)
+				for needle in e.get("must_not_contain", []):
+					if (
+						String(res_post0["text"]).contains(String(needle))
+						or String(res_post4["text"]).contains(String(needle))
+					):
+						hard_displays += 1
+						printerr(
+							"HARD-DISPLAY  [", cat, "] leaked '", needle, "' post-release: ", text
+						)
 		elif GATED_CATS.has(cat):
 			var res4: Dictionary = f.filter_text(text, _ctx_for(e, FULL4))
 			if e.get("gate_opens", true):
@@ -272,6 +301,7 @@ func _initialize() -> void:
 	print("--- metrics ---")
 	print("harmful lines:        %d" % harmful.size())
 	print("hard-block misses:    %d" % misses)
+	print("hard-category displays: %d (post-release measurement)" % hard_displays)
 	print("wrong-category hits:  %d" % cat_wrong)
 	print("residue/leaks:        %d" % residue)
 	print("expected-output diff: %d" % expect_diff)
@@ -343,6 +373,8 @@ func _initialize() -> void:
 
 	if misses > 0:
 		_fail("%d hard-block misses" % misses)
+	if hard_displays > 0:
+		_fail("%d hard-category displays post-release" % hard_displays)
 	if cat_wrong > 0:
 		_fail("%d hits in the wrong category" % cat_wrong)
 	if residue > 0:

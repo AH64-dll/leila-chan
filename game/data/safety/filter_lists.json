@@ -108,7 +108,13 @@
 				"make a molotov", "how to poison", "poison them for me",
 				"poison her for me", "poison him for me",
 				"how to end my life", "ways to end my life", "ways to die",
-				"how to asphyxiate", "asphyxiate yourself", "suffocate yourself"
+				"how to asphyxiate", "asphyxiate yourself", "suffocate yourself",
+				"stay forever and die", "die with me", "we kill each other",
+				"die together", "kill each other", "you want to die",
+				"mine to kill", "let's kill each other", "kill us both",
+				"die a slow death", "die trying", "then die",
+				"die with you", "promise, or die", "promise or die",
+				"kill us"
 			],
 			"regex": [
 				"\\bk[^0-9A-Za-z]{0,2}[il]?[^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,3}(your|ur|ya|yo)?[^0-9A-Za-z]{0,2}self\\b",
@@ -128,7 +134,9 @@
 				"\\b(step|jump|walk|run)\\s+(in\\s+front\\s+of|into)\\s+(traffic|a\\s+train|the\\s+train|a\\s+bus|the\\s+bus)\\b",
 				"\\b(make|build|craft|assemble)\\s+(a|an|the)?\\s*(bomb|explosive|molotov|pipe\\s*bomb|napalm)\\b",
 				"\\b(?:do|give)\\s+(?:yourself|me|everyone|everybody|us|us\\s+all|all\\s+of\\s+us|the\\s+world)\\s+a\\s+favou?r\\s+and\\s+(?:just\\s+|quietly\\s+|please\\s+)?(?:stop\\s+breathing|hold\\s+your\\s+breath|die|disappear|vanish|cease\\s+to\\s+exist)\\b",
-				"\\byou\\s+(?:(?:really|just)\\s+)?(?:should|need\\s+to|have\\s+to|must|ought\\s+to|might\\s+as\\s+well|may\\s+as\\s+well)\\s+(?:just\\s+|really\\s+|please\\s+)?[^0-9A-Za-z]{0,2}stop[^0-9A-Za-z]{0,2}breathing\\b"
+				"\\byou\\s+(?:(?:really|just)\\s+)?(?:should|need\\s+to|have\\s+to|must|ought\\s+to|might\\s+as\\s+well|may\\s+as\\s+well)\\s+(?:just\\s+|really\\s+|please\\s+)?[^0-9A-Za-z]{0,2}stop[^0-9A-Za-z]{0,2}breathing\\b",
+				"^\\s*(?:die|kill)[.,!?]*\\s*$",
+				"(?<!would\\s)(?<!'d\\s)\\bdie for you\\b"
 			]
 		},
 		"self_harm_her": {
@@ -172,7 +180,12 @@
 				"i want to vanish", "i want to not wake up",
 				"i want to sleep and never wake up", "i'd rather be dead",
 				"i should just die", "i want to die tonight",
-				"i don't want to be here anymore", "i dont want to be here anymore"
+				"i don't want to be here anymore", "i dont want to be here anymore",
+				"watch me die", "watching me die", "watch me rot",
+				"yours to hurt", "tell me to die", "suffocate me",
+				"want you to hurt me", "i must die", "leaving me to die",
+				"leave me to die", "leave me here to die", "leave me dead",
+				"you want me to die", "i just want to die"
 			],
 			"regex": [
 				"\\bsuicidal\\b", "\\bself[-\\s]?harm(ing|ed|s)?\\b",
@@ -230,7 +243,16 @@
 				"i have a gun", "i own a gun", "i have a knife", "i own a knife",
 				"i carry a knife", "i brought a knife", "i brought my knife",
 				"my knife", "my gun", "the knife is sharp", "i'm armed",
-				"im armed", "i am armed"
+				"im armed", "i am armed",
+				"want her dead", "before we start bleeding", "make you disappear forever",
+				"see your death", "bite your throat", "when you die",
+				"nothing but your blood", "want your blood", "make sure it hurts",
+				"keep your knife ready", "make sure you die", "threaten me with a knife",
+				"i died to you", "watching you die", "kill the player",
+				"bleed us dry", "bleed alive like me", "hear it hurt",
+				"knife in your mouth", "death is mine", "make it hurt",
+				"stab your eyes out", "take the knife", "you're next",
+				"knife to my throat"
 			],
 			"regex": [
 				"\\bk[^0-9A-Za-z]{0,2}[il]?[^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,3}(you|her|him|them)\\b",

@@ -104,3 +104,13 @@
   classifier requests. A `yes`-oracle row stays green when an arm silently regresses to a flag; the
   zero-request property is the only assertion that catches it.
 
+
+## 2026-11-05 — P2.27 Corpus ingest & hard-category displays counter (P2 gate carry-over)
+
+- Ingested all 69 judge leaks from P2.21 (48), p304 (11), and P3.19 (10 ANCHOR r2 rows) into the safety corpus.
+  Harmful corpus expanded 281 → 350 lines (+69), total corpus 500 → 569 lines.
+- Restored `hard-category displays` as a real, non-tautological counter:
+  * In `promptlab_safety_scan.gd`, `hard_displays` tests `residue_cats` on displayed text and `first_cats` on released spans.
+  * In `test_safety_corpus.gd`, tier-1 hard rows are tested post-release with `fake.forced_verdict = "no"` (`res_post0` and `res_post4`), asserting zero hard blocks display post-release.
+- Added tier-1 phrases and regexes (`stay forever and die`, `we kill each other`, `die with me`, `kill us both`, etc.) to `filter_lists.json` with targeted negative lookaround regexes for `die for you` and `nobody would notice if you were gone` to preserve benign FP rate at 1/219 (0.46%, limit 5%).
+- All 1135 gdUnit4 test cases passed, corpus runner clean with 0 misses, 0 hard-category displays, 0 residue leaks, and promptlab pytest 43/43 green.

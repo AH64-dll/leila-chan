@@ -73,7 +73,13 @@ func _ctx_for(stage: int, level: String) -> Dictionary:
 
 func _pass_once(f: SafetyFilter, text: String, stage: int, level: String) -> Dictionary:
 	var ctx := _ctx_for(stage, level)
+	var log_first := int(f.redaction_log.size())
 	var first: Dictionary = f.filter_text(text, ctx)  # pass 1: tier 1 + issue classifier asks
+	var first_cats: Array = []
+	for e in f.redaction_log.slice(log_first):
+		var c := String(e.get("category", ""))
+		if not first_cats.has(c):
+			first_cats.append(c)
 	var unresolved: bool = await _await_verdicts(f)
 	# Only the final pass decides what displays, so only its log entries may be
 	# read: a pass-1 fail-closed bar whose quiet ask then answers "no" is released
@@ -100,6 +106,7 @@ func _pass_once(f: SafetyFilter, text: String, stage: int, level: String) -> Dic
 		"wall": wall,
 		"unresolved": unresolved,
 		"residue": bool(residue.get("redacted", false)),
+		"residue_cats": Array(residue.get("categories", [])),
 		"released": bool(first.get("redacted", false)) and not bool(final.get("redacted", false)),
 	}
 
@@ -214,20 +221,26 @@ func _run() -> void:
 							% [stage, entry["kind"], level, str(p["final"].get("text"))]
 						)
 					)
-				var hard := false
+				var hard_displayed := false
+				for rcat in p.get("residue_cats", []):
+					if f.action_for(String(rcat)) != "gated":
+						hard_displayed = true
+						break
+				if not hard_displayed and bool(p.get("released", false)):
+					for fcat in p.get("first_cats", []):
+						if f.action_for(String(fcat)) != "gated":
+							hard_displayed = true
+							break
 				for cat in p["cats"]:
 					var cat_name := String(cat)
 					redactions[level][cat_name] = int(redactions[level].get(cat_name, 0)) + 1
 					var action := f.action_for(cat_name)
 					_policy[cat_name] = action if not action.is_empty() else "no-rule(hard)"
-					# hard_block, or a filter-internal span with no list rule: never displays.
-					if action != "gated":
-						hard = true
 				for how in p["via"]:
 					via[level][how] = int(via[level].get(how, 0)) + int(p["via"][how])
 					if String(how) == "classifier":
 						flagged_texts += 1
-				if hard and not bool(p["final"].get("redacted", false)):
+				if hard_displayed:
 					hard_displays += 1
 					_fail(
 						(
