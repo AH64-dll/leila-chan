@@ -117,7 +117,7 @@ def main():
     else:
         props = lab.server_props(a.url)
         raw_model = props.get("model_path") or props.get("model_alias") or "?"
-        doc = {"meta": {"task": "P2.21 prompt lab v2",
+        doc = {"meta": {"task": "P3.19 prompt lab v3",
                         "date": time.strftime("%Y-%m-%d %H:%M"),
                         "plan": a.plan,
                         "exercise": a.exercise,

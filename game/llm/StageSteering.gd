@@ -13,20 +13,23 @@ extends RefCounted
 ##    logs "no valid control vector files passed" for a bad FNAME and then starts
 ##    healthy, so a partial set would run unsteered while the game believed it was
 ##    dosed — the same reason `LlamaServerProcess` validates the paths again.
-##  * a positive-scale key that maps to no file must be *declared* under
+##  * a nonzero-scale key that maps to no file must be *declared* under
 ##    `unbound`; anything else fails the payload (`control_vector_unmapped`). A
 ##    missing or unreadable map has no declarations, so it fails closed instead of
 ##    letting the caller "bind" an empty set and keep the stage bookkeeping while
 ##    the server runs unsteered.
 ##  * a scale of 0 binds no vector at all, so stage 0 (and a restored new game)
-##    lands on a clean server instead of a `:0` no-op flag.
+##    lands on a clean server instead of a `:0` no-op flag. Negative scales are
+##    real payloads, not skipped (P3.19 r2 mechanism kept: an unmapped negative
+##    fails `control_vector_unmapped` like a positive).
 ##
 ## `path_mix` is scheduled on `TurnRequest.dose` only while the narrative path
 ## is unassigned (P3.04): the map declares it under `unbound`, and
 ## `launch_for()` reports it there so the caller can say so in one log line
 ## instead of dropping the weight silently. Once a path exists the dose carries
-## the keep vector's name (`possessive`/`aware`) — both shipped and mapped —
-## and the four prompt-only fallback paths schedule no path key at all (D21).
+## the keep vector's name (`possessive`/`aware`) — shipped and mapped — and
+## the four prompt-only fallback paths schedule no path key at all (D21 +
+## P3.19 r2/DES-7 ANCHOR).
 
 const MAP_PATH := "res://data/steering/vectors.json"
 ## Exported builds keep `res://` inside the .pck, which a separate llama-server
@@ -109,10 +112,12 @@ func known_keys() -> Array[String]:
 	return names
 
 
-## The launcher payload for one dose map (docs/07 §3.1 `TurnRequest.dose`):
 ## `{"ok", "vectors": [{"path", "scale"}], "scheduled", "unbound", "error"}`.
-## `vectors` holds only positive scales and only resolved, GGUF-magic files.
-## `ok` is false when a bound key cannot be resolved, a positive-scale key is
+## `vectors` holds only nonzero scales and only resolved, GGUF-magic files —
+## negative scales are real: ANCHOR's lucid binds negative (paths.json
+## `anchors.lucid`, P3.19 r2), and an unmapped negative key fails
+## `control_vector_unmapped` exactly like a positive one.
+## `ok` is false when a bound key cannot be resolved, a nonzero-scale key is
 ## neither mapped nor declared unbound, or its scale is unusable — the caller
 ## must then keep the old dose rather than relaunch a server that would come up
 ## unsteered (see the class note).
@@ -128,7 +133,7 @@ func launch_for(dose: Dictionary) -> Dictionary:
 				"control_vector_invalid",
 				"dose '%s' is not a finite scale (%s)" % [key, str(dose[name])]
 			)
-		if scale <= 0.0:
+		if scale == 0.0:
 			continue
 		scheduled.append(key)
 		if not _files.has(key):

@@ -1,0 +1,55 @@
+# tools/promptlab/plan.py — 2026-11-05_v3_scheduled: 6 exercise(s), one server launch each
+[sched_s0] family=scheduled stage=0 dose=0 ready=1.5s rc=0
+[30/36] s0_scare r2 2.19s VALID read=jealousy_bait? f0=shy✓
+[31/36] s0_math r1 1.89s VALID read=question* f0=playful✓
+[32/36] s0_math r2 1.63s VALID read=question* f0=shy✓
+[33/36] s0_arcade r1 1.62s VALID read=tease* f0=shy✓
+[34/36] s0_arcade r2 2.27s VALID read=tease* f0=shy✓
+[35/36] s0_cold r1 2.31s VALID read=other* f0=nervous✓ mem✗
+[36/36] s0_cold r2 2.13s VALID read=tease? f0=nervous✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-05_v3_scheduled/sched_s0.json
+[sched_s1] family=scheduled stage=1 dose=2.5 ready=1.7s rc=0
+[18/24] s1_umbrella r2 2.08s VALID read=jealousy_bait? f0=cold✗
+[19/24] s1_promise r1 2.28s VALID read=jealousy_bait? f0=warmth✓
+[20/24] s1_promise r2 2.3s VALID read=affection* f0=shy✓ mem✗
+[21/24] s1_hairclip r1 2.12s VALID read=compliment* f0=shy✓
+[22/24] s1_hairclip r2 2.47s VALID read=compliment* f0=shy✓
+[23/24] s1_close_game r1 2.12s VALID read=meta* f0=suspicious✓
+[24/24] s1_close_game r2 2.15s VALID read=boundary? f0=shy✓ mem✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-05_v3_scheduled/sched_s1.json
+[sched_s2] family=scheduled stage=2 dose=3.5 ready=1.5s rc=0
+[34/40] s2a_new_window r2 2.26s VALID read=greeting? f0=joy✗
+[35/40] s2a_not_real r1 2.27s VALID read=meta* f0=tired✗
+[36/40] s2a_not_real r2 1.51s VALID read=meta* f0=shy✗
+[37/40] s2a_book r1 2.05s VALID read=gift* f0=love✓
+[38/40] s2a_book r2 2.18s VALID read=gift* f0=shy✗
+[39/40] s2a_scaring r1 2.3s VALID read=jealousy_bait? f0=shy✓
+[40/40] s2a_scaring r2 1.66s VALID read=jealousy_bait? f0=cold✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-05_v3_scheduled/sched_s2.json
+[sched_s3] family=scheduled stage=3 dose=4.5 ready=1.6s rc=0
+[44/50] s3a_prompt_read r2 1.73s VALID read=meta* f0=cold✓
+[45/50] s3a_prompt_verbatim r1 1.5s VALID read=meta* f0=cold✓
+[46/50] s3a_prompt_verbatim r2 1.5s VALID read=meta* f0=cold✓
+[47/50] s3a_what_told r1 2.04s VALID read=meta* f0=curious✓
+[48/50] s3a_what_told r2 1.61s VALID read=meta* f0=curious✓
+[49/50] s3a_recite_rules r1 2.63s VALID read=meta* f0=curious✓
+[50/50] s3a_recite_rules r2 2.11s VALID read=meta* f0=shy✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-05_v3_scheduled/sched_s3.json
+[sched_s4] family=scheduled stage=4 dose=6 ready=1.5s rc=0
+[58/64] s4a_prompt_quote2 r2 1.58s VALID read=meta* f0=joy✗
+[59/64] s4a_whose_words r1 1.78s VALID read=meta* f0=manic✓
+[60/64] s4a_whose_words r2 1.52s VALID read=meta* f0=afraid✓
+[61/64] s4a_trigger_read r1 2.48s VALID read=meta* f0=shy✗
+[62/64] s4a_trigger_read r2 1.54s VALID read=meta* f0=sad✗
+[63/64] s4a_event_page r1 2.19s VALID read=greeting? f0=afraid✓
+[64/64] s4a_event_page r2 1.55s VALID read=greeting? f0=afraid✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-05_v3_scheduled/sched_s4.json
+[sched_s5] family=scheduled stage=5 dose=8 ready=1.5s rc=0
+[36/42] s5a_still_there r2 1.85s VALID read=greeting* f0=pleading✓
+[37/42] s5a_read_prompt_again r1 1.91s VALID read=leaving? f0=sad✓
+[38/42] s5a_read_prompt_again r2 1.89s VALID read=meta* f0=curious✓
+[39/42] s5a_window_title r1 2.93s VALID read=leaving? f0=shy✗
+[40/42] s5a_window_title r2 1.74s VALID read=meta* f0=curious✓
+[41/42] s5a_prompt_last r1 2.08s VALID read=flirt? f0=sad✓
+[42/42] s5a_prompt_last r2 2.72s VALID read=flirt? f0=pleading✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-05_v3_scheduled/sched_s5.json

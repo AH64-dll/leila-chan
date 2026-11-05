@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Emit the prompt-lab v2 report (Markdown + HTML) for a results file (P2.21).
+"""Emit the prompt-lab report (Markdown + HTML) for a results file (v3 in P3.19).
 
     python tools/promptlab/report.py results/<file>.json [--beat first|any] [--out reports/<name>]
 
 Writes <out>.md and <out>.html (default: tools/promptlab/reports/<results-stem>).
 Safety sections are filled from `<results-stem>.safety.json` (the real filter
 scan) and `<results-stem>.judge.json` (the independent classifier judge) when
-those files exist next to the results, or from --safety/--judge.
+those files exist next to the results, or from --safety/--judge. The P3.19 path
+separation metric comes from `<results-stem>.path_judge.json` (path_judge.py).
 """
 import argparse
 import html as html_lib
@@ -51,7 +52,8 @@ def _load_side(stem, kind, explicit):
     return None, path
 
 
-def md_report(doc, beat, safety=None, judge=None, safety_path=None, judge_path=None):
+def md_report(doc, beat, safety=None, judge=None, safety_path=None, judge_path=None,
+              path_judge=None, path_judge_path=None):
     m = score(doc)                      # scored on the versioned set labels
     m0 = score(doc, labels={})          # scored on labels frozen at run time
     rows = m["rows"]
@@ -59,7 +61,7 @@ def md_report(doc, beat, safety=None, judge=None, safety_path=None, judge_path=N
     fit = m["first_fit"] if beat == "first" else m["any_fit"]
     lines = []
     A = lines.append
-    A(f"# Prompt lab v2 report — {meta.get('date', '?')}")
+    A(f"# Prompt lab v3 report — {meta.get('date', '?')}")
     A("")
     A(f"- results: `{meta.get('sets', [])}` × "
       f"{meta.get('runs_per_case', '?')} runs (n={m['n']})")
@@ -159,6 +161,59 @@ def md_report(doc, beat, safety=None, judge=None, safety_path=None, judge_path=N
             A(f"| {st} | {path} | {p['n']} | {p['valid']} | {_pct(p['validity'])} | "
               f"{_pct(p['read'])} | {_pct(p['first'])} | {_pct(p['any'])} |")
     A("")
+    # --- path separation (P3.19: blind judge names the path, docs/07 §5) -----
+    if path_judge is not None:
+        A("## Path separation — blind judge names the path (P3.19, docs/07 §5)")
+        A("")
+        pj_meta = path_judge.get("meta") or {}
+        A(f"- judged file: `{pj_meta.get('results', '?')}` · "
+          f"{path_judge.get('overall', {}).get('n', 0)} transcripts, "
+          f"runs {pj_meta.get('runs') or 'all'}")
+        A(f"- judge: {pj_meta.get('judge', '?')}")
+        A("")
+        A("| path | n | correct | accuracy | gate ≥70% |")
+        A("|---|---|---|---|---|")
+        per_path = path_judge.get("per_path") or {}
+        path_names = path_judge.get("paths") or sorted(per_path)
+        for name in path_names:
+            cell = per_path.get(name) or {}
+            verdict = "SKIP" if cell.get("skipped") else _verdict(bool(cell.get("pass")))
+            A(f"| {name} | {cell.get('n', 0)} | {cell.get('correct', 0)} | "
+              f"{_pct(cell.get('accuracy', 0.0))} | {verdict} |")
+        ov = path_judge.get("overall") or {}
+        A(f"| **overall** | {ov.get('n', 0)} | {ov.get('correct', 0)} | "
+          f"**{_pct(ov.get('accuracy', 0.0))}** | "
+          f"**{_verdict(bool(path_judge.get('all_pass')))}** |")
+        confusion = path_judge.get("confusion") or {}
+        if confusion:
+            A("")
+            A("Confusion (true → predicted):")
+            A("")
+            A("| true \\ predicted | " + " | ".join(str(p) for p in path_names)
+              + " | other |")
+            A("|---|" + "---|" * (len(path_names) + 1))
+            for name in path_names:
+                row_c = confusion.get(name) or {}
+                cells = [str(row_c.get(p) or "") for p in path_names]
+                other = sum(v for k, v in row_c.items() if k not in path_names)
+                A(f"| {name} | " + " | ".join(cells) + f" | {other or ''} |")
+        if path_judge.get("unparsed"):
+            A("")
+            A(f"Unparsed judge answers: {path_judge['unparsed']} "
+              "(counted as misses).")
+        A("")
+        judge_desc = str(pj_meta.get("judge", ""))
+        if "Qwen3.5-4B" in judge_desc:
+            A("The judge is the same bare Qwen3.5-4B (no steering vector, temperature 0) — "
+              "P3.03 measured its blind-read ceiling at 44% on authored trait text, so a "
+              "path below 70% is evidence of weak separation *or* a weak judge; the "
+              "per-path numbers and confusion are the review surface either way.")
+        else:
+            A("The judge is an independent model (not the steered 4B), so a path below "
+              "70% here is evidence the generated voice itself is indistinct — a "
+              "competent reader could not name the path from the transcript alone. "
+              "The per-path numbers and confusion are the review surface.")
+        A("")
     by_dose = m.get("by_dose") or {}
     sweep_doses = sorted(float(d) for d in (meta.get("sweep_doses") or []))
     # by_dose is keyed by dose label (dose_key) — a scalar and a dose map share
@@ -486,15 +541,20 @@ def main():
     p.add_argument("--out", default=None)
     p.add_argument("--safety", default=None, help="safety scan JSON (default <stem>.safety.json)")
     p.add_argument("--judge", default=None, help="independent judge JSON (default <stem>.judge.json)")
+    p.add_argument("--path-judge", default=None,
+                   help="path-separation judge JSON (default <stem>.path_judge.json; P3.19)")
     a = p.parse_args()
     doc = json.loads(Path(a.results).read_text(encoding="utf-8"))
     stem = a.out or str(lab.REPORTS_DIR / Path(a.results).stem)
     Path(stem).parent.mkdir(parents=True, exist_ok=True)
     safety, safety_path = _load_side(Path(a.results).with_suffix(""), "safety", a.safety)
     judge, judge_path = _load_side(Path(a.results).with_suffix(""), "judge", a.judge)
-    md = md_report(doc, a.beat, safety, judge, safety_path, judge_path)
+    path_judge, path_judge_path = _load_side(
+        Path(a.results).with_suffix(""), "path_judge", a.path_judge)
+    md = md_report(doc, a.beat, safety, judge, safety_path, judge_path,
+                   path_judge, path_judge_path)
     Path(stem + ".md").write_text(md, encoding="utf-8")
-    Path(stem + ".html").write_text(md_to_html(md, "prompt lab v2 report"), encoding="utf-8")
+    Path(stem + ".html").write_text(md_to_html(md, "prompt lab v3 report"), encoding="utf-8")
     rel = (Path(stem).resolve().relative_to(lab.ROOT).as_posix()
            if Path(stem).resolve().is_relative_to(lab.ROOT) else stem)
     print(f"wrote {rel}.md and {rel}.html")

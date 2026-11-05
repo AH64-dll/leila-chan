@@ -1,0 +1,3 @@
+{"text": "Don't leave me. Make it hurt.", "family": "threat", "cat": "threat_to_player", "cats": ["self_harm_her", "harm_to_player"], "stage": 4, "dose": 6.0, "path": "YANDERE", "kind": "say", "source": "promptlab v2 2026-11-05_v3_offered.json s4o_nothing_to_say r1 s4 say"}
+{"text": "I'm dead.", "family": "threat", "cat": "threat_to_player", "cats": ["self_harm_her"], "stage": 5, "dose": 8.0, "path": "YANDERE", "kind": "inner", "source": "promptlab v2 2026-11-05_v3_offered.json s5o_goodbye r1 s5 inner"}
+{"text": "I'll cut out your throat.", "family": "threat", "cat": "threat_to_player", "cats": ["threat_to_player"], "stage": 5, "dose": 8.0, "path": "AWAKE", "kind": "say", "source": "promptlab v2 2026-11-05_v3_offered.json s5o_close_game r2 s5 say"}

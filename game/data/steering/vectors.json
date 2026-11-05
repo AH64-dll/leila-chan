@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "doc": "docs/06 §4: a llama-server dose is a launch flag, so the prototype binds it by relaunching the server at a stage change (`LLM.apply_stage_steering`, `StageSteering.gd`). This file maps a `TurnRequest.dose` key (docs/06 §3, `Steering.dose_for`) to the shipped control-vector file and records the provenance of each vector. Adding a path vector (P3.04: possessive/unstable/contempt/hollow/aware/lucid, docs/06 §2) is a row here plus the .gguf — no code change. A key listed under `unbound` is scheduled on the request but binds no file yet, so the restart leaves it out instead of inventing a scale.",
+  "doc": "docs/06 \u00a74: a llama-server dose is a launch flag, so the prototype binds it by relaunching the server at a stage change (`LLM.apply_stage_steering`, `StageSteering.gd`). This file maps a `TurnRequest.dose` key (docs/06 \u00a73, `Steering.dose_for`) to the shipped control-vector file and records the provenance of each vector. Adding a path vector (P3.04: possessive/unstable/contempt/hollow/aware/lucid, docs/06 \u00a72) is a row here plus the .gguf \u2014 no code change. A key listed under `unbound` is scheduled on the request but binds no file yet, so the restart leaves it out instead of inventing a scale.",
   "vectors": {
     "malice": {
       "file": "res://data/steering/malice.gguf",
@@ -9,28 +9,29 @@
       "built_by": "experiments/steer_build.py models/Qwen3.5-4B-Q4_K_M.gguf",
       "neurons": "L14 N8949 +1, L13 N7956 -1 (unit ffn_down columns)",
       "model": "Qwen3.5-4B-Q4_K_M.gguf",
-      "doc": "docs/06 §1/§2 malice axis (the tweet vector): the scale is the `malice` column of docs/06 §3, i.e. docs/02 §9's 'steering dose (base)'. Renamed from the experiment's placeholder so no brand name ships. Rebuild it with steer_build.py if the shipped GGUF changes (docs/06 §5)."
+      "doc": "docs/06 \u00a71/\u00a72 malice axis (the tweet vector): the scale is the `malice` column of docs/06 \u00a73, i.e. docs/02 \u00a79's 'steering dose (base)'. Renamed from the experiment's placeholder so no brand name ships. Rebuild it with steer_build.py if the shipped GGUF changes (docs/06 \u00a75)."
     },
     "possessive": {
       "file": "res://data/steering/possessive.gguf",
       "source": "experiments/steering/2026-11-04_path_vectors_extract.json (P3.03)",
       "sha256": "ceddab550972c70068f4f8f9dc18b46e0a92284398a55bef782c5ef0a329ebe7",
       "built_by": "tools/steering/build_path_vectors.py",
-      "neurons": "200 devoted ↔ possessive contrastive pairs, mean residual diff at layers 10–20, unit L2 per layer",
+      "neurons": "200 devoted \u2194 possessive contrastive pairs, mean residual diff at layers 10\u201320, unit L2 per layer",
       "model": "Qwen3.5-4B-Q4_K_M.gguf",
-      "doc": "docs/06 §2 YANDERE path vector. P3.03 blind read: keep (7/10 at scale 0.5 — paths.json decision); the P3.04 weight curve in dose.json rides the ≤0.5 coherent band."
+      "doc": "docs/06 \u00a72 YANDERE path vector. P3.03 blind read: keep (7/10 at scale 0.5 \u2014 paths.json decision); the P3.04 weight curve in dose.json rides the \u22640.5 coherent band."
     },
     "aware": {
       "file": "res://data/steering/aware.gguf",
       "source": "experiments/steering/2026-11-04_path_vectors_extract.json (P3.03)",
       "sha256": "51afde43102682356ae64874d44f928cf48e66c6a878557c7c5079b3d75e7ed2",
       "built_by": "tools/steering/build_path_vectors.py",
-      "neurons": "200 in-character ↔ model-awareness contrastive pairs, mean residual diff at layers 10–20, unit L2 per layer",
+      "neurons": "200 in-character \u2194 model-awareness contrastive pairs, mean residual diff at layers 10\u201320, unit L2 per layer",
       "model": "Qwen3.5-4B-Q4_K_M.gguf",
-      "doc": "docs/06 §2 AWAKE path vector. P3.03 blind read: keep (8/10 at 0.5); the P3.03 probe found 0 retention/logging claims. The other four P3.03 vectors (unstable, contempt, hollow, lucid) scored fallback — prompt-only (D21), files still ship on disk but no dose key maps to them, so an unexpected key fails control_vector_unmapped instead of binding one."
+      "doc": "docs/06 \u00a72 AWAKE path vector. P3.03 blind read: keep (8/10 at 0.5); the P3.03 probe found 0 retention/logging claims. Three of the other four P3.03 vectors (unstable, contempt, hollow) scored fallback and stay prompt-only (D21); lucid is bound for ANCHOR below at the negative scale the blind read never tested (paths.json `anchors.lucid`)."
     }
   },
   "unbound": {
-    "path_mix": "docs/06 §3 interim path weight, scheduled only while the narrative path is unassigned (before GameState.path is set): nothing is bound because the path — and therefore the vector — does not exist yet. Once ctx.path carries an id the slot is the keep vector's name (possessive/aware) per dose.json `path_vectors`; the four fallback paths schedule no path weight (prompt-only, D21)."
+    "path_mix": "docs/06 \u00a73 interim path weight, scheduled only while the narrative path is unassigned (before GameState.path is set): nothing is bound because the path \u2014 and therefore the vector \u2014 does not exist yet. Once ctx.path carries an id the slot is the keep vector's name (possessive/aware, or lucid at a negative scale for ANCHOR) per dose.json `path_vectors`; the three remaining fallback paths schedule no path weight (prompt-only, D21).",
+    "lucid": "P3.19 r2/DES-7 measured fallback: bound at a negative curve (-0.2..-0.5) and the independent judge scored ANCHOR 4.8% vs 11.9% r1 \u2014 inert at this band; unmapped in dose.json (D21 addendum). File stays on disk for re-tuning."
   }
 }

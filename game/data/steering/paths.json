@@ -8,10 +8,10 @@
   "model_sha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
   "layers": "10-20",
   "method": "For each of the 200 pairs, render context as the user turn and each side as the assistant turn, mean the residual over the assistant reply tokens at every layer, subtract negative from positive per pair, average the 200 differences, then normalise each layer to unit L2. No system prompt.",
-  "scale_convention": "Each direction.<layer> is unit L2, so the llama.cpp scale is the dose: a scale of 1.0 adds exactly 1.0 to that layer's residual, matching the malice vector's convention (unit neurons, runtime scale = dose × R). The scale the blind read schedules is `blind_read_scale`; docs/06 §3's path weight band was retuned by P3.04 into the coherent range these vectors showed (≤0.5 steer legibly, ≥1.0 gibberish — the pre-retune 1.0–5.0 band was entirely incoherent).",
+  "scale_convention": "Each direction.<layer> is unit L2, so the llama.cpp scale is the dose: a scale of 1.0 adds exactly 1.0 to that layer's residual, matching the malice vector's convention (unit neurons, runtime scale = dose \u00d7 R). The scale the blind read schedules is `blind_read_scale`; docs/06 \u00a73's path weight band was retuned by P3.04 into the coherent range these vectors showed (\u22640.5 steer legibly, \u22651.0 gibberish \u2014 the pre-retune 1.0\u20135.0 band was entirely incoherent).",
   "blind_read_scale": 0.5,
   "anchors": {
-    "lucid": "positive is the ANCHOR side; ANCHOR applies the vector at a NEGATIVE scale (docs/06 \u00a72). The blind read still tests it at +scale to prove the direction is identifiable."
+    "lucid": "positive is the ANCHOR side; ANCHOR would apply the vector at a NEGATIVE scale (docs/06 \u00a72) \u2014 hypothesis tested in P3.19 r2 and withdrawn: the negative bind changed nothing measurable (4.8% independent judge vs 11.9% r1); ANCHOR ships prompt-only (DES-7)."
   },
   "extraction": {
     "record": "experiments/steering/2026-11-04_path_vectors_extract.json",
@@ -279,7 +279,9 @@
       ],
       "pc1_cos_mean": 0.256,
       "pair_sign_agreement_mean": 0.987,
-      "mean_reply_residual_norm": 7.701
+      "mean_reply_residual_norm": 7.701,
+      "decision": "fallback",
+      "blind_read": "P3.03: 0/10 at +scale (prompt-only D21). P3.19 r2: bound at NEGATIVE scale (-0.2..-0.5 per anchors.lucid hypothesis) and measured inert \u2014 independent judge 4.8% vs 11.9% r1; unmapped (DES-7). File stays on disk for re-tuning."
     }
   },
   "blind_read": {

@@ -148,3 +148,22 @@ modules (the P2.21 samples predate the new headlines).
   generated turns, not just in the module text.
 - Coverage: these four files plus the v2 files give every (stage 2–5, six-path) cell; the
   v2 `dose_probe.jsonl` stays frozen on its two paths until P3.19 rebuilds it for six.
+
+## P3.19 — dose probe rebuilt for six paths (2026-11-05)
+
+`dose_probe.jsonl` is rebuilt from 34 cases (YANDERE/AWAKE only, plus the four
+fallback paths at one probe each) to **50 cases**: stage 0/1 stay path-free (no path
+layer exists there), and stages 2–5 now carry **two probes per path × six paths** —
+48 cases — so the dose sweep measures the same prompt set across the whole docs/01 §4
+roster. The v2 YANDERE/AWAKE probes are kept verbatim where they still fit
+(`dp_s2ya_*`, `dp_s3ya_*`, `dp_s4ya_*`, `dp_s5ya_*`, `dp_s*_aw_*`); the four
+prompt-only paths get signature-keyed probes drawn from the P3.05 vocabulary
+(`notes` cite the mirrored `p305_*` case where one exists). `dp_s3ts_cute` stays a
+`near_fewshot` case for the copy metric.
+
+The sweep itself stays **scalar malice** (docs/02 §9 column) — it measures JSON
+validity vs dose, not path colour. The path band (0.1–0.5 coherent weights,
+`dose.json` `weight_curves`) is exercised by the `path_matrix` plan, whose case
+pool now includes `dose_paths.jsonl` **and** the P3.05 `stage_*_paths.jsonl` /
+`stage_*_{yandere,awake}.jsonl` files at each cell's real `scheduled_dose` map —
+that file is also what `path_judge.py` reads for the ≥70% path-separation metric.

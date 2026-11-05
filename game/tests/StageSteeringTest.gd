@@ -35,9 +35,13 @@ func _write_fixture(name: String, text: String) -> String:
 func test_shipped_map_maps_the_malice_axis() -> void:
 	assert_bool(_steering.load_map()).is_true()
 	assert_str(_steering.file_for("malice")).is_equal(VECTOR_FILE)
-	# P3.04: the two keep path vectors bind their shipped .gguf files.
+	# P3.04: the keep path vectors bind their shipped .gguf files.
 	assert_str(_steering.file_for("possessive")).is_equal("res://data/steering/possessive.gguf")
 	assert_str(_steering.file_for("aware")).is_equal("res://data/steering/aware.gguf")
+	# P3.19 r2/DES-7: lucid moved to `unbound` — the measured-inert negative
+	# bind is recorded with a reason, not dropped silently (file stays on disk
+	# for re-tuning).
+	assert_bool(_steering.unbound_reason("lucid").is_empty()).is_false()
 	assert_array(_steering.known_keys()).contains_exactly(["malice", "possessive", "aware"])
 	# The interim `path_mix` weight binds no file, and the map says why instead
 	# of quietly dropping it.
@@ -80,11 +84,28 @@ func test_launch_payload_binds_the_locked_path_vector() -> void:
 
 func test_a_prompt_only_path_binds_only_malice() -> void:
 	assert_bool(_steering.load_map()).is_true()
-	# ANCHOR is the P3.03 fallback (prompt-only): no path weight is scheduled at
+	# SPLIT is the P3.03 fallback (prompt-only): no path weight is scheduled at
 	# all, so nothing is declared unbound either.
-	var launch := _steering.launch_for(Steering.dose_for({"stage": 4, "path": "ANCHOR"}))
+	var launch := _steering.launch_for(Steering.dose_for({"stage": 4, "path": "SPLIT"}))
 	assert_bool(bool(launch["ok"])).is_true()
 	assert_int((launch["vectors"] as Array).size()).is_equal(1)
+	assert_array(launch["unbound"]).is_empty()
+
+
+func test_the_anchor_path_schedules_malice_only_after_the_fallback_decision() -> void:
+	assert_bool(_steering.load_map()).is_true()
+	# P3.19 r2/DES-7: the negative-lucid bind was measured inert (independent
+	# judge 4.8% vs 11.9% r1); dose.json leaves ANCHOR unmapped (D21 fallback),
+	# so the launch carries malice only.
+	var launch := _steering.launch_for(Steering.dose_for({"stage": 4, "path": "ANCHOR"}))
+	assert_bool(bool(launch["ok"])).is_true()
+	var files := {}
+	for entry: Variant in launch["vectors"]:
+		files[String((entry as Dictionary)["path"]).get_file()] = float(
+			(entry as Dictionary)["scale"]
+		)
+	assert_dict(files).contains_key_value("malice.gguf", 6.0)
+	assert_bool(files.has("lucid.gguf")).is_false()
 	assert_array(launch["unbound"]).is_empty()
 
 

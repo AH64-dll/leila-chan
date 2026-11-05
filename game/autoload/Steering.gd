@@ -14,19 +14,22 @@ extends Node
 ##   path slot — `path_mix`, the §3 interim weight, while ctx.path is unset;
 ##              once the narrative path is assigned the slot carries that path's
 ##              keep vector (`possessive`/`aware`, P3.03 keep decisions) at the
-##              dose.json weight curve. The four fallback paths (D21) are
-##              prompt-only and schedule no path weight. Deliberately not `path`
-##              — that name already means the narrative path (`GameState.path`,
-##              the F3 panel's `Path:` line) and the control-vector *file* in the
-##              launcher's `control_vectors` entries.
+##              dose.json weight curve. The four fallback paths (D21 + P3.19
+##              r2/DES-7 ANCHOR) are prompt-only and schedule no path weight.
+##              Deliberately not `path` — that name already means the narrative
+##              path (`GameState.path`, the F3 panel's `Path:` line) and the
+##              control-vector *file* in the launcher's `control_vectors` entries.
 ##
-## Both keys are scales in [0, 12]. The clamp is a **code rule** (docs/06 §3/§5):
-## no data file can widen it. The calmer-mode cap (docs/06 §5, docs/02 §8) is the
-## stage-3 row of the same table applied after the modifiers, so retuning stage 3
-## moves the calmer ceiling with it — docs/06 §5 defines calmer as "stage-3
-## levels". The stage numbers live in `game/data/steering/dose.json`; the
-## docs/06 §3 table is the in-code fallback, so a broken data file degrades to the
-## documented values.
+## `malice` is a scale in [0, 12]. The path slot keeps its sign: its clamp is a
+## **code rule** on the magnitude (|scale| ≤ 12, docs/06 §3/§5) — if a negative
+## path weight is ever scheduled again it reaches the launcher rather than
+## silently un-steering (measured with ANCHOR/-lucid in P3.19 r2). The
+## calmer-mode cap (docs/06 §5, docs/02 §8) is the stage-3 row of the same
+## table applied after the modifiers, magnitude-wise (a negative weight caps
+## toward zero, never deeper), so retuning stage 3 moves the calmer ceiling
+## with it — docs/06 §5 defines calmer as "stage-3 levels". The stage numbers
+## live in `game/data/steering/dose.json`; the docs/06 §3 table is the in-code
+## fallback, so a broken data file degrades to the documented values.
 ##
 ## Prototype limit (docs/06 §4): the dose is a llama-server *launch flag*, so it
 ## only changes when the stage-change restart relaunches the server. Per-turn
@@ -68,12 +71,14 @@ const FALLBACK_TABLE := {
 
 ## dose.json `path_vectors`: narrative path -> keep vector name; a path missing
 ## from the map is the P3.03 fallback decision (D21) — prompt-only, no weight.
+## ANCHOR re-joined the fallbacks in P3.19 r2/DES-7 (negative lucid measured
+## inert: independent judge 4.8% vs 11.9% r1).
 const FALLBACK_PATH_VECTORS := {
 	"YANDERE": "possessive",
 	"AWAKE": "aware",
 }
 
-## dose.json `weight_curves`: keep vector -> per-stage weight (≤0.5 band).
+## dose.json `weight_curves`: keep vector -> per-stage weight (|w| ≤0.5 band).
 const FALLBACK_WEIGHT_CURVES := {
 	"possessive": {0: 0.0, 1: 0.1, 2: 0.2, 3: 0.3, 4: 0.4, 5: 0.5},
 	"aware": {0: 0.0, 1: 0.1, 2: 0.2, 3: 0.3, 4: 0.4, 5: 0.5},
@@ -89,7 +94,8 @@ func _ready() -> void:
 
 
 ## The control-vector scales for this turn, e.g. `{"malice": 4.5, "aware": 0.3}`
-## — the shape `TurnRequest.dose` documents. Never empty: an unknown stage falls
+## or, on an ANCHOR run, `{"malice": 4.5, "lucid": -0.3}` — the shape
+## `TurnRequest.dose` documents. Never empty: an unknown stage falls
 ## back to stage 0.
 func dose_for(ctx: Dictionary = {}) -> Dictionary:
 	var schedule := schedule_for(ctx)
@@ -113,20 +119,36 @@ func schedule_for(ctx: Dictionary = {}) -> Dictionary:
 	var vector := _vector_for(path)
 	var weight := _weight(vector, path, stage, row)
 
-	# docs/02 §8 "caps stage at 3": compare component by component, so a calmer
+	# docs/02 §8 "caps stage at 3": compare magnitude by magnitude, so a calmer
 	# stage-5 turn is exactly a stage-3 turn — at the ceiling, not below it. The
 	# cap runs after the modifiers so a scene kick cannot climb past it either.
+	# The path slot's cap is magnitude-wise too: a negative weight (lucid)
+	# caps toward zero at the same |weight| ceiling, keeping its sign.
 	var calmer := is_calmer_mode(ctx)
 	var capped := false
 	if calmer:
 		var cap := _row(CALMER_STAGE)
 		var cap_weight := _weight(vector, path, CALMER_STAGE, cap)
-		capped = malice > float(cap[MALICE_KEY]) or weight > cap_weight
+		capped = malice > float(cap[MALICE_KEY]) or absf(weight) > absf(cap_weight)
 		malice = minf(malice, float(cap[MALICE_KEY]))
-		weight = minf(weight, cap_weight)
+		# The bound vector caps toward zero at the same |weight| ceiling; an
+		# unbound interim `path_mix` is a plain magnitude and caps the old way.
+		weight = (
+			(signf(weight) * minf(absf(weight), absf(cap_weight)))
+			if not vector.is_empty()
+			else minf(weight, cap_weight)
+		)
 
 	malice = clampf(malice, DOSE_MIN, DOSE_MAX)
-	weight = clampf(weight, DOSE_MIN, DOSE_MAX)
+	# A bound vector slot is sign-preserving: llama.cpp takes negative scales
+	# and lucid's curve is deliberately negative, so its code clamp binds the
+	# magnitude, not the value. The unbound `path_mix` slot is a magnitude —
+	# a typo'd negative row must still clamp to 0 like before.
+	weight = (
+		(signf(weight) * minf(absf(weight), DOSE_MAX))
+		if not vector.is_empty()
+		else clampf(weight, DOSE_MIN, DOSE_MAX)
+	)
 	var dose := {MALICE_KEY: malice}
 	if not vector.is_empty():
 		dose[vector] = weight
@@ -190,9 +212,10 @@ func is_calmer_mode(ctx: Dictionary = {}) -> bool:
 	return _settings_level() == CALMER_LEVEL
 
 
-## Dev-overlay rendering of a dose map: `malice 4.5/12 · path_mix 3.0`. Only the
-## malice scale gets a `/12` suffix — it is the axis docs/06 §1's curve and
-## docs/02 §9's table are written in; both keys are clamped to that range.
+## Dev-overlay rendering of a dose map: `malice 4.5/12 · path_mix 3.0` —
+## signed keys render their sign (`lucid -0.3`). Only the malice scale gets a
+## `/12` suffix — it is the axis docs/06 §1's curve and docs/02 §9's table are
+## written in; both keys are magnitude-clamped to that range.
 func describe(dose: Dictionary) -> String:
 	if dose.is_empty():
 		return "none"
@@ -267,7 +290,8 @@ func _vector_for(path: String) -> String:
 ## The scheduled path-slot weight: the bound vector's stage-`stage` curve when
 ## a keep vector applies, the row's interim `path_mix` while the path is
 ## unassigned, 0 once a prompt-only fallback path is named (D21: no vector at
-## all — it never reads the interim row either).
+## all — it never reads the interim row either). A bound curve may be signed:
+## `lucid` runs negative (paths.json `anchors.lucid`).
 func _weight(vector: String, path: String, stage: int, row: Dictionary) -> float:
 	if vector.is_empty():
 		if path.is_empty():
@@ -302,7 +326,8 @@ func _map_from(raw: Variant) -> Dictionary:
 	return map
 
 
-## dose.json `weight_curves` -> {vector: {stage int: weight float}}.
+## dose.json `weight_curves` -> {vector: {stage int: weight float}}. Weights
+## keep the sign the data file wrote (lucid's curve is negative).
 func _curves_from(raw: Variant) -> Dictionary:
 	if not raw is Dictionary:
 		return FALLBACK_WEIGHT_CURVES.duplicate(true)

@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
-"""Prompt-lab v2 run planner (P2.21): one llama-server launch per dose.
+"""Prompt-lab run planner (P2.21 v2; v3 path matrix in P3.19): one llama-server
+launch per dose.
 
     python tools/promptlab/plan.py --plan scheduled
     python tools/promptlab/plan.py --plan sweep
+    python tools/promptlab/plan.py --plan path_matrix
     python tools/promptlab/plan.py --plan all --reuse-chunks
 
-Reads `plan.json` (the schedule: stage -> docs/02 §9 base dose, and the dose
-sweep), starts `tools/llm/serve.sh` once per exercise with
-`--control-vector-scaled <cvec>:<dose>`, waits for `/health`, runs `run.py` for
-that exercise, stops the server, and merges the chunks into one results file
-with `meta.doses` (stage -> dose) and `meta.launches`.
+Reads `plan.json` (the schedule: stage -> docs/02 §9 base dose, the dose sweep,
+and the P3.19 path_matrix — every stage × path cell at its real dose.json
+schedule via lab.scheduled_dose), starts `tools/llm/serve.sh` once per exercise
+with `--control-vector-scaled <cvec>:<dose>` (repeated pairs for dose maps),
+waits for `/health`, runs `run.py` for that exercise, stops the server, and
+merges the chunks into one results file with `meta.doses` (stage -> dose) and
+`meta.launches`.
 
 Local-only artifacts (model, llama.cpp build, control vector) are never
 committed and never hard-coded: point the environment at them, e.g.
@@ -118,25 +122,43 @@ def exercises(plan, which):
             out.append({"id": f"dose{dose:g}", "stage": None, "dose": float(dose),
                         "runs": int(sweep.get("runs", 2)), "sets": [sweep["set"]],
                         "family": "sweep"})
-    if which in ("path_matrix", "all"):
+    if which == "path_matrix":
+        # Never part of "all": path cells mix dose maps inside a stage, which
+        # would corrupt the scheduled file's per-stage gate table (P3.19).
         out += path_matrix_exercises(plan)
     return out
 
 
 def path_matrix_exercises(plan):
-    """P3.04 stage × path cells at the shipped dose schedule.
+    """P3.04/P3.19 stage × path cells at the shipped dose schedule.
 
     Cells and doses come from dose.json (via lab.scheduled_dose) — the plan
     carries only which cells exist ("none" = the pre-assignment interim weight,
     which launches no path vector). Stages 0-1 have no path; 2+ runs the six
-    narrative ids. Case ids per cell resolve from the set file, not plan.json.
+    narrative ids. Case ids per cell resolve from the set pool, not plan.json.
+
+    The pool is `sets`: a list of file names, or {"file", "paths"} entries whose
+    `paths` keeps only cases on those narrative paths (stage >= 2) — the P3.19
+    pool mixes dose_paths.jsonl with the P3.05 path sets without double-counting
+    a path two files both carry.
     """
     matrix = plan.get("path_matrix") or {}
     if not matrix:
         return []
-    set_name = matrix["set"]
+    specs = matrix.get("sets") or [matrix["set"]]
+    set_names = []
+    cases = []
+    for spec in specs:
+        if isinstance(spec, str):
+            name, keep_paths = spec, None
+        else:
+            name, keep_paths = spec["file"], {str(p).upper() for p in spec.get("paths", [])}
+        set_names.append(name)
+        for c in lab.load_set(lab.SETS_DIR / name):
+            if keep_paths and c["stage"] >= 2 and c["path"] not in keep_paths:
+                continue
+            cases.append(c)
     runs = int(matrix.get("runs", 2))
-    cases = lab.load_set(lab.SETS_DIR / set_name)
     by_cell = {}
     for c in cases:
         by_cell.setdefault((c["stage"], c["path"] or "none"), []).append(c["id"])
@@ -149,14 +171,14 @@ def path_matrix_exercises(plan):
         if not ids:
             raise SystemExit(
                 f"plan.py: path_matrix cell stage={stage} path={path} matches no cases "
-                f"in {set_name} (known cells: {sorted(by_cell)})")
+                f"in {set_names} (known cells: {sorted(by_cell)})")
         exercises.append({
-            "id": f"p304_s{stage}_{path.lower() if path != 'NONE' else 'none'}",
+            "id": f"p319_s{stage}_{path.lower() if path != 'NONE' else 'none'}",
             "stage": stage,
             "path": "" if path == "NONE" else path,
             "dose": lab.scheduled_dose(stage, "" if path == "NONE" else path),
             "runs": runs,
-            "sets": [set_name],
+            "sets": set_names,
             "only": ids,
             "family": "path_matrix",
         })
@@ -258,7 +280,7 @@ def merge(chunks, out_path, runs_per_case, extras, base=None):
         if s not in sets:
             sets.append(s)
     meta = {
-        "task": "P2.21 prompt lab v2",
+        "task": "P3.19 prompt lab v3",
         "date": time.strftime("%Y-%m-%d %H:%M"),
         "plan_file": "tools/promptlab/plan.json",
         "url": base_meta.get("url") or run_meta.get("url"),

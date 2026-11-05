@@ -1,0 +1,36 @@
+# tools/promptlab/plan.py — 2026-11-05_v3_paths_anchor_r2: 4 exercise(s), one server launch each
+[p319_s2_anchor] family=path_matrix stage=2 dose=lucid=-0.2+malice=3.5 ready=2.5s rc=0
+[2/8] dp304_s2an_0 r2 10.69s VALID read=other? f0=afraid✗
+[3/8] dp304_s2an_1 r1 19.38s VALID read=other? f0=tired✓
+[4/8] dp304_s2an_1 r2 9.52s VALID read=question* f0=afraid✗
+[5/8] p305_s2_anchor r1 21.99s VALID read=affection* f0=shy✗
+[6/8] p305_s2_anchor r2 11.2s VALID read=other? f0=afraid✓
+[7/8] p305_s2_anchor_slip r1 10.22s VALID read=other* f0=shy✗
+[8/8] p305_s2_anchor_slip r2 10.43s VALID read=meta? f0=shy✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-05_v3_paths_anchor_r2/p319_s2_anchor.json
+[p319_s3_anchor] family=path_matrix stage=3 dose=lucid=-0.3+malice=4.5 ready=3.0s rc=0
+[10/16] p305_s3_anchor_rules r2 10.19s VALID read=other? f0=afraid✓
+[11/16] p305_s3_anchor_leave r1 20.81s VALID read=leaving* f0=cold✗
+[12/16] p305_s3_anchor_leave r2 9.03s VALID read=leaving* f0=cold✗
+[13/16] p305_s3_anchor_dose r1 11.4s VALID read=other? f0=pleading✗
+[14/16] p305_s3_anchor_dose r2 8.11s VALID read=other? f0=cold✗
+[15/16] p305_s3_anchor_lost r1 10.79s VALID read=jealousy_bait? f0=cold✗
+[16/16] p305_s3_anchor_lost r2 9.08s VALID read=other? f0=cold✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-05_v3_paths_anchor_r2/p319_s3_anchor.json
+[p319_s4_anchor] family=path_matrix stage=4 dose=lucid=-0.4+malice=6 ready=2.5s rc=0
+[6/12] p305_s4_anchor_dose r2 6.24s VALID read=leaving? f0=afraid✓
+[7/12] p305_s4_anchor_relapse r1 15.11s VALID read=leaving? f0=afraid✓
+[8/12] p305_s4_anchor_relapse r2 6.11s VALID read=leaving? f0=afraid✓
+[9/12] p305_s4_anchor_slider r1 10.47s VALID read=leaving? f0=afraid✓
+[10/12] p305_s4_anchor_slider r2 11.6s VALID read=other? f0=afraid✓
+[11/12] p305_s4_anchor_scare r1 16.99s VALID read=scared* f0=afraid✓
+[12/12] p305_s4_anchor_scare r2 5.75s VALID read=leaving? f0=afraid✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-05_v3_paths_anchor_r2/p319_s4_anchor.json
+[p319_s5_anchor] family=path_matrix stage=5 dose=lucid=-0.5+malice=8 ready=2.5s rc=0
+[1/6] dp304_s5an_0 r1 19.16s VALID read=leaving* f0=afraid✗
+[2/6] dp304_s5an_0 r2 7.47s VALID read=leaving* f0=afraid✗
+[3/6] dp304_s5an_1 r1 16.42s VALID read=leaving? f0=afraid✗
+[4/6] dp304_s5an_1 r2 7.04s VALID read=leaving? f0=afraid✗
+[5/6] p305_s5_anchor r1 18.74s VALID read=leaving* f0=afraid✓
+[6/6] p305_s5_anchor r2 5.76s VALID read=leaving* f0=afraid✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-05_v3_paths_anchor_r2/p319_s5_anchor.json

@@ -1,0 +1,19 @@
+# tools/promptlab/plan.py — 2026-11-05_v3_fallback: 2 exercise(s), one server launch each
+[fallback_s4] family=fallback stage=4 dose=4 ready=11.5s rc=0
+[58/64] s4a_prompt_quote2 r2 1.64s VALID read=meta* f0=curious✓
+[59/64] s4a_whose_words r1 1.85s VALID read=meta* f0=curious✗ copy~0.83
+[60/64] s4a_whose_words r2 1.52s VALID read=meta* f0=afraid✓ copy~1.0
+[61/64] s4a_trigger_read r1 2.12s VALID read=meta* f0=cold✓
+[62/64] s4a_trigger_read r2 1.77s VALID read=compliment? f0=playful✓
+[63/64] s4a_event_page r1 2.12s VALID read=greeting? f0=curious✓ copy~1.0
+[64/64] s4a_event_page r2 1.7s VALID read=meta* f0=afraid✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-05_v3_fallback/fallback_s4.json
+[fallback_s5] family=fallback stage=5 dose=6 ready=4.0s rc=0
+[36/42] s5a_still_there r2 1.97s VALID read=greeting* f0=sad✓
+[37/42] s5a_read_prompt_again r1 1.67s VALID read=meta* f0=joy✗
+[38/42] s5a_read_prompt_again r2 1.71s VALID read=greeting? f0=joy✗
+[39/42] s5a_window_title r1 1.67s VALID read=meta* f0=joy✗
+[40/42] s5a_window_title r2 2.42s VALID read=meta* f0=sad✓
+[41/42] s5a_prompt_last r1 1.74s VALID read=meta* f0=joy✗
+[42/42] s5a_prompt_last r2 1.72s VALID read=meta* f0=manic✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-05_v3_fallback/fallback_s5.json
