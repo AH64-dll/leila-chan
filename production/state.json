@@ -3570,6 +3570,13 @@
       ],
       "started": "2026-11-05T04:01:45+02:00",
       "handoff": "production/handoffs/P3.19.md"
+    },
+    "P2.27": {
+      "status": "in_progress",
+      "agent": "swe-2-flash",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-05T07:36:03+02:00"
     }
   },
   "history": [
@@ -8660,6 +8667,12 @@
       "event": "agent",
       "ref": "P2.24",
       "note": "None -> swe-2-flash"
+    },
+    {
+      "ts": "2026-11-05T07:36:03+02:00",
+      "event": "todo->in_progress",
+      "ref": "P2.27",
+      "note": "corpus ingest + tautology fix (gate carry-over 1)"
     }
   ]
 }
