@@ -47,6 +47,29 @@ def _case_prompt_sha(case):
                                          None))
 
 
+def _parse_dose(text):
+    """--dose value: a scalar ('4.5' -> 4.5) or a JSON {name: scale} map (P3.04
+    path mix). A map stays a dict on the row; dose_key() makes it comparable."""
+    if text is None:
+        return None
+    text = text.strip()
+    if text.startswith("{"):
+        try:
+            dose = json.loads(text)
+        except json.JSONDecodeError as e:
+            raise SystemExit(f"run.py: bad --dose JSON: {e}")
+        if not isinstance(dose, dict) or not dose:
+            raise SystemExit("run.py: --dose map must be a non-empty {name: scale} object")
+        try:
+            return {str(k): float(v) for k, v in dose.items()}
+        except (TypeError, ValueError):
+            raise SystemExit(f"run.py: --dose map scales must be numbers: {dose}")
+    try:
+        return float(text)
+    except ValueError:
+        raise SystemExit(f"run.py: --dose must be a number or a JSON map: {text!r}")
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--url", default=lab.DEFAULT_URL)
@@ -59,14 +82,16 @@ def main():
     p.add_argument("--timeout", type=int, default=900)
     p.add_argument("--order", default="docs", choices=sorted(lab.ORDER_ALIASES),
                    help="wire schema order: docs = shipped (default); the rest are DCR candidates")
-    p.add_argument("--dose", type=float, default=None,
-                   help="steering dose the server was launched with (docs/02 §9); recorded")
+    p.add_argument("--dose", type=str, default=None,
+                   help="steering dose the server was launched with (docs/06 §3): a "
+                        "scalar ('4.5') or a JSON map for the P3.04 path mix "
+                        "('{\"malice\":4.5,\"possessive\":0.4}'); recorded")
     p.add_argument("--exercise", default=None,
                    help="plan exercise id (e.g. sched_s3 / dose12), recorded for the report")
     p.add_argument("--plan", default=None, help="plan file name, recorded for the report")
     p.add_argument("--player-name", default=lab.PLAYER_NAME)
     a = p.parse_args()
-
+    dose = _parse_dose(a.dose)
     set_paths = [Path(s) if Path(s).is_absolute() else lab.SETS_DIR / s
                  for s in (a.sets or [p for p in sorted(lab.SETS_DIR.glob("stage_*.jsonl"))])]
     cases = []
@@ -84,9 +109,9 @@ def main():
             raise SystemExit(f"{out_path.name} holds order={recorded_order!r}, refusing to mix "
                              f"order={a.order!r} results (pass --out)")
         recorded_dose = doc["meta"].get("dose")
-        if recorded_dose != a.dose:
+        if recorded_dose != dose:
             raise SystemExit(f"{out_path.name} holds dose={recorded_dose!r}, refusing to mix "
-                             f"dose={a.dose!r} results (pass --out)")
+                             f"dose={dose!r} results (pass --out)")
         done = {(r["id"], r["run"]) for r in doc["results"]}
         print(f"resuming: {len(done)} turns already in {out_path.name}")
     else:
@@ -100,7 +125,7 @@ def main():
                         "model": f"models/{Path(raw_model).name}" if raw_model != "?" else "?",
                         "model_ftype": props.get("model_ftype"),
                         "build_info": props.get("build_info"),
-                        "dose": a.dose,
+                        "dose": dose,
                         "dose_note": ("steering dose is a llama-server launch flag "
                                       "(--control-vector-scaled, docs/06 §4); recorded per row"),
                         "sampling": lab.SAMPLING,
@@ -135,7 +160,7 @@ def main():
                    "runner_up": case["runner_up"], "run": run_i,
                    "msg": case["msg"], "near_fewshot": case["near_fewshot"],
                    "read_ok": case["read_ok"], "feelings_ok": case["feelings_ok"],
-                   "dose": a.dose, "exercise": a.exercise,
+                   "dose": dose, "dose_label": lab.dose_key(dose), "exercise": a.exercise,
                    "offered_actions": offered_actions,
                    "events": len(case["events"]),
                    "system_sha": prompt_sha,

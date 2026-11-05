@@ -21,9 +21,9 @@ MAP = json.loads((ROOT / "game" / "data" / "steering" / "vectors.json").read_tex
 DOSE = json.loads((ROOT / "game" / "data" / "steering" / "dose.json").read_text(encoding="utf-8"))
 DESIGN = (ROOT / "docs" / "06_STEERING.md").read_text(encoding="utf-8")
 
-# docs/06 §2: "Vector files ship inside the game pack (each is ~10–60 KB)".
+# docs/06 §2: malice ~20 KB; the P3.03 path vectors ~111 KB (11 layers × 2560 f32).
 DOC_MIN_BYTES = 10 * 1024
-DOC_MAX_BYTES = 60 * 1024
+DOC_MAX_BYTES = 130 * 1024
 GGUF_MAGIC = b"GGUF"
 BRAND_TERMS = ["qwen", "alibaba", "evil"]
 
@@ -34,11 +34,13 @@ def shipped(res_path: str) -> Path:
 
 
 def dose_keys() -> set[str]:
+    """Every key the dose schedule can emit: stage-row keys plus the weight
+    curves' vector names (P3.04 binds those to the locked path)."""
     keys: set[str] = set()
     for row in DOSE["stages"].values():
         keys.update(row)
+    keys.update((DOSE.get("weight_curves") or {}).keys())
     return keys
-
 
 def test_map_is_versioned_and_documented() -> None:
     assert MAP["version"] == 1
@@ -57,11 +59,11 @@ def test_every_vector_key_is_a_dose_key() -> None:
 
 
 def test_path_mix_is_declared_unbound_not_invented() -> None:
-    # docs/06 §2: the per-path vectors (possessive/unstable/…) do not ship until
-    # P3.04, so the interim weight must not silently bind some file.
+    # The interim weight binds no file (pre-assignment only, P3.04), so the map
+    # must declare it unbound rather than silently bind some file.
     assert "path_mix" in MAP["unbound"]
     assert "path_mix" not in MAP["vectors"]
-    assert "P3.04" in MAP["unbound"]["path_mix"]
+    assert "unassigned" in MAP["unbound"]["path_mix"]
     assert not (set(MAP["unbound"]) & set(MAP["vectors"]))
 
 

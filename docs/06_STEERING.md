@@ -49,33 +49,46 @@ one stack and is preferred.
 
 ```
 dose(turn) = base[stage]
-           + path_mix                       # path vectors, each with its own weight curve
+           + path vectors                   # the locked path's keep vector(s) at their own
+                                            # weight curves; path_mix while unassigned
            + spike                          # trigger spikes: +3..+4 for 1–2 turns, decays
            + scene_modifier                 # e.g. 3 AM +1, ANCHOR lucid moment −2
            - player_slider                  # ANCHOR only (M26/M43)
 clamped to [0, 12] on every scale; >12 only in the scripted collapse (M40)
 ```
 
-| Stage | malice | path_mix | Notes |
+| Stage | malice | path weight | Notes |
 |---|---|---|---|
 | 0 | 0 | 0 | Pure persona |
-| 1 | 2.5 | 1.0 | Barely perceptible |
-| 2 | 3.5 | 2.0 | Inner turns first |
-| 3 | 4.5 | 3.0 | Path locks |
-| 4 | 6 | 4.0 | Open |
-| 5 | 8 | 5.0 | Spikes to 12 |
+| 1 | 2.5 | 0.1 | Barely perceptible |
+| 2 | 3.5 | 0.2 | Path soft-assigns; inner turns first |
+| 3 | 4.5 | 0.3 | Path locks |
+| 4 | 6 | 0.4 | Open |
+| 5 | 8 | 0.5 | Spikes to 12 |
 
-(Numbers are llama.cpp scales for unit vectors; to be re-tuned once path vectors exist, by blind-reading
-transcripts at each level.)
+(P3.04 retune: the path-vector band dropped from the placeholder 1.0–5.0 to **0.1–0.5**. The P3.03
+blind-read pilots showed the shipped path vectors steer legibly at ≤0.5 and collapse into gibberish
+at ≥1.0, so the old band was entirely inside the incoherent range — `paths.json` `blind_read_scale`
+0.5 is the measured ceiling and stage 5 rides it. The keep vectors each carry this curve;
+the four fallback vectors (D21) are prompt-only and schedule no weight. The table's
+"path weight" column is the **keep-vector curve** — the weight a bound path's vector
+carries once `ctx.path` is assigned; before assignment the scheduled weight is the
+flat `path_mix` interim (0 / 0.1 / 0.2 / 0.2 / 0.2 / 0.2), which binds no file.)
 
 The schedule reaches the model as `TurnRequest.dose`, a `{name: scale}` map (docs/07 §3.1). Its keys:
 
 - `malice` — the §2 tweet vector, the axis §1's behaviour curve and §5's JSON-risk row measure. The "steering
   dose (base)" column of docs/02 §9 is this number; the two tables must not drift apart.
-- `path_mix` — **interim**: the stage's path-vector weight as one number. The path vectors are the §2 names
-  (`possessive`, `unstable`, `contempt`, `hollow`, `aware`, `lucid`); P3.04 replaces `path_mix` with the locked
-  path's vector name(s) and their own weight curves. It is not the narrative path (which already owns the word
-  `path` in the turn context and the debug panel), so it does not borrow that name.
+- `path_mix` — **pre-assignment only**: the interim path weight while no narrative path exists
+  (stages 0–1, and before the stage-2 soft assignment). It binds no file — the vector does not exist
+  yet — so `vectors.json` declares it `unbound` and the relaunch log reports it. It is not the
+  narrative path (which already owns the word `path` in the turn context and the debug panel),
+  so it does not borrow that name.
+- the locked path's vector name — once `ctx.path` carries an id, the dose map carries that path's
+  keep vector (`possessive` for YANDERE, `aware` for AWAKE) at its stage weight instead of
+  `path_mix`. The four P3.03 fallback paths (SPLIT, TSUN, HOLLOW, ANCHOR — D21) are prompt-only:
+  they schedule no path key at all. `dose.json` `path_vectors` maps the six paths to vector names
+  (or null) and `weight_curves` holds the per-vector per-stage weights.
 
 Two rules bound every value in the map. The [0, 12] clamp is **code** (`Steering.gd`), never data: no row may
 widen it. Calmer mode (docs/02 §8) applies the stage-3 row as a ceiling after the modifier terms, so a calmer
@@ -91,7 +104,7 @@ as "stage-3 levels".
 - **Prototype (llama-server):** control vectors are a launch flag (`--control-vector-scaled file.gguf:SCALE`), so
   the prototype restarts the server at each stage change (~3 s) and hides it behind the diegetic stage-transition glitch.
   Per-turn spikes are not possible in the prototype — acceptable for M1/M2.
-- Vector files ship inside the game pack (each is ~10–60 KB); `data/steering/vectors.json` maps the dose
+- Vector files ship inside the game pack (malice ~20 KB; the P3.03 path vectors ~111 KB each, 11 layers × 2560 f32); `data/steering/vectors.json` maps the dose
   keys to them.
 
 ### 4.1 The prototype relaunch (P2.03)
@@ -112,8 +125,8 @@ as "stage-3 levels".
   adds the path vectors). A positive-scale key that maps to no file must be declared under
   `unbound`; anything else fails the payload (`control_vector_unmapped`) rather than being skipped,
   so a missing/unreadable map keeps the old dose instead of claiming a dose it never bound.
-  `path_mix` schedules a weight but binds no file until P3.04 — it is declared unbound and reported
-  in the relaunch log, not invented.
+  `path_mix` schedules a weight but binds no file — it is the pre-assignment interim weight —
+  so it is declared unbound and reported in the relaunch log, not invented.
 - **No lost input.** A turn and a relaunch share one session lock: a relaunch never kills a line that is being
   streamed, and a submit that lands during the window waits for the new server and then completes on it.
 - **Failure keeps the old dose.** A vector that fails validation (missing, not GGUF, a FNAME the flag grammar cannot

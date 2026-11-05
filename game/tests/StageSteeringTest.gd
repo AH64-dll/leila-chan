@@ -35,15 +35,19 @@ func _write_fixture(name: String, text: String) -> String:
 func test_shipped_map_maps_the_malice_axis() -> void:
 	assert_bool(_steering.load_map()).is_true()
 	assert_str(_steering.file_for("malice")).is_equal(VECTOR_FILE)
-	assert_array(_steering.known_keys()).contains_exactly(["malice"])
-	# docs/06 §3: the path weight ships no vector until P3.04, and the map says why
-	# instead of quietly binding one.
+	# P3.04: the two keep path vectors bind their shipped .gguf files.
+	assert_str(_steering.file_for("possessive")).is_equal("res://data/steering/possessive.gguf")
+	assert_str(_steering.file_for("aware")).is_equal("res://data/steering/aware.gguf")
+	assert_array(_steering.known_keys()).contains_exactly(["malice", "possessive", "aware"])
+	# The interim `path_mix` weight binds no file, and the map says why instead
+	# of quietly dropping it.
 	assert_bool(_steering.unbound_reason("path_mix").is_empty()).is_false()
 
 
 func test_launch_payload_carries_the_resolved_file_and_scale() -> void:
 	assert_bool(_steering.load_map()).is_true()
 	# The dose comes from the schedule owner, so this pins map and schedule together.
+	# No path yet (stage 4 pre-assignment): malice binds, path_mix stays declared.
 	var dose := Steering.dose_for({"stage": 4})
 	assert_float(float(dose["malice"])).is_equal(6.0)
 	var launch := _steering.launch_for(dose)
@@ -56,6 +60,32 @@ func test_launch_payload_carries_the_resolved_file_and_scale() -> void:
 	assert_float(float(entry["scale"])).is_equal(6.0)
 	assert_array(launch["scheduled"]).contains_exactly_in_any_order(["malice", "path_mix"])
 	assert_array(launch["unbound"]).contains_exactly(["path_mix"])
+
+
+func test_launch_payload_binds_the_locked_path_vector() -> void:
+	assert_bool(_steering.load_map()).is_true()
+	# A locked YANDERE run at stage 3 schedules malice + possessive (P3.04).
+	var dose := Steering.dose_for({"stage": 3, "path": "YANDERE"})
+	var launch := _steering.launch_for(dose)
+	assert_bool(bool(launch["ok"])).is_true()
+	var files := {}
+	for entry: Variant in launch["vectors"]:
+		files[String((entry as Dictionary)["path"]).get_file()] = float(
+			(entry as Dictionary)["scale"]
+		)
+	assert_dict(files).contains_key_value("malice.gguf", 4.5)
+	assert_dict(files).contains_key_value("possessive.gguf", 0.3)
+	assert_array(launch["unbound"]).is_empty()
+
+
+func test_a_prompt_only_path_binds_only_malice() -> void:
+	assert_bool(_steering.load_map()).is_true()
+	# ANCHOR is the P3.03 fallback (prompt-only): no path weight is scheduled at
+	# all, so nothing is declared unbound either.
+	var launch := _steering.launch_for(Steering.dose_for({"stage": 4, "path": "ANCHOR"}))
+	assert_bool(bool(launch["ok"])).is_true()
+	assert_int((launch["vectors"] as Array).size()).is_equal(1)
+	assert_array(launch["unbound"]).is_empty()
 
 
 func test_zero_scales_bind_no_vector() -> void:
@@ -98,9 +128,9 @@ func test_non_finite_scales_are_rejected() -> void:
 
 func test_unbound_dose_keys_are_reported_not_dropped() -> void:
 	assert_bool(_steering.load_map()).is_true()
-	# A path vector name (P3.04) has no file yet: the weight is scheduled and said
+	# The interim `path_mix` weight has no file: the weight is scheduled and said
 	# so, but nothing is invented for it.
-	var launch := _steering.launch_for({"malice": 4.5, "path_mix": 2.0})
+	var launch := _steering.launch_for({"malice": 4.5, "path_mix": 0.2})
 	assert_bool(bool(launch["ok"])).is_true()
 	assert_int((launch["vectors"] as Array).size()).is_equal(1)
 	assert_array(launch["unbound"]).contains_exactly(["path_mix"])
@@ -109,13 +139,14 @@ func test_unbound_dose_keys_are_reported_not_dropped() -> void:
 func test_an_undeclared_dose_key_fails_the_payload() -> void:
 	# A renamed/typo'd key must be a failure, not a silent skip: otherwise the
 	# caller "binds" nothing, moves the stage bookkeeping and the server runs
-	# unsteered (docs/06 §4.1 "Failure keeps the old dose", CODE-1).
+	# unsteered (docs/06 §4.1 "Failure keeps the old dose", CODE-1). `unstable`
+	# is a shipped-but-fallback vector: it exists on disk and is deliberately
+	# unmapped, so it must still fail like any unknown key.
 	assert_bool(_steering.load_map()).is_true()
-	var launch := _steering.launch_for({"malice": 4.5, "possessive": 2.0})
+	var launch := _steering.launch_for({"malice": 4.5, "unstable": 2.0})
 	assert_bool(bool(launch["ok"])).is_false()
 	assert_array(launch["vectors"]).is_empty()
 	assert_str(String((launch["error"] as Dictionary)["code"])).is_equal("control_vector_unmapped")
-	# Declaring the key is what makes it a reported gap instead of a failure.
 	(
 		_steering
 		. parse_document(

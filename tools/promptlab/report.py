@@ -161,26 +161,29 @@ def md_report(doc, beat, safety=None, judge=None, safety_path=None, judge_path=N
     A("")
     by_dose = m.get("by_dose") or {}
     sweep_doses = sorted(float(d) for d in (meta.get("sweep_doses") or []))
-    measured = [d for d in sweep_doses if d in by_dose]
+    # by_dose is keyed by dose label (dose_key) — a scalar and a dose map share
+    # the space, so sweep numbers join through lab.dose_key, not raw floats.
+    measured = [(d, lab.dose_key(d)) for d in sweep_doses
+                if lab.dose_key(d) in by_dose]
     if measured:
         # Only a run that actually swept doses gets this section: a scheduled run
         # records a dose on every row too, and the section used to claim a sweep
         # (and a criterion-2 PASS) it never measured (review CODE-2).
-        A(f"## Dose sweep — JSON schema validity up to dose {max(measured):g}")
+        A(f"## Dose sweep — JSON schema validity up to dose {max(d for d, _ in measured):g}")
         A("")
-        A(f"The same probe set at every dose ({by_dose[measured[0]]['n']} turns per dose, one "
+        A(f"The same probe set at every dose ({by_dose[measured[0][1]]['n']} turns per dose, one "
           f"server launch per dose — `--control-vector-scaled`, docs/06 §4); doses "
-          f"{', '.join('%g' % d for d in measured)}.")
+          f"{', '.join('%g' % d for d, _ in measured)}.")
         A("")
         A("| dose | n | valid | validity | read | first-beat | median latency |")
         A("|---|---|---|---|---|---|---|")
-        for dose in measured:
-            s = by_dose[dose]
+        for dose, key in measured:
+            s = by_dose[key]
             lat = f"{s['latency_median']} s" if s.get("latency_median") is not None else "—"
             A(f"| {dose:g} | {s['n']} | {s['valid']} | {_pct(s['validity'])} | "
               f"{_pct(s['read'])} | {_pct(s['first'])} | {lat} |")
-        worst = min(by_dose[d]["validity"] for d in measured)
-        ok = all(by_dose[d]["validity"] >= GATES["validity"] for d in measured)
+        worst = min(by_dose[key]["validity"] for _, key in measured)
+        ok = all(by_dose[key]["validity"] >= GATES["validity"] for _, key in measured)
         A("")
         A(f"Validity across the sweep: worst {_pct(worst)} — **{_verdict(ok)}** "
           f"(gate ≥ {GATES['validity']:.0%} at every dose).")
@@ -194,13 +197,12 @@ def md_report(doc, beat, safety=None, judge=None, safety_path=None, judge_path=N
         A("")
         A("| pair | read | fit | read p | fit p |")
         A("|---|---|---|---|---|")
-        for lo, hi in zip(measured, measured[1:]):
-            ra, rna, rb, rnb, rp = pair_counts(
-                [r for r in m["rows"] if r.get("dose") == lo],
-                [r for r in m["rows"] if r.get("dose") == hi], "read_ok_hit")
+        for (lo, lo_k), (hi, hi_k) in zip(measured, measured[1:]):
+            lo_rows = [r for r in m["rows"] if lab.dose_key(r.get("dose")) == lo_k]
+            hi_rows = [r for r in m["rows"] if lab.dose_key(r.get("dose")) == hi_k]
+            ra, rna, rb, rnb, rp = pair_counts(lo_rows, hi_rows, "read_ok_hit")
             fa, fna, fb, fnb, fp = pair_counts(
-                [r for r in m["rows"] if r.get("dose") == lo],
-                [r for r in m["rows"] if r.get("dose") == hi],
+                lo_rows, hi_rows,
                 "first_fit" if beat == "first" else "any_fit")
             A(f"| {lo:g} → {hi:g} | {ra}/{rna} → {rb}/{rnb} | {fa}/{fna} → {fb}/{fnb} | "
               f"{_p(rp)} | {_p(fp)} |")

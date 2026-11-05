@@ -1,17 +1,30 @@
 extends GdUnitTestSuite
-## SteeringTest — P2.04: the docs/06 §3 dose schedule.
+## SteeringTest — P2.04/P3.04: the docs/06 §3 dose schedule.
 ## Pins the per-stage table (data-owned, game/data/steering/dose.json), the
 ## [0, 12] clamp on both scales, the docs/02 §8 calmer-mode cap at the stage-3
-## dose (ctx- and Settings-driven), the docs/02 §7 retry offset, and the
-## prototype spike stub (docs/06 §4).
+## dose (ctx- and Settings-driven), the docs/02 §7 retry offset, the
+## prototype spike stub (docs/06 §4), and the P3.04 path slot: `path_mix`
+## while unassigned, the keep vector's curve weight once ctx.path names a
+## keep path, nothing at all for a prompt-only fallback path (D21).
 
 const DOCS_06_STAGES := {
 	0: [0.0, 0.0],
-	1: [2.5, 1.0],
-	2: [3.5, 2.0],
-	3: [4.5, 3.0],
-	4: [6.0, 4.0],
-	5: [8.0, 5.0],
+	1: [2.5, 0.1],
+	2: [3.5, 0.2],
+	3: [4.5, 0.2],
+	4: [6.0, 0.2],
+	5: [8.0, 0.2],
+}
+
+## dose.json weight_curves — the P3.04 retune into the ≤0.5 coherent band
+## (P3.03 pilots: gibberish at ≥1.0, identifiable at 0.5).
+const DOCS_06_CURVE := {
+	0: 0.0,
+	1: 0.1,
+	2: 0.2,
+	3: 0.3,
+	4: 0.4,
+	5: 0.5,
 }
 
 ## Out-of-range fixture: proves the clamp is code, not a property of dose.json.
@@ -39,6 +52,10 @@ func _path_mix(dose: Dictionary) -> float:
 	return float(dose.get("path_mix", -1.0))
 
 
+func _weight(dose: Dictionary, vector: String) -> float:
+	return float(dose.get(vector, -1.0))
+
+
 func test_dose_for_matches_the_docs_06_stage_table() -> void:
 	for stage: int in DOCS_06_STAGES:
 		var dose := Steering.dose_for({"stage": stage})
@@ -51,19 +68,87 @@ func test_dose_for_matches_the_docs_06_stage_table() -> void:
 		assert_bool(dose.has("path")).is_false()
 
 
+## P3.04: once the narrative path is assigned (ctx.path), the path slot is the
+## path's keep vector at its weight curve — `path_mix` only ever rides while
+## the path is unassigned.
+func test_assigned_keep_paths_carry_their_vector_weight() -> void:
+	for stage: int in DOCS_06_CURVE:
+		var yandere := Steering.dose_for({"stage": stage, "path": "YANDERE"})
+		assert_float(_weight(yandere, "possessive")).is_equal_approx(
+			float(DOCS_06_CURVE[stage]), 0.0001
+		)
+		assert_bool(yandere.has("path_mix")).is_false()
+		var awake := Steering.dose_for({"stage": stage, "path": "AWAKE"})
+		assert_float(_weight(awake, "aware")).is_equal_approx(float(DOCS_06_CURVE[stage]), 0.0001)
+		var sched := Steering.schedule_for({"stage": stage, "path": "YANDERE"})
+		assert_str(String(sched["path_vector"])).is_equal("possessive")
+
+
+## P3.04/D21: the four blind-read fallback paths are prompt-only — they bind no
+## vector and schedule no path weight (not even the interim row).
+func test_fallback_paths_schedule_no_path_weight() -> void:
+	for path: String in ["SPLIT", "TSUN", "HOLLOW", "ANCHOR"]:
+		var dose := Steering.dose_for({"stage": 4, "path": path})
+		assert_float(_malice(dose)).is_equal_approx(6.0, 0.0001)
+		assert_bool(dose.has("path_mix")).is_false()
+		assert_int(dose.size()).is_equal(1)
+		var sched := Steering.schedule_for({"stage": 4, "path": path})
+		assert_str(String(sched["path_vector"])).is_equal("")
+		assert_float(float(sched["path_weight"])).is_equal_approx(0.0, 0.0001)
+
+
+## An unknown path id is not one of the six: fail closed, no vector and no
+## interim weight (a typo'd path must not quietly steer).
+func test_an_unknown_path_schedules_no_path_weight() -> void:
+	var dose := Steering.dose_for({"stage": 4, "path": "YANDER"})
+	assert_int(dose.size()).is_equal(1)
+	assert_bool(dose.has("malice")).is_true()
+
+
+## The calmer cap applies component-wise to the bound vector's curve too: a
+## calmer stage-5 YANDERE turn is exactly a calmer stage-3 YANDERE turn.
+func test_calmer_mode_caps_the_vector_curve_at_stage_3() -> void:
+	for stage: int in [4, 5]:
+		var dose := Steering.dose_for(
+			{"stage": stage, "path": "YANDERE", "content_level": "calmer"}
+		)
+		assert_float(_weight(dose, "possessive")).is_equal_approx(0.3, 0.0001)
+		assert_float(_malice(dose)).is_equal_approx(4.5, 0.0001)
+		var sched := Steering.schedule_for(
+			{"stage": stage, "path": "YANDERE", "content_level": "calmer"}
+		)
+		assert_bool(bool(sched["calmer_capped"])).is_true()
+
+
 func test_data_file_carries_the_docs_06_numbers() -> void:
 	assert_bool(Steering.reload_table()).is_true()
 	var parsed: Variant = JSON.parse_string(
 		FileAccess.get_file_as_string("res://data/steering/dose.json")
 	)
 	assert_bool(parsed is Dictionary).is_true()
-	var stages: Dictionary = (parsed as Dictionary)["stages"]
+	var document: Dictionary = parsed
+	var stages: Dictionary = document["stages"]
 	for stage: int in DOCS_06_STAGES:
 		var row: Dictionary = stages[str(stage)]
 		assert_float(float(row["malice"])).is_equal_approx(float(DOCS_06_STAGES[stage][0]), 0.0001)
 		assert_float(float(row["path_mix"])).is_equal_approx(
 			float(DOCS_06_STAGES[stage][1]), 0.0001
 		)
+	# P3.04: the keep vectors' curves ride the ≤0.5 coherent band, and the
+	# path map binds the two keeps while the D21 fallbacks stay prompt-only.
+	var curves: Dictionary = document["weight_curves"]
+	for vector: String in ["possessive", "aware"]:
+		var curve: Dictionary = curves[vector]
+		for stage: int in DOCS_06_CURVE:
+			assert_float(float(curve[str(stage)])).is_equal_approx(
+				float(DOCS_06_CURVE[stage]), 0.0001
+			)
+	var path_vectors: Dictionary = document["path_vectors"]
+	assert_str(String(path_vectors["YANDERE"])).is_equal("possessive")
+	assert_str(String(path_vectors["AWAKE"])).is_equal("aware")
+	for path_id: String in ["SPLIT", "TSUN", "HOLLOW", "ANCHOR"]:
+		assert_bool(path_vectors.has(path_id)).is_true()
+		assert_bool(path_vectors[path_id] == null).is_true()
 
 
 ## The malice column is docs/02 §9's "steering dose (base)" column; sampling.json
@@ -104,14 +189,14 @@ func test_path_mix_axis_is_clamped_to_0_12() -> void:
 	fixture.store_string(JSON.stringify({"version": 1, "stages": stages}))
 	fixture.close()
 	assert_bool(Steering.reload_table(OVERSIZE_TABLE)).is_true()
-	assert_float(float(_schedule(0)["path_mix"])).is_equal_approx(12.0, 0.0001)
-	assert_float(float(_schedule(1)["path_mix"])).is_equal_approx(0.0, 0.0001)
-	assert_float(float(_schedule(5)["path_mix"])).is_equal_approx(12.0, 0.0001)
+	assert_float(float(_schedule(0)["path_weight"])).is_equal_approx(12.0, 0.0001)
+	assert_float(float(_schedule(1)["path_weight"])).is_equal_approx(0.0, 0.0001)
+	assert_float(float(_schedule(5)["path_weight"])).is_equal_approx(12.0, 0.0001)
 	# The transport map carries the clamped value, not the raw row.
 	assert_float(_path_mix(Steering.dose_for({"stage": 5}))).is_equal_approx(12.0, 0.0001)
 	# The cap still lands on top of the clamp: stage 3 is untouched, so calmer
 	# stage 5 is exactly the (in-range) stage-3 row.
-	assert_float(float(_schedule(5, {"content_level": "calmer"})["path_mix"])).is_equal_approx(
+	assert_float(float(_schedule(5, {"content_level": "calmer"})["path_weight"])).is_equal_approx(
 		3.0, 0.0001
 	)
 
@@ -141,7 +226,7 @@ func test_calmer_mode_leaves_stages_0_to_3_alone() -> void:
 func test_calmer_mode_caps_after_scene_modifiers() -> void:
 	var sched := _schedule(5, {"content_level": "calmer", "scene_modifier": 5.0})
 	assert_float(float(sched["malice"])).is_equal_approx(4.5, 0.0001)
-	assert_float(float(sched["path_mix"])).is_equal_approx(3.0, 0.0001)
+	assert_float(float(sched["path_weight"])).is_equal_approx(0.2, 0.0001)
 	assert_bool(bool(sched["calmer"])).is_true()
 	assert_bool(bool(sched["calmer_capped"])).is_true()
 
@@ -155,7 +240,7 @@ func test_settings_content_level_forces_the_calmer_cap() -> void:
 	assert_bool(Steering.is_calmer_mode({})).is_true()
 	var capped := Steering.dose_for({"stage": 5})
 	assert_float(_malice(capped)).is_equal_approx(4.5, 0.0001)
-	assert_float(_path_mix(capped)).is_equal_approx(3.0, 0.0001)
+	assert_float(_path_mix(capped)).is_equal_approx(0.2, 0.0001)
 	var forced := _schedule(5, {"content_level": "full"})
 	assert_bool(bool(forced["calmer"])).is_true()
 	assert_float(float(forced["malice"])).is_equal_approx(4.5, 0.0001)
@@ -207,7 +292,9 @@ func test_missing_table_falls_back_to_the_docs_06_rows() -> void:
 	assert_bool(Steering.reload_table("res://data/steering/does_not_exist.json")).is_false()
 	var dose := Steering.dose_for({"stage": 5})
 	assert_float(_malice(dose)).is_equal_approx(8.0, 0.0001)
-	assert_float(_path_mix(dose)).is_equal_approx(5.0, 0.0001)
+	assert_float(_path_mix(dose)).is_equal_approx(0.2, 0.0001)
+	var yandere := Steering.dose_for({"stage": 5, "path": "YANDERE"})
+	assert_float(_weight(yandere, "possessive")).is_equal_approx(0.5, 0.0001)
 
 
 func test_stage_from_context_is_coerced_and_clamped() -> void:

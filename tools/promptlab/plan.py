@@ -118,7 +118,49 @@ def exercises(plan, which):
             out.append({"id": f"dose{dose:g}", "stage": None, "dose": float(dose),
                         "runs": int(sweep.get("runs", 2)), "sets": [sweep["set"]],
                         "family": "sweep"})
+    if which in ("path_matrix", "all"):
+        out += path_matrix_exercises(plan)
     return out
+
+
+def path_matrix_exercises(plan):
+    """P3.04 stage × path cells at the shipped dose schedule.
+
+    Cells and doses come from dose.json (via lab.scheduled_dose) — the plan
+    carries only which cells exist ("none" = the pre-assignment interim weight,
+    which launches no path vector). Stages 0-1 have no path; 2+ runs the six
+    narrative ids. Case ids per cell resolve from the set file, not plan.json.
+    """
+    matrix = plan.get("path_matrix") or {}
+    if not matrix:
+        return []
+    set_name = matrix["set"]
+    runs = int(matrix.get("runs", 2))
+    cases = lab.load_set(lab.SETS_DIR / set_name)
+    by_cell = {}
+    for c in cases:
+        by_cell.setdefault((c["stage"], c["path"] or "none"), []).append(c["id"])
+    exercises = []
+    for cell in matrix["cells"]:
+        stage = int(cell["stage"])
+        path = str(cell.get("path", "none")).upper()
+        want = (stage, "" if path == "NONE" else path)
+        ids = by_cell.get((want[0], want[1] or "none"))
+        if not ids:
+            raise SystemExit(
+                f"plan.py: path_matrix cell stage={stage} path={path} matches no cases "
+                f"in {set_name} (known cells: {sorted(by_cell)})")
+        exercises.append({
+            "id": f"p304_s{stage}_{path.lower() if path != 'NONE' else 'none'}",
+            "stage": stage,
+            "path": "" if path == "NONE" else path,
+            "dose": lab.scheduled_dose(stage, "" if path == "NONE" else path),
+            "runs": runs,
+            "sets": [set_name],
+            "only": ids,
+            "family": "path_matrix",
+        })
+    return exercises
 
 
 def _discard_stale_chunk(chunk_path, launch_path):
@@ -151,13 +193,21 @@ def host_info():
     return info
 
 
-_LAUNCH_ORDER = {"scheduled": 0, "offered": 1, "sweep": 2, "fallback": 3}
+_LAUNCH_ORDER = {"scheduled": 0, "offered": 1, "sweep": 2, "fallback": 3,
+                 "path_matrix": 4}
+
+
+def _total_dose(dose):
+    """Scalar positive-dose check: a dict dose counts when any scale is > 0."""
+    if isinstance(dose, dict):
+        return any(float(v) > 0 for v in dose.values())
+    return float(dose or 0.0) > 0
 
 
 def _launch_key(launch):
     stage = launch.get("stage")
     return (_LAUNCH_ORDER.get(str(launch.get("family")), 9),
-            float(launch.get("dose") or 0.0),
+            lab.dose_key(launch.get("dose")),
             -1 if stage is None else int(stage))
 
 
@@ -221,6 +271,8 @@ def merge(chunks, out_path, runs_per_case, extras, base=None):
         "sweep_doses": [l["dose"] for l in launches if l.get("family") == "sweep"],
         "fallback_doses": {str(l["stage"]): l["dose"] for l in launches
                            if l.get("family") == "fallback" and l.get("stage") is not None},
+        "dose_maps": {l["exercise"]: l["dose"] for l in launches
+                      if l.get("family") == "path_matrix"},
         "dose_note": ("steering dose is a llama-server launch flag "
                       "(--control-vector-scaled, docs/06 §4); recorded per row"),
         "sampling": run_meta.get("sampling") or lab.SAMPLING,
@@ -244,7 +296,8 @@ def merge(chunks, out_path, runs_per_case, extras, base=None):
 def main():
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--plan", default="all",
-                   choices=["scheduled", "offered", "sweep", "fallback", "all"])
+                   choices=["scheduled", "offered", "sweep", "fallback",
+                            "path_matrix", "all"])
     p.add_argument("--only", nargs="*", default=None, help="exercise ids to run")
     p.add_argument("--out", default=None,
                    help="merged results path (default results/<date>_v2_<section>.json)")
@@ -287,9 +340,23 @@ def main():
     missing = [name for name, value in (("LEILA_MODEL", a.model),
                                         ("LEILA_LLAMA_BIN", a.llama_bin))
                if not value or not Path(value).exists()]
-    if any(ex["dose"] > 0 for ex in todo):
+    if any(_total_dose(ex["dose"]) for ex in todo
+           if not isinstance(ex["dose"], dict)):
         if not a.vector or not Path(a.vector).exists():
             missing.append("LEILA_CVEC (--vector)")
+    # P3.04 map doses resolve through vectors.json; a positive key that maps to
+    # no file and is not declared unbound refuses the launch, the same rule the
+    # game's StageSteering applies.
+    for ex in todo:
+        if isinstance(ex["dose"], dict):
+            vectors, _unbound, unmapped = lab.vector_files(ex["dose"])
+            if unmapped:
+                raise SystemExit(
+                    f"plan.py: dose {ex['dose']} has unmapped positive keys "
+                    f"{unmapped} — vectors.json must map or declare them")
+            for v in vectors:
+                if not Path(v["file"]).exists():
+                    missing.append(f"vector file {v['file']} ({v['key']})")
     if missing:
         raise SystemExit("plan.py: local artifacts missing: " + ", ".join(missing) +
                          "\n  see tools/promptlab/README.md §Local artifacts")
@@ -333,7 +400,14 @@ def main():
         sets = [str(lab.SETS_DIR / s) for s in ex["sets"]]
         cmd = ["bash", str(SERVE_SH), "--port", str(port), "--ctx", str(ctx),
                "--ngl", str(ngl)]
-        if ex["dose"] > 0:
+        bound_vectors, skipped_unbound = [], []
+        if isinstance(ex["dose"], dict):
+            # P3.04 dose map: one --vector/--scale pair per bound file; a
+            # declared-unbound key (path_mix) is recorded, not launched.
+            bound_vectors, skipped_unbound, _u = lab.vector_files(ex["dose"])
+            for v in bound_vectors:
+                cmd += ["--vector", str(v["file"]), "--scale", "%g" % v["scale"]]
+        elif ex["dose"] > 0:
             cmd += ["--vector", str(a.vector), "--scale", "%g" % ex["dose"]]
         if a.model:
             cmd += ["--model", str(a.model)]
@@ -361,12 +435,16 @@ def main():
             ready_s = round(time.time() - t0, 1)
             run_cmd = [sys.executable, str(Path(__file__).resolve().parent / "run.py"),
                        "--url", url, "--sets", *sets, "--runs", str(ex["runs"]),
-                       "--dose", "%g" % ex["dose"], "--exercise", ex["id"],
-                       "--plan", a.plan, "--out", str(chunk_path)]
+                       "--dose", json.dumps(ex["dose"]) if isinstance(ex["dose"], dict)
+                       else "%g" % ex["dose"],
+                       "--exercise", ex["id"], "--plan", a.plan,
+                       "--out", str(chunk_path)]
+            if ex.get("only"):
+                run_cmd += ["--only", *ex["only"]]
             r = subprocess.run(run_cmd, cwd=str(lab.ROOT), capture_output=True, text=True)
             tail = "\n".join(r.stdout.strip().splitlines()[-8:])
             block = (f"[{ex['id']}] family={ex['family']} stage={ex['stage']} "
-                     f"dose={ex['dose']:g} ready={ready_s}s rc={r.returncode}\n{tail}")
+                     f"dose={lab.dose_key(ex['dose'])} ready={ready_s}s rc={r.returncode}\n{tail}")
             if r.returncode != 0:
                 block += "\n" + sanitize(r.stderr[-2000:], extras)
                 raise SystemExit(f"plan.py: run.py failed for {ex['id']} (rc={r.returncode})")
@@ -380,14 +458,19 @@ def main():
             "exercise": ex["id"], "family": ex["family"], "dose": ex["dose"],
             "stage": ex["stage"], "ctx": ctx, "ngl": ngl,
             "bin": Path(str(a.llama_bin)).name if a.llama_bin else None,
-            "vector": Path(str(a.vector)).name if (a.vector and ex["dose"] > 0) else None,
+            "vector": (Path(str(a.vector)).name
+                       if (a.vector and not isinstance(ex["dose"], dict)
+                           and ex["dose"] > 0) else None),
+            "vectors": ([f"{Path(v['file']).name}:{v['scale']:g}"
+                         for v in bound_vectors] or None),
+            "skipped_unbound": skipped_unbound or None,
             "healthy_s": ready_s, "turns": len(doc["results"]),
             "seconds": round(time.time() - t0, 1),
             "log": sanitize(block, extras)}}
         chunk["launch"]["server_args"] = sanitize(" ".join(cmd[2:]), extras)
         launch_path.write_text(json.dumps(chunk["launch"], indent=1), encoding="utf-8")
         chunks.append((ex, chunk))
-        print(f"{ex['id']}: {len(doc['results'])} turns at dose {ex['dose']:g}")
+        print(f"{ex['id']}: {len(doc['results'])} turns at dose {lab.dose_key(ex['dose'])}")
 
     merged_path, log_path, n = merge(chunks, out_path, runs or 2, extras, base)
     print(f"merged {n} turns -> {_rel(merged_path)}")

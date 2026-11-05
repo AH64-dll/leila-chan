@@ -22,13 +22,17 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MODEL="${LEILA_MODEL:-$ROOT/models/Qwen3.5-4B-Q4_K_M.gguf}"
 BIN="${LEILA_LLAMA_BIN:-$ROOT/tools/llama/llama-b12024}"
-PORT=8089; CTX=8192; NGL=99; VECTOR=""; VSCALE=1; DRY=0
+PORT=8089; CTX=8192; NGL=99; DRY=0
+VECTORS=(); SCALES=()
 
 usage() {
     cat >&2 <<EOF
 usage: $0 [--model GGUF] [--bin DIR] [--port N] [--ctx N] [--ngl N] \\
-          [--vector CVEC_GGUF] [--scale S] [--dry-run]
+          [--vector CVEC_GGUF [--scale S]]... [--dry-run]
   --vector/--scale  append --control-vector-scaled CVEC:S (dose; e.g. 4).
+      Repeat --vector for the P3.04 multi-vector dose map (one --scale per
+      --vector, in order; a missing scale defaults to 1) — the pairs join
+      into one comma-separated flag.
       CVEC may be relative, POSIX-absolute, UNC or (Git Bash) X:/... on the
       cwd's drive — drive paths are normalized to same-drive relative ones
       (see header). X:file and names containing ':'/',' are rejected.
@@ -41,8 +45,8 @@ while [ $# -gt 0 ]; do case "$1" in
     --port)    PORT="$2";   shift 2;;
     --ctx)     CTX="$2";    shift 2;;
     --ngl)     NGL="$2";    shift 2;;
-    --vector)  VECTOR="$2"; shift 2;;
-    --scale)   VSCALE="$2"; shift 2;;
+    --vector)  VECTORS+=("$2"); shift 2;;
+    --scale)   SCALES+=("$2");  shift 2;;
     --dry-run) DRY=1;       shift;;
     -h|--help) usage; exit 0;;
     *) echo "unknown arg: $1" >&2; usage; exit 2;;
@@ -56,22 +60,27 @@ esac
 [ -f "$MODEL" ] || { echo "model not found at $MODEL — see tools/llm/README.md" >&2; exit 1; }
 
 ARGS=(-m "$MODEL" -ngl "$NGL" -c "$CTX" --jinja --port "$PORT" -np 1)
-if [ -n "$VECTOR" ]; then
-    [ -f "$VECTOR" ] || { echo "control vector not found: $VECTOR" >&2; exit 1; }
-    # Normalize CVEC for the FNAME:SCALE parser via tools/llm/cvec_path.py
+if [ "${#VECTORS[@]}" -gt 0 ]; then
+    # Normalize each CVEC for the FNAME:SCALE parser via tools/llm/cvec_path.py
     # (see header): drive paths become same-drive relative paths. On Git Bash
     # the helper (and python itself) sees Windows paths, so translate first.
     CVEC_PY="$(dirname "${BASH_SOURCE[0]}")/cvec_path.py"
     PYBIN=""
     for c in python3 python "py -3"; do command -v ${c%% *} >/dev/null 2>&1 && { PYBIN=$c; break; }; done
     [ -n "$PYBIN" ] || { echo "--vector needs python3 (or py -3) on PATH for cvec_path.py normalization" >&2; exit 1; }
-    VP="$VECTOR"; PCWD=""
-    if [ "${OS:-}" = "Windows_NT" ] && command -v cygpath >/dev/null 2>&1; then
-        VP="$(cygpath -wa "$VECTOR")"; PCWD="$(cygpath -w "$PWD")"
-    fi
-    FLAG="$($PYBIN "$CVEC_PY" --scale "$VSCALE" ${PCWD:+--cwd "$PCWD"} -- "$VP")" \
-        || { echo "control vector rejected: $VECTOR" >&2; exit 1; }
-    CVEC_ARG="$(printf '%s\n' "$FLAG" | tail -n1)"
+    CVEC_ARG=""
+    for i in "${!VECTORS[@]}"; do
+        VECTOR="${VECTORS[$i]}"
+        [ -f "$VECTOR" ] || { echo "control vector not found: $VECTOR" >&2; exit 1; }
+        VP="$VECTOR"; PCWD=""
+        if [ "${OS:-}" = "Windows_NT" ] && command -v cygpath >/dev/null 2>&1; then
+            VP="$(cygpath -wa "$VECTOR")"; PCWD="$(cygpath -w "$PWD")"
+        fi
+        FLAG="$($PYBIN "$CVEC_PY" --scale "${SCALES[$i]:-1}" ${PCWD:+--cwd "$PCWD"} -- "$VP")" \
+            || { echo "control vector rejected: $VECTOR" >&2; exit 1; }
+        PAIR="$(printf '%s\n' "$FLAG" | tail -n1)"
+        CVEC_ARG="${CVEC_ARG:+$CVEC_ARG,}$PAIR"
+    done
     ARGS+=(--control-vector-scaled "$CVEC_ARG")
 fi
 

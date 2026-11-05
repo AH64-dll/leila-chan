@@ -96,7 +96,7 @@ def build(docs, run=1):
     for ids, gs in by_ids.items():
         if len(gs) < 2:
             continue
-        gs = sorted(gs, key=lambda g: (g["dose"] if g["dose"] is not None else -1))
+        gs = sorted(gs, key=lambda g: ("" if g["dose"] is None else str(g["dose"])))
         for i in range(len(gs)):
             for j in range(i + 1, len(gs)):
                 a, b = gs[i], gs[j]

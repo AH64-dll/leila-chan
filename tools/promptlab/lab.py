@@ -24,17 +24,23 @@ import re
 import time
 import unicodedata
 import urllib.request
+import warnings
 from difflib import SequenceMatcher
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 PROMPTS_DIR = ROOT / "game" / "data" / "prompts"
 STAGE_GATES_PATH = ROOT / "game" / "data" / "stage_gates.json"
+DOSE_PATH = ROOT / "game" / "data" / "steering" / "dose.json"
+VECTOR_MAP_PATH = ROOT / "game" / "data" / "steering" / "vectors.json"
 SETS_DIR = Path(__file__).resolve().parent / "sets"
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
 REPORTS_DIR = Path(__file__).resolve().parent / "reports"
 DEFAULT_URL = "http://127.0.0.1:8089"
 PLAYER_NAME = "Ren"
+# All six docs/01 §4 path ids (GameState.PATHS). Only YANDERE/AWAKE ship a
+# path_{id}.md module today (P3.05 adds the rest); a path without a module
+# sends no path layer — the same fall-through PromptBuilder has.
 PATHS = ["YANDERE", "SPLIT", "TSUN", "HOLLOW", "AWAKE", "ANCHOR"]
 STAGES = [0, 1, 2, 3, 4, 5]
 
@@ -130,6 +136,96 @@ SAMPLING = {
 
 # docs/02 §9 base steering dose per stage (the scheduled dose the gate uses).
 SCHEDULED_DOSES = {0: 0.0, 1: 2.5, 2: 3.5, 3: 4.5, 4: 6.0, 5: 8.0}
+
+# --- the shipped dose schedule (game/data/steering/dose.json, P3.04) ----------
+_DOSE = {}
+_VECTOR_MAP = {}
+
+
+def dose_table():
+    """`game/data/steering/dose.json`, loaded once (the game's dose authority)."""
+    if not _DOSE:
+        _DOSE.update(json.loads(DOSE_PATH.read_text(encoding="utf-8")))
+    return _DOSE
+
+
+def vector_map():
+    """`game/data/steering/vectors.json` — dose key -> shipped vector file."""
+    if not _VECTOR_MAP:
+        _VECTOR_MAP.update(json.loads(VECTOR_MAP_PATH.read_text(encoding="utf-8")))
+    return _VECTOR_MAP
+
+
+def scheduled_dose(stage, path=""):
+    """The TurnRequest.dose map Steering.dose_for emits (P3.04 rules).
+
+    `malice` always; `path_mix` (the pre-assignment interim weight) only while
+    no path is set; the locked path's keep vector at its stage weight once
+    `path` names a keep path; nothing extra for a prompt-only fallback path.
+    """
+    doc = dose_table()
+    row = doc["stages"][str(stage)]
+    dose = {"malice": float(row["malice"])}
+    path = (path or "").strip().upper()
+    vector = (doc.get("path_vectors") or {}).get(path) if path else None
+    if vector:
+        curve = (doc.get("weight_curves") or {}).get(vector) or {}
+        weight = curve.get(str(stage))
+        if weight is not None:
+            dose[str(vector)] = float(weight)
+        else:
+            # Mirror Steering._weight's push_warning: a curve gap is a data typo,
+            # not a silent path_mix substitution (P3.04 r2 CODE-4/DES-4).
+            warnings.warn(
+                "scheduled_dose: no %s weight-curve weight for stage %d — "
+                "falling back to the interim path_mix row" % (vector, stage),
+                stacklevel=2,
+            )
+            dose[str(vector)] = float(row["path_mix"])
+    elif not path:
+        dose["path_mix"] = float(row["path_mix"])
+    return dose
+
+
+def dose_key(dose):
+    """A comparable label for a dose: '4.5' stays '4.5', a {name: scale} map
+    becomes 'malice=4.5+possessive=0.3' so rows group and sort stably."""
+    if dose is None:
+        return ""
+    if isinstance(dose, dict):
+        return "+".join("%s=%g" % (name, float(dose[name]))
+                        for name in sorted(dose))
+    return "%g" % float(dose)
+
+
+def vector_files(dose):
+    """Resolve a dose map to (vectors, unbound, unmapped) via vectors.json.
+
+    vectors: [{"key", "file", "scale"}] with repo-local paths for serve.sh;
+    unbound: positive-scale keys declared under `unbound` (scheduled, binds
+    nothing); unmapped: positive keys with neither — the caller must refuse.
+    res:// paths resolve against game/ (the files ship in the game pack).
+    """
+    mapping = vector_map()
+    files = mapping.get("vectors") or {}
+    declared = mapping.get("unbound") or {}
+    vectors, unbound, unmapped = [], [], []
+    for name, scale in (dose or {}).items():
+        scale = float(scale)
+        if scale <= 0:
+            continue
+        row = files.get(name)
+        if row and row.get("file"):
+            res = str(row["file"])
+            path = (ROOT / "game" / res[len("res://"):]) if res.startswith("res://") \
+                else Path(res)
+            vectors.append({"key": name, "file": path, "scale": scale})
+        elif name in declared:
+            unbound.append(name)
+        else:
+            unmapped.append(name)
+    return vectors, unbound, unmapped
+
 
 # --- memory validation (docs/02 §6 rules 1-2) ---------------------------------
 # Words that can only be meta/schema leakage (rule 2): unambiguous jargon plus
@@ -512,7 +608,10 @@ def load_set(path):
         c.setdefault("scene", "")
         c["path"] = case_path
         c["runner_up"] = str(c.get("runner_up", "")).upper() or (
-            next((p for p in PATHS if p != case_path), "") if case_path else "")
+            # default runner-up: the other shipped module (YANDERE <-> AWAKE);
+            # a prompt-only path hybridizes against YANDERE's 25% line
+            next(p for p in PATHS if p != case_path
+                 and (p == "AWAKE" or case_path != "YANDERE")) if case_path else "")
         cases.append(c)
     return cases
 

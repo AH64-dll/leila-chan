@@ -246,7 +246,7 @@ func get_current_dose() -> Dictionary:
 		# Not `build_turn_context()`: that injects the memories, and a read-only
 		# accessor (the F3 overlay refreshes it) must not spend an injection or
 		# clear the log the transcript is about to write (review r2 DES-7).
-		return Steering.dose_for({"stage": stage})
+		return Steering.dose_for({"stage": stage, "path": String(GameState.path)})
 	return {"malice": float(sampling_spec(stage).get("dose", 0.0))}
 
 

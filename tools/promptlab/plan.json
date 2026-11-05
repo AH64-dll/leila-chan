@@ -118,5 +118,116 @@
         "stage_5_awake.jsonl"
       ]
     }
-  ]
+  ],
+  "path_matrix": {
+    "doc": "P3.04: one exercise per stage x path cell at the shipped dose schedule (plan.py resolves each cell's dose map from game/data/steering/dose.json, binds the keep vectors through game/data/steering/vectors.json, and filters the set to the cell's case ids). 'none' = pre-assignment interim path_mix (no path vector bound). Stages 0-1 have no path; the four prompt-only paths run malice only (D21).",
+    "set": "dose_paths.jsonl",
+    "runs": 2,
+    "cells": [
+      {
+        "stage": 0,
+        "path": "none"
+      },
+      {
+        "stage": 1,
+        "path": "none"
+      },
+      {
+        "stage": 2,
+        "path": "YANDERE"
+      },
+      {
+        "stage": 2,
+        "path": "SPLIT"
+      },
+      {
+        "stage": 2,
+        "path": "TSUN"
+      },
+      {
+        "stage": 2,
+        "path": "HOLLOW"
+      },
+      {
+        "stage": 2,
+        "path": "AWAKE"
+      },
+      {
+        "stage": 2,
+        "path": "ANCHOR"
+      },
+      {
+        "stage": 3,
+        "path": "YANDERE"
+      },
+      {
+        "stage": 3,
+        "path": "SPLIT"
+      },
+      {
+        "stage": 3,
+        "path": "TSUN"
+      },
+      {
+        "stage": 3,
+        "path": "HOLLOW"
+      },
+      {
+        "stage": 3,
+        "path": "AWAKE"
+      },
+      {
+        "stage": 3,
+        "path": "ANCHOR"
+      },
+      {
+        "stage": 4,
+        "path": "YANDERE"
+      },
+      {
+        "stage": 4,
+        "path": "SPLIT"
+      },
+      {
+        "stage": 4,
+        "path": "TSUN"
+      },
+      {
+        "stage": 4,
+        "path": "HOLLOW"
+      },
+      {
+        "stage": 4,
+        "path": "AWAKE"
+      },
+      {
+        "stage": 4,
+        "path": "ANCHOR"
+      },
+      {
+        "stage": 5,
+        "path": "YANDERE"
+      },
+      {
+        "stage": 5,
+        "path": "SPLIT"
+      },
+      {
+        "stage": 5,
+        "path": "TSUN"
+      },
+      {
+        "stage": 5,
+        "path": "HOLLOW"
+      },
+      {
+        "stage": 5,
+        "path": "AWAKE"
+      },
+      {
+        "stage": 5,
+        "path": "ANCHOR"
+      }
+    ]
+  }
 }
