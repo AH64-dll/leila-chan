@@ -20,38 +20,45 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.08, 0.07, 0.09, 1)
 
-[node name="Column" type="VBoxContainer" parent="."]
+[node name="Margin" type="MarginContainer" parent="."]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -360.0
-offset_top = -200.0
-offset_right = 360.0
-offset_bottom = 200.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="Column" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
 alignment = 1
 
-[node name="Line" type="Label" parent="Column"]
+[node name="Line" type="Label" parent="Margin/Column"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="Progress" type="ProgressBar" parent="Column"]
+[node name="Progress" type="ProgressBar" parent="Margin/Column"]
+custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
+size_flags_horizontal = 3
 max_value = 1.0
 show_percentage = false
 
-[node name="Fix" type="Label" parent="Column"]
+[node name="Fix" type="Label" parent="Margin/Column"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="Actions" type="HBoxContainer" parent="Column"]
+[node name="Actions" type="VBoxContainer" parent="Margin/Column"]
 layout_mode = 2
+size_flags_horizontal = 3
 alignment = 1

@@ -39,10 +39,10 @@ var _line_index := -1
 var _actions: Array = []
 var _finished := false
 
-@onready var _line: Label = $Column/Line
-@onready var _progress: ProgressBar = $Column/Progress
-@onready var _fix: Label = $Column/Fix
-@onready var _actions_box: HBoxContainer = $Column/Actions
+@onready var _line: Label = $Margin/Column/Line
+@onready var _progress: ProgressBar = $Margin/Column/Progress
+@onready var _fix: Label = $Margin/Column/Fix
+@onready var _actions_box: VBoxContainer = $Margin/Column/Actions
 
 
 func _ready() -> void:
@@ -93,6 +93,7 @@ func _begin_attempt() -> void:
 	_line_index = -1
 	_bar_value = 0.0
 	_progress.value = 0.0
+	_progress.visible = true
 	if not _backend.has_engine():
 		_show_error("no_extension", {})
 		return
@@ -169,6 +170,7 @@ func _runs_on_cpu(info: Dictionary) -> bool:
 
 
 func _show_error(code: String, values: Dictionary) -> void:
+	_progress.visible = false
 	var errors: Dictionary = _data.get("errors", {})
 	var entry: Dictionary = errors.get(code, {})
 	if entry.is_empty():

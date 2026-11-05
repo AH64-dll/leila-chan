@@ -159,15 +159,15 @@ func _finished(screen: Node) -> bool:
 
 
 func _line(screen: Node) -> String:
-	return (screen.get_node("Column/Line") as Label).text
+	return (screen.get_node("Margin/Column/Line") as Label).text
 
 
 func _fix(screen: Node) -> String:
-	return (screen.get_node("Column/Fix") as Label).text
+	return (screen.get_node("Margin/Column/Fix") as Label).text
 
 
 func _press(screen: Node, label: String) -> bool:
-	for child in screen.get_node("Column/Actions").get_children():
+	for child in screen.get_node("Margin/Column/Actions").get_children():
 		var button := child as Button
 		if button != null and button.text == label:
 			button.pressed.emit()
@@ -293,7 +293,7 @@ func test_the_bar_never_decreases_during_one_attempt() -> void:
 	engine.load_delay_ms = 40
 	engine.progress_values = [0.0, 0.2, 0.5, 0.4, 0.9, 0.3, 1.0]
 	var screen := _spawn(_native(engine))
-	var bar: ProgressBar = screen.get_node("Column/Progress")
+	var bar: ProgressBar = screen.get_node("Margin/Column/Progress")
 	var last := -1.0
 	var decreased := false
 	var deadline := Time.get_ticks_msec() + 8000
