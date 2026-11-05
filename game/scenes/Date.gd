@@ -391,6 +391,12 @@ func load_scenario(path_or_dict: Variant = DEFAULT_SCENARIO) -> bool:
 	if ResourceLoader.exists(bg_path) and background != null:
 		background.texture = load(bg_path)
 		background.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	# docs/05 §1.5 M35: the room follows the player's real hour. The meta module
+	# owns the bucket/tint data; the scene only offers its background. Missing
+	# module (or headless) means an untinted background, never an error.
+	var sky := get_node_or_null("/root/MetaDirector/MetaEventsM31")
+	if sky != null and sky.has_method("apply_sky"):
+		sky.call("apply_sky", background)
 
 	# Wire music state
 	var music_id := StringName(String(_scenario.get("music", "calm")))

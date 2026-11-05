@@ -96,11 +96,11 @@ func test_the_effect_module_is_mounted_from_the_path_list() -> void:
 ## ── Polling, caps and the note ────────────────────────────────────────────
 
 
-func test_a_due_scripted_event_fires_through_offers_and_pays_the_scene_budget() -> void:
+func test_a_due_scripted_event_fires_at_the_scene_boundary_and_pays_the_scene_budget() -> void:
 	var ui := await _new_chat()
 	_log_player_line(ui)
 	assert_bool(MetaDirector.events_seen().has("M23")).is_false()
-	MetaDirector.offers(4)
+	MetaDirector.note_scene("test_scene")
 	assert_bool(MetaDirector.events_seen().has("M23")).is_true()
 	var view: Dictionary = MetaDirector.state()
 	assert_int(int(view.get("scene_events", 0))).is_equal(1)
@@ -108,13 +108,21 @@ func test_a_due_scripted_event_fires_through_offers_and_pays_the_scene_budget() 
 	assert_str(MetaLogEdits.shown("player", "I like you", 1)).is_equal("I love you")
 
 
-## One poll per turn: a second `offers()` call in the same turn cannot repeat it.
+## One poll per turn: a second scene boundary in the same turn cannot repeat it.
 func test_a_scripted_event_fires_once_per_turn() -> void:
 	var ui := await _new_chat()
 	_log_player_line(ui)
-	MetaDirector.offers(4)
-	MetaDirector.offers(4)
-	assert_int(int(MetaDirector.state().get("scene_events", 0))).is_equal(1)
+	MetaDirector.note_scene("test_scene")
+	MetaDirector.note_scene("test_scene")
+	# The second boundary lands in the same turn: the quiet-turn guard suppresses
+	# the repeat, so M23 is charged exactly once even though the new scene's own
+	# budget is fresh.
+	var seen := 0
+	for id: String in MetaDirector.events_seen():
+		if id == "M23":
+			seen += 1
+	assert_int(seen).is_equal(1)
+	assert_int(int(MetaDirector.state().get("scene_events", 0))).is_equal(0)
 
 
 ## docs/05 §2: the note reaches the SAME submit (docs/02 §4 step 1), not the next
@@ -122,7 +130,7 @@ func test_a_scripted_event_fires_once_per_turn() -> void:
 func test_the_event_note_rides_the_turn_it_happened_in() -> void:
 	var ui := await _new_chat()
 	_log_player_line(ui)
-	MetaDirector.offers(4)
+	MetaDirector.note_scene("test_scene")
 	var events: Array = MetaDirector.turn_events([], 4)
 	var found := false
 	for line: String in events:
@@ -135,8 +143,9 @@ func test_the_event_note_rides_the_turn_it_happened_in() -> void:
 func test_the_turn_after_a_scripted_event_is_quiet() -> void:
 	var ui := await _new_chat()
 	_log_player_line(ui)
-	MetaDirector.offers(4)
+	MetaDirector.note_scene("test_scene")
 	GameState.advance_turn()
+	MetaDirector.note_scene("next_scene")
 	assert_array(MetaDirector.offers(4)).is_empty()
 
 
@@ -144,7 +153,7 @@ func test_the_turn_after_a_scripted_event_is_quiet() -> void:
 func test_a_scripted_event_is_once_per_save() -> void:
 	var ui := await _new_chat()
 	_log_player_line(ui)
-	MetaDirector.offers(4)
+	MetaDirector.note_scene("test_scene")
 	GameState.advance_turn()
 	GameState.advance_turn()
 	MetaDirector.note_scene("next_scene")
@@ -170,7 +179,7 @@ func test_spent_m23_does_not_starve_m24() -> void:
 	)
 	assert_bool(MetaDirector.events_seen().has("M23")).is_true()
 	assert_bool(MetaDirector.events_seen().has("M24")).is_false()
-	MetaDirector.offers(4)
+	MetaDirector.note_scene("test_scene")
 	assert_bool(MetaDirector.events_seen().has("M24")).is_true()
 
 
@@ -179,7 +188,7 @@ func test_spent_m23_does_not_starve_m24() -> void:
 func test_a_spent_scene_buys_no_scripted_event() -> void:
 	var ui := await _new_chat()
 	_log_player_line(ui)
-	MetaDirector.offers(4)
+	MetaDirector.note_scene("test_scene")
 	assert_int(MetaDirector.scene_cap(4)).is_equal(2)
 	assert_int(int(MetaDirector.state().get("scene_events", 0))).is_equal(1)
 	# A stage-3 scene has room for one event; make this one stage 3.
@@ -193,7 +202,7 @@ func test_a_parked_scheduler_runs_no_scripted_events() -> void:
 	var ui := await _new_chat()
 	_log_player_line(ui)
 	MetaDirector.set_catalog({"events": {}})
-	MetaDirector.offers(4)
+	MetaDirector.note_scene("test_scene")
 	assert_bool(MetaDirector.events_seen().has("M23")).is_false()
 	assert_int(int(MetaDirector.state().get("scene_events", 0))).is_equal(0)
 

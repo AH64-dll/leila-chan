@@ -43,8 +43,20 @@ func _ready() -> void:
 	_apply_texts()
 	back_button.pressed.connect(_on_back_pressed)
 	refresh()
+	_add_meta_notes_section()
 	back_button.grab_focus()
 	extras_opened.emit()
+
+
+## docs/05 §1.4: the letters M31 writes and the diary M32 keeps are readable
+## here, and M31's "Open game folder" button lives on this screen. The section
+## is built by the meta module that owns the files (one call, so this screen
+## stays a view); a build without that module simply shows nothing extra.
+func _add_meta_notes_section() -> void:
+	var meta_files := get_node_or_null("/root/MetaDirector/MetaEventsM31")
+	if meta_files == null or not meta_files.has_method("build_extras_section"):
+		return
+	meta_files.call("build_extras_section", $Margin/VBox)
 
 
 ## Rebuilds the list from the log. Public so a test (and a future "she rewrote

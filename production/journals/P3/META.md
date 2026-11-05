@@ -172,3 +172,43 @@ Round 2 (rework) of P3.14:
   so unrelated suites that call `note_scene` stay deterministic.
 - Never write to the real user:// during debugging — `SaveSystem.shadow_path`/`store.path` scratch first; a
   polluted real shadow.json makes M08/M10 fire inside other suites.
+## P3.10 — Meta events M21–M26 (round 1, 2026-11-04)
+
+- Built `game/llm/meta/MetaEventsM21.gd` under the same mount seam; EFFECTS_PATHS is now `{01,21}`.
+- Scripted S events deliver their docs/05 §2 EVENT line on the turn they fired, via `turn_events()` —
+  never the pending queue (the Director drains that at step 0), so the model sees it on that submit.
+- Ambient context returns `{"budget": false}` from `poll_scripted` and lands without spending a scene slot.
+
+## P3.11 — Meta events M31–M38 (round 1, 2026-11-04)
+
+- Built `game/llm/meta/MetaEventsM31.gd` (detection/effects), `MetaNotesStore.gd` (the only disk
+  writer: `user://letters/for_<name>.txt`, `user://diary/day_NN.txt`, `user://saves/meta_names.json`)
+  and `MetaBirthday.gd` (the date grammar as data). Content is `game/data/meta_notes.json`.
+- Seam: MetaDirector mounts `res://llm/meta/MetaEventsM{01,21,31}.gd` as children (`EFFECTS_PATHS`) and
+  calls `fire(id, action)` / `on_scene` / `poll_scripted(stage)`. P3.09's union shape, plus a scripted
+  EVENT line carried by `turn_events()` (same turn, not the queue) and `{"budget": false}` for ambient
+  context (M35's clock line must not spend the St-3 scene slot, or the greeting eats every date's one event).
+- GOTCHA: `Director.filter_output` is the STREAMING scanner. Measured: its second consecutive one-shot
+  scan returns RAW text (cross-beat carry). Never use it for files — use `Safety.filter_text` (stateless,
+  the transcript-redactor path) and fail closed to bars.
+- GOTCHA: M33/M34 need SaveSystem's slots; `GameState.set_meter(stage 4)` locks a path via
+  `_evaluate_path`, so a test that wants AWAKE must `assign_path(&"AWAKE", true)` BEFORE raising instability.
+- Conventions: the clock is a Callable returning unix seconds (Triggers/Telemetry/SaveSystem shape); local
+  hour = unix + system bias, and tests build a "local" unix from today's date so DST cannot flake them.
+  The day boundary writes the diary (pure side effect); the announcement is a meta event the host charges
+  on the next scene. M34 never writes a loadable save — a `fiction: true` name in the ledger only.
+- Files are owned by `MetaNotesStore`, which refuses any root outside `user://` — note the scheme colon:
+  the root check must strip `user://` before testing for `:` or every root looks illegal (found the hard way).
+
+Round 2 (rework) of P3.11:
+- Teardown hygiene: `MetaEventsM31Test.gd:after_test()` left a 3:00 AM clock and scratch paths on the mounted
+  child node of autoload `MetaDirector`, poisoning subsequent test suites with late-night triggers. Always
+  reset injected seams (`set_clock(Callable())`, `user_root = "user://"`) in `after_test()`.
+- Implemented `reset_session()` on `MetaEventsM31.gd` to clear `_clock`, `user_root`, and pending diary/slots
+  at every `MetaDirector.reset_session()` call.
+- GOTCHA: `MetaDirector.offers()` must NEVER side-effect scripted rolls. Coupling `_roll_scripted()` to
+  offer queries starved turn-1 offers under "never two in a row" and polluted `_session_log` on inspections.
+- Memory leak: `build_extras_section()` allocated VBoxContainer and Label before checking `has_notes()`,
+  orphaning 2 nodes per Extras visit. Guard early before allocating.
+- Accessibility parity: `_write_diary()` in-memory fallback now sets `_diary_pending = day` so the M32
+  announcement event still arms when writing to disk fails.
