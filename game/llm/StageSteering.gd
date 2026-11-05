@@ -20,16 +20,16 @@ extends RefCounted
 ##    the server runs unsteered.
 ##  * a scale of 0 binds no vector at all, so stage 0 (and a restored new game)
 ##    lands on a clean server instead of a `:0` no-op flag. Negative scales are
-##    real payloads, not skipped: ANCHOR binds lucid at a negative weight
-##    (paths.json `anchors.lucid`, P3.19 r2).
+##    real payloads, not skipped (P3.19 r2 mechanism kept: an unmapped negative
+##    fails `control_vector_unmapped` like a positive).
 ##
 ## `path_mix` is scheduled on `TurnRequest.dose` only while the narrative path
 ## is unassigned (P3.04): the map declares it under `unbound`, and
 ## `launch_for()` reports it there so the caller can say so in one log line
 ## instead of dropping the weight silently. Once a path exists the dose carries
-## the keep vector's name (`possessive`/`aware`, or `lucid` negative for
-## ANCHOR) — shipped and mapped — and the three remaining prompt-only fallback
-## paths schedule no path key at all (D21).
+## the keep vector's name (`possessive`/`aware`) — shipped and mapped — and
+## the four prompt-only fallback paths schedule no path key at all (D21 +
+## P3.19 r2/DES-7 ANCHOR).
 
 const MAP_PATH := "res://data/steering/vectors.json"
 ## Exported builds keep `res://` inside the .pck, which a separate llama-server

@@ -824,20 +824,23 @@ def test_score_judgements_marks_zero_row_paths_skipped():
     assert out["per_path"]["ANCHOR"]["skipped"] is True
 
 
-def test_anchor_dose_carries_a_negative_lucid_weight():
-    """P3.19 r2: ANCHOR binds lucid at a negative curve (paths.json anchors.lucid)."""
+def test_anchor_dose_is_prompt_only_after_the_fallback_decision():
+    """P3.19 r2/DES-7: ANCHOR joins the prompt-only fallbacks (D21 addendum) —
+    dose.json leaves path_vectors.ANCHOR null; only malice is scheduled."""
     dose = lab.scheduled_dose(4, "ANCHOR")
-    assert dose == {"malice": 6.0, "lucid": -0.4}
+    assert dose == {"malice": 6.0}
     vectors, unbound, unmapped = lab.vector_files(dose)
-    assert [(v["key"], v["scale"]) for v in vectors] == [
-        ("malice", 6.0), ("lucid", -0.4)]
+    assert [(v["key"], v["scale"]) for v in vectors] == [("malice", 6.0)]
     assert unbound == [] and unmapped == []
 
 
 def test_vector_files_treats_negative_scales_as_real():
-    """Negative keys resolve files like positive ones; unmapped negatives refuse."""
-    vectors, _u, _m = lab.vector_files({"malice": 4.5, "lucid": -0.3})
-    assert {v["key"]: v["scale"] for v in vectors} == {"malice": 4.5, "lucid": -0.3}
+    """Negative keys resolve files like positive ones; unmapped/unbound
+    negatives are declared, not silently dropped (P3.19 r2 mechanism kept;
+    lucid is unbound since DES-7)."""
+    vectors, unbound, _m = lab.vector_files({"malice": 4.5, "lucid": -0.3})
+    assert {v["key"]: v["scale"] for v in vectors} == {"malice": 4.5}
+    assert "lucid" in unbound
     _v, _u2, unmapped = lab.vector_files({"bogus": -0.2})
     assert unmapped == ["bogus"]
     assert lab.vector_files({"malice": 0.0}) == ([], [], [])  # zero still binds nothing

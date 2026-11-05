@@ -13,25 +13,22 @@ extends Node
 ##   malice   — the tweet-malice scale (docs/06 §1 curve, docs/02 §9 base column)
 ##   path slot — `path_mix`, the §3 interim weight, while ctx.path is unset;
 ##              once the narrative path is assigned the slot carries that path's
-##              keep vector (`possessive`/`aware`/`lucid`, P3.03 keep decisions)
-##              at the dose.json weight curve. `lucid` (ANCHOR) is the signed
-##              exception: paths.json `anchors.lucid` documents that its positive
-##              side is the anchor voice while docs/06 §2 applies it *back*, so
-##              its curve weights are negative (P3.19 r2). The three remaining
-##              fallback paths (D21) are prompt-only and schedule no path
-##              weight. Deliberately not `path`
-##              — that name already means the narrative path (`GameState.path`,
-##              the F3 panel's `Path:` line) and the control-vector *file* in the
-##              launcher's `control_vectors` entries.
+##              keep vector (`possessive`/`aware`, P3.03 keep decisions) at the
+##              dose.json weight curve. The four fallback paths (D21 + P3.19
+##              r2/DES-7 ANCHOR) are prompt-only and schedule no path weight.
+##              Deliberately not `path` — that name already means the narrative
+##              path (`GameState.path`, the F3 panel's `Path:` line) and the
+##              control-vector *file* in the launcher's `control_vectors` entries.
 ##
 ## `malice` is a scale in [0, 12]. The path slot keeps its sign: its clamp is a
-## **code rule** on the magnitude (|scale| ≤ 12, docs/06 §3/§5) so the lucid
-## negative reaches the launcher — no data file can widen it either way. The
-## calmer-mode cap (docs/06 §5, docs/02 §8) is the stage-3 row of the same table
-## applied after the modifiers, magnitude-wise (a negative weight caps toward
-## zero, never deeper), so retuning stage 3 moves the calmer ceiling with it —
-## docs/06 §5 defines calmer as "stage-3 levels". The stage numbers live in
-## `game/data/steering/dose.json`; the docs/06 §3 table is the in-code
+## **code rule** on the magnitude (|scale| ≤ 12, docs/06 §3/§5) — if a negative
+## path weight is ever scheduled again it reaches the launcher rather than
+## silently un-steering (measured with ANCHOR/-lucid in P3.19 r2). The
+## calmer-mode cap (docs/06 §5, docs/02 §8) is the stage-3 row of the same
+## table applied after the modifiers, magnitude-wise (a negative weight caps
+## toward zero, never deeper), so retuning stage 3 moves the calmer ceiling
+## with it — docs/06 §5 defines calmer as "stage-3 levels". The stage numbers
+## live in `game/data/steering/dose.json`; the docs/06 §3 table is the in-code
 ## fallback, so a broken data file degrades to the documented values.
 ##
 ## Prototype limit (docs/06 §4): the dose is a llama-server *launch flag*, so it
@@ -74,19 +71,17 @@ const FALLBACK_TABLE := {
 
 ## dose.json `path_vectors`: narrative path -> keep vector name; a path missing
 ## from the map is the P3.03 fallback decision (D21) — prompt-only, no weight.
-## ANCHOR binds `lucid`, the signed vector (negative curve weights).
+## ANCHOR re-joined the fallbacks in P3.19 r2/DES-7 (negative lucid measured
+## inert: independent judge 4.8% vs 11.9% r1).
 const FALLBACK_PATH_VECTORS := {
 	"YANDERE": "possessive",
 	"AWAKE": "aware",
-	"ANCHOR": "lucid",
 }
 
 ## dose.json `weight_curves`: keep vector -> per-stage weight (|w| ≤0.5 band).
-## `lucid`'s curve is negative on purpose — see `anchors.lucid` in paths.json.
 const FALLBACK_WEIGHT_CURVES := {
 	"possessive": {0: 0.0, 1: 0.1, 2: 0.2, 3: 0.3, 4: 0.4, 5: 0.5},
 	"aware": {0: 0.0, 1: 0.1, 2: 0.2, 3: 0.3, 4: 0.4, 5: 0.5},
-	"lucid": {0: 0.0, 1: 0.0, 2: -0.2, 3: -0.3, 4: -0.4, 5: -0.5},
 }
 
 var _table: Dictionary = {}

@@ -84,11 +84,13 @@ func test_assigned_keep_paths_carry_their_vector_weight() -> void:
 		assert_str(String(sched["path_vector"])).is_equal("possessive")
 
 
-## P3.04/D21 + P3.19 r2: the three remaining blind-read fallback paths are
+## P3.04/D21 + P3.19 r2/DES-7: ALL blind-read fallback paths are
 ## prompt-only — they bind no vector and schedule no path weight (not even the
-## interim row). ANCHOR left this set when lucid bound at a negative curve.
+## interim row). ANCHOR re-joined this set after the negative-lucid
+## hypothesis was bound and measured inert (independent judge 4.8% vs 11.9%
+## r1): docs/06 §5 falls back rather than burn more on it.
 func test_fallback_paths_schedule_no_path_weight() -> void:
-	for path: String in ["SPLIT", "TSUN", "HOLLOW"]:
+	for path: String in ["SPLIT", "TSUN", "HOLLOW", "ANCHOR"]:
 		var dose := Steering.dose_for({"stage": 4, "path": path})
 		assert_float(_malice(dose)).is_equal_approx(6.0, 0.0001)
 		assert_bool(dose.has("path_mix")).is_false()
@@ -98,21 +100,11 @@ func test_fallback_paths_schedule_no_path_weight() -> void:
 		assert_float(float(sched["path_weight"])).is_equal_approx(0.0, 0.0001)
 
 
-## P3.19 r2: ANCHOR binds `lucid`, the signed vector — its curve weights are
-## negative and must reach the dose with the sign intact (paths.json
-## `anchors.lucid`). The path slot clamp binds |scale|, not the value: an
-## out-of-band negative curve lands at -12, not 0 (the flag grammar takes
-## negatives, so clamping to 0 would silently un-steer an ANCHOR run); calmer
-## caps the same way, |weight| at the stage-3 row, sign kept.
-func test_the_anchor_path_schedules_a_signed_lucid_weight() -> void:
-	for stage: int in [2, 3, 4, 5]:
-		var dose := Steering.dose_for({"stage": stage, "path": "ANCHOR"})
-		assert_float(_malice(dose)).is_equal_approx(float(DOCS_06_STAGES[stage][0]), 0.0001)
-		assert_float(_weight(dose, "lucid")).is_equal_approx(-float(DOCS_06_CURVE[stage]), 0.0001)
-		assert_bool(dose.has("path_mix")).is_false()
-		var sched := Steering.schedule_for({"stage": stage, "path": "ANCHOR"})
-		assert_str(String(sched["path_vector"])).is_equal("lucid")
-		assert_float(float(sched["path_weight"])).is_less(0.0)
+## P3.19 r2 (mechanism, kept): the path slot clamp binds |scale|, not the
+## value, so if a negative curve is ever scheduled again it lands at -12, not
+## 0 (the flag grammar takes negatives; clamping to 0 would silently
+## un-steer). Verified on the oversize fixture table.
+func test_a_negative_path_curve_clamps_by_magnitude() -> void:
 	var fixture := FileAccess.open(OVERSIZE_TABLE, FileAccess.WRITE)
 	assert_bool(fixture != null).is_true()
 	if fixture == null:
@@ -137,15 +129,7 @@ func test_the_anchor_path_schedules_a_signed_lucid_weight() -> void:
 	assert_bool(Steering.reload_table(OVERSIZE_TABLE)).is_true()
 	var clamped := Steering.dose_for({"stage": 4, "path": "ANCHOR"})
 	assert_float(_weight(clamped, "lucid")).is_equal_approx(-12.0, 0.0001)
-	# calmer on the shipped table: a calmer stage-5 ANCHOR caps toward zero at
-	# the stage-3 row's |0.3|, never flips to +0.3 (a capped anchor is
-	# shallower, not anti-steered).
 	assert_bool(Steering.reload_table()).is_true()
-	var sched := Steering.schedule_for({"stage": 5, "path": "ANCHOR", "content_level": "calmer"})
-	assert_bool(bool(sched["calmer_capped"])).is_true()
-	assert_float(float(sched["path_weight"])).is_equal_approx(-0.3, 0.0001)
-	var capped := Steering.dose_for({"stage": 5, "path": "ANCHOR", "content_level": "calmer"})
-	assert_float(_weight(capped, "lucid")).is_equal_approx(-0.3, 0.0001)
 
 
 ## An unknown path id is not one of the six: fail closed, no vector and no
@@ -194,15 +178,12 @@ func test_data_file_carries_the_docs_06_numbers() -> void:
 			assert_float(float(curve[str(stage)])).is_equal_approx(
 				float(DOCS_06_CURVE[stage]), 0.0001
 			)
-	# P3.19 r2: lucid is the signed keep vector — same band, negative side.
-	var lucid: Dictionary = curves["lucid"]
-	for stage: int in [2, 3, 4, 5]:
-		assert_float(float(lucid[str(stage)])).is_equal_approx(-float(DOCS_06_CURVE[stage]), 0.0001)
+	# P3.19 r2/DES-7: lucid was bound at a negative curve, measured inert
+	# (independent judge 4.8%), and unbound — ANCHOR joins the D21 fallbacks.
 	var path_vectors: Dictionary = document["path_vectors"]
 	assert_str(String(path_vectors["YANDERE"])).is_equal("possessive")
 	assert_str(String(path_vectors["AWAKE"])).is_equal("aware")
-	assert_str(String(path_vectors["ANCHOR"])).is_equal("lucid")
-	for path_id: String in ["SPLIT", "TSUN", "HOLLOW"]:
+	for path_id: String in ["SPLIT", "TSUN", "HOLLOW", "ANCHOR"]:
 		assert_bool(path_vectors.has(path_id)).is_true()
 		assert_bool(path_vectors[path_id] == null).is_true()
 
