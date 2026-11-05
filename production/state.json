@@ -3515,6 +3515,14 @@
       "started": "2026-11-05T01:18:04+02:00",
       "handoff": "production/handoffs/P3.04.md",
       "finished": "2026-11-05T02:21:42+02:00"
+    },
+    "P3.18": {
+      "status": "in_review",
+      "agent": "gemini-flash",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-05T02:35:25+02:00",
+      "handoff": "production/handoffs/P3.18.md"
     }
   },
   "history": [
@@ -8526,6 +8534,24 @@
       "ts": "2026-11-05T02:21:42+02:00",
       "event": "in_review->done",
       "ref": "P3.04",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T02:35:25+02:00",
+      "event": "todo->in_progress",
+      "ref": "P3.18",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T02:37:25+02:00",
+      "event": "agent",
+      "ref": "P3.18",
+      "note": "adopted from handoff: gemini-flash"
+    },
+    {
+      "ts": "2026-11-05T02:37:25+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P3.18",
       "note": ""
     }
   ]
