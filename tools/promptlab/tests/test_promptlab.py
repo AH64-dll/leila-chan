@@ -605,6 +605,19 @@ def test_load_set_rejects_an_action_missing_from_the_gate_table(tmp_path):
         lab.offered_actions_min_stage("end_data")
 
 
+def test_p3_path_sets_contain_end_date_offered_cases():
+    """P2.29 / S3-2: P3 lab sets must contain cases offering end_date with valid OPPORTUNITY lines."""
+    s3_cases = lab.load_set(lab.SETS_DIR / "stage_3_paths.jsonl")
+    s4_cases = lab.load_set(lab.SETS_DIR / "stage_4_paths.jsonl")
+    s3_offered = [c for c in s3_cases if "end_date" in c.get("offered_actions", [])]
+    s4_offered = [c for c in s4_cases if "end_date" in c.get("offered_actions", [])]
+    assert len(s3_offered) >= 2
+    assert len(s4_offered) >= 2
+    for c in s3_offered + s4_offered:
+        assert any(e.startswith(lab.OFFER_PREFIX) for e in c["events"])
+        assert any(e.startswith(lab.OFFER_ACTION_PREFIX) and '"end_date"' in e for e in c["events"])
+
+
 def test_score_console_dose_block_is_gated_on_meta_sweep_doses(capsys):
     """CODE-r2-2: a dose on every row is not a sweep, so the header may not say it is."""
     scheduled = make_doc([row(dose=0.0),

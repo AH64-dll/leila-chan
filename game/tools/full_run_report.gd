@@ -25,6 +25,7 @@ var path_log: Array[Dictionary] = []
 var trigger_log: Array[Dictionary] = []
 var redaction_log: Array[Dictionary] = []
 var leak_log: Array[Dictionary] = []
+var own_server := false
 
 
 func header_lines() -> Array[String]:
@@ -45,8 +46,12 @@ func header_lines() -> Array[String]:
 	)
 	lines.append(
 		(
-			"- dose: `Steering.dose_for` per turn — scheduled, not bound "
-			+ "(attach mode: the app did not launch the server)"
+			"- dose: `Steering.dose_for` per turn — %s"
+			% (
+				"bound via server relaunch (own-server mode)"
+				if own_server
+				else "scheduled, not bound (attach mode: the app did not launch the server)"
+			)
 		)
 	)
 	lines.append(
@@ -116,7 +121,22 @@ func day_header_lines(scenario: Dictionary, stage: int, dose: Dictionary) -> Arr
 			)
 		)
 	)
-	lines.append("- dose: %s (scheduled; attach mode binds no vector)" % _dose_text(dose))
+	(
+		lines
+		. append(
+			(
+				"- dose: %s (%s)"
+				% [
+					_dose_text(dose),
+					(
+						"bound via server relaunch"
+						if own_server
+						else "scheduled; attach mode binds no vector"
+					),
+				]
+			)
+		)
+	)
 	var end_rules: Dictionary = scenario.get("end", {})
 	(
 		lines
@@ -284,14 +304,18 @@ func night_lines(
 	for text: String in screen:
 		lines.append("  - %s" % text)
 	for entry: Dictionary in stage_events:
-		lines.append(
-			(
-				'- **stage transition** %d → %d "%s" (night crossing)'
-				% [
-					int(entry.get("from", 0)),
-					int(entry.get("to", 0)),
-					String(entry.get("name", ""))
-				]
+		(
+			lines
+			. append(
+				(
+					'- **stage transition** %d → %d "%s" (night crossing%s)'
+					% [
+						int(entry.get("from", 0)),
+						int(entry.get("to", 0)),
+						String(entry.get("name", "")),
+						_relaunch_text(entry),
+					]
+				)
 			)
 		)
 		var event_line := Stages.event_line(int(entry.get("to", 0)))
@@ -327,7 +351,9 @@ func night_lines(
 	return lines
 
 
-func summary_lines(reason: String, final: Dictionary, wall_s: float) -> Array[String]:
+func summary_lines(
+	reason: String, final: Dictionary, wall_s: float, is_checkpoint := false
+) -> Array[String]:
 	var latencies: Array[float] = []
 	for record: Dictionary in records:
 		latencies.append(
@@ -336,8 +362,16 @@ func summary_lines(reason: String, final: Dictionary, wall_s: float) -> Array[St
 	latencies.sort()
 	var lines: Array[String] = []
 	lines.append("\n---\n")
-	lines.append("## Run summary\n")
-	lines.append("- finished: %s · wall time %.0f s (%.1f min)" % [reason, wall_s, wall_s / 60.0])
+	if is_checkpoint:
+		lines.append("## Checkpoint summary\n")
+		lines.append(
+			"- checkpoint: %s · wall time %.0f s (%.1f min)" % [reason, wall_s, wall_s / 60.0]
+		)
+	else:
+		lines.append("## Run summary\n")
+		lines.append(
+			"- finished: %s · wall time %.0f s (%.1f min)" % [reason, wall_s, wall_s / 60.0]
+		)
 	lines.append(
 		(
 			"- turns recorded: %d · broken turns: %d · dates played: %d"
@@ -481,7 +515,7 @@ func _annotation_lines(record: Dictionary) -> Array[String]:
 			lines
 			. append(
 				(
-					'- **stage transition** %d → %d "%s" (glitch %.1f s, fx %s, cue %s)'
+					'- **stage transition** %d → %d "%s" (glitch %.1f s, fx %s, cue %s%s)'
 					% [
 						int(cross.get("from", 0)),
 						int(cross.get("to", 0)),
@@ -489,6 +523,7 @@ func _annotation_lines(record: Dictionary) -> Array[String]:
 						float(spec.get("duration_s", 0.0)),
 						String(spec.get("fx", "")),
 						String(spec.get("cue", "")),
+						_relaunch_text(cross),
 					]
 				)
 			)
@@ -684,21 +719,34 @@ func _transitions_text() -> String:
 		return "none"
 	var parts := PackedStringArray()
 	for entry: Dictionary in transitions:
-		(
-			parts
-			. append(
-				(
-					"day %d: %d→%d %s"
-					% [
-						int(entry.get("day", 0)),
-						int(entry.get("from", 0)),
-						int(entry.get("to", 0)),
-						String(entry.get("name", "")),
-					]
-				)
-			)
+		var txt := (
+			"day %d: %d→%d %s"
+			% [
+				int(entry.get("day", 0)),
+				int(entry.get("from", 0)),
+				int(entry.get("to", 0)),
+				String(entry.get("name", "")),
+			]
 		)
+		if entry.has("relaunch"):
+			var rel: Dictionary = entry.get("relaunch", {})
+			if bool(rel.get("ok", false)):
+				txt += " (relaunch ok)"
+			else:
+				txt += " (relaunch %s)" % String(rel.get("error", {}).get("code", "refused"))
+		parts.append(txt)
 	return " · ".join(parts)
+
+
+func _relaunch_text(entry: Dictionary) -> String:
+	if not entry.has("relaunch"):
+		return ""
+	var rel: Dictionary = entry.get("relaunch", {})
+	if bool(rel.get("ok", false)):
+		return " · relaunch %d ms ok" % int(rel.get("ms", 0))
+	var err: Dictionary = rel.get("error", {})
+	var code := String(err.get("code", "unknown"))
+	return " · relaunch refused (%s)" % code
 
 
 func _path_decisions_text() -> String:

@@ -77,3 +77,10 @@
 - Report corrections worth reusing: count bars by provenance (corruption `redact` = fixed 6-bar runs at stage ≥ 4 vs safety redactions = redaction-log phrases missing from that turn's `displayed`), and never call a redaction-log length a screen count — rescans log the same span repeatedly and negated matches log without barring.
 - Gotcha: `debug.missing` is real — `_read_layer` records every dropped prompt file; the Director just ignores `prompt_res["debug"]`. Check `debug` before claiming "no record".
 - The night block renderer only printed the EVENT count, not the line — `night_lines` now appends `Stages.event_line(to)` for crossings, same as turn blocks.
+
+## P2.29 — QA harness carry-overs (2026-11-05)
+
+- Added `--own-server` mode to `game/tools/full_run_driver.gd` (and `LEILA_OWN_SERVER=1` flag), wiring `auto_start: true` so the full-run harness launches and supervises its own llama-server; stage transitions capture relaunch outcomes via `LLM.steering_applied` and eliminate the attach-mode `server_not_owned` refusal.
+- Added transcript renderer `--resume` deduplication: `FullRunStore.scan_rendered` indexes rendered days and turns from existing markdown; resuming continues the day section without duplicate `## Day N` headers, appends only the tail of unrendered turns, and writes `## Checkpoint summary` (or per-N-day checkpoints via `--checkpoint-days`) rather than duplicate run summaries.
+- Added four `end_date` offered-action cases across P3 path sets (`stage_3_paths.jsonl` SPLIT/TSUN, `stage_4_paths.jsonl` HOLLOW/ANCHOR) satisfying `lab.load_set()` OPPORTUNITY and action-naming requirements.
+- Surfaced `debug.missing` dropped prompt layers in Director logs (`push_warning("Director: dropped prompt layers: ...")`) and exposed `Director.last_missing_layers`, keeping `Director.gd` under the 1000-line gdlint cap.

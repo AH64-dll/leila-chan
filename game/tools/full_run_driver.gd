@@ -42,9 +42,13 @@ var _player := "Ren"
 var _max_days := 14
 var _stop_stage := 6
 var _resume := false
+var _own_server := false
+var _checkpoint_days := 0
 var _seed := 0
 var _base_url := DEFAULT_URL
-
+var _rendered_days: Dictionary = {}
+var _rendered_turns: Dictionary = {}
+var _last_steering_info: Dictionary = {}
 var _plan: Dictionary = {}
 var _render := FullRunReport.new()
 var _started_ms := 0
@@ -134,11 +138,17 @@ func _process(_delta: float) -> void:
 
 func _parse_args() -> void:
 	for raw: String in OS.get_cmdline_user_args():
-		if not raw.begins_with("--") or not raw.contains("="):
+		if not raw.begins_with("--"):
 			continue
-		var bits := raw.trim_prefix("--").split("=", true, 1)
-		if bits.size() == 2:
-			_args_set(bits[0], bits[1])
+		if raw.contains("="):
+			var bits := raw.trim_prefix("--").split("=", true, 1)
+			if bits.size() == 2:
+				_args_set(bits[0], bits[1])
+		else:
+			_args_set(raw.trim_prefix("--"), "true")
+	var env_own := OS.get_environment("LEILA_OWN_SERVER").strip_edges().to_lower()
+	if env_own in ["1", "true", "yes"]:
+		_own_server = true
 	if _out_md.is_empty():
 		_out_md = "%s/%s.md" % [DEFAULT_OUT_DIR, _run]
 	if _out_json.is_empty():
@@ -165,6 +175,10 @@ func _args_set(key: String, value: String) -> void:
 			_stop_stage = clampi(int(value), 0, 6)
 		"resume":
 			_resume = value.strip_edges() in ["1", "true", "yes"]
+		"own-server", "own_server":
+			_own_server = value.strip_edges() in ["1", "true", "yes", ""]
+		"checkpoint-days", "checkpoint_days":
+			_checkpoint_days = maxi(0, int(value))
 		"seed":
 			_seed = int(value)
 		"url":
@@ -195,7 +209,13 @@ func _load_plan() -> void:
 
 func _install_backend() -> void:
 	if not LLM.has_backend():
-		LLM.use_default_backend({"base_url": _base_url})
+		var cfg := {"base_url": _base_url}
+		if _own_server:
+			cfg["auto_start"] = true
+		LLM.use_default_backend(cfg)
+	var backend := LLM.get_backend()
+	if _own_server and backend != null and backend.has_method("ensure_server"):
+		backend.call("ensure_server")
 	var props := FullRunNet.get_text(_base_url, "/props")
 	var parsed: Variant = JSON.parse_string(String(props.get("text", "")))
 	if parsed is Dictionary:
@@ -230,21 +250,25 @@ func _instrument() -> void:
 	Director.turn_completed.connect(_on_turn_completed)
 	Director.turn_failed.connect(_on_turn_failed)
 	Director.turn_cancelled.connect(_on_turn_cancelled)
+	if not LLM.steering_applied.is_connected(_on_steering_applied):
+		LLM.steering_applied.connect(_on_steering_applied)
+
+
+func _on_steering_applied(info: Dictionary) -> void:
+	_last_steering_info = info
+	if not _transitions.is_empty():
+		_transitions[-1]["relaunch"] = info.duplicate(true)
 
 
 func _start_logger() -> void:
 	if Director.transcript_logger != null:
-		(
-			Director
-			. transcript_logger
-			. start_session(
-				{
-					"tool": "full_run",
-					"run": _run,
-					"stage": int(GameState.stage),
-					"path": str(GameState.path),
-				}
-			)
+		Director.transcript_logger.start_session(
+			{
+				"tool": "full_run",
+				"run": _run,
+				"stage": int(GameState.stage),
+				"path": str(GameState.path)
+			}
 		)
 
 
@@ -267,6 +291,7 @@ func _sync_render() -> void:
 	_render.trigger_log = _trigger_log
 	_render.redaction_log = _redaction_log
 	_render.leak_log = _leak_log
+	_render.own_server = _own_server
 
 
 ## ── Scene tracking ───────────────────────────────────────────────────────────
@@ -315,13 +340,18 @@ func _attach_date(date: Node) -> void:
 		date.turn_completed.connect(_on_turn_displayed)
 	var chat_ui: Node = date.get("chat_ui")
 	_chat_ui = chat_ui
-	_md.append_array(
-		_render.day_header_lines(
-			date.get_scenario(),
-			int(GameState.stage),
-			Steering.dose_for({"stage": int(GameState.stage), "path": String(GameState.path)})
+	var day_num := int(GameState.day)
+	if not _rendered_days.has(day_num):
+		_rendered_days[day_num] = true
+		_md.append_array(
+			_render.day_header_lines(
+				date.get_scenario(),
+				int(GameState.stage),
+				Steering.dose_for({"stage": int(GameState.stage), "path": String(GameState.path)})
+			)
 		)
-	)
+	else:
+		_md.append("\n_Resumed day %d at turn %d_\n\n" % [day_num, int(date.get("_current_turn"))])
 	_flush_outputs()
 	print(
 		(
@@ -683,10 +713,12 @@ func _record_turn() -> void:
 				}
 			)
 		)
-	_md.append_array(_render.turn_lines(record))
+	var turn_key := "%d:%d" % [int(record["day"]), int(record["turn_in_day"])]
+	if not _rendered_turns.has(turn_key):
+		_rendered_turns[turn_key] = true
+		_rendered_days[int(record["day"])] = true
+		_md.append_array(_render.turn_lines(record))
 	_flush_outputs()
-	# Let the Date's deferred end check (`_check_scenario_end`) run before the
-	# next submit: a last-turn submit must never race the route into the night.
 	_pump_after_ms = Time.get_ticks_msec() + 50
 
 
@@ -734,6 +766,14 @@ func _record_night() -> void:
 	_night_report = {}
 	_night_recorded = true
 	_flush_outputs()
+	if _checkpoint_days > 0 and (int(GameState.day) - 1) % _checkpoint_days == 0:
+		var wall := float(Time.get_ticks_msec() - _started_ms) / 1000.0
+		_md.append_array(
+			_render.summary_lines(
+				"day %d checkpoint" % (int(GameState.day) - 1), _final_state(), wall, true
+			)
+		)
+		_flush_outputs()
 	var stage := int(GameState.stage)
 	if stage >= _stop_stage:
 		_finish_run("stage %d reached (stop-stage %d)" % [stage, _stop_stage])
@@ -745,22 +785,20 @@ func _on_stage_transition(previous: int, current: int, spec: Dictionary) -> void
 	_pending_stage.append(
 		{"from": previous, "to": current, "name": Stages.name_of(current), "spec": spec}
 	)
-	(
-		_transitions
-		. append(
-			{
-				"day": int(GameState.day),
-				"turn": int(GameState.turn),
-				"from": previous,
-				"to": current,
-				"name": Stages.name_of(current),
-				"duration_s": float(spec.get("duration_s", 0.0)),
-				"fx": String(spec.get("fx", "")),
-				"cue": String(spec.get("cue", "")),
-				"instability": float(GameState.instability),
-			}
-		)
-	)
+	var trans := {
+		"day": int(GameState.day),
+		"turn": int(GameState.turn),
+		"from": previous,
+		"to": current,
+		"name": Stages.name_of(current),
+		"duration_s": float(spec.get("duration_s", 0.0)),
+		"fx": String(spec.get("fx", "")),
+		"cue": String(spec.get("cue", "")),
+		"instability": float(GameState.instability),
+	}
+	if not _last_steering_info.is_empty():
+		trans["relaunch"] = _last_steering_info.duplicate(true)
+	_transitions.append(trans)
 	print(
 		(
 			"full_run: stage %d → %d (%s) at day %d, instability %.1f"
@@ -823,7 +861,11 @@ func _on_redacted(category: String, matched_text: String, source: String) -> voi
 ## ── Output ───────────────────────────────────────────────────────────────────
 func _prepare_output() -> void:
 	if _resume and FileAccess.file_exists(_abs(_out_md)):
-		_prefix = FileAccess.get_file_as_string(_abs(_out_md))
+		var raw_prefix := FileAccess.get_file_as_string(_abs(_out_md))
+		var scanned := FullRunStore.scan_rendered(raw_prefix)
+		_prefix = String(scanned.get("cleaned", raw_prefix))
+		_rendered_days = (scanned.get("days", {}) as Dictionary).duplicate()
+		_rendered_turns = (scanned.get("turns", {}) as Dictionary).duplicate()
 		_md.append("\n---\n\n## Resumed\n")
 		_md.append(
 			(
@@ -853,28 +895,30 @@ func _flush_md() -> void:
 
 
 func _write_json() -> void:
-	var payload := {
-		"run": _run,
-		"dev_note":
-		(
-			"dev artifact — `turns[].beats[].say` and `inner` hold the raw, "
-			+ "pre-filter model text; `displayed` is the filtered screen text"
-		),
-		"started": _started_at,
-		"model": _model_label,
-		"url": _base_url,
-		"player": _player,
-		"turns": _records,
-		"nights": _nights,
-		"broken": _broken,
-		"refused": _refused,
-		"stage_transitions": _transitions,
-		"path_decisions": _path_log,
-		"triggers": _trigger_log,
-		"redactions": _redaction_log,
-		"leaks": _leak_log,
-		"final": _final_state(),
-	}
+	var payload := (
+		FullRunStore
+		. build_payload(
+			{
+				"run": _run,
+				"started": _started_at,
+				"model": _model_label,
+				"url": _base_url,
+				"player": _player
+			},
+			{
+				"records": _records,
+				"nights": _nights,
+				"broken": _broken,
+				"refused": _refused,
+				"transitions": _transitions,
+				"path_log": _path_log,
+				"trigger_log": _trigger_log,
+				"redaction_log": _redaction_log,
+				"leak_log": _leak_log,
+			},
+			_final_state()
+		)
+	)
 	FullRunStore.save_sidecar(_abs(_out_json), payload)
 
 
@@ -884,9 +928,17 @@ func _finish_run(reason: String) -> void:
 	_finished = true
 	set_process(false)
 	var wall := float(Time.get_ticks_msec() - _started_ms) / 1000.0
-	_md.append_array(_render.summary_lines(reason, _final_state(), wall))
+	var is_checkpoint := (
+		reason.begins_with("day cap")
+		or (
+			not _campaign_over
+			and int(GameState.stage) < _stop_stage
+			and not reason.begins_with("campaign ended")
+		)
+	)
+	_md.append_array(_render.summary_lines(reason, _final_state(), wall, is_checkpoint))
 	_flush_outputs()
-	print("full_run: finished — %s" % reason)
+	print("full_run: %s — %s" % ["checkpoint" if is_checkpoint else "finished", reason])
 	print("full_run: wrote %s" % _abs(_out_md))
 	if Director.transcript_logger != null:
 		print("full_run: game transcript %s" % Director.transcript_logger.current_file())
@@ -923,40 +975,11 @@ func _check_stall() -> void:
 
 
 func _final_state() -> Dictionary:
-	return {
-		"day": int(GameState.day),
-		"stage": int(GameState.stage),
-		"path": str(GameState.path),
-		"path_locked": bool(GameState.path_locked),
-		"instability": float(GameState.instability),
-		"instability_peak": float(GameState.instability_peak),
-		"instability_floor": float(GameState.instability_floor),
-		"turn": int(GameState.turn),
-		"memory_count": int(Memory.size()),
-	}
+	return FullRunStore.final_state()
 
 
 func _meters_dict() -> Dictionary:
-	return {
-		"affection": float(GameState.affection),
-		"trust": float(GameState.trust),
-		"instability": float(GameState.instability),
-		"instability_peak": float(GameState.instability_peak),
-		"instability_floor": float(GameState.instability_floor),
-		"fixation": float(GameState.fixation),
-		"lucidity": float(GameState.lucidity),
-	}
-
-
-## JSON gives untyped arrays back; one shallow pass restores the typed Arrays
-## the renderer declares.
-func _typed(value: Variant) -> Array[Dictionary]:
-	var out: Array[Dictionary] = []
-	if value is Array:
-		for item: Variant in value:
-			if item is Dictionary:
-				out.append(item)
-	return out
+	return FullRunStore.meters_dict()
 
 
 func _drain(list: Array[Dictionary]) -> Array[Dictionary]:

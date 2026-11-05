@@ -44,6 +44,7 @@ var last_inner: String = ""
 ## GameState.apply_turn_meters(); dev tooling reads it.
 var last_meter_ledger: Dictionary = {}
 var last_sprite_enter: Dictionary = {}  # docs/10 §3: last {"events", "report"} dispatch
+var last_missing_layers: Array = []
 
 var transcript_logger: TranscriptLogger = null
 var _overlay: CanvasLayer = null
@@ -135,6 +136,7 @@ func reset() -> void:
 	last_read = ""
 	last_inner = ""
 	last_meter_ledger.clear()
+	last_missing_layers.clear()
 	if transcript_logger != null and transcript_logger.is_enabled():
 		transcript_logger.end_session()
 	_init_transcript_logger()
@@ -393,26 +395,23 @@ func _start_turn(player_text: String) -> bool:
 	# Step 2: Prompt assembly via PromptBuilder
 	var prompt_res: Dictionary = PromptBuilder.build(ctx)
 	var messages: Array = prompt_res.get("messages", [])
+	var missing_layers: Array = prompt_res.get("debug", {}).get("missing", [])
+	last_missing_layers = missing_layers.duplicate()
+	if not missing_layers.is_empty():
+		push_warning("Director: dropped prompt layers: %s" % ", ".join(missing_layers))
 
-	# Step 3: Schema assembly via TurnSchema. The property order is the
-	# docs/02 §3 order — music/fx before beats — because llama.cpp emits in
-	# schema order and the face/sound must change exactly when the line starts
-	# (docs/02 §1, review CODE-3).
+	# Step 3: Schema assembly via TurnSchema (docs/02 §3 music/fx before beats).
 	var schema_ctx := ctx.duplicate()
 	schema_ctx["property_order"] = TurnSchema.DOCS_02_PROPERTY_ORDER
 	var schema: Dictionary = TurnSchema.build_turn_schema(schema_ctx, offered_actions)
 	_current_prompt = messages.duplicate(true)
 	_current_schema = schema.duplicate(true)
 
-	# Step 4: Sampling and steering dose (docs/02 §9). The three sampling columns
-	# come straight from the data row via TurnContext (P2.05); this file keeps no
-	# copy of the table or its defaults, so a retune is a data edit only.
+	# Step 4: Sampling and steering dose (docs/02 §9 data row via TurnContext).
 	var sampling_spec := sampling_spec(stage)
 	var sampling_dict := TurnContext.request_sampling(stage)
 
-	# docs/06 §3: Steering owns dose schedule (scales like {"malice": 4.5,
-	# "possessive": 0.3} on keep paths; `path_mix` pre-assignment). Fallback
-	# when autoload is absent is docs/02 §9 column. Transport uses it in P2.03.
+	# docs/06 §3: Steering owns dose schedule (fallback is docs/02 §9 column).
 	var dose_dict := {}
 	if Steering != null and Steering.has_method("dose_for"):
 		dose_dict = Steering.dose_for(ctx)

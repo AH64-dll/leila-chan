@@ -566,3 +566,24 @@ func test_late_verdict_routes_to_its_beat_and_drops_after_the_turn() -> void:
 	)
 	assert_int(chat.chunks.size()).is_equal(1)
 	chat.queue_free()
+
+
+func test_dropped_prompt_layers_surface_in_director_warnings() -> void:
+	var orig_dir: String = PromptBuilder.prompt_dir
+	PromptBuilder.prompt_dir = "res://tests/fixtures/nonexistent_prompts/"
+	var chat := FakeChatUI.new()
+	add_child(chat)
+	Director.register_chat_ui(chat)
+	_fake_backend.chunks = PackedStringArray(
+		[
+			'{"read":"greeting","inner":"hi","music":"keep","fx":"none",',
+			'"beats":[{"feeling":"joy","intensity":1,"cue":"none","say":"hi"}],',
+			'"mood":{"affection":0,"trust":0,"stress":0},"memory":"","action":"none"}'
+		]
+	)
+	Director.submit_player_input("Hello")
+	await get_tree().process_frame
+	PromptBuilder.prompt_dir = orig_dir
+	assert_array(Director.last_missing_layers).is_not_empty()
+	assert_bool(Director.last_missing_layers.has("persona.md")).is_true()
+	chat.queue_free()
