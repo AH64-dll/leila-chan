@@ -32,12 +32,12 @@ set(CMAKE_BUILD_RPATH "$ORIGIN")
 set(CMAKE_INSTALL_RPATH "$ORIGIN")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH OFF)
 
-# godot-cpp: static, template_release, exceptions off.
+# godot-cpp: static, template_release, exceptions ON (llama.cpp common_* functions throw).
 # GODOTCPP_USE_STATIC_CPP stays OFF: its PUBLIC -static-libstdc++ would put a second
 # libstdc++ inside leila_llm next to libllama.so.
 set(GODOTCPP_TARGET "template_release" CACHE STRING "" FORCE)
 set(GODOTCPP_USE_STATIC_CPP OFF CACHE BOOL "" FORCE)
-set(GODOTCPP_DISABLE_EXCEPTIONS ON CACHE BOOL "" FORCE)
+set(GODOTCPP_DISABLE_EXCEPTIONS OFF CACHE BOOL "" FORCE)
 add_subdirectory("${LEILA_NATIVE_DEPS}/godot-cpp" godot-cpp)
 
 # llama.cpp: shared libs, ggml CPU backends as runtime-loaded DL modules.
