@@ -18,28 +18,28 @@ Work in the main tree at `/run/media/amrhares/New Volume/lila`, on the `main` br
 |---|---|---|---|---|
 | P2.01 | done | SYS | commandcode | production/reviews/P2.01-code-r2.md, production/reviews/P2.01-design-r2.md |
 | P2.02 | done | SYS | commandcode | production/reviews/P2.02-code-r1.md, production/reviews/P2.02-design-r1.md |
-| P2.03 | todo | LLM | — | — |
+| P2.03 | done | LLM | deepseek | production/reviews/P2.03-code-r2.md, production/reviews/P2.03-design-r2.md |
 | P2.04 | done | STR | commandcode | production/reviews/P2.04-code-r2.md, production/reviews/P2.04-design-r2.md |
 | P2.05 | done | LLM | commandcode | production/reviews/P2.05-code-r2.md, production/reviews/P2.05-design-r2.md |
 | P2.06 | done | META | commandcode | production/reviews/P2.06-design-r1.md, production/reviews/P2.06-code-r1.md |
-| P2.07 | todo | META | — | — |
-| P2.08 | todo | SYS | — | — |
+| P2.07 | done | META | deepseek | production/reviews/P2.07-code-r1.md, production/reviews/P2.07-design-r1.md, production/reviews/P2.07-safety-r1.md |
+| P2.08 | done | SYS | deepseek | production/reviews/P2.08-code-r2.md, production/reviews/P2.08-design-r2.md |
 | P2.09 | done | META | commandcode | production/reviews/P2.09-design-r2.md, production/reviews/P2.09-code-r2.md |
-| P2.10 | todo | SYS | — | — |
+| P2.10 | done | SYS | commandcode | production/reviews/P2.10-code-r3.md, production/reviews/P2.10-design-r3.md |
 | P2.11 | done | SYS | commandcode | production/reviews/P2.11-code-r2.md, production/reviews/P2.11-design-r2.md |
-| P2.12 | todo | SYS | — | — |
+| P2.12 | done | SYS | deepseek | production/reviews/P2.12-code-r2.md, production/reviews/P2.12-design-r2.md |
 | P2.13 | done | NAR | commandcode | production/reviews/P2.13-design-r1.md, production/reviews/P2.13-safety-r1.md, production/reviews/P2.13-content-r1.md |
 | P2.14 | done | ART | commandcode | production/reviews/P2.14-code-r2.md, production/reviews/P2.14-design-r2.md |
 | P2.15 | done | ART | commandcode | production/reviews/P2.15-code-r3.md, production/reviews/P2.15-safety-r3.md, production/reviews/P2.15-design-r3.md |
 | P2.16 | done | AUD | commandcode | production/reviews/P2.16-code-r1.md, production/reviews/P2.16-design-r1.md |
 | P2.17 | done | SAFE | commandcode | production/reviews/P2.17-safety-r5.md, production/reviews/P2.17-code-r5.md |
-| P2.18 | todo | NAR | — | — |
-| P2.19 | todo | SYS | — | — |
-| P2.20 | todo | SYS | — | — |
-| P2.21 | todo | QA | — | — |
-| P2.22 | todo | QA | — | — |
+| P2.18 | done | NAR | deepseek | production/reviews/P2.18-content-r2.md, production/reviews/P2.18-design-r2.md |
+| P2.19 | done | SYS | deepseek | production/reviews/P2.19-code-r2.md, production/reviews/P2.19-design-r2.md |
+| P2.20 | done | SYS | deepseek | production/reviews/P2.20-code-r2.md |
+| P2.21 | done | QA | deepseek | production/reviews/P2.21-code-r3.md, production/reviews/P2.21-design-r3.md |
+| P2.22 | done | QA | deepseek | production/reviews/P2.22-design-r2.md, production/reviews/P2.22-safety-r2.md |
 | P2.23 | done | SYS | commandcode | production/reviews/P2.23-code-r1.md |
-| P2.24 | todo | QA | — | — |
+| P2.24 | in_progress | QA | — | — |
 | P2.25 | done | REL | commandcode | production/reviews/P2.25-code-r4.md |
 | P2.26 | done | SYS | commandcode | production/reviews/P2.26-code-r2.md, production/reviews/P2.26-design-r2.md |
 
