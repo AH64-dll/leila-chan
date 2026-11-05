@@ -569,6 +569,14 @@ func reset_session() -> void:
 	_scripted_note_turn = -1
 	for action: String in _open_offers.keys():
 		_close_offer(action)
+	# The mounted modules own session state the scheduler cannot see: M01's
+	# on-screen replica (a leftover fake-crash dialog is a full-rect
+	# MOUSE_FILTER_STOP layer that swallows every later click), M21's queued UI
+	# effects, M31's session clock. Each module's reset_session() is the one
+	# teardown path; a module without one simply has no session state.
+	for effect: Node in _effects:
+		if effect.has_method("reset_session"):
+			effect.call("reset_session")
 
 
 ## Test seam (docs/05 §0 rule 3): `quit_callable` runs instead of the tree's

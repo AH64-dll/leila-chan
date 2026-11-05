@@ -140,9 +140,9 @@ func test_the_clock_greeting_rides_the_turn_it_was_polled_for() -> void:
 	# arrive with THIS turn's context, not one submit later (the queue drained
 	# at step 0, before the poll exists).
 	var module: Variant = _module()
+	MetaDirector.reset_session()
 	_at(21, 10)
 	GameState.turn = 4
-	MetaDirector.reset_session()
 	MetaDirector.note_scene("D02_cafe")
 	var events := MetaDirector.turn_events([], 1)
 	var note := _with_prefix(events, "EVENT: It is 21:10")
