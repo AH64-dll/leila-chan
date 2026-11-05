@@ -27,6 +27,7 @@ class FakeEngine:
 	var bound_vectors: Array = []  # what the engine holds now; a refused bind keeps it
 	var bind_error_code := ""  # non-empty: every bind is refused with this code
 	var call_order: Array = []  # "load", "bind", "generate" in the order they happened
+	var metrics_extra: Dictionary = {}  # merged into each generate()'s metrics
 
 	func load_model(_config: Dictionary) -> Dictionary:
 		load_calls += 1
@@ -38,6 +39,9 @@ class FakeEngine:
 
 	func unload() -> void:
 		pass
+
+	func clear_prompt_cache() -> bool:
+		return true
 
 	func set_control_vectors(vectors: Array) -> Dictionary:
 		call_order.append("bind")
@@ -71,6 +75,7 @@ class FakeEngine:
 				on_token.call(String(chunk))
 			text += String(chunk)
 		var metrics := {"prompt_tokens": 7, "completion_tokens": chunks.size()}
+		metrics.merge(metrics_extra, true)
 		return {"ok": true, "text": text, "metrics": metrics}
 
 
@@ -300,3 +305,16 @@ func test_bind_outcome_reaches_the_turn_metrics() -> void:
 	assert_bool(float(metrics.get("dose_set_ms", -1.0)) >= 0.0).is_true()
 	assert_bool(bool(metrics.get("dose_applied", false))).is_true()
 	assert_bool(metrics.has("dose_error")).is_false()
+
+
+func test_cache_reused_tokens_reach_the_result_and_last_metrics() -> void:
+	var engine := FakeEngine.new()
+	engine.chunks = ["ok"]
+	engine.metrics_extra = {"cache_reused_tokens": 512}
+	var backend := NativeBackend.new({}, engine)
+	var result := backend.generate(_new_request(), Callable(), null)
+	assert_bool(bool(result.get("ok", false))).is_true()
+	var metrics: Dictionary = result.get("metrics", {})
+	assert_int(int(metrics.get("cache_reused_tokens", -1))).is_equal(512)
+	var last: Dictionary = backend.last_metrics()
+	assert_int(int(last.get("cache_reused_tokens", -1))).is_equal(512)

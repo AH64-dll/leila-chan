@@ -43,11 +43,15 @@ struct LeilaError : std::runtime_error {
 
 struct Metrics {
 	int64_t prompt_tokens = 0;
+	int64_t cache_reused_tokens = 0;  // prompt tokens whose KV the main context kept from the last generate()
 	int64_t completion_tokens = 0;
 	int64_t prompt_ms = 0;
 	int64_t ttft_ms = 0;   // generate() start to first sampled token
 	int64_t total_ms = 0;  // generate() start to return
 	double tok_per_s = 0.0;  // completion tokens over (total - prompt) time
+	double cache_save_ms = 0.0;     // checkpoint saves this turn, summed over the prompt decode
+	double cache_restore_ms = 0.0;  // checkpoint restore this turn (set_data plus seq_rm)
+	int64_t cache_state_bytes = 0;  // total size of checkpoints_ after the prompt
 	std::string stop_reason;
 };
 
@@ -90,11 +94,15 @@ std::string dict_str(const godot::Dictionary &d, const char *key, const std::str
 godot::Dictionary metrics_dict(const Metrics &m) {
 	godot::Dictionary d;
 	d["prompt_tokens"] = m.prompt_tokens;
+	d["cache_reused_tokens"] = m.cache_reused_tokens;
 	d["completion_tokens"] = m.completion_tokens;
 	d["prompt_ms"] = m.prompt_ms;
 	d["ttft_ms"] = m.ttft_ms;
 	d["total_ms"] = m.total_ms;
 	d["tok_per_s"] = m.tok_per_s;
+	d["cache_save_ms"] = m.cache_save_ms;
+	d["cache_restore_ms"] = m.cache_restore_ms;
+	d["cache_state_bytes"] = m.cache_state_bytes;
 	d["stop_reason"] = godot::String(m.stop_reason.c_str());
 	return d;
 }
@@ -117,6 +125,10 @@ godot::Dictionary fail_dict(const char *code, const std::string &message, const 
 
 int64_t ms_between(clock_type::time_point a, clock_type::time_point b) {
 	return std::chrono::duration_cast<std::chrono::milliseconds>(b - a).count();
+}
+
+double ms_double(clock_type::time_point a, clock_type::time_point b) {
+	return std::chrono::duration<double, std::milli>(b - a).count();
 }
 
 int64_t ms_since(clock_type::time_point a) {
@@ -158,6 +170,152 @@ void init_backends(const std::string &backend_dir) {
 		llama_backend_init();
 	});
 }
+
+// ---- devices ---------------------------------------------------------------
+
+constexpr uint64_t kMiB = 1024ull * 1024ull;
+constexpr uint64_t kIgpuMinBytes = 3ull * 1024ull * 1024ull * 1024ull;  // auto takes an IGPU only with at least 3 GB
+
+// One registered ggml backend device.
+struct DevInfo {
+	ggml_backend_dev_t dev = nullptr;
+	std::string name;
+	std::string description;
+	enum ggml_backend_dev_type type = GGML_BACKEND_DEVICE_TYPE_CPU;
+	uint64_t total_bytes = 0;
+	uint64_t free_bytes = 0;
+};
+
+// The device load_model runs on. dev == nullptr means no device: the CPU, with an empty devices list.
+struct DevChoice {
+	ggml_backend_dev_t dev = nullptr;
+	std::string name = "cpu";
+	std::string type = "cpu";
+	uint64_t total_bytes = 0;
+	uint64_t free_bytes = 0;
+	int64_t gpu_layers = 0;
+};
+
+const char *device_type_name(enum ggml_backend_dev_type t) {
+	switch (t) {
+		case GGML_BACKEND_DEVICE_TYPE_GPU:
+			return "gpu";
+		case GGML_BACKEND_DEVICE_TYPE_IGPU:
+			return "igpu";
+		case GGML_BACKEND_DEVICE_TYPE_ACCEL:
+			return "accel";
+		case GGML_BACKEND_DEVICE_TYPE_META:
+			return "meta";
+		case GGML_BACKEND_DEVICE_TYPE_CPU:
+			break;
+	}
+	return "cpu";
+}
+
+// Every registered device, in registration order. Needs init_backends first.
+std::vector<DevInfo> enumerate_devices() {
+	std::vector<DevInfo> out;
+	const size_t n = ggml_backend_dev_count();
+	out.reserve(n);
+	for (size_t i = 0; i < n; ++i) {
+		ggml_backend_dev_t dev = ggml_backend_dev_get(i);
+		size_t free_b = 0;
+		size_t total_b = 0;
+		ggml_backend_dev_memory(dev, &free_b, &total_b);
+		DevInfo d;
+		d.dev = dev;
+		const char *name = ggml_backend_dev_name(dev);
+		d.name = name ? name : "";
+		const char *desc = ggml_backend_dev_description(dev);
+		d.description = desc ? desc : "";
+		d.type = ggml_backend_dev_type(dev);
+		d.total_bytes = static_cast<uint64_t>(total_b);
+		d.free_bytes = static_cast<uint64_t>(free_b);
+		out.push_back(std::move(d));
+	}
+	return out;
+}
+
+bool is_cuda_name(const std::string &name) {
+	return name.rfind("CUDA", 0) == 0;
+}
+
+// Auto ranking weight: total memory, times 1.5 for a CUDA device. The same physical card is registered on
+// both CUDA and Vulkan, each reporting a slightly different total (RTX 4050: CUDA0 5853 MB, Vulkan1 6141 MB),
+// and Vulkan runs slower on this card, so the CUDA entry must win that near tie. A much larger non-CUDA card
+// can still win. Integer math: 2x for non-CUDA and 3x for CUDA keeps the 1.5 ratio exact.
+uint64_t rank_bytes(const DevInfo &d) {
+	return d.total_bytes * (is_cuda_name(d.name) ? 3u : 2u);
+}
+
+// True when a beats b within one class of device: more rank_bytes, then a CUDA name on an exact tie.
+// A tie with no CUDA name is not a win, so the caller keeps the first seen.
+bool beats(const DevInfo &a, const DevInfo &b) {
+	const uint64_t ra = rank_bytes(a);
+	const uint64_t rb = rank_bytes(b);
+	if (ra != rb) {
+		return ra > rb;
+	}
+	return is_cuda_name(a.name) && !is_cuda_name(b.name);
+}
+
+// Resolves config "device". Throws invalid_request for a name that no registered device has.
+DevChoice choose_device(const std::vector<DevInfo> &devs, const std::string &want, int64_t gpu_layers) {
+	DevChoice c;
+	auto take = [&c](const DevInfo &d, int64_t layers) {
+		c.dev = d.dev;
+		c.name = d.name;
+		c.type = device_type_name(d.type);
+		c.total_bytes = d.total_bytes;
+		c.free_bytes = d.free_bytes;
+		c.gpu_layers = layers;
+	};
+	if (want == "cpu") {
+		return c;
+	}
+	if (want == "auto") {
+		// GPU over IGPU: an IGPU is looked at only when no GPU is registered.
+		const DevInfo *best = nullptr;
+		for (const DevInfo &d : devs) {
+			if (d.type == GGML_BACKEND_DEVICE_TYPE_GPU && (!best || beats(d, *best))) {
+				best = &d;
+			}
+		}
+		if (!best) {
+			for (const DevInfo &d : devs) {
+				if (d.type == GGML_BACKEND_DEVICE_TYPE_IGPU && d.total_bytes >= kIgpuMinBytes && (!best || beats(d, *best))) {
+					best = &d;
+				}
+			}
+		}
+		if (best) {
+			take(*best, gpu_layers);
+		}
+		return c;  // no GPU and no usable IGPU: the CPU
+	}
+	for (const DevInfo &d : devs) {
+		if (d.name == want) {
+			// A CPU-class device is the CPU path: no device list and no layers.
+			if (d.type != GGML_BACKEND_DEVICE_TYPE_CPU) {
+				take(d, gpu_layers);
+			}
+			return c;
+		}
+	}
+	throw LeilaError("invalid_request", "unknown device: " + want + " (list_devices() lists the registered names)");
+}
+
+// Clears a cancel flag when it goes out of scope, so load_model clears it on every return path.
+class FlagReset {
+public:
+	explicit FlagReset(std::atomic<bool> &flag) : flag_(flag) {}
+	~FlagReset() { flag_.store(false); }
+	FlagReset(const FlagReset &) = delete;
+	FlagReset &operator=(const FlagReset &) = delete;
+
+private:
+	std::atomic<bool> &flag_;
+};
 
 // ---- sampling dict ---------------------------------------------------------
 
@@ -298,6 +456,10 @@ void LeilaLLM::_bind_methods() {
 	godot::ClassDB::bind_method(godot::D_METHOD("is_loaded"), &LeilaLLM::is_loaded);
 	godot::ClassDB::bind_method(godot::D_METHOD("unload"), &LeilaLLM::unload);
 	godot::ClassDB::bind_method(godot::D_METHOD("set_control_vectors", "vectors"), &LeilaLLM::set_control_vectors);
+	godot::ClassDB::bind_method(godot::D_METHOD("clear_prompt_cache"), &LeilaLLM::clear_prompt_cache);
+	godot::ClassDB::bind_method(godot::D_METHOD("load_progress"), &LeilaLLM::load_progress);
+	godot::ClassDB::bind_method(godot::D_METHOD("list_devices", "backend_dir"), &LeilaLLM::list_devices);
+	godot::ClassDB::bind_method(godot::D_METHOD("cancel_load"), &LeilaLLM::cancel_load);
 	godot::ClassDB::bind_method(
 			godot::D_METHOD("generate", "messages_json", "schema_json", "sampling", "max_tokens", "on_token", "is_cancelled"),
 			&LeilaLLM::generate);
@@ -337,6 +499,33 @@ void LeilaLLM::free_locked() {
 	devices_.clear();
 	cvec_cache_.clear();
 	cvec_current_.clear();
+	cache_tokens_.clear();
+	checkpoints_.clear();
+}
+
+// Creates ctx_cls_ on the loaded model. Returns false when llama.cpp cannot create it; ctx_cls_ stays null.
+bool LeilaLLM::init_classifier_locked() {
+	if (ctx_cls_) {
+		return true;
+	}
+	if (!model_ || !ctx_) {
+		return false;
+	}
+	// Same model, its own context, no control vector. Never call llama_set_adapter_cvec on
+	// ctx_cls_: an unbound context is the dose-0 guarantee of docs/02 §8 (SAF-3).
+	llama_context_params cp = llama_context_default_params();
+	cp.n_ctx = static_cast<uint32_t>(cls_ctx_);
+	cp.n_batch = static_cast<uint32_t>(cls_ctx_);
+	cp.n_ubatch = static_cast<uint32_t>(cls_ubatch_);
+	cp.no_perf = false;
+	cp.n_threads = llama_n_threads(ctx_);
+	cp.n_threads_batch = llama_n_threads(ctx_);
+	try {
+		ctx_cls_ = llama_init_from_model(model_, cp);
+	} catch (const std::exception &) {
+		ctx_cls_ = nullptr;
+	}
+	return ctx_cls_ != nullptr;
 }
 
 godot::Dictionary LeilaLLM::load_model(const godot::Dictionary &config) {
@@ -344,12 +533,19 @@ godot::Dictionary LeilaLLM::load_model(const godot::Dictionary &config) {
 	// Lock order: mu_, then cls_mu_. classify() takes only cls_mu_, so it never waits on a turn.
 	std::lock_guard<std::mutex> lock(mu_);
 	std::lock_guard<std::mutex> cls_lock(cls_mu_);
+	// Declared after both guards, so it clears before they release. It clears on every return path and never at
+	// the start, so a cancel_load() that lands before this call starts still applies to this load.
+	FlagReset cancel_reset(load_cancel_);
 
 	if (loaded_) {
 		return error_dict("already_loaded", "a model is already loaded; call unload() first");
 	}
+	load_progress_.store(0.0f);
 
 	try {
+		if (load_cancel_.load()) {
+			throw LeilaError("cancelled", "load cancelled before it began");
+		}
 		const std::string model_path = dict_str(config, "model_path", "");
 		const std::string backend_dir = dict_str(config, "backend_dir", "");
 		std::error_code ec;
@@ -362,11 +558,35 @@ godot::Dictionary LeilaLLM::load_model(const godot::Dictionary &config) {
 
 		init_backends(backend_dir);
 
+		// Device choice (P4.06a). Enumerated before the load, so vram_* describe the memory the device had then.
+		const std::vector<DevInfo> devs = enumerate_devices();
+		const DevChoice choice =
+				choose_device(devs, dict_str(config, "device", "auto"), dict_int(config, "n_gpu_layers", 99));
+
 		llama_model_params mp = llama_model_default_params();
-		mp.n_gpu_layers = static_cast<int32_t>(dict_int(config, "n_gpu_layers", 99));
+		// devices is a NULL-terminated list. {nullptr} is an empty list: no device, CPU only.
+		// Both arrays outlive llama_model_load_from_file below.
+		ggml_backend_dev_t chosen_list[2] = { choice.dev, nullptr };
+		ggml_backend_dev_t cpu_list[1] = { nullptr };
+		mp.devices = choice.dev ? chosen_list : cpu_list;
+		mp.n_gpu_layers = static_cast<int32_t>(choice.gpu_layers);
+		// Loading screen progress (P4.05). llama.cpp calls this on the loading thread; load_progress() polls it.
+		// Returning false aborts the load. cancel_load() sets load_cancel_ to ask for that (P4.06a).
+		mp.progress_callback = [](float progress, void *user_data) -> bool {
+			auto *self = static_cast<LeilaLLM *>(user_data);
+			self->load_progress_.store(progress);
+			return !self->load_cancel_.load();
+		};
+		mp.progress_callback_user_data = this;
 		model_ = llama_model_load_from_file(model_path.c_str(), mp);
 		if (!model_) {
+			if (load_cancel_.load()) {
+				throw LeilaError("cancelled", "load cancelled while the model was loading");
+			}
 			throw LeilaError("model_load_failed", "llama_model_load_from_file failed: " + model_path);
+		}
+		if (load_cancel_.load()) {
+			throw LeilaError("cancelled", "load cancelled after the model was read");
 		}
 
 		// n_threads <= 0 means all math cores, as llama-server does.
@@ -374,15 +594,21 @@ godot::Dictionary LeilaLLM::load_model(const godot::Dictionary &config) {
 		if (n_threads <= 0) {
 			n_threads = common_cpu_get_num_math();
 		}
-		// Classifier context sizes, read here so classify() creates its lazy context with them.
+		// Classifier context sizes. Its context is created below, with the main one, so all VRAM use is known at load.
 		// 512/64 costs 152 MiB of VRAM against 604 MiB at 1024/512 (P4.04, RTX 4050). n_ubatch is
 		// the main cost. The real prompt is about 198 tokens; an overflow fails closed to bars.
 		cls_ctx_ = static_cast<int32_t>(std::max<int64_t>(64, dict_int(config, "classifier_n_ctx", 512)));
 		cls_ubatch_ = static_cast<int32_t>(std::max<int64_t>(16, dict_int(config, "classifier_n_ubatch", 64)));
+		// Prompt-prefix cache (P4.05). Checkpoints sit on n_ubatch boundaries, so a restored tail splits where an
+		// uncached decode splits. The cap at kBatch matches llama.cpp, which caps n_ubatch at n_batch.
+		// The default is 128, the value the P4.05 measurement chose.
+		const int64_t ubatch_cfg = dict_int(config, "n_ubatch", 128);
+		n_ubatch_ = static_cast<int32_t>(std::min<int64_t>(kBatch, std::max<int64_t>(16, ubatch_cfg)));
+		prompt_cache_ = dict_int(config, "prompt_cache", 1) != 0;
 		llama_context_params cp = llama_context_default_params();
 		cp.n_ctx = static_cast<uint32_t>(dict_int(config, "n_ctx", 8192));
 		cp.n_batch = kBatch;
-		cp.n_ubatch = 512;
+		cp.n_ubatch = static_cast<uint32_t>(n_ubatch_);
 		cp.no_perf = false;
 		cp.n_threads = static_cast<int32_t>(n_threads);
 		cp.n_threads_batch = static_cast<int32_t>(n_threads);
@@ -390,11 +616,22 @@ godot::Dictionary LeilaLLM::load_model(const godot::Dictionary &config) {
 		if (!ctx_) {
 			throw LeilaError("context_failed", "llama_init_from_model failed");
 		}
+		if (load_cancel_.load()) {
+			throw LeilaError("cancelled", "load cancelled while the context was created");
+		}
+		load_progress_.store(1.0f);
 
 		try {
 			tmpls_ = common_chat_templates_init(model_, "");
 		} catch (const std::exception &e) {
 			throw LeilaError("template_failed", std::string("chat template init failed: ") + e.what());
+		}
+
+		// Classifier context (P4.06a). A failure here does not fail the load: classifier_ready is false and
+		// classify() retries it, failing closed if the retry fails too.
+		const bool classifier_ready = init_classifier_locked();
+		if (load_cancel_.load()) {
+			throw LeilaError("cancelled", "load cancelled while the classifier context was created");
 		}
 
 		n_ctx_ = static_cast<int32_t>(cp.n_ctx);
@@ -403,16 +640,10 @@ godot::Dictionary LeilaLLM::load_model(const godot::Dictionary &config) {
 
 		// devices lists every ggml backend device that was registered, not the model's split.
 		devices_.clear();
-		gpu_offload_ = false;
-		const size_t n_dev = ggml_backend_dev_count();
-		for (size_t i = 0; i < n_dev; ++i) {
-			ggml_backend_dev_t dev = ggml_backend_dev_get(i);
-			devices_.emplace_back(ggml_backend_dev_name(dev));
-			if (ggml_backend_dev_type(dev) == GGML_BACKEND_DEVICE_TYPE_GPU) {
-				gpu_offload_ = true;
-			}
+		for (const DevInfo &d : devs) {
+			devices_.push_back(d.name);
 		}
-		gpu_offload_ = gpu_offload_ && mp.n_gpu_layers != 0;
+		gpu_offload_ = choice.dev != nullptr && choice.gpu_layers > 0;
 
 		loaded_ = true;
 
@@ -422,13 +653,20 @@ godot::Dictionary LeilaLLM::load_model(const godot::Dictionary &config) {
 		out["n_layer"] = static_cast<int64_t>(n_layer_);
 		out["n_embd"] = static_cast<int64_t>(n_embd_);
 		out["n_ctx"] = static_cast<int64_t>(n_ctx_);
+		out["n_ubatch"] = static_cast<int64_t>(n_ubatch_);
 		out["n_threads"] = static_cast<int64_t>(n_threads);
 		out["gpu_offload"] = gpu_offload_;
-		godot::Array devs;
+		godot::Array devs_out;
 		for (const auto &name : devices_) {
-			devs.push_back(to_godot(name));
+			devs_out.push_back(to_godot(name));
 		}
-		out["devices"] = devs;
+		out["devices"] = devs_out;
+		out["device"] = to_godot(choice.name);
+		out["device_type"] = to_godot(choice.type);
+		out["vram_total_mb"] = static_cast<int64_t>(choice.total_bytes / kMiB);
+		out["vram_free_mb"] = static_cast<int64_t>(choice.free_bytes / kMiB);
+		out["gpu_layers"] = choice.gpu_layers;
+		out["classifier_ready"] = classifier_ready;
 		return out;
 	} catch (const LeilaError &e) {
 		free_locked();
@@ -437,6 +675,29 @@ godot::Dictionary LeilaLLM::load_model(const godot::Dictionary &config) {
 		free_locked();
 		return error_dict("model_load_failed", e.what());
 	}
+}
+
+godot::Array LeilaLLM::list_devices(const godot::String &backend_dir) {
+	godot::Array out;
+	try {
+		init_backends(from_godot(backend_dir));
+		for (const DevInfo &d : enumerate_devices()) {
+			godot::Dictionary e;
+			e["name"] = to_godot(d.name);
+			e["description"] = to_godot(d.description);
+			e["type"] = to_godot(device_type_name(d.type));
+			e["total_mb"] = static_cast<int64_t>(d.total_bytes / kMiB);
+			e["free_mb"] = static_cast<int64_t>(d.free_bytes / kMiB);
+			out.push_back(e);
+		}
+	} catch (const std::exception &) {
+		return godot::Array();
+	}
+	return out;
+}
+
+void LeilaLLM::cancel_load() {
+	load_cancel_.store(true);
 }
 
 bool LeilaLLM::is_loaded() const {
@@ -544,6 +805,8 @@ godot::Dictionary LeilaLLM::set_control_vectors(const godot::Array &vectors) {
 		if (rc != 0) {
 			return error_dict("control_vector_load_failed", "llama_set_adapter_cvec failed");
 		}
+		// No KV clear here: a control vector acts on the forward pass, not on KV already computed. Earlier
+		// words keep the dose they were spoken with (docs/06 §4); only the tokens decoded from now on get the new one.
 		cvec_current_ = std::move(wanted);
 
 		godot::Dictionary out;
@@ -555,6 +818,24 @@ godot::Dictionary LeilaLLM::set_control_vectors(const godot::Array &vectors) {
 	} catch (const std::exception &e) {
 		return error_dict("control_vector_load_failed", e.what());
 	}
+}
+
+bool LeilaLLM::clear_prompt_cache() {
+	std::unique_lock<std::mutex> lock(mu_, std::try_to_lock);
+	if (!lock.owns_lock()) {
+		return false;
+	}
+	if (!loaded_) {
+		return true;
+	}
+	cache_tokens_.clear();
+	checkpoints_.clear();
+	llama_memory_clear(llama_get_memory(ctx_), true);
+	return true;
+}
+
+float LeilaLLM::load_progress() const {
+	return load_progress_.load();
 }
 
 godot::Dictionary LeilaLLM::generate(const godot::String &messages_json_g, const godot::String &schema_json_g,
@@ -627,20 +908,83 @@ godot::Dictionary LeilaLLM::generate(const godot::String &messages_json_g, const
 			common_sampler_accept(smpl.get(), t, false);
 		}
 
-		// Prompt decode, in chunks of n_batch, with a cancel check between chunks.
-		llama_memory_clear(llama_get_memory(ctx_), true);
+		// Prompt-prefix reuse (P4.05). Qwen3.5 is hybrid: its recurrent layers cannot roll back, so a prefix is reused
+		// by restoring the recurrent state saved at a checkpoint, then dropping the attention KV past it. The KV of the
+		// last prompt stays in ctx_; generated tokens sit after the prompt and are dropped here too.
+		const auto mem = llama_get_memory(ctx_);
+		size_t common = 0;
+		if (prompt_cache_) {
+			const size_t n_match = std::min(prompt_tokens.size(), cache_tokens_.size());
+			while (common < n_match && prompt_tokens[common] == cache_tokens_[common]) {
+				++common;
+			}
+		}
+		// The last prompt token is always decoded, so that there are logits to sample from.
+		const size_t limit = std::min(common, prompt_tokens.size() - 1);
+		// Checkpoints past the limit describe a prefix this prompt does not share.
+		while (!checkpoints_.empty() && static_cast<size_t>(checkpoints_.back().n_tokens) > limit) {
+			checkpoints_.pop_back();
+		}
+		size_t reuse = 0;
+		if (!checkpoints_.empty()) {
+			const PromptCheckpoint &cp = checkpoints_.back();
+			const auto t_restore0 = clock_type::now();
+			const size_t restored = llama_state_seq_set_data_ext(ctx_, cp.state.data(), cp.state.size(), 0, LLAMA_STATE_SEQ_FLAGS_PARTIAL_ONLY);
+			const bool ok = restored == cp.state.size() && llama_memory_seq_rm(mem, 0, static_cast<llama_pos>(cp.n_tokens), -1);
+			m.cache_restore_ms = ms_double(t_restore0, clock_type::now());
+			if (ok) {
+				reuse = static_cast<size_t>(cp.n_tokens);
+			}
+		}
+		if (reuse == 0) {
+			llama_memory_clear(mem, true);
+			checkpoints_.clear();
+		}
+		// Cleared before decoding, so that a cancel or failure mid-prompt leaves no claim on the cache.
+		cache_tokens_.clear();
+		m.cache_reused_tokens = static_cast<int64_t>(reuse);
+
+		// Prompt decode from reuse, one n_ubatch_ chunk per llama_decode call, with a cancel check before each.
+		// reuse is a multiple of n_ubatch_, so every chunk starts and ends on one: the batch splits then fall where an
+		// uncached decode puts them, which keeps the output byte-identical. Checkpoints are saved at chunk ends.
 		const auto t_prompt0 = clock_type::now();
-		for (size_t i = 0; i < prompt_tokens.size(); i += static_cast<size_t>(kBatch)) {
+		const size_t ubatch = static_cast<size_t>(n_ubatch_);
+		constexpr size_t kMaxCheckpoints = 16;
+		// A cancel or failure mid-prompt leaves no KV and no checkpoints behind, so the next generate starts clean.
+		auto drop_prompt_state = [&]() {
+			llama_memory_clear(mem, true);
+			checkpoints_.clear();
+			cache_tokens_.clear();
+		};
+		for (size_t i = reuse; i < prompt_tokens.size(); i += ubatch) {
 			if (cancelled_now()) {
+				drop_prompt_state();
 				m.stop_reason = "cancelled";
 				m.total_ms = ms_since(t_start);
 				return fail_dict("cancelled", "cancelled by is_cancelled()", m);
 			}
-			const size_t n = std::min(static_cast<size_t>(kBatch), prompt_tokens.size() - i);
+			const size_t n = std::min(ubatch, prompt_tokens.size() - i);
 			llama_batch batch = llama_batch_get_one(const_cast<llama_token *>(prompt_tokens.data() + i), static_cast<int32_t>(n));
 			if (llama_decode(ctx_, batch) != 0) {
+				drop_prompt_state();
 				throw LeilaError("decode_failed", "llama_decode failed while processing the prompt");
 			}
+			const size_t end = i + n;
+			if (prompt_cache_ && end % ubatch == 0 && end < prompt_tokens.size() && checkpoints_.size() < kMaxCheckpoints) {
+				const auto t_save0 = clock_type::now();
+				const size_t bytes = llama_state_seq_get_size_ext(ctx_, 0, LLAMA_STATE_SEQ_FLAGS_PARTIAL_ONLY);
+				PromptCheckpoint cp;
+				cp.n_tokens = static_cast<int64_t>(end);
+				cp.state.resize(bytes);
+				if (llama_state_seq_get_data_ext(ctx_, cp.state.data(), bytes, 0, LLAMA_STATE_SEQ_FLAGS_PARTIAL_ONLY) == bytes) {
+					checkpoints_.push_back(std::move(cp));
+				}
+				m.cache_save_ms += ms_double(t_save0, clock_type::now());
+			}
+		}
+		cache_tokens_ = prompt_tokens;  // only now: the whole prompt is in the KV
+		for (const PromptCheckpoint &cp : checkpoints_) {
+			m.cache_state_bytes += static_cast<int64_t>(cp.state.size());
 		}
 		m.prompt_ms = ms_between(t_prompt0, clock_type::now());
 
@@ -772,21 +1116,11 @@ godot::Dictionary LeilaLLM::classify(const godot::String &messages_json_g, int64
 			throw LeilaError("prompt_too_long", "prompt_tokens + max_tokens exceeds the classifier context");
 		}
 
-		// Created on the first call. A failure leaves ctx_cls_ null, so a later call retries.
+		// load_model creates ctx_cls_ (P4.06a). This retries only when that failed, and a failed retry fails closed.
 		// Same model, its own context, no control vector. Never call llama_set_adapter_cvec on
 		// ctx_cls_: an unbound context is the dose-0 guarantee of docs/02 §8 (SAF-3).
-		if (!ctx_cls_) {
-			llama_context_params cp = llama_context_default_params();
-			cp.n_ctx = static_cast<uint32_t>(cls_ctx_);
-			cp.n_batch = static_cast<uint32_t>(cls_ctx_);
-			cp.n_ubatch = static_cast<uint32_t>(cls_ubatch_);
-			cp.no_perf = false;
-			cp.n_threads = llama_n_threads(ctx_);
-			cp.n_threads_batch = llama_n_threads(ctx_);
-			ctx_cls_ = llama_init_from_model(model_, cp);
-			if (!ctx_cls_) {
-				throw LeilaError("context_failed", "llama_init_from_model failed for the classifier context");
-			}
+		if (!init_classifier_locked()) {
+			throw LeilaError("context_failed", "llama_init_from_model failed for the classifier context");
 		}
 
 		// Prompt decode from an empty cache, in chunks of n_batch.

@@ -1,0 +1,1 @@
+{ "doc": "docs/07 §4 Fast mode: one beat and a shorter reply, enforced by the turn grammar. P4.06.", "max_tokens": 220, "max_beats": 1, "say_max_length": 160, "inner_max_length": 60 }

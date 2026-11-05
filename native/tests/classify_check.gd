@@ -252,10 +252,12 @@ func _init() -> void:
 	var vram_before := _vram_query()
 	print("vram before load: %d MiB" % _mib(vram_before))
 
+	# load_model creates the classifier context itself. classifier_n_ubatch is passed explicitly (64, the default).
 	var info: Dictionary = llm.load_model({
 		"model_path": model_path,
 		"backend_dir": backend_dir,
 		"n_gpu_layers": ngl,
+		"classifier_n_ubatch": 64,
 	})
 	if not info.get("ok", false) or not llm.is_loaded():
 		_check("load_model ok", false, JSON.stringify(info, "", false))
@@ -265,8 +267,8 @@ func _init() -> void:
 	var vram_loaded := _vram_query()
 	print("vram after load: %d MiB" % _mib(vram_loaded))
 
-	# 1. Baseline: the first classify gives text A. It also creates the classifier context,
-	# so the VRAM reading after it is the classifier's cost. A repeat must give A again.
+	# 1. Baseline: the first classify gives text A. The classifier context already exists (load_model made it),
+	# so the VRAM reading after it must equal the one after load (check 6). A repeat must give A again.
 	var r1: Dictionary = llm.classify(_classify_messages(), CLASSIFY_MAX_TOKENS)
 	var a := _ctext(r1)
 	var vram_classified := _vram_query()
@@ -399,12 +401,17 @@ func _init() -> void:
 	_check("5 unload then classify -> not_loaded",
 			_err_code(r5) == "not_loaded" and not llm.is_loaded(), _err_code(r5))
 
-	# 6. The VRAM readings are taken at the three points the brief names, and each must come back.
-	var cost := _mib(vram_classified) - _mib(vram_loaded)
-	_check("6 nvidia-smi readings before load, after load, after first classify",
-			_mib(vram_before) >= 0 and _mib(vram_loaded) >= 0 and _mib(vram_classified) >= 0,
-			"before=%d load=%d first_classify=%d classifier_cost=%d MiB" % [
-				_mib(vram_before), _mib(vram_loaded), _mib(vram_classified), cost])
+	# 6. load_model made the classifier context (P4.06a): classifier_ready is true, and the first classify
+	# may add at most 32 MiB over the VRAM reading after load. A first-use driver allocation of about 12 MiB
+	# is expected, so an exact match is not required. The load cost and the first-classify delta are reported.
+	var load_cost := _mib(vram_loaded) - _mib(vram_before)
+	var first_delta := _mib(vram_classified) - _mib(vram_loaded)
+	_check("6 classifier context made at load: classifier_ready, first classify adds at most 32 MiB VRAM",
+			bool(info.get("classifier_ready", false)) and _mib(vram_before) >= 0 and _mib(vram_loaded) >= 0
+			and _mib(vram_classified) >= 0 and first_delta <= 32,
+			"classifier_ready=%s before=%d load=%d first_classify=%d first_delta=%d load_cost=%d MiB" % [
+				str(info.get("classifier_ready", "")), _mib(vram_before), _mib(vram_loaded),
+				_mib(vram_classified), first_delta, load_cost])
 
 	print("classify_check: %s" % ("ALL PASS" if _failures == 0 else "%d FAILED" % _failures))
 	quit(0 if _failures == 0 else 1)

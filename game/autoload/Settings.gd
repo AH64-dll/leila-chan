@@ -74,6 +74,10 @@ var settings_path := PATH
 var photosensitive: bool = false
 var reduced_motion: bool = false
 
+## docs/07 §4 Fast mode: one beat and a shorter reply, enforced by the turn grammar.
+## Off by default; a settings file without the key loads as off.
+var fast_mode: bool = false
+
 ## docs/02 §4 typewriter speed as a scale on the configured chars_per_second
 ## (1.0 = the ui.json rate). Not a safety gate, so it always defaults to 1.
 var text_speed: float = TEXT_SPEED_DEFAULT
@@ -172,6 +176,16 @@ func set_reduced_motion(enabled: bool) -> void:
 	reduced_motion = enabled
 	save_settings()
 	changed.emit(&"reduced_motion")
+
+
+## P4.06: read when the next turn request is finalized, so a turn already in flight
+## keeps the mode it started with.
+func set_fast_mode(enabled: bool) -> void:
+	if fast_mode == enabled:
+		return
+	fast_mode = enabled
+	save_settings()
+	changed.emit(&"fast_mode")
 
 
 ## ── Content level and calmer mode (docs/02 §8) ─────────────────────────────
@@ -446,6 +460,7 @@ func load_settings() -> void:
 		else ""
 	)
 	immersion = _cfg_enum(cfg, SECTION_GAME, "immersion", VALID_IMMERSION, IMMERSION_STANDARD)
+	fast_mode = _cfg_bool(cfg, SECTION_GAME, "fast_mode", false)
 	for bus: StringName in bus_volumes.keys():
 		bus_volumes.erase(bus)
 	if cfg.has_section(SECTION_AUDIO):
@@ -485,6 +500,7 @@ func save_settings() -> void:
 		cfg.set_value(SECTION_GAME, "content_level_before_calmer", _pre_calmer_level)
 	if VALID_IMMERSION.has(immersion):
 		cfg.set_value(SECTION_GAME, "immersion", immersion)
+	cfg.set_value(SECTION_GAME, "fast_mode", fast_mode)
 	for bus: StringName in bus_volumes:
 		cfg.set_value(SECTION_AUDIO, String(bus), float(bus_volumes[bus]))
 	var err := cfg.save(settings_path)

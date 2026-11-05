@@ -1,0 +1,35 @@
+{
+  "lines": ["Leila is getting ready.", "She says not to come in yet.", "She's looking for the good cups.", "Almost."],
+  "errors": {
+    "missing_model": {
+      "fiction": "The porch light is on, but nobody is home.",
+      "fix": "The game's model file is missing. It should be here:\n{path}\nVerify the game files in Steam, or reinstall the game.",
+      "actions": ["retry", "quit"]
+    },
+    "wrong_hash": {
+      "fiction": "She answers the door. It isn't quite her.",
+      "fix": "The model file is damaged or the wrong version:\n{path}\nVerify the game files in Steam, or reinstall the game.",
+      "actions": ["retry", "quit"]
+    },
+    "no_extension": {
+      "fiction": "The house is there. The door isn't.",
+      "fix": "A game library is missing or could not start. Verify the game files in Steam, or reinstall the game.",
+      "actions": ["quit"]
+    },
+    "load_failed": {
+      "fiction": "She couldn't get up today.",
+      "fix": "The model could not load, usually because there isn't enough memory. It needs about 4 GB of graphics memory or 8 GB of system memory. Close other programs and try again.\nDetails: {detail}",
+      "actions": ["retry", "quit"]
+    },
+    "no_gpu": {
+      "fiction": "She's moving slowly today. She asks you to be patient with her.",
+      "fix": "No supported graphics card was found, so the game is running on your processor. Replies will be slower. Updating your graphics driver may help.",
+      "actions": ["fast", "continue", "quit"]
+    },
+    "gpu_oom": {
+      "fiction": "She's so tired tonight. She asks you to be patient with her.",
+      "fix": "Your graphics card doesn't have enough free memory for the model, so the game is running {where}. Replies will be slower. Closing other programs may help.",
+      "actions": ["fast", "continue", "quit"]
+    }
+  }
+}

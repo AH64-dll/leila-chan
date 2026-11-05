@@ -113,8 +113,10 @@ func test_backend_kind_native_is_honoured_in_a_dev_run() -> void:
 	assert_str(BootScript.backend_kind_for("native", false)).is_equal("native")
 
 
-func test_backend_kind_server_is_honoured_in_an_export() -> void:
-	assert_str(BootScript.backend_kind_for("server", true)).is_equal("server")
+func test_an_export_is_always_native() -> void:
+	assert_str(BootScript.backend_kind_for("server", true)).is_equal("native")
+	assert_str(BootScript.backend_kind_for("bogus", true)).is_equal("native")
+	assert_str(BootScript.backend_kind_for("", true)).is_equal("native")
 
 
 func test_backend_kind_ignores_case_and_padding() -> void:
@@ -190,3 +192,68 @@ func test_empty_request_dose_picks_up_the_facade_dose() -> void:
 	var bound: Array = engine.bind_calls[0]
 	assert_int(bound.size()).is_equal(1)
 	assert_float(float(bound[0]["scale"])).is_equal(2.5)
+
+
+func test_native_required_an_export_needs_no_class() -> void:
+	assert_bool(BootScript.native_required("server", false, true)).is_true()
+
+
+func test_native_required_dev_without_the_class_is_false() -> void:
+	assert_bool(BootScript.native_required("native", false, false)).is_false()
+
+
+func test_native_required_dev_native_with_the_class_is_true() -> void:
+	assert_bool(BootScript.native_required("native", true, false)).is_true()
+
+
+func test_native_required_dev_server_is_false_even_with_the_class() -> void:
+	assert_bool(BootScript.native_required("server", true, false)).is_false()
+
+
+## Warnings are once per distinct code per process, so each run uses a fresh code.
+func test_a_dose_error_warns_once_per_code() -> void:
+	var code := "test_code_%d" % Time.get_ticks_usec()
+	var before := LLM.dose_error_warning_count()
+	LLM._warn_dose_error({"dose_error": code})
+	LLM._warn_dose_error({"dose_error": code})
+	assert_int(LLM.dose_error_warning_count() - before).is_equal(1)
+
+
+func test_native_line_appears_only_for_a_record_with_native_metrics() -> void:
+	var report := FullRunReport.new()
+	var plain := {
+		"stage": 0,
+		"turn_in_day": 1,
+		"day": 1,
+		"instability": 0.0,
+		"player": "Ren",
+		"beats": [],
+		"displayed": [],
+		"read": "",
+		"music": "",
+		"fx": "",
+		"action": "",
+		"inner": "",
+	}
+	var metrics := {
+		"dose_applied": true,
+		"dose_error": "bind_failed",
+		"first_say_ms": 812.0,
+		"cache_reused_tokens": 40.0,
+		"prompt_tokens": 300.0,
+	}
+	assert_array(_native_rows(report.turn_lines(plain))).is_empty()
+	var rows := _native_rows(report.turn_lines(plain.merged({"native": metrics})))
+	assert_array(rows).has_size(1)
+	assert_str(rows[0]).contains("dose_applied=true")
+	assert_str(rows[0]).contains("first_say=812ms")
+	assert_str(rows[0]).contains("reused=40/300 tokens")
+	assert_str(rows[0]).contains("dose_error=bind_failed")
+
+
+func _native_rows(lines: Array[String]) -> Array[String]:
+	var rows: Array[String] = []
+	for line: String in lines:
+		if line.begins_with("**Native:**"):
+			rows.append(line)
+	return rows

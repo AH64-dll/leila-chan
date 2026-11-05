@@ -402,7 +402,6 @@ func _start_turn(player_text: String) -> bool:
 	schema_ctx["property_order"] = TurnSchema.DOCS_02_PROPERTY_ORDER
 	var schema: Dictionary = TurnSchema.build_turn_schema(schema_ctx, offered_actions)
 	_current_prompt = messages.duplicate(true)
-	_current_schema = schema.duplicate(true)
 
 	# Step 4: Sampling and steering dose (docs/02 §9). The three sampling columns
 	# come straight from the data row via TurnContext (P2.05); this file keeps no
@@ -435,7 +434,8 @@ func _start_turn(player_text: String) -> bool:
 	req.schema = schema
 	req.sampling = sampling_dict
 	req.dose = dose_dict
-	req.max_tokens = 600
+	TurnContext.finalize_request(req, Settings.fast_mode)
+	_current_schema = req.schema.duplicate(true)
 
 	# Step 5: Start streaming through IncrementalJson
 	_parser = IncrementalJson.new()

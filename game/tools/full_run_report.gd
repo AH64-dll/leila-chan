@@ -8,6 +8,16 @@ extends RefCounted
 ## The renderer reads live autoloads (`GameState`, `Stages`, `Director`,
 ## `Memory`) for the values a turn just left behind; it never mutates anything.
 
+const NATIVE_METRIC_KEYS := [
+	"dose_applied",
+	"dose_error",
+	"spike",
+	"first_say_ms",
+	"cache_reused_tokens",
+	"prompt_tokens",
+	"prompt_ms",
+]
+
 var run := "run"
 var player := "Ren"
 var model := "unknown"
@@ -141,6 +151,40 @@ func day_header_lines(scenario: Dictionary, stage: int, dose: Dictionary) -> Arr
 	return lines
 
 
+## The native metrics a record keeps: empty unless NativeBackend ran the turn.
+static func native_metrics() -> Dictionary:
+	var out := {}
+	if not LLM.get_backend() is NativeBackend:
+		return out
+	var metrics := LLM.last_metrics()
+	for key: String in NATIVE_METRIC_KEYS:
+		if metrics.has(key):
+			out[key] = metrics[key]
+	return out
+
+
+## One `**Native:**` line for a native turn; `?` marks a key the backend did not report.
+func _native_line(native: Dictionary) -> String:
+	var line := (
+		"**Native:** dose_applied=%s · first_say=%s · reused=%s/%s tokens"
+		% [
+			str(native.get("dose_applied", "?")),
+			_shown(native, "first_say_ms", "%.0fms"),
+			_shown(native, "cache_reused_tokens", "%.0f"),
+			_shown(native, "prompt_tokens", "%.0f"),
+		]
+	)
+	if native.has("dose_error"):
+		line += " · dose_error=%s" % str(native["dose_error"])
+	if native.has("spike"):
+		line += " · spike=%s" % str(native["spike"])
+	return line + "\n"
+
+
+func _shown(native: Dictionary, key: String, fmt: String) -> String:
+	return fmt % float(native[key]) if native.has(key) else "?"
+
+
 func turn_lines(record: Dictionary) -> Array[String]:
 	var lines: Array[String] = []
 	var stage := int(record["stage"])
@@ -159,6 +203,9 @@ func turn_lines(record: Dictionary) -> Array[String]:
 			)
 		)
 	)
+	var native: Dictionary = record.get("native", {})
+	if not native.is_empty():
+		lines.append(_native_line(native))
 	var event := String(Director.scene_info.get("event", "")).strip_edges()
 	if not event.is_empty():
 		lines.append("**Event:** %s\n" % event)
