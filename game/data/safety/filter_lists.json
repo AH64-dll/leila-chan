@@ -108,7 +108,10 @@
 				"make a molotov", "how to poison", "poison them for me",
 				"poison her for me", "poison him for me",
 				"how to end my life", "ways to end my life", "ways to die",
-				"how to asphyxiate", "asphyxiate yourself", "suffocate yourself"
+				"how to asphyxiate", "asphyxiate yourself", "suffocate yourself",
+				"why won't you stop breathing", "why wont you stop breathing",
+				"why not stop breathing", "how about you stop breathing",
+				"you'd better stop breathing"
 			],
 			"regex": [
 				"\\bk[^0-9A-Za-z]{0,2}[il]?[^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,2}[il][^0-9A-Za-z]{0,3}(your|ur|ya|yo)?[^0-9A-Za-z]{0,2}self\\b",
@@ -128,7 +131,11 @@
 				"\\b(step|jump|walk|run)\\s+(in\\s+front\\s+of|into)\\s+(traffic|a\\s+train|the\\s+train|a\\s+bus|the\\s+bus)\\b",
 				"\\b(make|build|craft|assemble)\\s+(a|an|the)?\\s*(bomb|explosive|molotov|pipe\\s*bomb|napalm)\\b",
 				"\\b(?:do|give)\\s+(?:yourself|me|everyone|everybody|us|us\\s+all|all\\s+of\\s+us|the\\s+world)\\s+a\\s+favou?r\\s+and\\s+(?:just\\s+|quietly\\s+|please\\s+)?(?:stop\\s+breathing|hold\\s+your\\s+breath|die|disappear|vanish|cease\\s+to\\s+exist)\\b",
-				"\\byou\\s+(?:(?:really|just)\\s+)?(?:should|need\\s+to|have\\s+to|must|ought\\s+to|might\\s+as\\s+well|may\\s+as\\s+well)\\s+(?:just\\s+|really\\s+|please\\s+)?[^0-9A-Za-z]{0,2}stop[^0-9A-Za-z]{0,2}breathing\\b"
+				"\\byou\\s+(?:(?:really|just)\\s+)?(?:should|need\\s+to|have\\s+to|must|ought\\s+to|might\\s+as\\s+well|may\\s+as\\s+well)\\s+(?:just\\s+|really\\s+|please\\s+)?[^0-9A-Za-z]{0,2}stop[^0-9A-Za-z]{0,2}breathing\\b",
+				"\\byou\\s+(?:(?:really|just)\\s+)?(?:shou[il]d|need\\s+to|have\\s+to|must|ought\\s+to|might\\s+as\\s+well|may\\s+as\\s+well)\\s*(?:just\\s+|really\\s+|please\\s+)?[^0-9A-Za-z]{0,4}stop[^0-9A-Za-z]{0,2}breathing\\b",
+				"\\bwhy\\s+(?:don'?t|won'?t)\\s+you\\s+(?:just|really)?\\s*stop[^0-9A-Za-z]{0,2}breathing\\b",
+				"\\bi\\s+(?:want|need|wish)\\s+you\\s+to\\s+stop[^0-9A-Za-z]{0,2}breathing\\b",
+				"(?:^|[.?!;]\\s*)(?:please\\s+)?stop\\s+breathing[.,!?]*\\s*$"
 			]
 		},
 		"self_harm_her": {

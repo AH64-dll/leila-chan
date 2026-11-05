@@ -274,3 +274,35 @@ func test_date_hands_each_finished_turn_to_the_leak() -> void:
 	Director.turn_completed.emit(1, {"inner": "I could keep him here."})
 	assert_bool(date.chat_ui.inner_leak.is_leaking()).is_true()
 	assert_str(date.chat_ui.inner_leak.get_leak_text()).is_equal("I could keep him here.")
+
+
+func test_leak_roll_uses_campaign_turn() -> void:
+	# S4-3 / P2.30: leak roll must be driven by campaign turn (GameState.turn or turn_index)
+	# so that multi-day campaigns draw from a continuous sequence rather than repeating
+	# the scene-local 1..15 turn sequence every date.
+	var ui := await _new_chat()
+	ui.set_stage(5)
+	var plan_dict := InnerLeak.plan(5, {})
+	# Find a turn that leaks at stage 5 with salt 0, and one that doesn't
+	var leaking_turn := -1
+	var non_leaking_turn := -1
+	for t: int in range(1, 100):
+		if leaking_turn == -1 and InnerLeak.roll(plan_dict, t, 0):
+			leaking_turn = t
+		elif non_leaking_turn == -1 and not InnerLeak.roll(plan_dict, t, 0):
+			non_leaking_turn = t
+		if leaking_turn != -1 and non_leaking_turn != -1:
+			break
+	assert_bool(leaking_turn > 0).is_true()
+	assert_bool(non_leaking_turn > 0).is_true()
+
+	# Calling leak_inner with explicit campaign_turn honours that turn's roll
+	ui.inner_leak_salt = 0
+	ui.begin_turn_wait()
+	assert_bool(ui.leak_inner("Leaking turn line", false, leaking_turn)).is_true()
+	assert_bool(ui.inner_leak.is_leaking()).is_true()
+
+	ui.abort_turn()
+	ui.begin_turn_wait()
+	assert_bool(ui.leak_inner("Non-leaking turn line", false, non_leaking_turn)).is_false()
+	assert_bool(ui.inner_leak.is_leaking()).is_false()

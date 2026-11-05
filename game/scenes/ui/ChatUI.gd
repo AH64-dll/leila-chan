@@ -396,7 +396,7 @@ func _begin_corruption_turn() -> void:
 ## `force` is the F3 dev trigger: it bypasses the docs gate, chance and the
 ## per-turn cap so a tester can see either style at any stage — it never
 ## bypasses Safety.
-func leak_inner(inner_text: String, force: bool = false) -> bool:
+func leak_inner(inner_text: String, force: bool = false, campaign_turn: int = -1) -> bool:
 	if inner_leak == null:
 		return false
 	var text := inner_text.strip_edges()
@@ -406,7 +406,14 @@ func leak_inner(inner_text: String, force: bool = false) -> bool:
 	if not force:
 		if _inner_leaked_turn == _turn_seq:
 			return false
-		if not InnerLeak.roll(plan_dict, _turn_seq, inner_leak_salt):
+		var roll_turn := campaign_turn
+		if roll_turn <= 0:
+			var gs := get_node_or_null("/root/GameState")
+			if gs != null:
+				roll_turn = int(gs.get("turn"))
+		if roll_turn <= 0:
+			roll_turn = _turn_seq
+		if not InnerLeak.roll(plan_dict, roll_turn, inner_leak_salt):
 			return false
 	var scanned := _scan_inner(text)
 	if scanned.strip_edges().is_empty():

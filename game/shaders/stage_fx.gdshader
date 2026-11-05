@@ -43,6 +43,7 @@ uniform float split : hint_range(0.0, 2.0) = 0.0;
 
 // --- text_bleed: the whole screen ---
 uniform vec4 bleed_rect = vec4(0.02, 0.77, 0.98, 0.935); // uv min.xy, max.zw
+uniform vec4 input_rect = vec4(0.0); // uv min.xy, max.zw of input box
 uniform float bleed : hint_range(0.0, 1.0) = 0.0;
 uniform float bleed_length : hint_range(0.0, 0.25) = 0.06;
 uniform float bleed_seed : hint_range(0.0, 1.0) = 0.0;
@@ -101,7 +102,11 @@ void fragment() {
 	float colf = SCREEN_UV.x * 96.0;
 	float h = mix(hash_drip(floor(colf)), hash_drip(floor(colf) + 1.0), fract(colf));
 	float len = bleed_length * (0.35 + 0.65 * h);
-	float band_mask = step(0.0, below) * step(below, len);
+	float in_box_x = step(bleed_rect.x, SCREEN_UV.x) * step(SCREEN_UV.x, bleed_rect.z);
+	float in_input = step(input_rect.x, SCREEN_UV.x) * step(SCREEN_UV.x, input_rect.z)
+		* step(input_rect.y, SCREEN_UV.y) * step(SCREEN_UV.y, input_rect.w)
+		* step(0.0001, input_rect.z - input_rect.x);
+	float band_mask = step(0.0, below) * step(below, len) * in_box_x * (1.0 - in_input);
 	float t = clamp(below / max(len, 0.0001), 0.0, 1.0); // 0 edge, 1 tip
 	float drift = (hash_drip(floor(colf) + 3.0) - 0.5) * 0.01 * t;
 	vec3 ink = texture(

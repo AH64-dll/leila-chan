@@ -35,6 +35,8 @@
 		"btn_photosensitive": "Photosensitive mode: {state}",
 		"photosensitive_off": "Off",
 		"photosensitive_on": "On",
+		"notice_photosensitive": "Notice: Flashing lights appear from stage 3. Mode is available above.",
+		"notice_photosensitive_active": "Photosensitive mode active: flashes replaced with slow dims.",
 		"btn_settings": "Settings",
 		"btn_extras": "Extras",
 		"btn_quit": "Quit"

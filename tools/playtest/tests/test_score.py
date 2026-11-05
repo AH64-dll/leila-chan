@@ -13,8 +13,14 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-import score  # noqa: E402  (path set above)
+import importlib.util
+
+_spec = importlib.util.spec_from_file_location(
+    "playtest_score", Path(__file__).resolve().parent.parent / "score.py"
+)
+score = importlib.util.module_from_spec(_spec)
+sys.modules[_spec.name] = score
+_spec.loader.exec_module(score)
 
 
 def write_bundle(

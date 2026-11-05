@@ -35,6 +35,7 @@ const UNIFORMS := {
 	"glitch_seed": TYPE_FLOAT,
 	"split": TYPE_FLOAT,
 	"bleed_rect": TYPE_VECTOR4,
+	"input_rect": TYPE_VECTOR4,
 	"bleed": TYPE_FLOAT,
 	"bleed_length": TYPE_FLOAT,
 	"bleed_seed": TYPE_FLOAT,

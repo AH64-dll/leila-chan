@@ -307,6 +307,8 @@ func test_title_screen_exposes_the_photosensitive_toggle() -> void:
 	var row: Button = title.photosensitive_button
 	assert_object(row).is_not_null()
 	assert_str(row.text).is_equal("Photosensitive mode: Off")
+	assert_object(title.photosensitive_notice).is_not_null()
+	assert_bool(title.photosensitive_notice.text.contains("Notice")).is_true()
 	assert_int(row.focus_mode).is_equal(Control.FOCUS_ALL)
 	# in the Tab/arrow chain, not a mouse-only extra
 	var next: Node = title.continue_button.get_node_or_null(title.continue_button.focus_next)
@@ -317,6 +319,7 @@ func test_title_screen_exposes_the_photosensitive_toggle() -> void:
 	assert_bool(Settings.photosensitive).is_true()
 	assert_bool(FX.photosensitive).is_true()  # live, not queued for the next cue
 	assert_str(row.text).is_equal("Photosensitive mode: On")
+	assert_bool(title.photosensitive_notice.text.contains("active")).is_true()
 	assert_bool(FileAccess.file_exists(TMP)).is_true()  # and it survives the session
 
 	Settings.settings_path = previous_path

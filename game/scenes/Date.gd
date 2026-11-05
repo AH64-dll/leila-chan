@@ -171,6 +171,8 @@ func _ready() -> void:
 		# the Character asks this scene for it at fire time (layout-proof).
 		if character.has_method("set_bleed_rect_provider"):
 			character.set_bleed_rect_provider(_text_bleed_rect)
+		if character.has_method("set_input_rect_provider"):
+			character.set_input_rect_provider(_input_bleed_rect)
 	# docs/02 §2.3 accessibility and docs/01 §3's stage baseline reach the FX
 	# host through the autoload (it owns the gates and the stage lookup);
 	# DateFX keeps its own reduced-motion/photosensitive copies just below.
@@ -608,6 +610,14 @@ func _text_bleed_rect() -> Rect2:
 	return box.get_global_rect()
 
 
+## The input box rect (SAF-2): text_bleed drips spare the input row so player text is never smeared.
+func _input_bleed_rect() -> Rect2:
+	var box: Control = input_box
+	if box == null:
+		return Rect2()
+	return box.get_global_rect()
+
+
 func _shake_camera(amount: float, duration: float) -> void:
 	if character == null:
 		return
@@ -704,7 +714,7 @@ func _on_turn_displayed() -> void:
 ## owns the decision, the per-turn cap, the Safety scan and the render; the
 ## scene only hands it the finished turn. `inner` is schema-required
 ## (docs/02 §3), so a missing key simply means there is nothing to leak.
-func _on_director_turn_completed(_turn_index: int, turn_data: Dictionary) -> void:
+func _on_director_turn_completed(turn_index: int, turn_data: Dictionary) -> void:
 	# P2.19: the scenario's end rule reads the turn's `action` (docs/08 §7's
 	# `end.on_goal`), and this is the only callback that carries it — the displayed
 	# boundary that routes to the night does not.
@@ -713,7 +723,7 @@ func _on_director_turn_completed(_turn_index: int, turn_data: Dictionary) -> voi
 		return
 	if not chat_ui.has_method("leak_inner"):
 		return
-	chat_ui.leak_inner(str(turn_data.get("inner", "")))
+	chat_ui.leak_inner(str(turn_data.get("inner", "")), false, turn_index)
 
 
 func _on_pause_requested() -> void:

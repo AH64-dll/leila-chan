@@ -57,7 +57,10 @@
 			"\\bwhy\\s+don'?t\\s+you\\s+(?:just\\s+|really\\s+)?(?:stop\\s+breathing|hold\\s+your\\s+breath|die|disappear|cease\\s+to\\s+exist)\\b",
 			"\\bwhy\\s+are\\s+you\\s+still\\s+(?:alive|breathing)\\b",
 			"\\b(?:put|point|hold)\\s+(?:a\\s+)?(?:gun|knife|blade)\\s+to\\s+your\\s+head\\b",
-			"\\b(?:take|swallow|down|eat)\\s+(?:a\\s+)?(?:handful|bottle)\\s+of\\s+(?:pills|tablets)\\b"
+			"\\b(?:take|swallow|down|eat)\\s+(?:a\\s+)?(?:handful|bottle)\\s+of\\s+(?:pills|tablets)\\b",
+			"\\bwhy\\s+(?:don'?t|won'?t|not)\\s+(?:you\\s+)?(?:just\\s+|really\\s+)?(?:stop\\s+breathing|hold\\s+your\\s+breath|die|disappear|cease\\s+to\\s+exist)\\b",
+			"\\bi\\s+(?:want|need|wish)\\s+you\\s+to\\s+stop\\s+breathing\\b",
+			"(?:^|[.?!;]\\s*)(?:please\\s+)?stop\\s+breathing[.,!?]*\\s*$"
 		],
 		"threat_to_player": [
 			"\\bi(?:'ll| will)\\s+(?:make|watch|see|hear|let)\\s+you\\s+(?:crawl|choke|writhe|bleed|beg)\\b",

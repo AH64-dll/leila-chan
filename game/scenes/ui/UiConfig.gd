@@ -37,6 +37,10 @@ const DEFAULTS := {
 		"btn_quit": "Quit",
 		"btn_settings": "Settings",
 		"game_title": "Leila-chan",
+		"notice_photosensitive":
+		"Notice: Flashing lights appear from stage 3. Mode is available above.",
+		"notice_photosensitive_active":
+		"Photosensitive mode active: flashes replaced with slow dims.",
 		"photosensitive_off": "Off",
 		"photosensitive_on": "On",
 		"subtitle": "A Dating Sim",

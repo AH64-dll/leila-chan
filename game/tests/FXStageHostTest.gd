@@ -280,6 +280,18 @@ func test_text_bleed_uses_the_text_box_rect_and_drains() -> void:
 	assert_bool(_stage_fx.visible).is_false()
 
 
+## SAF-2 (P2.30): text_bleed spares the input box row so player typing is not smeared.
+func test_text_bleed_sets_input_rect_to_spare_input_row() -> void:
+	_char.set_bleed_rect_provider(func() -> Rect2: return Rect2(8, 500, 368, 120))
+	_char.set_input_rect_provider(func() -> Rect2: return Rect2(8, 630, 368, 30))
+	assert_str(_char.play_fx("text_bleed")).is_equal("")
+	var rect: Vector4 = _mat.get_shader_parameter("input_rect")
+	assert_float(rect.x).is_equal_approx(8.0 / 384.0, 0.0001)
+	assert_float(rect.y).is_equal_approx(630.0 / 688.0, 0.0001)
+	assert_float(rect.z).is_equal_approx(376.0 / 384.0, 0.0001)
+	assert_float(rect.w).is_equal_approx(660.0 / 688.0, 0.0001)
+
+
 # --- stage baseline -----------------------------------------------------------
 
 

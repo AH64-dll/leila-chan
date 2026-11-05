@@ -50,6 +50,7 @@ var _meta_note: Label
 @onready var new_game_button: Button = $Margin/VBox/MenuContainer/NewGameButton
 @onready var continue_button: Button = $Margin/VBox/MenuContainer/ContinueButton
 @onready var photosensitive_button: Button = $Margin/VBox/MenuContainer/PhotosensitiveButton
+@onready var photosensitive_notice: Label = $Margin/VBox/MenuContainer/PhotosensitiveNotice
 @onready var settings_button: Button = $Margin/VBox/MenuContainer/SettingsButton
 @onready var extras_button: Button = $Margin/VBox/MenuContainer/ExtrasButton
 @onready var quit_button: Button = $Margin/VBox/MenuContainer/QuitButton
@@ -105,6 +106,12 @@ func _refresh_photosensitive_button() -> void:
 	var state_text := String(_title_cfg.get(state_key, defaults[state_key]))
 	var label := String(_title_cfg.get("btn_photosensitive", defaults["btn_photosensitive"]))
 	photosensitive_button.text = label.format({"state": state_text})
+	if photosensitive_notice != null:
+		var notice_key := (
+			"notice_photosensitive_active" if Settings.photosensitive else "notice_photosensitive"
+		)
+		var notice_fallback: String = defaults.get(notice_key, "")
+		photosensitive_notice.text = String(_title_cfg.get(notice_key, notice_fallback))
 
 
 ## docs/05 §1.1 M06/M07: the title screen is where she gets a body and where

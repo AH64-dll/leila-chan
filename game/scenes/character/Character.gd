@@ -174,6 +174,8 @@ var _bleed := 0.0
 ## Where the dialogue box is, for text_bleed. A callable because the Date scene
 ## owns the UI: the rect must be read at fire time, not at install time.
 var _bleed_rect_provider: Callable = Callable()
+## Where the player's input box is, so text_bleed drips never smear typed input (SAF-2).
+var _input_rect_provider: Callable = Callable()
 
 @onready var _cam: Camera2D = $Camera2D
 @onready var _shadow: Polygon2D = $Shadow
@@ -313,6 +315,11 @@ func apply_stage_fx(profile: Dictionary) -> void:
 ## owns the UI layout, so it supplies a callable that answers in viewport px.
 func set_bleed_rect_provider(provider: Callable) -> void:
 	_bleed_rect_provider = provider
+
+
+## Where the input box sits, so text_bleed spares the input row (SAF-2).
+func set_input_rect_provider(provider: Callable) -> void:
+	_input_rect_provider = provider
 
 
 ## Drops every transient screen effect back to neutral: timelines killed,
@@ -855,6 +862,8 @@ func _fx_glitch() -> void:
 func _fx_text_bleed() -> void:
 	if _bleed_rect_provider.is_valid():
 		_set_bleed_rect(_bleed_rect_provider.call())
+	if _input_rect_provider.is_valid():
+		_set_input_rect(_input_rect_provider.call())
 	_stage_mat.set_shader_parameter("bleed_seed", randf())
 	_stage_fx.visible = true
 	_live_fx["text_bleed"] = true
@@ -872,6 +881,18 @@ func _set_bleed_rect(rect_px: Rect2) -> void:
 	min_uv = min_uv.clamp(Vector2.ZERO, Vector2.ONE)
 	max_uv = max_uv.clamp(Vector2.ZERO, Vector2.ONE)
 	_stage_mat.set_shader_parameter("bleed_rect", Vector4(min_uv.x, min_uv.y, max_uv.x, max_uv.y))
+
+
+## The input row rect that drips must spare; in uv space (SAF-2).
+func _set_input_rect(rect_px: Rect2) -> void:
+	if rect_px.size.x <= 0.0 or rect_px.size.y <= 0.0:
+		_stage_mat.set_shader_parameter("input_rect", Vector4.ZERO)
+		return
+	var min_uv := Vector2(rect_px.position.x / VIEW.x, rect_px.position.y / VIEW.y)
+	var max_uv := Vector2(rect_px.end.x / VIEW.x, rect_px.end.y / VIEW.y)
+	min_uv = min_uv.clamp(Vector2.ZERO, Vector2.ONE)
+	max_uv = max_uv.clamp(Vector2.ZERO, Vector2.ONE)
+	_stage_mat.set_shader_parameter("input_rect", Vector4(min_uv.x, min_uv.y, max_uv.x, max_uv.y))
 
 
 func _set_flicker_level(value: float) -> void:

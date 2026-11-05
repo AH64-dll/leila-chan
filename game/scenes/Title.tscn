@@ -86,6 +86,14 @@ focus_next = NodePath("../SettingsButton")
 focus_previous = NodePath("../ContinueButton")
 text = "Photosensitive mode: Off"
 
+[node name="PhotosensitiveNotice" type="Label" parent="Margin/VBox/MenuContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.7, 0.75, 0.85)
+theme_override_font_sizes/font_size = 10
+text = "Notice: Flashing lights appear from stage 3. Mode is available above."
+horizontal_alignment = 1
+autowrap_mode = 2
+
 [node name="SettingsButton" type="Button" parent="Margin/VBox/MenuContainer"]
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
