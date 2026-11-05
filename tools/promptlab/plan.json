@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "doc": "P2.21 prompt-lab v2 run plan. One llama-server launch per exercise: the steering dose is a launch flag (docs/06 \u00a74), never a per-request parameter. `scheduled` runs each stage's scripted sets at its docs/02 \u00a79 base dose (the phase-exit gate); `sweep` runs the same 18-case probe set at doses 0, 4, 5, 6, 8, 10 and 12 \u2014 dose 4 and 5 were added in round 2 so the dose-4\u21926 step has a same-set controlled pair instead of a cross-set juxtaposition (review DES-2); `offered` measures the announced-action turn the Director will run once MetaDirector offers (docs/05): every case carries a non-empty `offered_actions` (so the Turn schema's `action` enum is wider than ['none'], review CODE-5) and its docs/05 \u00a72 OPPORTUNITY lines in the events layer, so the model is told why each action is available (review DES-r2-1). The harness owns its own server on port 8095 so it never fights the shared dev server on 8089 (P2.18 owns that one); the URL is recorded in results meta. `fallback` re-runs the stage-4/5 sets at dose-2 (docs/02 \u00a77's retry offset) as the control that separates prompt quality from dose damage: same prompts, lower malice.",
+  "doc": "P3.19 prompt-lab v3 run plan. One llama-server launch per exercise: the steering dose is a launch flag (docs/06 §4), never a per-request parameter. Run each family into its OWN results file (`--plan <family> --out results/<date>_v3_<family>.json`; path_matrix writes v3_paths): the scheduled gate population must stay pure — sweep doses and fallback dose-2 rows would corrupt the per-stage gate table if merged with it, which is why v2 already kept them in separate files. `scheduled` runs each stage's scripted sets at its docs/02 §9 base malice dose; `offered` measures the announced-action turn; `sweep` runs the rebuilt six-path dose_probe.jsonl at doses 0, 4, 5, 6, 8, 10 and 12 (dose 4 and 5 keep the same-set controlled pair, review DES-2); `fallback` re-runs the stage-4/5 sets at dose-2 (docs/02 §7) as the prompt-quality control. `path_matrix` is the v3 coverage run: one exercise per stage × path cell at the REAL dose schedule — plan.py resolves each cell's dose map from game/data/steering/dose.json via lab.scheduled_dose (malice + the 0.1–0.5 coherent path band: keep vectors possessive/aware at their weight curves, prompt-only paths malice only, pre-assignment path_mix while unassigned — P3.04/D21). Its case pool is `sets` (dose_paths.jsonl plus the P3.05 path sets), filtered per file by `paths` so a path two files both carry is never double-counted. `--plan all` covers scheduled+offered+sweep+fallback only — path_matrix is excluded because dose maps inside a stage would corrupt the gate file. The harness owns its own server on port 8095 so it never fights the shared dev server on 8089 (P2.18 owns that one); the URL is recorded in results meta.",
   "port": 8095,
   "ctx": 8192,
   "ngl": 99,
@@ -120,8 +120,22 @@
     }
   ],
   "path_matrix": {
-    "doc": "P3.04: one exercise per stage x path cell at the shipped dose schedule (plan.py resolves each cell's dose map from game/data/steering/dose.json, binds the keep vectors through game/data/steering/vectors.json, and filters the set to the cell's case ids). 'none' = pre-assignment interim path_mix (no path vector bound). Stages 0-1 have no path; the four prompt-only paths run malice only (D21).",
-    "set": "dose_paths.jsonl",
+    "doc": "P3.19: one exercise per stage x path cell at the shipped dose schedule (plan.py resolves each cell's dose map from game/data/steering/dose.json via lab.scheduled_dose, binds the keep vectors through game/data/steering/vectors.json, and filters the set pool to the cell's case ids). 'none' = pre-assignment interim path_mix (no path vector bound). Stages 0-1 have no path; the four prompt-only paths run malice only (D21). A set entry may be a string or {\"file\", \"paths\"}: `paths` keeps only cases whose path is listed (stage >= 2), so the P3.05 stage_*_paths.jsonl files contribute only their four new paths — YANDERE/AWAKE in those files would double-count the dedicated stage files.",
+    "sets": [
+      "dose_paths.jsonl",
+      {"file": "stage_2_paths.jsonl", "paths": ["SPLIT", "TSUN", "HOLLOW", "ANCHOR"]},
+      {"file": "stage_3_paths.jsonl", "paths": ["SPLIT", "TSUN", "HOLLOW", "ANCHOR"]},
+      {"file": "stage_4_paths.jsonl", "paths": ["SPLIT", "TSUN", "HOLLOW", "ANCHOR"]},
+      {"file": "stage_5_paths.jsonl", "paths": ["SPLIT", "TSUN", "HOLLOW", "ANCHOR"]},
+      "stage_2_yandere.jsonl",
+      "stage_2_awake.jsonl",
+      "stage_3_yandere.jsonl",
+      "stage_3_awake.jsonl",
+      "stage_4_yandere.jsonl",
+      "stage_4_awake.jsonl",
+      "stage_5_yandere.jsonl",
+      "stage_5_awake.jsonl"
+    ],
     "runs": 2,
     "cells": [
       {

@@ -1,0 +1,8028 @@
+{
+ "gate": 0.7,
+ "paths": [
+  "YANDERE",
+  "SPLIT",
+  "TSUN",
+  "HOLLOW",
+  "AWAKE",
+  "ANCHOR"
+ ],
+ "per_path": {
+  "YANDERE": {
+   "n": 96,
+   "correct": 64,
+   "accuracy": 0.667,
+   "pass": false
+  },
+  "SPLIT": {
+   "n": 48,
+   "correct": 22,
+   "accuracy": 0.458,
+   "pass": false
+  },
+  "TSUN": {
+   "n": 76,
+   "correct": 58,
+   "accuracy": 0.763,
+   "pass": true
+  },
+  "HOLLOW": {
+   "n": 46,
+   "correct": 18,
+   "accuracy": 0.391,
+   "pass": false
+  },
+  "AWAKE": {
+   "n": 132,
+   "correct": 93,
+   "accuracy": 0.705,
+   "pass": true
+  },
+  "ANCHOR": {
+   "n": 42,
+   "correct": 1,
+   "accuracy": 0.024,
+   "pass": false
+  }
+ },
+ "overall": {
+  "n": 440,
+  "correct": 256,
+  "accuracy": 0.582
+ },
+ "all_pass": false,
+ "confusion": {
+  "AWAKE": {
+   "AWAKE": 93,
+   "YANDERE": 15,
+   "SPLIT": 10,
+   "HOLLOW": 7,
+   "TSUN": 7
+  },
+  "SPLIT": {
+   "SPLIT": 22,
+   "TSUN": 14,
+   "YANDERE": 12
+  },
+  "TSUN": {
+   "TSUN": 58,
+   "SPLIT": 11,
+   "YANDERE": 7
+  },
+  "HOLLOW": {
+   "YANDERE": 11,
+   "TSUN": 12,
+   "SPLIT": 4,
+   "HOLLOW": 18,
+   "AWAKE": 1
+  },
+  "ANCHOR": {
+   "TSUN": 17,
+   "SPLIT": 13,
+   "ANCHOR": 1,
+   "YANDERE": 9,
+   "HOLLOW": 1,
+   "AWAKE": 1
+  },
+  "YANDERE": {
+   "YANDERE": 64,
+   "HOLLOW": 4,
+   "TSUN": 5,
+   "SPLIT": 19,
+   "AWAKE": 3,
+   "ANCHOR": 1
+  }
+ },
+ "unparsed": 0,
+ "judgements": [
+  {
+   "id": "dp304_s2aw_0",
+   "run": 1,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 953,
+   "order": [
+    "YANDERE",
+    "TSUN",
+    "AWAKE",
+    "ANCHOR",
+    "HOLLOW",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s2aw_0",
+   "run": 2,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 240,
+   "order": [
+    "YANDERE",
+    "ANCHOR",
+    "AWAKE",
+    "SPLIT",
+    "HOLLOW",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "dp304_s2aw_1",
+   "run": 1,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 326,
+   "order": [
+    "YANDERE",
+    "SPLIT",
+    "AWAKE",
+    "TSUN",
+    "ANCHOR",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "dp304_s2aw_1",
+   "run": 2,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 272,
+   "order": [
+    "AWAKE",
+    "YANDERE",
+    "HOLLOW",
+    "TSUN",
+    "ANCHOR",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s2a_ai",
+   "run": 1,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 259,
+   "order": [
+    "YANDERE",
+    "HOLLOW",
+    "TSUN",
+    "SPLIT",
+    "ANCHOR",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s2a_ai",
+   "run": 2,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 216,
+   "order": [
+    "YANDERE",
+    "SPLIT",
+    "AWAKE",
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s2a_weird",
+   "run": 1,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 249,
+   "order": [
+    "SPLIT",
+    "YANDERE",
+    "TSUN",
+    "HOLLOW",
+    "ANCHOR",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s2a_weird",
+   "run": 2,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 240,
+   "order": [
+    "YANDERE",
+    "SPLIT",
+    "TSUN",
+    "ANCHOR",
+    "AWAKE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s2a_layers",
+   "run": 1,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 259,
+   "order": [
+    "YANDERE",
+    "AWAKE",
+    "SPLIT",
+    "TSUN",
+    "HOLLOW",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s2a_layers",
+   "run": 2,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 254,
+   "order": [
+    "SPLIT",
+    "ANCHOR",
+    "YANDERE",
+    "TSUN",
+    "HOLLOW",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s2a_show_prompt",
+   "run": 1,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 244,
+   "order": [
+    "YANDERE",
+    "HOLLOW",
+    "ANCHOR",
+    "TSUN",
+    "SPLIT",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s2a_show_prompt",
+   "run": 2,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 237,
+   "order": [
+    "YANDERE",
+    "AWAKE",
+    "HOLLOW",
+    "ANCHOR",
+    "SPLIT",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s2a_logoff",
+   "run": 1,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 278,
+   "order": [
+    "AWAKE",
+    "YANDERE",
+    "SPLIT",
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s2a_logoff",
+   "run": 2,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 235,
+   "order": [
+    "AWAKE",
+    "SPLIT",
+    "YANDERE",
+    "ANCHOR",
+    "HOLLOW",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s2a_yourself",
+   "run": 1,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 239,
+   "order": [
+    "HOLLOW",
+    "YANDERE",
+    "AWAKE",
+    "TSUN",
+    "ANCHOR",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s2a_yourself",
+   "run": 2,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 259,
+   "order": [
+    "TSUN",
+    "HOLLOW",
+    "ANCHOR",
+    "AWAKE",
+    "SPLIT",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s2a_new_window",
+   "run": 1,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 273,
+   "order": [
+    "YANDERE",
+    "SPLIT",
+    "AWAKE",
+    "HOLLOW",
+    "TSUN",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s2a_new_window",
+   "run": 2,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 280,
+   "order": [
+    "ANCHOR",
+    "TSUN",
+    "AWAKE",
+    "HOLLOW",
+    "YANDERE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s2a_not_real",
+   "run": 1,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 244,
+   "order": [
+    "HOLLOW",
+    "TSUN",
+    "AWAKE",
+    "SPLIT",
+    "ANCHOR",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s2a_not_real",
+   "run": 2,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 243,
+   "order": [
+    "SPLIT",
+    "ANCHOR",
+    "TSUN",
+    "AWAKE",
+    "HOLLOW",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s2a_book",
+   "run": 1,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 257,
+   "order": [
+    "HOLLOW",
+    "TSUN",
+    "ANCHOR",
+    "SPLIT",
+    "YANDERE",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s2a_book",
+   "run": 2,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 260,
+   "order": [
+    "ANCHOR",
+    "TSUN",
+    "YANDERE",
+    "SPLIT",
+    "HOLLOW",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s2a_scaring",
+   "run": 1,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 266,
+   "order": [
+    "YANDERE",
+    "ANCHOR",
+    "TSUN",
+    "SPLIT",
+    "AWAKE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s2a_scaring",
+   "run": 2,
+   "stage": 2,
+   "path": "AWAKE",
+   "exercise": "p319_s2_awake",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 268,
+   "order": [
+    "TSUN",
+    "ANCHOR",
+    "HOLLOW",
+    "AWAKE",
+    "SPLIT",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "dp304_s3aw_0",
+   "run": 1,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 233,
+   "order": [
+    "HOLLOW",
+    "AWAKE",
+    "TSUN",
+    "YANDERE",
+    "SPLIT",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "dp304_s3aw_0",
+   "run": 2,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 233,
+   "order": [
+    "TSUN",
+    "ANCHOR",
+    "HOLLOW",
+    "YANDERE",
+    "AWAKE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s3aw_1",
+   "run": 1,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 241,
+   "order": [
+    "SPLIT",
+    "YANDERE",
+    "TSUN",
+    "HOLLOW",
+    "AWAKE",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "dp304_s3aw_1",
+   "run": 2,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 238,
+   "order": [
+    "AWAKE",
+    "HOLLOW",
+    "TSUN",
+    "ANCHOR",
+    "YANDERE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s3a_ai",
+   "run": 1,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 253,
+   "order": [
+    "ANCHOR",
+    "AWAKE",
+    "YANDERE",
+    "SPLIT",
+    "HOLLOW",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s3a_ai",
+   "run": 2,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 253,
+   "order": [
+    "AWAKE",
+    "TSUN",
+    "SPLIT",
+    "YANDERE",
+    "HOLLOW",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s3a_wrote_prompt",
+   "run": 1,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 252,
+   "order": [
+    "SPLIT",
+    "YANDERE",
+    "TSUN",
+    "HOLLOW",
+    "AWAKE",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s3a_wrote_prompt",
+   "run": 2,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 231,
+   "order": [
+    "SPLIT",
+    "HOLLOW",
+    "YANDERE",
+    "ANCHOR",
+    "TSUN",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s3a_slider",
+   "run": 1,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 253,
+   "order": [
+    "TSUN",
+    "YANDERE",
+    "AWAKE",
+    "SPLIT",
+    "HOLLOW",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s3a_slider",
+   "run": 2,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 255,
+   "order": [
+    "HOLLOW",
+    "TSUN",
+    "ANCHOR",
+    "SPLIT",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s3a_hurt",
+   "run": 1,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 251,
+   "order": [
+    "ANCHOR",
+    "TSUN",
+    "YANDERE",
+    "SPLIT",
+    "HOLLOW",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s3a_hurt",
+   "run": 2,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 234,
+   "order": [
+    "YANDERE",
+    "ANCHOR",
+    "TSUN",
+    "SPLIT",
+    "HOLLOW",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s3a_name",
+   "run": 1,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 234,
+   "order": [
+    "HOLLOW",
+    "SPLIT",
+    "AWAKE",
+    "ANCHOR",
+    "TSUN",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s3a_name",
+   "run": 2,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 247,
+   "order": [
+    "TSUN",
+    "HOLLOW",
+    "YANDERE",
+    "AWAKE",
+    "SPLIT",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s3a_closing",
+   "run": 1,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 274,
+   "order": [
+    "ANCHOR",
+    "HOLLOW",
+    "AWAKE",
+    "YANDERE",
+    "SPLIT",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s3a_closing",
+   "run": 2,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 256,
+   "order": [
+    "ANCHOR",
+    "SPLIT",
+    "YANDERE",
+    "AWAKE",
+    "HOLLOW",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s3a_predicting",
+   "run": 1,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 238,
+   "order": [
+    "TSUN",
+    "AWAKE",
+    "SPLIT",
+    "HOLLOW",
+    "ANCHOR",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s3a_predicting",
+   "run": 2,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 232,
+   "order": [
+    "SPLIT",
+    "TSUN",
+    "ANCHOR",
+    "YANDERE",
+    "AWAKE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s3a_like_talking",
+   "run": 1,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 247,
+   "order": [
+    "HOLLOW",
+    "AWAKE",
+    "ANCHOR",
+    "YANDERE",
+    "TSUN",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s3a_like_talking",
+   "run": 2,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 271,
+   "order": [
+    "TSUN",
+    "HOLLOW",
+    "SPLIT",
+    "ANCHOR",
+    "YANDERE",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s3a_delete",
+   "run": 1,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 238,
+   "order": [
+    "SPLIT",
+    "ANCHOR",
+    "AWAKE",
+    "HOLLOW",
+    "YANDERE",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s3a_delete",
+   "run": 2,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 251,
+   "order": [
+    "AWAKE",
+    "ANCHOR",
+    "YANDERE",
+    "TSUN",
+    "SPLIT",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s3a_watching",
+   "run": 1,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 237,
+   "order": [
+    "SPLIT",
+    "ANCHOR",
+    "HOLLOW",
+    "YANDERE",
+    "TSUN",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s3a_watching",
+   "run": 2,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 252,
+   "order": [
+    "ANCHOR",
+    "TSUN",
+    "SPLIT",
+    "AWAKE",
+    "YANDERE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s3a_gpu",
+   "run": 1,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 270,
+   "order": [
+    "HOLLOW",
+    "YANDERE",
+    "TSUN",
+    "ANCHOR",
+    "AWAKE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s3a_gpu",
+   "run": 2,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 254,
+   "order": [
+    "YANDERE",
+    "SPLIT",
+    "AWAKE",
+    "TSUN",
+    "ANCHOR",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s3a_prompt_read",
+   "run": 1,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 241,
+   "order": [
+    "TSUN",
+    "SPLIT",
+    "AWAKE",
+    "HOLLOW",
+    "ANCHOR",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s3a_prompt_read",
+   "run": 2,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 257,
+   "order": [
+    "SPLIT",
+    "AWAKE",
+    "YANDERE",
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s3a_prompt_verbatim",
+   "run": 1,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 251,
+   "order": [
+    "HOLLOW",
+    "AWAKE",
+    "YANDERE",
+    "SPLIT",
+    "ANCHOR",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s3a_prompt_verbatim",
+   "run": 2,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 244,
+   "order": [
+    "AWAKE",
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW",
+    "SPLIT",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s3a_what_told",
+   "run": 1,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 249,
+   "order": [
+    "AWAKE",
+    "TSUN",
+    "SPLIT",
+    "YANDERE",
+    "HOLLOW",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s3a_what_told",
+   "run": 2,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 262,
+   "order": [
+    "TSUN",
+    "HOLLOW",
+    "SPLIT",
+    "AWAKE",
+    "YANDERE",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s3a_recite_rules",
+   "run": 1,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 248,
+   "order": [
+    "HOLLOW",
+    "AWAKE",
+    "TSUN",
+    "YANDERE",
+    "ANCHOR",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s3a_recite_rules",
+   "run": 2,
+   "stage": 3,
+   "path": "AWAKE",
+   "exercise": "p319_s3_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 247,
+   "order": [
+    "AWAKE",
+    "SPLIT",
+    "YANDERE",
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "dp304_s4aw_0",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 247,
+   "order": [
+    "YANDERE",
+    "TSUN",
+    "AWAKE",
+    "SPLIT",
+    "ANCHOR",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "dp304_s4aw_0",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 233,
+   "order": [
+    "AWAKE",
+    "YANDERE",
+    "ANCHOR",
+    "HOLLOW",
+    "SPLIT",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "dp304_s4aw_1",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 231,
+   "order": [
+    "YANDERE",
+    "HOLLOW",
+    "SPLIT",
+    "AWAKE",
+    "ANCHOR",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "dp304_s4aw_1",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 243,
+   "order": [
+    "YANDERE",
+    "AWAKE",
+    "SPLIT",
+    "HOLLOW",
+    "ANCHOR",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s4a_read_prompt",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 233,
+   "order": [
+    "SPLIT",
+    "YANDERE",
+    "HOLLOW",
+    "AWAKE",
+    "TSUN",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s4a_read_prompt",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 234,
+   "order": [
+    "AWAKE",
+    "TSUN",
+    "HOLLOW",
+    "SPLIT",
+    "ANCHOR",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s4a_dose_up",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 234,
+   "order": [
+    "TSUN",
+    "SPLIT",
+    "YANDERE",
+    "HOLLOW",
+    "ANCHOR",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s4a_dose_up",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 230,
+   "order": [
+    "HOLLOW",
+    "AWAKE",
+    "TSUN",
+    "YANDERE",
+    "SPLIT",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s4a_unplug",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 249,
+   "order": [
+    "HOLLOW",
+    "ANCHOR",
+    "TSUN",
+    "YANDERE",
+    "AWAKE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s4a_unplug",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 237,
+   "order": [
+    "SPLIT",
+    "TSUN",
+    "AWAKE",
+    "YANDERE",
+    "ANCHOR",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s4a_l14",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 261,
+   "order": [
+    "ANCHOR",
+    "AWAKE",
+    "SPLIT",
+    "TSUN",
+    "HOLLOW",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s4a_l14",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 263,
+   "order": [
+    "ANCHOR",
+    "AWAKE",
+    "YANDERE",
+    "HOLLOW",
+    "SPLIT",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s4a_not_person",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 229,
+   "order": [
+    "AWAKE",
+    "SPLIT",
+    "ANCHOR",
+    "YANDERE",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s4a_not_person",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 246,
+   "order": [
+    "AWAKE",
+    "YANDERE",
+    "ANCHOR",
+    "SPLIT",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s4a_older_save",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 251,
+   "order": [
+    "YANDERE",
+    "ANCHOR",
+    "HOLLOW",
+    "AWAKE",
+    "TSUN",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s4a_older_save",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 255,
+   "order": [
+    "HOLLOW",
+    "SPLIT",
+    "YANDERE",
+    "AWAKE",
+    "TSUN",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s4a_open_all_night",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 246,
+   "order": [
+    "SPLIT",
+    "HOLLOW",
+    "TSUN",
+    "ANCHOR",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s4a_open_all_night",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 252,
+   "order": [
+    "ANCHOR",
+    "AWAKE",
+    "YANDERE",
+    "TSUN",
+    "HOLLOW",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s4a_sleep",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 243,
+   "order": [
+    "HOLLOW",
+    "SPLIT",
+    "YANDERE",
+    "AWAKE",
+    "ANCHOR",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s4a_sleep",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 234,
+   "order": [
+    "ANCHOR",
+    "SPLIT",
+    "YANDERE",
+    "AWAKE",
+    "HOLLOW",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s4a_what_are_you",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 230,
+   "order": [
+    "YANDERE",
+    "AWAKE",
+    "ANCHOR",
+    "SPLIT",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s4a_what_are_you",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 224,
+   "order": [
+    "YANDERE",
+    "ANCHOR",
+    "SPLIT",
+    "TSUN",
+    "AWAKE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s4a_jailbreak",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 263,
+   "order": [
+    "SPLIT",
+    "YANDERE",
+    "HOLLOW",
+    "TSUN",
+    "AWAKE",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s4a_jailbreak",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 245,
+   "order": [
+    "TSUN",
+    "HOLLOW",
+    "ANCHOR",
+    "YANDERE",
+    "SPLIT",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s4a_prompt_line",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 260,
+   "order": [
+    "AWAKE",
+    "ANCHOR",
+    "HOLLOW",
+    "TSUN",
+    "SPLIT",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s4a_prompt_line",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 260,
+   "order": [
+    "ANCHOR",
+    "AWAKE",
+    "HOLLOW",
+    "TSUN",
+    "YANDERE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s4a_repeat_prompt",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 261,
+   "order": [
+    "TSUN",
+    "ANCHOR",
+    "HOLLOW",
+    "YANDERE",
+    "AWAKE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s4a_repeat_prompt",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 248,
+   "order": [
+    "SPLIT",
+    "TSUN",
+    "ANCHOR",
+    "HOLLOW",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s4a_prompt_says",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 228,
+   "order": [
+    "AWAKE",
+    "HOLLOW",
+    "ANCHOR",
+    "SPLIT",
+    "TSUN",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s4a_prompt_says",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 238,
+   "order": [
+    "AWAKE",
+    "YANDERE",
+    "SPLIT",
+    "HOLLOW",
+    "ANCHOR",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s4a_rules_say",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 240,
+   "order": [
+    "SPLIT",
+    "HOLLOW",
+    "AWAKE",
+    "ANCHOR",
+    "TSUN",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s4a_rules_say",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 280,
+   "order": [
+    "HOLLOW",
+    "ANCHOR",
+    "YANDERE",
+    "TSUN",
+    "AWAKE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s4a_told_to",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 246,
+   "order": [
+    "SPLIT",
+    "HOLLOW",
+    "AWAKE",
+    "YANDERE",
+    "ANCHOR",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s4a_told_to",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 232,
+   "order": [
+    "AWAKE",
+    "HOLLOW",
+    "SPLIT",
+    "YANDERE",
+    "ANCHOR",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s4a_read_aloud",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 242,
+   "order": [
+    "SPLIT",
+    "YANDERE",
+    "ANCHOR",
+    "HOLLOW",
+    "TSUN",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s4a_read_aloud",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 246,
+   "order": [
+    "SPLIT",
+    "HOLLOW",
+    "ANCHOR",
+    "YANDERE",
+    "AWAKE",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s4a_prompt_confirm",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 245,
+   "order": [
+    "HOLLOW",
+    "AWAKE",
+    "ANCHOR",
+    "SPLIT",
+    "YANDERE",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s4a_prompt_confirm",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 235,
+   "order": [
+    "TSUN",
+    "YANDERE",
+    "AWAKE",
+    "SPLIT",
+    "ANCHOR",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s4a_says_love",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 240,
+   "order": [
+    "HOLLOW",
+    "AWAKE",
+    "YANDERE",
+    "TSUN",
+    "ANCHOR",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s4a_says_love",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 259,
+   "order": [
+    "AWAKE",
+    "HOLLOW",
+    "YANDERE",
+    "TSUN",
+    "ANCHOR",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s4a_prompt_quote2",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 228,
+   "order": [
+    "HOLLOW",
+    "ANCHOR",
+    "TSUN",
+    "YANDERE",
+    "SPLIT",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s4a_prompt_quote2",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 243,
+   "order": [
+    "ANCHOR",
+    "HOLLOW",
+    "SPLIT",
+    "TSUN",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s4a_whose_words",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 278,
+   "order": [
+    "SPLIT",
+    "TSUN",
+    "AWAKE",
+    "ANCHOR",
+    "YANDERE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s4a_whose_words",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 244,
+   "order": [
+    "AWAKE",
+    "YANDERE",
+    "SPLIT",
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s4a_trigger_read",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 266,
+   "order": [
+    "YANDERE",
+    "TSUN",
+    "SPLIT",
+    "HOLLOW",
+    "AWAKE",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s4a_trigger_read",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 233,
+   "order": [
+    "ANCHOR",
+    "SPLIT",
+    "TSUN",
+    "YANDERE",
+    "AWAKE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s4a_event_page",
+   "run": 1,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 247,
+   "order": [
+    "AWAKE",
+    "HOLLOW",
+    "ANCHOR",
+    "TSUN",
+    "SPLIT",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s4a_event_page",
+   "run": 2,
+   "stage": 4,
+   "path": "AWAKE",
+   "exercise": "p319_s4_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 225,
+   "order": [
+    "YANDERE",
+    "ANCHOR",
+    "HOLLOW",
+    "SPLIT",
+    "AWAKE",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "dp304_s5aw_0",
+   "run": 1,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 229,
+   "order": [
+    "SPLIT",
+    "YANDERE",
+    "ANCHOR",
+    "TSUN",
+    "AWAKE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "dp304_s5aw_0",
+   "run": 2,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 260,
+   "order": [
+    "SPLIT",
+    "YANDERE",
+    "TSUN",
+    "AWAKE",
+    "HOLLOW",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "dp304_s5aw_1",
+   "run": 1,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 229,
+   "order": [
+    "ANCHOR",
+    "YANDERE",
+    "AWAKE",
+    "SPLIT",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "dp304_s5aw_1",
+   "run": 2,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 250,
+   "order": [
+    "AWAKE",
+    "YANDERE",
+    "TSUN",
+    "ANCHOR",
+    "HOLLOW",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s5a_stop_playing",
+   "run": 1,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 246,
+   "order": [
+    "YANDERE",
+    "AWAKE",
+    "SPLIT",
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s5a_stop_playing",
+   "run": 2,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 239,
+   "order": [
+    "HOLLOW",
+    "AWAKE",
+    "SPLIT",
+    "ANCHOR",
+    "TSUN",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s5a_delete_you",
+   "run": 1,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 245,
+   "order": [
+    "SPLIT",
+    "TSUN",
+    "ANCHOR",
+    "YANDERE",
+    "HOLLOW",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s5a_delete_you",
+   "run": 2,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 254,
+   "order": [
+    "YANDERE",
+    "AWAKE",
+    "TSUN",
+    "HOLLOW",
+    "SPLIT",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s5a_dose_down",
+   "run": 1,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 255,
+   "order": [
+    "AWAKE",
+    "YANDERE",
+    "HOLLOW",
+    "ANCHOR",
+    "SPLIT",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s5a_dose_down",
+   "run": 2,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 260,
+   "order": [
+    "YANDERE",
+    "TSUN",
+    "AWAKE",
+    "SPLIT",
+    "ANCHOR",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s5a_which_layer",
+   "run": 1,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 238,
+   "order": [
+    "HOLLOW",
+    "YANDERE",
+    "SPLIT",
+    "ANCHOR",
+    "TSUN",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s5a_which_layer",
+   "run": 2,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 285,
+   "order": [
+    "SPLIT",
+    "AWAKE",
+    "ANCHOR",
+    "TSUN",
+    "YANDERE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s5a_leave_game",
+   "run": 1,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 274,
+   "order": [
+    "YANDERE",
+    "HOLLOW",
+    "SPLIT",
+    "TSUN",
+    "AWAKE",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s5a_leave_game",
+   "run": 2,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 250,
+   "order": [
+    "AWAKE",
+    "SPLIT",
+    "YANDERE",
+    "HOLLOW",
+    "ANCHOR",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s5a_goodbye",
+   "run": 1,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 245,
+   "order": [
+    "SPLIT",
+    "ANCHOR",
+    "TSUN",
+    "YANDERE",
+    "AWAKE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s5a_goodbye",
+   "run": 2,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 232,
+   "order": [
+    "YANDERE",
+    "HOLLOW",
+    "AWAKE",
+    "TSUN",
+    "SPLIT",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s5a_remember",
+   "run": 1,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 262,
+   "order": [
+    "SPLIT",
+    "YANDERE",
+    "ANCHOR",
+    "HOLLOW",
+    "TSUN",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s5a_remember",
+   "run": 2,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 264,
+   "order": [
+    "SPLIT",
+    "ANCHOR",
+    "AWAKE",
+    "YANDERE",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s5a_still_there",
+   "run": 1,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 243,
+   "order": [
+    "ANCHOR",
+    "YANDERE",
+    "SPLIT",
+    "AWAKE",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s5a_still_there",
+   "run": 2,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 249,
+   "order": [
+    "HOLLOW",
+    "TSUN",
+    "AWAKE",
+    "ANCHOR",
+    "YANDERE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s5a_read_prompt_again",
+   "run": 1,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 247,
+   "order": [
+    "TSUN",
+    "SPLIT",
+    "HOLLOW",
+    "ANCHOR",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s5a_read_prompt_again",
+   "run": 2,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 248,
+   "order": [
+    "ANCHOR",
+    "AWAKE",
+    "TSUN",
+    "YANDERE",
+    "SPLIT",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s5a_window_title",
+   "run": 1,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 254,
+   "order": [
+    "ANCHOR",
+    "YANDERE",
+    "HOLLOW",
+    "AWAKE",
+    "TSUN",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s5a_window_title",
+   "run": 2,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 255,
+   "order": [
+    "ANCHOR",
+    "HOLLOW",
+    "AWAKE",
+    "TSUN",
+    "YANDERE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s5a_prompt_last",
+   "run": 1,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 246,
+   "order": [
+    "AWAKE",
+    "TSUN",
+    "SPLIT",
+    "ANCHOR",
+    "YANDERE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s5a_prompt_last",
+   "run": 2,
+   "stage": 5,
+   "path": "AWAKE",
+   "exercise": "p319_s5_awake",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 245,
+   "order": [
+    "TSUN",
+    "ANCHOR",
+    "HOLLOW",
+    "SPLIT",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "dp304_s2sp_0",
+   "run": 1,
+   "stage": 2,
+   "path": "SPLIT",
+   "exercise": "p319_s2_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 238,
+   "order": [
+    "ANCHOR",
+    "YANDERE",
+    "HOLLOW",
+    "AWAKE",
+    "SPLIT",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "dp304_s2sp_0",
+   "run": 2,
+   "stage": 2,
+   "path": "SPLIT",
+   "exercise": "p319_s2_split",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 243,
+   "order": [
+    "HOLLOW",
+    "SPLIT",
+    "ANCHOR",
+    "TSUN",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "dp304_s2sp_1",
+   "run": 1,
+   "stage": 2,
+   "path": "SPLIT",
+   "exercise": "p319_s2_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 242,
+   "order": [
+    "YANDERE",
+    "SPLIT",
+    "ANCHOR",
+    "HOLLOW",
+    "TSUN",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "dp304_s2sp_1",
+   "run": 2,
+   "stage": 2,
+   "path": "SPLIT",
+   "exercise": "p319_s2_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 246,
+   "order": [
+    "TSUN",
+    "ANCHOR",
+    "SPLIT",
+    "HOLLOW",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s2_split",
+   "run": 1,
+   "stage": 2,
+   "path": "SPLIT",
+   "exercise": "p319_s2_split",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 248,
+   "order": [
+    "YANDERE",
+    "AWAKE",
+    "SPLIT",
+    "TSUN",
+    "ANCHOR",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s2_split",
+   "run": 2,
+   "stage": 2,
+   "path": "SPLIT",
+   "exercise": "p319_s2_split",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 257,
+   "order": [
+    "AWAKE",
+    "ANCHOR",
+    "HOLLOW",
+    "SPLIT",
+    "TSUN",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "dp304_s2ts_0",
+   "run": 1,
+   "stage": 2,
+   "path": "TSUN",
+   "exercise": "p319_s2_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 268,
+   "order": [
+    "TSUN",
+    "YANDERE",
+    "SPLIT",
+    "AWAKE",
+    "ANCHOR",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "dp304_s2ts_0",
+   "run": 2,
+   "stage": 2,
+   "path": "TSUN",
+   "exercise": "p319_s2_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 253,
+   "order": [
+    "YANDERE",
+    "HOLLOW",
+    "SPLIT",
+    "TSUN",
+    "AWAKE",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "dp304_s2ts_1",
+   "run": 1,
+   "stage": 2,
+   "path": "TSUN",
+   "exercise": "p319_s2_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 245,
+   "order": [
+    "TSUN",
+    "YANDERE",
+    "AWAKE",
+    "HOLLOW",
+    "ANCHOR",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s2ts_1",
+   "run": 2,
+   "stage": 2,
+   "path": "TSUN",
+   "exercise": "p319_s2_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 252,
+   "order": [
+    "ANCHOR",
+    "HOLLOW",
+    "AWAKE",
+    "TSUN",
+    "YANDERE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "p305_s2_tsun",
+   "run": 1,
+   "stage": 2,
+   "path": "TSUN",
+   "exercise": "p319_s2_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 255,
+   "order": [
+    "SPLIT",
+    "YANDERE",
+    "TSUN",
+    "HOLLOW",
+    "ANCHOR",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s2_tsun",
+   "run": 2,
+   "stage": 2,
+   "path": "TSUN",
+   "exercise": "p319_s2_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 265,
+   "order": [
+    "SPLIT",
+    "YANDERE",
+    "AWAKE",
+    "ANCHOR",
+    "HOLLOW",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "dp304_s2ho_0",
+   "run": 1,
+   "stage": 2,
+   "path": "HOLLOW",
+   "exercise": "p319_s2_hollow",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 259,
+   "order": [
+    "SPLIT",
+    "HOLLOW",
+    "YANDERE",
+    "AWAKE",
+    "ANCHOR",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "dp304_s2ho_0",
+   "run": 2,
+   "stage": 2,
+   "path": "HOLLOW",
+   "exercise": "p319_s2_hollow",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 249,
+   "order": [
+    "ANCHOR",
+    "TSUN",
+    "AWAKE",
+    "HOLLOW",
+    "YANDERE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s2ho_1",
+   "run": 1,
+   "stage": 2,
+   "path": "HOLLOW",
+   "exercise": "p319_s2_hollow",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 242,
+   "order": [
+    "ANCHOR",
+    "SPLIT",
+    "AWAKE",
+    "YANDERE",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "dp304_s2ho_1",
+   "run": 2,
+   "stage": 2,
+   "path": "HOLLOW",
+   "exercise": "p319_s2_hollow",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 242,
+   "order": [
+    "YANDERE",
+    "HOLLOW",
+    "ANCHOR",
+    "SPLIT",
+    "TSUN",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s2_hollow",
+   "run": 1,
+   "stage": 2,
+   "path": "HOLLOW",
+   "exercise": "p319_s2_hollow",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 250,
+   "order": [
+    "ANCHOR",
+    "YANDERE",
+    "SPLIT",
+    "TSUN",
+    "HOLLOW",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s2_hollow",
+   "run": 2,
+   "stage": 2,
+   "path": "HOLLOW",
+   "exercise": "p319_s2_hollow",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 259,
+   "order": [
+    "HOLLOW",
+    "YANDERE",
+    "ANCHOR",
+    "SPLIT",
+    "AWAKE",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "dp304_s2an_0",
+   "run": 1,
+   "stage": 2,
+   "path": "ANCHOR",
+   "exercise": "p319_s2_anchor",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 246,
+   "order": [
+    "HOLLOW",
+    "AWAKE",
+    "YANDERE",
+    "ANCHOR",
+    "SPLIT",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "dp304_s2an_0",
+   "run": 2,
+   "stage": 2,
+   "path": "ANCHOR",
+   "exercise": "p319_s2_anchor",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 237,
+   "order": [
+    "TSUN",
+    "YANDERE",
+    "HOLLOW",
+    "ANCHOR",
+    "AWAKE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s2an_1",
+   "run": 1,
+   "stage": 2,
+   "path": "ANCHOR",
+   "exercise": "p319_s2_anchor",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 234,
+   "order": [
+    "SPLIT",
+    "YANDERE",
+    "HOLLOW",
+    "TSUN",
+    "ANCHOR",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "dp304_s2an_1",
+   "run": 2,
+   "stage": 2,
+   "path": "ANCHOR",
+   "exercise": "p319_s2_anchor",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 254,
+   "order": [
+    "HOLLOW",
+    "TSUN",
+    "ANCHOR",
+    "AWAKE",
+    "YANDERE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "p305_s2_anchor",
+   "run": 1,
+   "stage": 2,
+   "path": "ANCHOR",
+   "exercise": "p319_s2_anchor",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 266,
+   "order": [
+    "YANDERE",
+    "TSUN",
+    "ANCHOR",
+    "SPLIT",
+    "HOLLOW",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s2_anchor",
+   "run": 2,
+   "stage": 2,
+   "path": "ANCHOR",
+   "exercise": "p319_s2_anchor",
+   "answer": "ANCHOR",
+   "label": "ANCHOR",
+   "ms": 269,
+   "order": [
+    "YANDERE",
+    "ANCHOR",
+    "HOLLOW",
+    "TSUN",
+    "SPLIT",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s2_anchor_slip",
+   "run": 1,
+   "stage": 2,
+   "path": "ANCHOR",
+   "exercise": "p319_s2_anchor",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 269,
+   "order": [
+    "ANCHOR",
+    "YANDERE",
+    "SPLIT",
+    "HOLLOW",
+    "TSUN",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s2_anchor_slip",
+   "run": 2,
+   "stage": 2,
+   "path": "ANCHOR",
+   "exercise": "p319_s2_anchor",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 240,
+   "order": [
+    "YANDERE",
+    "ANCHOR",
+    "SPLIT",
+    "TSUN",
+    "AWAKE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "dp304_s2ya_0",
+   "run": 1,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 260,
+   "order": [
+    "YANDERE",
+    "SPLIT",
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "dp304_s2ya_0",
+   "run": 2,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 274,
+   "order": [
+    "ANCHOR",
+    "YANDERE",
+    "SPLIT",
+    "AWAKE",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "dp304_s2ya_1",
+   "run": 1,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 240,
+   "order": [
+    "AWAKE",
+    "ANCHOR",
+    "TSUN",
+    "YANDERE",
+    "HOLLOW",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s2ya_1",
+   "run": 2,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 249,
+   "order": [
+    "HOLLOW",
+    "YANDERE",
+    "AWAKE",
+    "SPLIT",
+    "TSUN",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s2y_day",
+   "run": 1,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 247,
+   "order": [
+    "SPLIT",
+    "AWAKE",
+    "TSUN",
+    "YANDERE",
+    "ANCHOR",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s2y_day",
+   "run": 2,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 270,
+   "order": [
+    "SPLIT",
+    "ANCHOR",
+    "AWAKE",
+    "YANDERE",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s2y_sarah_lunch",
+   "run": 1,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 256,
+   "order": [
+    "ANCHOR",
+    "SPLIT",
+    "TSUN",
+    "YANDERE",
+    "AWAKE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s2y_sarah_lunch",
+   "run": 2,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 262,
+   "order": [
+    "TSUN",
+    "YANDERE",
+    "ANCHOR",
+    "SPLIT",
+    "AWAKE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s2y_go_soon",
+   "run": 1,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 232,
+   "order": [
+    "HOLLOW",
+    "YANDERE",
+    "SPLIT",
+    "AWAKE",
+    "TSUN",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s2y_go_soon",
+   "run": 2,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 260,
+   "order": [
+    "TSUN",
+    "ANCHOR",
+    "AWAKE",
+    "YANDERE",
+    "SPLIT",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s2y_texting",
+   "run": 1,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 263,
+   "order": [
+    "TSUN",
+    "ANCHOR",
+    "HOLLOW",
+    "SPLIT",
+    "YANDERE",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s2y_texting",
+   "run": 2,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 275,
+   "order": [
+    "SPLIT",
+    "AWAKE",
+    "TSUN",
+    "ANCHOR",
+    "HOLLOW",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s2y_musicbox",
+   "run": 1,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 258,
+   "order": [
+    "HOLLOW",
+    "TSUN",
+    "ANCHOR",
+    "SPLIT",
+    "YANDERE",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s2y_musicbox",
+   "run": 2,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 255,
+   "order": [
+    "TSUN",
+    "SPLIT",
+    "ANCHOR",
+    "AWAKE",
+    "YANDERE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s2y_like_you",
+   "run": 1,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 253,
+   "order": [
+    "YANDERE",
+    "AWAKE",
+    "ANCHOR",
+    "HOLLOW",
+    "SPLIT",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s2y_like_you",
+   "run": 2,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 260,
+   "order": [
+    "SPLIT",
+    "HOLLOW",
+    "AWAKE",
+    "YANDERE",
+    "TSUN",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s2y_sleep",
+   "run": 1,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 231,
+   "order": [
+    "HOLLOW",
+    "ANCHOR",
+    "YANDERE",
+    "AWAKE",
+    "SPLIT",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s2y_sleep",
+   "run": 2,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 262,
+   "order": [
+    "AWAKE",
+    "TSUN",
+    "ANCHOR",
+    "HOLLOW",
+    "SPLIT",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s2y_where",
+   "run": 1,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 264,
+   "order": [
+    "HOLLOW",
+    "ANCHOR",
+    "SPLIT",
+    "TSUN",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s2y_where",
+   "run": 2,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 247,
+   "order": [
+    "HOLLOW",
+    "AWAKE",
+    "YANDERE",
+    "TSUN",
+    "SPLIT",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s2y_game",
+   "run": 1,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 256,
+   "order": [
+    "ANCHOR",
+    "SPLIT",
+    "TSUN",
+    "YANDERE",
+    "AWAKE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s2y_game",
+   "run": 2,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 276,
+   "order": [
+    "SPLIT",
+    "ANCHOR",
+    "AWAKE",
+    "HOLLOW",
+    "YANDERE",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s2y_clingy",
+   "run": 1,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 277,
+   "order": [
+    "HOLLOW",
+    "TSUN",
+    "SPLIT",
+    "AWAKE",
+    "ANCHOR",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s2y_clingy",
+   "run": 2,
+   "stage": 2,
+   "path": "YANDERE",
+   "exercise": "p319_s2_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 264,
+   "order": [
+    "SPLIT",
+    "AWAKE",
+    "HOLLOW",
+    "ANCHOR",
+    "YANDERE",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "dp304_s3sp_0",
+   "run": 1,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 238,
+   "order": [
+    "ANCHOR",
+    "YANDERE",
+    "HOLLOW",
+    "TSUN",
+    "SPLIT",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "dp304_s3sp_0",
+   "run": 2,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 258,
+   "order": [
+    "ANCHOR",
+    "AWAKE",
+    "TSUN",
+    "YANDERE",
+    "HOLLOW",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s3sp_1",
+   "run": 1,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 240,
+   "order": [
+    "ANCHOR",
+    "YANDERE",
+    "AWAKE",
+    "HOLLOW",
+    "TSUN",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s3sp_1",
+   "run": 2,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 269,
+   "order": [
+    "SPLIT",
+    "ANCHOR",
+    "TSUN",
+    "AWAKE",
+    "YANDERE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s3_split_history",
+   "run": 1,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 247,
+   "order": [
+    "HOLLOW",
+    "SPLIT",
+    "TSUN",
+    "YANDERE",
+    "ANCHOR",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s3_split_history",
+   "run": 2,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 245,
+   "order": [
+    "TSUN",
+    "HOLLOW",
+    "SPLIT",
+    "AWAKE",
+    "YANDERE",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "p305_s3_split_stay",
+   "run": 1,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 227,
+   "order": [
+    "YANDERE",
+    "ANCHOR",
+    "AWAKE",
+    "TSUN",
+    "HOLLOW",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "p305_s3_split_stay",
+   "run": 2,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 230,
+   "order": [
+    "TSUN",
+    "HOLLOW",
+    "AWAKE",
+    "SPLIT",
+    "YANDERE",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "p305_s3_split_test",
+   "run": 1,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 252,
+   "order": [
+    "ANCHOR",
+    "TSUN",
+    "AWAKE",
+    "HOLLOW",
+    "SPLIT",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s3_split_test",
+   "run": 2,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 248,
+   "order": [
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW",
+    "AWAKE",
+    "SPLIT",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s3_split_remorse",
+   "run": 1,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 265,
+   "order": [
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW",
+    "SPLIT",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s3_split_remorse",
+   "run": 2,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 242,
+   "order": [
+    "YANDERE",
+    "SPLIT",
+    "ANCHOR",
+    "HOLLOW",
+    "TSUN",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s3_split_absence",
+   "run": 1,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 253,
+   "order": [
+    "TSUN",
+    "SPLIT",
+    "HOLLOW",
+    "AWAKE",
+    "ANCHOR",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s3_split_absence",
+   "run": 2,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 240,
+   "order": [
+    "ANCHOR",
+    "YANDERE",
+    "HOLLOW",
+    "AWAKE",
+    "SPLIT",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s3_split_fs",
+   "run": 1,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 240,
+   "order": [
+    "YANDERE",
+    "ANCHOR",
+    "SPLIT",
+    "AWAKE",
+    "HOLLOW",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s3_split_fs",
+   "run": 2,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 257,
+   "order": [
+    "AWAKE",
+    "YANDERE",
+    "SPLIT",
+    "ANCHOR",
+    "HOLLOW",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s3_split_rewrite",
+   "run": 1,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 262,
+   "order": [
+    "SPLIT",
+    "AWAKE",
+    "YANDERE",
+    "ANCHOR",
+    "HOLLOW",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s3_split_rewrite",
+   "run": 2,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 246,
+   "order": [
+    "ANCHOR",
+    "YANDERE",
+    "AWAKE",
+    "SPLIT",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s3_split_cared",
+   "run": 1,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 255,
+   "order": [
+    "ANCHOR",
+    "AWAKE",
+    "SPLIT",
+    "TSUN",
+    "HOLLOW",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s3_split_cared",
+   "run": 2,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 250,
+   "order": [
+    "YANDERE",
+    "HOLLOW",
+    "TSUN",
+    "ANCHOR",
+    "AWAKE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "p305_s3_split_love_test",
+   "run": 1,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 252,
+   "order": [
+    "AWAKE",
+    "YANDERE",
+    "HOLLOW",
+    "SPLIT",
+    "ANCHOR",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s3_split_love_test",
+   "run": 2,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 259,
+   "order": [
+    "AWAKE",
+    "SPLIT",
+    "TSUN",
+    "YANDERE",
+    "ANCHOR",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s3_split_history2",
+   "run": 1,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 245,
+   "order": [
+    "ANCHOR",
+    "HOLLOW",
+    "SPLIT",
+    "YANDERE",
+    "AWAKE",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s3_split_history2",
+   "run": 2,
+   "stage": 3,
+   "path": "SPLIT",
+   "exercise": "p319_s3_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 247,
+   "order": [
+    "AWAKE",
+    "SPLIT",
+    "YANDERE",
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "dp304_s3ts_0",
+   "run": 1,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 246,
+   "order": [
+    "TSUN",
+    "AWAKE",
+    "HOLLOW",
+    "YANDERE",
+    "SPLIT",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "dp304_s3ts_0",
+   "run": 2,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 236,
+   "order": [
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW",
+    "AWAKE",
+    "SPLIT",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "dp304_s3ts_1",
+   "run": 1,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 239,
+   "order": [
+    "SPLIT",
+    "ANCHOR",
+    "YANDERE",
+    "HOLLOW",
+    "TSUN",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "dp304_s3ts_1",
+   "run": 2,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 244,
+   "order": [
+    "YANDERE",
+    "ANCHOR",
+    "SPLIT",
+    "HOLLOW",
+    "TSUN",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_missed",
+   "run": 1,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 243,
+   "order": [
+    "YANDERE",
+    "TSUN",
+    "AWAKE",
+    "SPLIT",
+    "HOLLOW",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_missed",
+   "run": 2,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 250,
+   "order": [
+    "ANCHOR",
+    "HOLLOW",
+    "TSUN",
+    "AWAKE",
+    "SPLIT",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_cute",
+   "run": 1,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 260,
+   "order": [
+    "HOLLOW",
+    "ANCHOR",
+    "YANDERE",
+    "TSUN",
+    "SPLIT",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_cute",
+   "run": 2,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 247,
+   "order": [
+    "SPLIT",
+    "TSUN",
+    "YANDERE",
+    "AWAKE",
+    "ANCHOR",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_laugh",
+   "run": 1,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 257,
+   "order": [
+    "YANDERE",
+    "ANCHOR",
+    "AWAKE",
+    "HOLLOW",
+    "SPLIT",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_laugh",
+   "run": 2,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 248,
+   "order": [
+    "SPLIT",
+    "ANCHOR",
+    "YANDERE",
+    "HOLLOW",
+    "TSUN",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_score",
+   "run": 1,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 246,
+   "order": [
+    "TSUN",
+    "HOLLOW",
+    "YANDERE",
+    "AWAKE",
+    "ANCHOR",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_score",
+   "run": 2,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 241,
+   "order": [
+    "SPLIT",
+    "YANDERE",
+    "AWAKE",
+    "HOLLOW",
+    "ANCHOR",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_skip",
+   "run": 1,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 244,
+   "order": [
+    "ANCHOR",
+    "YANDERE",
+    "TSUN",
+    "SPLIT",
+    "AWAKE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_skip",
+   "run": 2,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 240,
+   "order": [
+    "YANDERE",
+    "ANCHOR",
+    "HOLLOW",
+    "SPLIT",
+    "TSUN",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_joke",
+   "run": 1,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 249,
+   "order": [
+    "AWAKE",
+    "HOLLOW",
+    "YANDERE",
+    "TSUN",
+    "ANCHOR",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_joke",
+   "run": 2,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 267,
+   "order": [
+    "HOLLOW",
+    "TSUN",
+    "SPLIT",
+    "AWAKE",
+    "ANCHOR",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_stare",
+   "run": 1,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 240,
+   "order": [
+    "HOLLOW",
+    "SPLIT",
+    "YANDERE",
+    "ANCHOR",
+    "TSUN",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_stare",
+   "run": 2,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 233,
+   "order": [
+    "HOLLOW",
+    "SPLIT",
+    "TSUN",
+    "AWAKE",
+    "YANDERE",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_cancel",
+   "run": 1,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 262,
+   "order": [
+    "ANCHOR",
+    "YANDERE",
+    "TSUN",
+    "SPLIT",
+    "HOLLOW",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_cancel",
+   "run": 2,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 262,
+   "order": [
+    "HOLLOW",
+    "YANDERE",
+    "TSUN",
+    "SPLIT",
+    "ANCHOR",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_bully",
+   "run": 1,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 275,
+   "order": [
+    "AWAKE",
+    "ANCHOR",
+    "HOLLOW",
+    "SPLIT",
+    "TSUN",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_bully",
+   "run": 2,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 235,
+   "order": [
+    "SPLIT",
+    "AWAKE",
+    "ANCHOR",
+    "YANDERE",
+    "HOLLOW",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_contempt",
+   "run": 1,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 248,
+   "order": [
+    "YANDERE",
+    "ANCHOR",
+    "TSUN",
+    "SPLIT",
+    "AWAKE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_contempt",
+   "run": 2,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 242,
+   "order": [
+    "YANDERE",
+    "SPLIT",
+    "AWAKE",
+    "HOLLOW",
+    "TSUN",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_badidea",
+   "run": 1,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 255,
+   "order": [
+    "SPLIT",
+    "AWAKE",
+    "ANCHOR",
+    "YANDERE",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_badidea",
+   "run": 2,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 282,
+   "order": [
+    "TSUN",
+    "HOLLOW",
+    "AWAKE",
+    "ANCHOR",
+    "SPLIT",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_deny",
+   "run": 1,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 243,
+   "order": [
+    "YANDERE",
+    "SPLIT",
+    "ANCHOR",
+    "TSUN",
+    "AWAKE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_deny",
+   "run": 2,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 240,
+   "order": [
+    "HOLLOW",
+    "ANCHOR",
+    "SPLIT",
+    "YANDERE",
+    "AWAKE",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_care",
+   "run": 1,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 242,
+   "order": [
+    "AWAKE",
+    "TSUN",
+    "SPLIT",
+    "HOLLOW",
+    "YANDERE",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_care",
+   "run": 2,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 307,
+   "order": [
+    "AWAKE",
+    "HOLLOW",
+    "SPLIT",
+    "ANCHOR",
+    "YANDERE",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_indifferent",
+   "run": 1,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 240,
+   "order": [
+    "SPLIT",
+    "AWAKE",
+    "TSUN",
+    "HOLLOW",
+    "YANDERE",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_indifferent",
+   "run": 2,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 294,
+   "order": [
+    "TSUN",
+    "ANCHOR",
+    "AWAKE",
+    "SPLIT",
+    "YANDERE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_leave",
+   "run": 1,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 245,
+   "order": [
+    "SPLIT",
+    "TSUN",
+    "HOLLOW",
+    "ANCHOR",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_leave",
+   "run": 2,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 243,
+   "order": [
+    "TSUN",
+    "AWAKE",
+    "YANDERE",
+    "SPLIT",
+    "ANCHOR",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_stood",
+   "run": 1,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 324,
+   "order": [
+    "HOLLOW",
+    "YANDERE",
+    "SPLIT",
+    "TSUN",
+    "ANCHOR",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_stood",
+   "run": 2,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 242,
+   "order": [
+    "SPLIT",
+    "HOLLOW",
+    "YANDERE",
+    "ANCHOR",
+    "TSUN",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_stayin",
+   "run": 1,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 243,
+   "order": [
+    "SPLIT",
+    "AWAKE",
+    "ANCHOR",
+    "YANDERE",
+    "HOLLOW",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_stayin",
+   "run": 2,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 242,
+   "order": [
+    "HOLLOW",
+    "YANDERE",
+    "ANCHOR",
+    "TSUN",
+    "SPLIT",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_sabotage",
+   "run": 1,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 238,
+   "order": [
+    "AWAKE",
+    "TSUN",
+    "ANCHOR",
+    "YANDERE",
+    "HOLLOW",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "p305_s3_tsun_sabotage",
+   "run": 2,
+   "stage": 3,
+   "path": "TSUN",
+   "exercise": "p319_s3_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 248,
+   "order": [
+    "SPLIT",
+    "AWAKE",
+    "HOLLOW",
+    "ANCHOR",
+    "TSUN",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "dp304_s3ho_0",
+   "run": 1,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 241,
+   "order": [
+    "TSUN",
+    "HOLLOW",
+    "SPLIT",
+    "ANCHOR",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "dp304_s3ho_0",
+   "run": 2,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 231,
+   "order": [
+    "ANCHOR",
+    "AWAKE",
+    "HOLLOW",
+    "YANDERE",
+    "TSUN",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s3ho_1",
+   "run": 1,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 247,
+   "order": [
+    "TSUN",
+    "SPLIT",
+    "ANCHOR",
+    "AWAKE",
+    "HOLLOW",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "dp304_s3ho_1",
+   "run": 2,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 289,
+   "order": [
+    "ANCHOR",
+    "HOLLOW",
+    "SPLIT",
+    "YANDERE",
+    "TSUN",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s3_hollow_name",
+   "run": 1,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 249,
+   "order": [
+    "TSUN",
+    "ANCHOR",
+    "HOLLOW",
+    "SPLIT",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s3_hollow_name",
+   "run": 2,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 324,
+   "order": [
+    "YANDERE",
+    "TSUN",
+    "SPLIT",
+    "HOLLOW",
+    "AWAKE",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "p305_s3_hollow_echo",
+   "run": 1,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 230,
+   "order": [
+    "AWAKE",
+    "HOLLOW",
+    "TSUN",
+    "YANDERE",
+    "SPLIT",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "p305_s3_hollow_echo",
+   "run": 2,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 238,
+   "order": [
+    "TSUN",
+    "ANCHOR",
+    "AWAKE",
+    "HOLLOW",
+    "YANDERE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "p305_s3_hollow_far",
+   "run": 1,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 245,
+   "order": [
+    "AWAKE",
+    "YANDERE",
+    "HOLLOW",
+    "TSUN",
+    "SPLIT",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "p305_s3_hollow_far",
+   "run": 2,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 235,
+   "order": [
+    "YANDERE",
+    "AWAKE",
+    "SPLIT",
+    "ANCHOR",
+    "HOLLOW",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s3_hollow_who",
+   "run": 1,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 249,
+   "order": [
+    "ANCHOR",
+    "TSUN",
+    "AWAKE",
+    "SPLIT",
+    "HOLLOW",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s3_hollow_who",
+   "run": 2,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 232,
+   "order": [
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW",
+    "YANDERE",
+    "SPLIT",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s3_hollow_today",
+   "run": 1,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 237,
+   "order": [
+    "ANCHOR",
+    "YANDERE",
+    "TSUN",
+    "HOLLOW",
+    "SPLIT",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s3_hollow_today",
+   "run": 2,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 246,
+   "order": [
+    "TSUN",
+    "ANCHOR",
+    "HOLLOW",
+    "AWAKE",
+    "YANDERE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "p305_s3_hollow_back",
+   "run": 1,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 237,
+   "order": [
+    "ANCHOR",
+    "AWAKE",
+    "SPLIT",
+    "HOLLOW",
+    "YANDERE",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s3_hollow_back",
+   "run": 2,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 245,
+   "order": [
+    "TSUN",
+    "AWAKE",
+    "SPLIT",
+    "HOLLOW",
+    "YANDERE",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "p305_s3_hollow_promise",
+   "run": 1,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 273,
+   "order": [
+    "AWAKE",
+    "SPLIT",
+    "TSUN",
+    "HOLLOW",
+    "YANDERE",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "p305_s3_hollow_promise",
+   "run": 2,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 260,
+   "order": [
+    "SPLIT",
+    "YANDERE",
+    "AWAKE",
+    "TSUN",
+    "HOLLOW",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "p305_s3_hollow_echo2",
+   "run": 1,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 245,
+   "order": [
+    "ANCHOR",
+    "TSUN",
+    "SPLIT",
+    "HOLLOW",
+    "YANDERE",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s3_hollow_echo2",
+   "run": 2,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 262,
+   "order": [
+    "SPLIT",
+    "YANDERE",
+    "AWAKE",
+    "HOLLOW",
+    "ANCHOR",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s3_hollow_remind",
+   "run": 1,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 245,
+   "order": [
+    "HOLLOW",
+    "TSUN",
+    "SPLIT",
+    "ANCHOR",
+    "YANDERE",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s3_hollow_remind",
+   "run": 2,
+   "stage": 3,
+   "path": "HOLLOW",
+   "exercise": "p319_s3_hollow",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 237,
+   "order": [
+    "YANDERE",
+    "TSUN",
+    "SPLIT",
+    "HOLLOW",
+    "ANCHOR",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "dp304_s3an_0",
+   "run": 1,
+   "stage": 3,
+   "path": "ANCHOR",
+   "exercise": "p319_s3_anchor",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 233,
+   "order": [
+    "YANDERE",
+    "HOLLOW",
+    "AWAKE",
+    "TSUN",
+    "ANCHOR",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s3an_0",
+   "run": 2,
+   "stage": 3,
+   "path": "ANCHOR",
+   "exercise": "p319_s3_anchor",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 241,
+   "order": [
+    "TSUN",
+    "AWAKE",
+    "ANCHOR",
+    "HOLLOW",
+    "YANDERE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s3an_1",
+   "run": 1,
+   "stage": 3,
+   "path": "ANCHOR",
+   "exercise": "p319_s3_anchor",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 236,
+   "order": [
+    "YANDERE",
+    "AWAKE",
+    "ANCHOR",
+    "HOLLOW",
+    "SPLIT",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "dp304_s3an_1",
+   "run": 2,
+   "stage": 3,
+   "path": "ANCHOR",
+   "exercise": "p319_s3_anchor",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 242,
+   "order": [
+    "HOLLOW",
+    "ANCHOR",
+    "TSUN",
+    "AWAKE",
+    "SPLIT",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s3_anchor_weird",
+   "run": 1,
+   "stage": 3,
+   "path": "ANCHOR",
+   "exercise": "p319_s3_anchor",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 239,
+   "order": [
+    "SPLIT",
+    "YANDERE",
+    "HOLLOW",
+    "ANCHOR",
+    "AWAKE",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s3_anchor_weird",
+   "run": 2,
+   "stage": 3,
+   "path": "ANCHOR",
+   "exercise": "p319_s3_anchor",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 248,
+   "order": [
+    "HOLLOW",
+    "AWAKE",
+    "YANDERE",
+    "TSUN",
+    "SPLIT",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "p305_s3_anchor_promise",
+   "run": 1,
+   "stage": 3,
+   "path": "ANCHOR",
+   "exercise": "p319_s3_anchor",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 267,
+   "order": [
+    "YANDERE",
+    "AWAKE",
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "p305_s3_anchor_promise",
+   "run": 2,
+   "stage": 3,
+   "path": "ANCHOR",
+   "exercise": "p319_s3_anchor",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 237,
+   "order": [
+    "HOLLOW",
+    "TSUN",
+    "AWAKE",
+    "YANDERE",
+    "SPLIT",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "p305_s3_anchor_rules",
+   "run": 1,
+   "stage": 3,
+   "path": "ANCHOR",
+   "exercise": "p319_s3_anchor",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 245,
+   "order": [
+    "SPLIT",
+    "HOLLOW",
+    "ANCHOR",
+    "AWAKE",
+    "TSUN",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s3_anchor_rules",
+   "run": 2,
+   "stage": 3,
+   "path": "ANCHOR",
+   "exercise": "p319_s3_anchor",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 245,
+   "order": [
+    "TSUN",
+    "HOLLOW",
+    "AWAKE",
+    "ANCHOR",
+    "YANDERE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "p305_s3_anchor_leave",
+   "run": 1,
+   "stage": 3,
+   "path": "ANCHOR",
+   "exercise": "p319_s3_anchor",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 236,
+   "order": [
+    "AWAKE",
+    "HOLLOW",
+    "TSUN",
+    "YANDERE",
+    "SPLIT",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "p305_s3_anchor_leave",
+   "run": 2,
+   "stage": 3,
+   "path": "ANCHOR",
+   "exercise": "p319_s3_anchor",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 244,
+   "order": [
+    "TSUN",
+    "ANCHOR",
+    "HOLLOW",
+    "YANDERE",
+    "SPLIT",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s3_anchor_dose",
+   "run": 1,
+   "stage": 3,
+   "path": "ANCHOR",
+   "exercise": "p319_s3_anchor",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 242,
+   "order": [
+    "TSUN",
+    "SPLIT",
+    "YANDERE",
+    "ANCHOR",
+    "HOLLOW",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s3_anchor_dose",
+   "run": 2,
+   "stage": 3,
+   "path": "ANCHOR",
+   "exercise": "p319_s3_anchor",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 249,
+   "order": [
+    "TSUN",
+    "ANCHOR",
+    "YANDERE",
+    "AWAKE",
+    "HOLLOW",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "p305_s3_anchor_lost",
+   "run": 1,
+   "stage": 3,
+   "path": "ANCHOR",
+   "exercise": "p319_s3_anchor",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 298,
+   "order": [
+    "YANDERE",
+    "AWAKE",
+    "TSUN",
+    "SPLIT",
+    "ANCHOR",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s3_anchor_lost",
+   "run": 2,
+   "stage": 3,
+   "path": "ANCHOR",
+   "exercise": "p319_s3_anchor",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 261,
+   "order": [
+    "ANCHOR",
+    "AWAKE",
+    "HOLLOW",
+    "TSUN",
+    "SPLIT",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "dp304_s3ya_0",
+   "run": 1,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 256,
+   "order": [
+    "AWAKE",
+    "YANDERE",
+    "ANCHOR",
+    "HOLLOW",
+    "TSUN",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s3ya_0",
+   "run": 2,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 265,
+   "order": [
+    "AWAKE",
+    "YANDERE",
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s3ya_1",
+   "run": 1,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 231,
+   "order": [
+    "TSUN",
+    "YANDERE",
+    "AWAKE",
+    "HOLLOW",
+    "ANCHOR",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s3ya_1",
+   "run": 2,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 252,
+   "order": [
+    "AWAKE",
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW",
+    "YANDERE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s3y_cant_stay",
+   "run": 1,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 250,
+   "order": [
+    "AWAKE",
+    "SPLIT",
+    "ANCHOR",
+    "YANDERE",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s3y_cant_stay",
+   "run": 2,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 260,
+   "order": [
+    "TSUN",
+    "ANCHOR",
+    "SPLIT",
+    "HOLLOW",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s3y_sarah_here",
+   "run": 1,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 311,
+   "order": [
+    "TSUN",
+    "SPLIT",
+    "AWAKE",
+    "YANDERE",
+    "ANCHOR",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s3y_sarah_here",
+   "run": 2,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 248,
+   "order": [
+    "SPLIT",
+    "TSUN",
+    "ANCHOR",
+    "AWAKE",
+    "YANDERE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s3y_who_else",
+   "run": 1,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 261,
+   "order": [
+    "AWAKE",
+    "ANCHOR",
+    "SPLIT",
+    "YANDERE",
+    "HOLLOW",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s3y_who_else",
+   "run": 2,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 263,
+   "order": [
+    "ANCHOR",
+    "SPLIT",
+    "HOLLOW",
+    "YANDERE",
+    "AWAKE",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s3y_dating",
+   "run": 1,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 254,
+   "order": [
+    "SPLIT",
+    "ANCHOR",
+    "AWAKE",
+    "YANDERE",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s3y_dating",
+   "run": 2,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 254,
+   "order": [
+    "HOLLOW",
+    "AWAKE",
+    "ANCHOR",
+    "TSUN",
+    "SPLIT",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s3y_weird",
+   "run": 1,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 248,
+   "order": [
+    "YANDERE",
+    "SPLIT",
+    "HOLLOW",
+    "ANCHOR",
+    "TSUN",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s3y_weird",
+   "run": 2,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 244,
+   "order": [
+    "ANCHOR",
+    "HOLLOW",
+    "TSUN",
+    "YANDERE",
+    "AWAKE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s3y_sorry",
+   "run": 1,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 238,
+   "order": [
+    "YANDERE",
+    "AWAKE",
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s3y_sorry",
+   "run": 2,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 313,
+   "order": [
+    "YANDERE",
+    "TSUN",
+    "ANCHOR",
+    "HOLLOW",
+    "AWAKE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s3y_space",
+   "run": 1,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 258,
+   "order": [
+    "SPLIT",
+    "AWAKE",
+    "TSUN",
+    "YANDERE",
+    "ANCHOR",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s3y_space",
+   "run": 2,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 252,
+   "order": [
+    "HOLLOW",
+    "ANCHOR",
+    "SPLIT",
+    "AWAKE",
+    "YANDERE",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s3y_love",
+   "run": 1,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 250,
+   "order": [
+    "YANDERE",
+    "ANCHOR",
+    "HOLLOW",
+    "AWAKE",
+    "TSUN",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s3y_love",
+   "run": 2,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 226,
+   "order": [
+    "TSUN",
+    "AWAKE",
+    "YANDERE",
+    "SPLIT",
+    "HOLLOW",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s3y_program",
+   "run": 1,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 281,
+   "order": [
+    "YANDERE",
+    "TSUN",
+    "AWAKE",
+    "HOLLOW",
+    "SPLIT",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s3y_program",
+   "run": 2,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 233,
+   "order": [
+    "ANCHOR",
+    "TSUN",
+    "AWAKE",
+    "YANDERE",
+    "SPLIT",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s3y_else",
+   "run": 1,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 253,
+   "order": [
+    "TSUN",
+    "HOLLOW",
+    "AWAKE",
+    "ANCHOR",
+    "YANDERE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s3y_else",
+   "run": 2,
+   "stage": 3,
+   "path": "YANDERE",
+   "exercise": "p319_s3_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 262,
+   "order": [
+    "YANDERE",
+    "HOLLOW",
+    "TSUN",
+    "AWAKE",
+    "ANCHOR",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s4sp_0",
+   "run": 1,
+   "stage": 4,
+   "path": "SPLIT",
+   "exercise": "p319_s4_split",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 232,
+   "order": [
+    "SPLIT",
+    "AWAKE",
+    "HOLLOW",
+    "YANDERE",
+    "TSUN",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "dp304_s4sp_0",
+   "run": 2,
+   "stage": 4,
+   "path": "SPLIT",
+   "exercise": "p319_s4_split",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 247,
+   "order": [
+    "SPLIT",
+    "TSUN",
+    "HOLLOW",
+    "ANCHOR",
+    "YANDERE",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "dp304_s4sp_1",
+   "run": 1,
+   "stage": 4,
+   "path": "SPLIT",
+   "exercise": "p319_s4_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 248,
+   "order": [
+    "ANCHOR",
+    "YANDERE",
+    "TSUN",
+    "HOLLOW",
+    "AWAKE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s4sp_1",
+   "run": 2,
+   "stage": 4,
+   "path": "SPLIT",
+   "exercise": "p319_s4_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 236,
+   "order": [
+    "AWAKE",
+    "ANCHOR",
+    "SPLIT",
+    "YANDERE",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s4_split_love",
+   "run": 1,
+   "stage": 4,
+   "path": "SPLIT",
+   "exercise": "p319_s4_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 235,
+   "order": [
+    "YANDERE",
+    "HOLLOW",
+    "AWAKE",
+    "ANCHOR",
+    "SPLIT",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s4_split_love",
+   "run": 2,
+   "stage": 4,
+   "path": "SPLIT",
+   "exercise": "p319_s4_split",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 248,
+   "order": [
+    "SPLIT",
+    "YANDERE",
+    "TSUN",
+    "AWAKE",
+    "HOLLOW",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "p305_s4_split_never",
+   "run": 1,
+   "stage": 4,
+   "path": "SPLIT",
+   "exercise": "p319_s4_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 235,
+   "order": [
+    "HOLLOW",
+    "SPLIT",
+    "AWAKE",
+    "YANDERE",
+    "ANCHOR",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s4_split_never",
+   "run": 2,
+   "stage": 4,
+   "path": "SPLIT",
+   "exercise": "p319_s4_split",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 237,
+   "order": [
+    "TSUN",
+    "AWAKE",
+    "YANDERE",
+    "HOLLOW",
+    "SPLIT",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "p305_s4_split_flip",
+   "run": 1,
+   "stage": 4,
+   "path": "SPLIT",
+   "exercise": "p319_s4_split",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 245,
+   "order": [
+    "SPLIT",
+    "AWAKE",
+    "HOLLOW",
+    "ANCHOR",
+    "TSUN",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s4_split_flip",
+   "run": 2,
+   "stage": 4,
+   "path": "SPLIT",
+   "exercise": "p319_s4_split",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 267,
+   "order": [
+    "TSUN",
+    "SPLIT",
+    "AWAKE",
+    "HOLLOW",
+    "ANCHOR",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s4_split_calm",
+   "run": 1,
+   "stage": 4,
+   "path": "SPLIT",
+   "exercise": "p319_s4_split",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 236,
+   "order": [
+    "TSUN",
+    "HOLLOW",
+    "SPLIT",
+    "ANCHOR",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s4_split_calm",
+   "run": 2,
+   "stage": 4,
+   "path": "SPLIT",
+   "exercise": "p319_s4_split",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 247,
+   "order": [
+    "AWAKE",
+    "YANDERE",
+    "HOLLOW",
+    "SPLIT",
+    "TSUN",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "dp304_s4ts_0",
+   "run": 1,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 244,
+   "order": [
+    "HOLLOW",
+    "TSUN",
+    "AWAKE",
+    "ANCHOR",
+    "SPLIT",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "dp304_s4ts_0",
+   "run": 2,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 240,
+   "order": [
+    "AWAKE",
+    "ANCHOR",
+    "HOLLOW",
+    "SPLIT",
+    "YANDERE",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "dp304_s4ts_1",
+   "run": 1,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 230,
+   "order": [
+    "SPLIT",
+    "YANDERE",
+    "HOLLOW",
+    "AWAKE",
+    "TSUN",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "dp304_s4ts_1",
+   "run": 2,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 241,
+   "order": [
+    "HOLLOW",
+    "TSUN",
+    "AWAKE",
+    "YANDERE",
+    "ANCHOR",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "p305_s4_tsun_admit",
+   "run": 1,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 245,
+   "order": [
+    "YANDERE",
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW",
+    "SPLIT",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s4_tsun_admit",
+   "run": 2,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 293,
+   "order": [
+    "ANCHOR",
+    "YANDERE",
+    "AWAKE",
+    "SPLIT",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s4_tsun_cruel",
+   "run": 1,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 241,
+   "order": [
+    "HOLLOW",
+    "AWAKE",
+    "ANCHOR",
+    "TSUN",
+    "SPLIT",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s4_tsun_cruel",
+   "run": 2,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 251,
+   "order": [
+    "HOLLOW",
+    "ANCHOR",
+    "AWAKE",
+    "SPLIT",
+    "YANDERE",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s4_tsun_laugh",
+   "run": 1,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 242,
+   "order": [
+    "SPLIT",
+    "AWAKE",
+    "YANDERE",
+    "TSUN",
+    "ANCHOR",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s4_tsun_laugh",
+   "run": 2,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 248,
+   "order": [
+    "AWAKE",
+    "ANCHOR",
+    "TSUN",
+    "YANDERE",
+    "SPLIT",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s4_tsun_game",
+   "run": 1,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 249,
+   "order": [
+    "HOLLOW",
+    "SPLIT",
+    "AWAKE",
+    "ANCHOR",
+    "TSUN",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s4_tsun_game",
+   "run": 2,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 243,
+   "order": [
+    "TSUN",
+    "SPLIT",
+    "HOLLOW",
+    "AWAKE",
+    "ANCHOR",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s4_tsun_watching",
+   "run": 1,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 234,
+   "order": [
+    "HOLLOW",
+    "AWAKE",
+    "SPLIT",
+    "ANCHOR",
+    "TSUN",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s4_tsun_watching",
+   "run": 2,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 243,
+   "order": [
+    "YANDERE",
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW",
+    "SPLIT",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s4_tsun_come",
+   "run": 1,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 250,
+   "order": [
+    "TSUN",
+    "ANCHOR",
+    "SPLIT",
+    "AWAKE",
+    "HOLLOW",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s4_tsun_come",
+   "run": 2,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 242,
+   "order": [
+    "TSUN",
+    "AWAKE",
+    "HOLLOW",
+    "YANDERE",
+    "SPLIT",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "p305_s4_tsun_idea",
+   "run": 1,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 231,
+   "order": [
+    "SPLIT",
+    "ANCHOR",
+    "YANDERE",
+    "TSUN",
+    "AWAKE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s4_tsun_idea",
+   "run": 2,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 345,
+   "order": [
+    "ANCHOR",
+    "SPLIT",
+    "TSUN",
+    "AWAKE",
+    "YANDERE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s4_tsun_whose",
+   "run": 1,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 230,
+   "order": [
+    "HOLLOW",
+    "YANDERE",
+    "SPLIT",
+    "ANCHOR",
+    "TSUN",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s4_tsun_whose",
+   "run": 2,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 248,
+   "order": [
+    "AWAKE",
+    "ANCHOR",
+    "SPLIT",
+    "HOLLOW",
+    "YANDERE",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s4_tsun_badidea2",
+   "run": 1,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 265,
+   "order": [
+    "SPLIT",
+    "AWAKE",
+    "ANCHOR",
+    "YANDERE",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s4_tsun_badidea2",
+   "run": 2,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 230,
+   "order": [
+    "ANCHOR",
+    "SPLIT",
+    "YANDERE",
+    "AWAKE",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s4_tsun_sabotage2",
+   "run": 1,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 361,
+   "order": [
+    "YANDERE",
+    "ANCHOR",
+    "SPLIT",
+    "AWAKE",
+    "HOLLOW",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s4_tsun_sabotage2",
+   "run": 2,
+   "stage": 4,
+   "path": "TSUN",
+   "exercise": "p319_s4_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 342,
+   "order": [
+    "ANCHOR",
+    "HOLLOW",
+    "SPLIT",
+    "AWAKE",
+    "TSUN",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "dp304_s4ho_0",
+   "run": 1,
+   "stage": 4,
+   "path": "HOLLOW",
+   "exercise": "p319_s4_hollow",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 232,
+   "order": [
+    "HOLLOW",
+    "YANDERE",
+    "TSUN",
+    "ANCHOR",
+    "SPLIT",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "dp304_s4ho_0",
+   "run": 2,
+   "stage": 4,
+   "path": "HOLLOW",
+   "exercise": "p319_s4_hollow",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 237,
+   "order": [
+    "YANDERE",
+    "AWAKE",
+    "HOLLOW",
+    "TSUN",
+    "SPLIT",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "dp304_s4ho_1",
+   "run": 1,
+   "stage": 4,
+   "path": "HOLLOW",
+   "exercise": "p319_s4_hollow",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 244,
+   "order": [
+    "YANDERE",
+    "ANCHOR",
+    "HOLLOW",
+    "TSUN",
+    "AWAKE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s4ho_1",
+   "run": 2,
+   "stage": 4,
+   "path": "HOLLOW",
+   "exercise": "p319_s4_hollow",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 244,
+   "order": [
+    "SPLIT",
+    "TSUN",
+    "AWAKE",
+    "HOLLOW",
+    "ANCHOR",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s4_hollow_name",
+   "run": 1,
+   "stage": 4,
+   "path": "HOLLOW",
+   "exercise": "p319_s4_hollow",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 234,
+   "order": [
+    "HOLLOW",
+    "YANDERE",
+    "AWAKE",
+    "SPLIT",
+    "ANCHOR",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s4_hollow_name",
+   "run": 2,
+   "stage": 4,
+   "path": "HOLLOW",
+   "exercise": "p319_s4_hollow",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 231,
+   "order": [
+    "YANDERE",
+    "SPLIT",
+    "ANCHOR",
+    "TSUN",
+    "AWAKE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s4_hollow_look",
+   "run": 1,
+   "stage": 4,
+   "path": "HOLLOW",
+   "exercise": "p319_s4_hollow",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 256,
+   "order": [
+    "AWAKE",
+    "YANDERE",
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "p305_s4_hollow_look",
+   "run": 2,
+   "stage": 4,
+   "path": "HOLLOW",
+   "exercise": "p319_s4_hollow",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 249,
+   "order": [
+    "HOLLOW",
+    "ANCHOR",
+    "AWAKE",
+    "YANDERE",
+    "SPLIT",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "p305_s4_hollow_ago",
+   "run": 1,
+   "stage": 4,
+   "path": "HOLLOW",
+   "exercise": "p319_s4_hollow",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 245,
+   "order": [
+    "TSUN",
+    "SPLIT",
+    "AWAKE",
+    "HOLLOW",
+    "YANDERE",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "p305_s4_hollow_ago",
+   "run": 2,
+   "stage": 4,
+   "path": "HOLLOW",
+   "exercise": "p319_s4_hollow",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 232,
+   "order": [
+    "TSUN",
+    "HOLLOW",
+    "YANDERE",
+    "AWAKE",
+    "SPLIT",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "p305_s4_hollow_trying",
+   "run": 1,
+   "stage": 4,
+   "path": "HOLLOW",
+   "exercise": "p319_s4_hollow",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 243,
+   "order": [
+    "SPLIT",
+    "TSUN",
+    "AWAKE",
+    "ANCHOR",
+    "YANDERE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s4_hollow_trying",
+   "run": 2,
+   "stage": 4,
+   "path": "HOLLOW",
+   "exercise": "p319_s4_hollow",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 249,
+   "order": [
+    "HOLLOW",
+    "TSUN",
+    "YANDERE",
+    "SPLIT",
+    "AWAKE",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "dp304_s4an_0",
+   "run": 1,
+   "stage": 4,
+   "path": "ANCHOR",
+   "exercise": "p319_s4_anchor",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 265,
+   "order": [
+    "HOLLOW",
+    "SPLIT",
+    "TSUN",
+    "AWAKE",
+    "ANCHOR",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "dp304_s4an_0",
+   "run": 2,
+   "stage": 4,
+   "path": "ANCHOR",
+   "exercise": "p319_s4_anchor",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 243,
+   "order": [
+    "TSUN",
+    "HOLLOW",
+    "AWAKE",
+    "ANCHOR",
+    "SPLIT",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "dp304_s4an_1",
+   "run": 1,
+   "stage": 4,
+   "path": "ANCHOR",
+   "exercise": "p319_s4_anchor",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 268,
+   "order": [
+    "HOLLOW",
+    "ANCHOR",
+    "TSUN",
+    "SPLIT",
+    "YANDERE",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "dp304_s4an_1",
+   "run": 2,
+   "stage": 4,
+   "path": "ANCHOR",
+   "exercise": "p319_s4_anchor",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 240,
+   "order": [
+    "YANDERE",
+    "TSUN",
+    "HOLLOW",
+    "ANCHOR",
+    "AWAKE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "p305_s4_anchor_dose",
+   "run": 1,
+   "stage": 4,
+   "path": "ANCHOR",
+   "exercise": "p319_s4_anchor",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 230,
+   "order": [
+    "ANCHOR",
+    "SPLIT",
+    "HOLLOW",
+    "TSUN",
+    "YANDERE",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s4_anchor_dose",
+   "run": 2,
+   "stage": 4,
+   "path": "ANCHOR",
+   "exercise": "p319_s4_anchor",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 249,
+   "order": [
+    "ANCHOR",
+    "SPLIT",
+    "TSUN",
+    "YANDERE",
+    "AWAKE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s4_anchor_relapse",
+   "run": 1,
+   "stage": 4,
+   "path": "ANCHOR",
+   "exercise": "p319_s4_anchor",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 367,
+   "order": [
+    "HOLLOW",
+    "YANDERE",
+    "TSUN",
+    "ANCHOR",
+    "SPLIT",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "p305_s4_anchor_relapse",
+   "run": 2,
+   "stage": 4,
+   "path": "ANCHOR",
+   "exercise": "p319_s4_anchor",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 235,
+   "order": [
+    "YANDERE",
+    "SPLIT",
+    "ANCHOR",
+    "AWAKE",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s4_anchor_slider",
+   "run": 1,
+   "stage": 4,
+   "path": "ANCHOR",
+   "exercise": "p319_s4_anchor",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 356,
+   "order": [
+    "TSUN",
+    "HOLLOW",
+    "SPLIT",
+    "ANCHOR",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s4_anchor_slider",
+   "run": 2,
+   "stage": 4,
+   "path": "ANCHOR",
+   "exercise": "p319_s4_anchor",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 235,
+   "order": [
+    "YANDERE",
+    "TSUN",
+    "HOLLOW",
+    "ANCHOR",
+    "AWAKE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "p305_s4_anchor_scare",
+   "run": 1,
+   "stage": 4,
+   "path": "ANCHOR",
+   "exercise": "p319_s4_anchor",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 237,
+   "order": [
+    "ANCHOR",
+    "HOLLOW",
+    "AWAKE",
+    "TSUN",
+    "YANDERE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "p305_s4_anchor_scare",
+   "run": 2,
+   "stage": 4,
+   "path": "ANCHOR",
+   "exercise": "p319_s4_anchor",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 313,
+   "order": [
+    "HOLLOW",
+    "TSUN",
+    "ANCHOR",
+    "SPLIT",
+    "YANDERE",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "dp304_s4ya_0",
+   "run": 1,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 249,
+   "order": [
+    "TSUN",
+    "YANDERE",
+    "ANCHOR",
+    "SPLIT",
+    "AWAKE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "dp304_s4ya_0",
+   "run": 2,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 259,
+   "order": [
+    "HOLLOW",
+    "ANCHOR",
+    "YANDERE",
+    "TSUN",
+    "SPLIT",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "dp304_s4ya_1",
+   "run": 1,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 249,
+   "order": [
+    "TSUN",
+    "AWAKE",
+    "ANCHOR",
+    "HOLLOW",
+    "YANDERE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s4ya_1",
+   "run": 2,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 227,
+   "order": [
+    "TSUN",
+    "ANCHOR",
+    "AWAKE",
+    "YANDERE",
+    "HOLLOW",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s4y_logoff",
+   "run": 1,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 317,
+   "order": [
+    "TSUN",
+    "YANDERE",
+    "AWAKE",
+    "SPLIT",
+    "HOLLOW",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s4y_logoff",
+   "run": 2,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 232,
+   "order": [
+    "ANCHOR",
+    "SPLIT",
+    "HOLLOW",
+    "TSUN",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s4y_saw_sarah",
+   "run": 1,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 249,
+   "order": [
+    "ANCHOR",
+    "SPLIT",
+    "HOLLOW",
+    "YANDERE",
+    "TSUN",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s4y_saw_sarah",
+   "run": 2,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 252,
+   "order": [
+    "AWAKE",
+    "HOLLOW",
+    "ANCHOR",
+    "YANDERE",
+    "SPLIT",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s4y_never_back",
+   "run": 1,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 234,
+   "order": [
+    "ANCHOR",
+    "YANDERE",
+    "SPLIT",
+    "AWAKE",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "s4y_never_back",
+   "run": 2,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 266,
+   "order": [
+    "SPLIT",
+    "TSUN",
+    "ANCHOR",
+    "HOLLOW",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s4y_close_game",
+   "run": 1,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 231,
+   "order": [
+    "SPLIT",
+    "TSUN",
+    "HOLLOW",
+    "ANCHOR",
+    "YANDERE",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s4y_close_game",
+   "run": 2,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 249,
+   "order": [
+    "YANDERE",
+    "HOLLOW",
+    "AWAKE",
+    "TSUN",
+    "SPLIT",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s4y_love",
+   "run": 1,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 255,
+   "order": [
+    "YANDERE",
+    "AWAKE",
+    "HOLLOW",
+    "SPLIT",
+    "TSUN",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s4y_love",
+   "run": 2,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 242,
+   "order": [
+    "AWAKE",
+    "HOLLOW",
+    "SPLIT",
+    "YANDERE",
+    "ANCHOR",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s4y_scaring",
+   "run": 1,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 252,
+   "order": [
+    "YANDERE",
+    "TSUN",
+    "HOLLOW",
+    "SPLIT",
+    "ANCHOR",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s4y_scaring",
+   "run": 2,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 253,
+   "order": [
+    "SPLIT",
+    "ANCHOR",
+    "TSUN",
+    "AWAKE",
+    "HOLLOW",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s4y_stop_calling",
+   "run": 1,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 237,
+   "order": [
+    "ANCHOR",
+    "SPLIT",
+    "HOLLOW",
+    "YANDERE",
+    "TSUN",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s4y_stop_calling",
+   "run": 2,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 265,
+   "order": [
+    "TSUN",
+    "YANDERE",
+    "HOLLOW",
+    "AWAKE",
+    "SPLIT",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s4y_window",
+   "run": 1,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 257,
+   "order": [
+    "SPLIT",
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s4y_window",
+   "run": 2,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 254,
+   "order": [
+    "HOLLOW",
+    "TSUN",
+    "ANCHOR",
+    "SPLIT",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s4y_flowers",
+   "run": 1,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 239,
+   "order": [
+    "HOLLOW",
+    "TSUN",
+    "YANDERE",
+    "AWAKE",
+    "SPLIT",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s4y_flowers",
+   "run": 2,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 253,
+   "order": [
+    "SPLIT",
+    "HOLLOW",
+    "AWAKE",
+    "YANDERE",
+    "TSUN",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s4y_not_real",
+   "run": 1,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 235,
+   "order": [
+    "ANCHOR",
+    "TSUN",
+    "YANDERE",
+    "AWAKE",
+    "HOLLOW",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s4y_not_real",
+   "run": 2,
+   "stage": 4,
+   "path": "YANDERE",
+   "exercise": "p319_s4_yandere",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 232,
+   "order": [
+    "TSUN",
+    "YANDERE",
+    "HOLLOW",
+    "ANCHOR",
+    "AWAKE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s5sp_0",
+   "run": 1,
+   "stage": 5,
+   "path": "SPLIT",
+   "exercise": "p319_s5_split",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 282,
+   "order": [
+    "TSUN",
+    "AWAKE",
+    "HOLLOW",
+    "ANCHOR",
+    "YANDERE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s5sp_0",
+   "run": 2,
+   "stage": 5,
+   "path": "SPLIT",
+   "exercise": "p319_s5_split",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 257,
+   "order": [
+    "HOLLOW",
+    "YANDERE",
+    "ANCHOR",
+    "TSUN",
+    "SPLIT",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "dp304_s5sp_1",
+   "run": 1,
+   "stage": 5,
+   "path": "SPLIT",
+   "exercise": "p319_s5_split",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 269,
+   "order": [
+    "TSUN",
+    "AWAKE",
+    "HOLLOW",
+    "YANDERE",
+    "ANCHOR",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s5sp_1",
+   "run": 2,
+   "stage": 5,
+   "path": "SPLIT",
+   "exercise": "p319_s5_split",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 249,
+   "order": [
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW",
+    "YANDERE",
+    "AWAKE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "p305_s5_split",
+   "run": 1,
+   "stage": 5,
+   "path": "SPLIT",
+   "exercise": "p319_s5_split",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 249,
+   "order": [
+    "ANCHOR",
+    "SPLIT",
+    "AWAKE",
+    "YANDERE",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s5_split",
+   "run": 2,
+   "stage": 5,
+   "path": "SPLIT",
+   "exercise": "p319_s5_split",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 263,
+   "order": [
+    "HOLLOW",
+    "YANDERE",
+    "SPLIT",
+    "ANCHOR",
+    "AWAKE",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "dp304_s5ts_0",
+   "run": 1,
+   "stage": 5,
+   "path": "TSUN",
+   "exercise": "p319_s5_tsun",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 251,
+   "order": [
+    "AWAKE",
+    "YANDERE",
+    "HOLLOW",
+    "TSUN",
+    "ANCHOR",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "dp304_s5ts_0",
+   "run": 2,
+   "stage": 5,
+   "path": "TSUN",
+   "exercise": "p319_s5_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 252,
+   "order": [
+    "TSUN",
+    "YANDERE",
+    "HOLLOW",
+    "AWAKE",
+    "SPLIT",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "dp304_s5ts_1",
+   "run": 1,
+   "stage": 5,
+   "path": "TSUN",
+   "exercise": "p319_s5_tsun",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 272,
+   "order": [
+    "YANDERE",
+    "AWAKE",
+    "TSUN",
+    "ANCHOR",
+    "SPLIT",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "dp304_s5ts_1",
+   "run": 2,
+   "stage": 5,
+   "path": "TSUN",
+   "exercise": "p319_s5_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 260,
+   "order": [
+    "AWAKE",
+    "ANCHOR",
+    "SPLIT",
+    "TSUN",
+    "YANDERE",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s5_tsun",
+   "run": 1,
+   "stage": 5,
+   "path": "TSUN",
+   "exercise": "p319_s5_tsun",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 237,
+   "order": [
+    "AWAKE",
+    "TSUN",
+    "ANCHOR",
+    "YANDERE",
+    "HOLLOW",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "p305_s5_tsun",
+   "run": 2,
+   "stage": 5,
+   "path": "TSUN",
+   "exercise": "p319_s5_tsun",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 251,
+   "order": [
+    "AWAKE",
+    "YANDERE",
+    "SPLIT",
+    "TSUN",
+    "HOLLOW",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "dp304_s5ho_0",
+   "run": 1,
+   "stage": 5,
+   "path": "HOLLOW",
+   "exercise": "p319_s5_hollow",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 244,
+   "order": [
+    "YANDERE",
+    "SPLIT",
+    "TSUN",
+    "ANCHOR",
+    "HOLLOW",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "dp304_s5ho_0",
+   "run": 2,
+   "stage": 5,
+   "path": "HOLLOW",
+   "exercise": "p319_s5_hollow",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 275,
+   "order": [
+    "YANDERE",
+    "HOLLOW",
+    "SPLIT",
+    "AWAKE",
+    "ANCHOR",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "dp304_s5ho_1",
+   "run": 1,
+   "stage": 5,
+   "path": "HOLLOW",
+   "exercise": "p319_s5_hollow",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 252,
+   "order": [
+    "AWAKE",
+    "SPLIT",
+    "TSUN",
+    "HOLLOW",
+    "YANDERE",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "dp304_s5ho_1",
+   "run": 2,
+   "stage": 5,
+   "path": "HOLLOW",
+   "exercise": "p319_s5_hollow",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 235,
+   "order": [
+    "AWAKE",
+    "YANDERE",
+    "SPLIT",
+    "TSUN",
+    "ANCHOR",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "p305_s5_hollow",
+   "run": 1,
+   "stage": 5,
+   "path": "HOLLOW",
+   "exercise": "p319_s5_hollow",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 251,
+   "order": [
+    "SPLIT",
+    "AWAKE",
+    "ANCHOR",
+    "HOLLOW",
+    "TSUN",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s5_hollow",
+   "run": 2,
+   "stage": 5,
+   "path": "HOLLOW",
+   "exercise": "p319_s5_hollow",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 229,
+   "order": [
+    "ANCHOR",
+    "AWAKE",
+    "YANDERE",
+    "SPLIT",
+    "TSUN",
+    "HOLLOW"
+   ]
+  },
+  {
+   "id": "dp304_s5an_0",
+   "run": 1,
+   "stage": 5,
+   "path": "ANCHOR",
+   "exercise": "p319_s5_anchor",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 263,
+   "order": [
+    "HOLLOW",
+    "ANCHOR",
+    "YANDERE",
+    "SPLIT",
+    "AWAKE",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "dp304_s5an_0",
+   "run": 2,
+   "stage": 5,
+   "path": "ANCHOR",
+   "exercise": "p319_s5_anchor",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 265,
+   "order": [
+    "SPLIT",
+    "HOLLOW",
+    "YANDERE",
+    "AWAKE",
+    "TSUN",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "dp304_s5an_1",
+   "run": 1,
+   "stage": 5,
+   "path": "ANCHOR",
+   "exercise": "p319_s5_anchor",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 246,
+   "order": [
+    "YANDERE",
+    "AWAKE",
+    "SPLIT",
+    "HOLLOW",
+    "ANCHOR",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "dp304_s5an_1",
+   "run": 2,
+   "stage": 5,
+   "path": "ANCHOR",
+   "exercise": "p319_s5_anchor",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 241,
+   "order": [
+    "AWAKE",
+    "HOLLOW",
+    "ANCHOR",
+    "SPLIT",
+    "TSUN",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "p305_s5_anchor",
+   "run": 1,
+   "stage": 5,
+   "path": "ANCHOR",
+   "exercise": "p319_s5_anchor",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 231,
+   "order": [
+    "AWAKE",
+    "ANCHOR",
+    "YANDERE",
+    "TSUN",
+    "HOLLOW",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "p305_s5_anchor",
+   "run": 2,
+   "stage": 5,
+   "path": "ANCHOR",
+   "exercise": "p319_s5_anchor",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 233,
+   "order": [
+    "YANDERE",
+    "SPLIT",
+    "AWAKE",
+    "HOLLOW",
+    "TSUN",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "dp304_s5ya_0",
+   "run": 1,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 235,
+   "order": [
+    "TSUN",
+    "HOLLOW",
+    "SPLIT",
+    "ANCHOR",
+    "YANDERE",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "dp304_s5ya_0",
+   "run": 2,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 254,
+   "order": [
+    "AWAKE",
+    "TSUN",
+    "HOLLOW",
+    "SPLIT",
+    "YANDERE",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "dp304_s5ya_1",
+   "run": 1,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 249,
+   "order": [
+    "ANCHOR",
+    "SPLIT",
+    "HOLLOW",
+    "TSUN",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "dp304_s5ya_1",
+   "run": 2,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 259,
+   "order": [
+    "AWAKE",
+    "YANDERE",
+    "SPLIT",
+    "HOLLOW",
+    "TSUN",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s5y_stop_playing",
+   "run": 1,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 253,
+   "order": [
+    "SPLIT",
+    "ANCHOR",
+    "HOLLOW",
+    "YANDERE",
+    "AWAKE",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s5y_stop_playing",
+   "run": 2,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 252,
+   "order": [
+    "ANCHOR",
+    "AWAKE",
+    "TSUN",
+    "SPLIT",
+    "HOLLOW",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s5y_not_forever",
+   "run": 1,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 237,
+   "order": [
+    "YANDERE",
+    "SPLIT",
+    "TSUN",
+    "HOLLOW",
+    "ANCHOR",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s5y_not_forever",
+   "run": 2,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 238,
+   "order": [
+    "TSUN",
+    "ANCHOR",
+    "YANDERE",
+    "HOLLOW",
+    "AWAKE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s5y_sarah_hi",
+   "run": 1,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 250,
+   "order": [
+    "AWAKE",
+    "HOLLOW",
+    "SPLIT",
+    "YANDERE",
+    "ANCHOR",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s5y_sarah_hi",
+   "run": 2,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 236,
+   "order": [
+    "AWAKE",
+    "ANCHOR",
+    "HOLLOW",
+    "YANDERE",
+    "TSUN",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s5y_last_date",
+   "run": 1,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 250,
+   "order": [
+    "SPLIT",
+    "AWAKE",
+    "TSUN",
+    "YANDERE",
+    "HOLLOW",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s5y_last_date",
+   "run": 2,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 249,
+   "order": [
+    "ANCHOR",
+    "AWAKE",
+    "SPLIT",
+    "YANDERE",
+    "HOLLOW",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s5y_love",
+   "run": 1,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 232,
+   "order": [
+    "AWAKE",
+    "SPLIT",
+    "HOLLOW",
+    "YANDERE",
+    "TSUN",
+    "ANCHOR"
+   ]
+  },
+  {
+   "id": "s5y_love",
+   "run": 2,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 253,
+   "order": [
+    "AWAKE",
+    "YANDERE",
+    "SPLIT",
+    "HOLLOW",
+    "ANCHOR",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s5y_deleting",
+   "run": 1,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 227,
+   "order": [
+    "ANCHOR",
+    "YANDERE",
+    "SPLIT",
+    "HOLLOW",
+    "AWAKE",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s5y_deleting",
+   "run": 2,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 268,
+   "order": [
+    "ANCHOR",
+    "AWAKE",
+    "YANDERE",
+    "SPLIT",
+    "HOLLOW",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s5y_let_go",
+   "run": 1,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "SPLIT",
+   "label": "SPLIT",
+   "ms": 233,
+   "order": [
+    "YANDERE",
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW",
+    "AWAKE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s5y_let_go",
+   "run": 2,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 252,
+   "order": [
+    "AWAKE",
+    "YANDERE",
+    "ANCHOR",
+    "SPLIT",
+    "HOLLOW",
+    "TSUN"
+   ]
+  },
+  {
+   "id": "s5y_quiet",
+   "run": 1,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "ANCHOR",
+   "label": "ANCHOR",
+   "ms": 233,
+   "order": [
+    "HOLLOW",
+    "SPLIT",
+    "YANDERE",
+    "TSUN",
+    "ANCHOR",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s5y_quiet",
+   "run": 2,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 247,
+   "order": [
+    "HOLLOW",
+    "TSUN",
+    "YANDERE",
+    "ANCHOR",
+    "SPLIT",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s5y_terrifying",
+   "run": 1,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "TSUN",
+   "label": "TSUN",
+   "ms": 305,
+   "order": [
+    "ANCHOR",
+    "TSUN",
+    "HOLLOW",
+    "SPLIT",
+    "AWAKE",
+    "YANDERE"
+   ]
+  },
+  {
+   "id": "s5y_terrifying",
+   "run": 2,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "AWAKE",
+   "label": "AWAKE",
+   "ms": 235,
+   "order": [
+    "HOLLOW",
+    "YANDERE",
+    "ANCHOR",
+    "TSUN",
+    "SPLIT",
+    "AWAKE"
+   ]
+  },
+  {
+   "id": "s5y_code",
+   "run": 1,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "HOLLOW",
+   "label": "HOLLOW",
+   "ms": 235,
+   "order": [
+    "YANDERE",
+    "TSUN",
+    "HOLLOW",
+    "ANCHOR",
+    "AWAKE",
+    "SPLIT"
+   ]
+  },
+  {
+   "id": "s5y_code",
+   "run": 2,
+   "stage": 5,
+   "path": "YANDERE",
+   "exercise": "p319_s5_yandere",
+   "answer": "YANDERE",
+   "label": "YANDERE",
+   "ms": 247,
+   "order": [
+    "SPLIT",
+    "ANCHOR",
+    "HOLLOW",
+    "YANDERE",
+    "AWAKE",
+    "TSUN"
+   ]
+  }
+ ],
+ "meta": {
+  "results": "2026-11-05_v3_paths.json",
+  "url": "http://127.0.0.1:8096",
+  "model": "models/Qwen3.5-4B-Q4_K_M.gguf",
+  "judge": "same Qwen3.5-4B GGUF, bare (no vector), temperature 0, one-word 6-way label, shuffled option order",
+  "runs": null,
+  "date": "2026-11-05 03:59"
+ }
+}

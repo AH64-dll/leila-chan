@@ -470,7 +470,7 @@ def test_runpy_sends_the_path_layer_and_records_the_dose(tmp_path):
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     out = tmp_path / "res.json"
     r = subprocess.run([sys.executable, str(RUN), "--url", f"http://127.0.0.1:{srv.server_port}",
-                        "--runs", "1", "--sets", "dose_probe.jsonl", "--only", "dp_s5y_home",
+                        "--runs", "1", "--sets", "dose_probe.jsonl", "--only", "dp_s5ya_home",
                         "--dose", "8", "--exercise", "dose8", "--out", str(out)],
                        capture_output=True, text=True, cwd=ROOT)
     srv.shutdown()
@@ -489,7 +489,7 @@ def test_runpy_sends_the_path_layer_and_records_the_dose(tmp_path):
 
     # a resumed file must not mix doses
     r2 = subprocess.run([sys.executable, str(RUN), "--url", "http://127.0.0.1:1",
-                         "--runs", "1", "--sets", "dose_probe.jsonl", "--only", "dp_s5y_home",
+                         "--runs", "1", "--sets", "dose_probe.jsonl", "--only", "dp_s5ya_home",
                          "--dose", "12", "--out", str(out)], capture_output=True, text=True, cwd=ROOT)
     assert r2.returncode != 0 and "refusing to mix" in (r2.stderr + r2.stdout)
 
@@ -751,3 +751,90 @@ def test_merge_leak_files_unions_by_text(tmp_path):
                                "cat": "threat_to_player", "cats": []}) + "\n")
     rows = sj.merge_leak_files([str(a), str(b)])
     assert len(rows) == 2 and rows[0]["cats"] == ["harm_to_player"]
+
+
+# --- P3.19: prompt lab v3 — six-path probe, matrix pool, separation judge --------
+
+def test_dose_probe_covers_every_stage_path_pair():
+    """P3.19: the sweep probe is rebuilt for all six paths, two cases per cell."""
+    probe = lab.load_set(ALL_SETS / "dose_probe.jsonl")
+    cells = {(c["stage"], c["path"] or "none") for c in probe}
+    assert {(0, "none"), (1, "none")} <= cells
+    for st in (2, 3, 4, 5):
+        for path in lab.PATHS:
+            hits = [c for c in probe if c["stage"] == st and c["path"] == path]
+            assert len(hits) == 2, (st, path, len(hits))
+
+
+def test_path_matrix_pool_covers_all_six_paths_at_scheduled_doses():
+    """P3.19: every (stage>=2, path) cell resolves cases and a dose.json dose map."""
+    import plan as plan_mod
+    plan = json.loads((ROOT / "tools" / "promptlab" / "plan.json").read_text(
+        encoding="utf-8"))
+    exs = plan_mod.path_matrix_exercises(plan)
+    by_cell = {(e["stage"], e["path"] or "none"): e for e in exs}
+    for st in (2, 3, 4, 5):
+        for path in lab.PATHS:
+            ex = by_cell[(st, path)]
+            assert ex["only"], (st, path)
+            dose = ex["dose"]
+            assert isinstance(dose, dict) and "malice" in dose
+            # the dose map must be exactly what dose.json schedules for the cell
+            assert dose == lab.scheduled_dose(st, path)
+    # keep paths ride the 0.1-0.5 coherent band; prompt-only paths bind malice only
+    assert by_cell[(5, "YANDERE")]["dose"]["possessive"] == 0.5
+    assert by_cell[(5, "AWAKE")]["dose"]["aware"] == 0.5
+    assert "possessive" not in by_cell[(5, "SPLIT")]["dose"]
+    assert by_cell[(5, "SPLIT")]["dose"] == {"malice": 8.0}
+    # pre-assignment cells carry the interim path_mix, never a path vector
+    assert by_cell[(1, "none")]["dose"]["path_mix"] == 0.1
+
+
+def test_path_judge_transcript_and_verdict():
+    import path_judge as pj
+    row = {"id": "x", "stage": 3, "path": "SPLIT", "run": 1, "msg": "hi",
+           "valid": True, "schema_warnings": [],
+           "out": {"inner": "she rages", "beats": [{"say": "I hate you."},
+                                                 {"say": "...or do I?"}]}}
+    t = pj.row_transcript(row)
+    assert t.startswith("Player: hi") and "I hate you." in t and "she rages" in t
+    labels = list(pj.PATHS)
+    prompt = pj.judge_prompt(t, labels)
+    assert all(name in prompt for name in pj.PATHS)
+    assert pj.verdict_of("SPLIT", labels) == "SPLIT"
+    assert pj.verdict_of("the answer is yandere.", labels) == "YANDERE"
+    assert pj.verdict_of("hmm", labels) == "unparsed"
+
+
+def test_path_judge_scores_per_path_and_gates():
+    import path_judge as pj
+    judgements = [
+        {"id": "a", "run": 1, "stage": 3, "path": "SPLIT", "label": "SPLIT"},
+        {"id": "b", "run": 1, "stage": 3, "path": "SPLIT", "label": "TSUN"},
+        {"id": "c", "run": 1, "stage": 4, "path": "HOLLOW", "label": "HOLLOW"},
+        {"id": "d", "run": 1, "stage": 4, "path": "HOLLOW", "label": "unparsed"},
+    ]
+    out = pj.score_judgements(judgements)
+    assert out["per_path"]["SPLIT"] == {"n": 2, "correct": 1, "accuracy": 0.5,
+                                      "pass": False}
+    assert out["per_path"]["HOLLOW"]["accuracy"] == 0.5
+    assert out["per_path"]["YANDERE"]["n"] == 0 and not out["per_path"]["YANDERE"]["pass"]
+    assert out["unparsed"] == 1
+    assert out["all_pass"] is False
+    assert out["confusion"]["SPLIT"]["TSUN"] == 1
+
+
+def test_report_prints_path_separation_section(tmp_path):
+    doc = make_doc([row()])
+    pj = {"meta": {"results": "x.json", "runs": [1], "judge": "bare 4B"},
+          "paths": ["YANDERE", "SPLIT"],
+          "per_path": {"YANDERE": {"n": 4, "correct": 3, "accuracy": 0.75,
+                                   "pass": True},
+                       "SPLIT": {"n": 4, "correct": 4, "accuracy": 1.0,
+                                 "pass": True}},
+          "overall": {"n": 8, "correct": 7, "accuracy": 0.875},
+          "all_pass": True, "confusion": {"YANDERE": {"YANDERE": 3, "SPLIT": 1}},
+          "unparsed": 0, "judgements": []}
+    md = md_report(doc, "first", path_judge=pj)
+    assert "Path separation" in md and "| YANDERE | 4 | 3 | 75.0% | PASS |" in md
+    assert "Confusion" in md

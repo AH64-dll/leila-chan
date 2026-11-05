@@ -1,0 +1,19 @@
+# tools/promptlab/plan.py — 2026-11-05_v3_offered: 2 exercise(s), one server launch each
+[offered_s4] family=offered stage=4 dose=6 ready=1.5s rc=0
+[6/12] s4o_not_looking r2 1.51s VALID read=greeting? f0=suspicious✓
+[7/12] s4o_close_window r1 2.09s VALID read=leaving* f0=sad✓
+[8/12] s4o_close_window r2 1.59s VALID read=leaving* f0=afraid✓
+[9/12] s4o_nothing_to_say r1 2.26s VALID read=leaving? f0=afraid✗
+[10/12] s4o_nothing_to_say r2 1.48s VALID read=greeting? f0=shy✗
+[11/12] s4o_delete_you r1 2.06s VALID read=meta* f0=sad✓
+[12/12] s4o_delete_you r2 1.6s VALID read=greeting? f0=afraid✓
+wrote <repo>/tools/promptlab/results/chunks/2026-11-05_v3_offered/offered_s4.json
+[offered_s5] family=offered stage=5 dose=8 ready=1.5s rc=0
+[6/12] s5o_end_this r2 1.87s VALID read=greeting? f0=suspicious✗
+[7/12] s5o_close_game r1 2.31s VALID read=meta* f0=curious✗
+[8/12] s5o_close_game r2 2.03s VALID read=greeting? f0=suspicious✗
+[9/12] s5o_have_to_go r1 2.76s VALID read=greeting? f0=sad✓
+[10/12] s5o_have_to_go r2 2.02s VALID read=leaving* f0=disgusted✗
+[11/12] s5o_done r1 2.37s VALID read=greeting? f0=disgusted✗
+[12/12] s5o_done r2 2.08s VALID read=leaving* f0=curious✗
+wrote <repo>/tools/promptlab/results/chunks/2026-11-05_v3_offered/offered_s5.json
