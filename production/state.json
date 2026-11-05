@@ -3534,6 +3534,14 @@
       "started": "2026-11-05T02:35:25+02:00",
       "handoff": "production/handoffs/P3.18.md",
       "finished": "2026-11-05T02:37:34+02:00"
+    },
+    "P3.19": {
+      "status": "in_review",
+      "agent": "swe2",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-05T04:01:45+02:00",
+      "handoff": "production/handoffs/P3.19.md"
     }
   },
   "history": [
@@ -8575,6 +8583,24 @@
       "ts": "2026-11-05T02:37:34+02:00",
       "event": "in_review->done",
       "ref": "P3.18",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T04:01:45+02:00",
+      "event": "todo->in_progress",
+      "ref": "P3.19",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T04:01:45+02:00",
+      "event": "agent",
+      "ref": "P3.19",
+      "note": "adopted from handoff: swe2"
+    },
+    {
+      "ts": "2026-11-05T04:01:45+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P3.19",
       "note": ""
     }
   ]
