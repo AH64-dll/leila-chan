@@ -3387,7 +3387,7 @@
       "finished": "2026-11-05T01:44:45+02:00"
     },
     "P3.11": {
-      "status": "in_review",
+      "status": "done",
       "agent": "swe2",
       "round": 2,
       "reviews": [
@@ -3420,7 +3420,8 @@
         }
       ],
       "started": "2026-11-04T20:30:51+02:00",
-      "handoff": "production/handoffs/P3.11.md"
+      "handoff": "production/handoffs/P3.11.md",
+      "finished": "2026-11-05T02:20:09+02:00"
     },
     "P2.22": {
       "status": "done",
@@ -8483,6 +8484,12 @@
       "event": "review:safety:approved",
       "ref": "P3.11",
       "note": "production/reviews/P3.11-safety-r2.md"
+    },
+    {
+      "ts": "2026-11-05T02:20:09+02:00",
+      "event": "in_review->done",
+      "ref": "P3.11",
+      "note": ""
     }
   ]
 }
