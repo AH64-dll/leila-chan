@@ -3614,16 +3614,39 @@
       "finished": "2026-11-05T05:25:27+02:00"
     },
     "P4.03": {
-      "status": "todo",
+      "status": "done",
       "agent": "haiku-worker",
-      "round": 0,
-      "reviews": []
+      "round": 1,
+      "reviews": [
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "claude",
+          "report": "production/reviews/P4.03-code-r1.md",
+          "ts": "2026-11-05T06:03:47+02:00",
+          "declared": "claude"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "claude",
+          "report": "production/reviews/P4.03-design-r1.md",
+          "ts": "2026-11-05T06:03:47+02:00",
+          "declared": "claude"
+        }
+      ],
+      "started": "2026-11-05T06:03:47+02:00",
+      "handoff": "production/handoffs/P4.03.md",
+      "finished": "2026-11-05T06:03:47+02:00"
     },
     "P4.04": {
-      "status": "todo",
+      "status": "in_progress",
       "agent": "haiku-worker",
-      "round": 0,
-      "reviews": []
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-05T06:03:47+02:00"
     }
   },
   "history": [
@@ -8774,6 +8797,42 @@
       "event": "agent",
       "ref": "P4.04",
       "note": "None -> haiku-worker"
+    },
+    {
+      "ts": "2026-11-05T06:03:47+02:00",
+      "event": "todo->in_progress",
+      "ref": "P4.03",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T06:03:47+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P4.03",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T06:03:47+02:00",
+      "event": "review:code:approved",
+      "ref": "P4.03",
+      "note": "production/reviews/P4.03-code-r1.md"
+    },
+    {
+      "ts": "2026-11-05T06:03:47+02:00",
+      "event": "review:design:approved",
+      "ref": "P4.03",
+      "note": "production/reviews/P4.03-design-r1.md"
+    },
+    {
+      "ts": "2026-11-05T06:03:47+02:00",
+      "event": "in_review->done",
+      "ref": "P4.03",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T06:03:47+02:00",
+      "event": "todo->in_progress",
+      "ref": "P4.04",
+      "note": ""
     }
   ]
 }
