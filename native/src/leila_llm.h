@@ -5,10 +5,13 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/variant/array.hpp>
 #include <godot_cpp/variant/callable.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/string.hpp>
@@ -30,14 +33,21 @@ public:
 	LeilaLLM();
 	~LeilaLLM();
 
-	// config: model_path (required), backend_dir (required), n_ctx=8192, n_gpu_layers=99, n_threads=-1.
-	// Returns {ok, load_ms, n_layer, n_embd, n_ctx, gpu_offload, devices} or {ok:false, error:{code,message}}.
+	// config: model_path (required), backend_dir (required), n_ctx=8192, n_gpu_layers=99,
+	// n_threads=-1 (<=0 means common_cpu_get_num_math()).
+	// Returns {ok, load_ms, n_layer, n_embd, n_ctx, n_threads, gpu_offload, devices} or {ok:false, error:{code,message}}.
 	godot::Dictionary load_model(const godot::Dictionary &config);
 
 	bool is_loaded() const;
 
 	// Waits for any running generate() to finish, then frees context, templates and model.
 	void unload();
+
+	// Per-turn control vectors. vectors: [{"path": String, "scale": float}, ...]; [] clears them.
+	// Returns {ok:true, applied, set_ms, n_vectors} or {ok:false, error:{code,message}}.
+	// applied is false when the list equals the one already bound. On any error the previously
+	// bound vectors stay in place. Never reloads the model or recreates the context.
+	godot::Dictionary set_control_vectors(const godot::Array &vectors);
 
 	// Returns {ok:true, text, metrics} or {ok:false, error:{code,message}, metrics}.
 	// on_token(String chunk) receives complete UTF-8 chunks. is_cancelled() is polled before each token.
@@ -56,6 +66,12 @@ private:
 	// Frees everything. The caller must hold mu_.
 	void free_locked();
 
+	// Mirror of llama.cpp's common_control_vector_data, so llama.cpp types stay out of this header.
+	struct CvecUnit {
+		int32_t n_embd = -1;
+		std::vector<float> data;  // layers [1, n_layer] at strength 1.0
+	};
+
 	std::mutex mu_;
 	std::atomic<bool> loaded_{ false };
 	llama_model *model_ = nullptr;
@@ -66,4 +82,6 @@ private:
 	int32_t n_embd_ = 0;
 	bool gpu_offload_ = false;
 	std::vector<std::string> devices_;
+	std::unordered_map<std::string, CvecUnit> cvec_cache_;     // path -> unit vector; never re-read from disk
+	std::vector<std::pair<std::string, float>> cvec_current_;  // (path, scale) list bound to ctx_; empty = none
 };

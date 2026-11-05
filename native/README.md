@@ -27,8 +27,8 @@ from a worker thread, never from the main thread. Do not use SceneTree APIs insi
 
 ### `Dictionary load_model(Dictionary config)`
 - `config.model_path` (String, required), `config.backend_dir` (String, required): the directory that holds `libggml-*.so`.
-- `config.n_ctx` (int, 8192), `config.n_gpu_layers` (int, 99), `config.n_threads` (int, -1 = llama default).
-- Returns `{ok:true, load_ms, n_layer, n_embd, n_ctx, gpu_offload, devices}` or `{ok:false, error:{code, message}}`.
+- `config.n_ctx` (int, 8192), `config.n_gpu_layers` (int, 99), `config.n_threads` (int, -1 = all math cores, as llama-server).
+- Returns `{ok:true, load_ms, n_layer, n_embd, n_ctx, n_threads, gpu_offload, devices}` or `{ok:false, error:{code, message}}`.
 - Codes: `model_missing`, `model_load_failed`, `context_failed`, `already_loaded`.
 - `gpu_offload` is approximate: true when `n_gpu_layers != 0` and ggml registered a GPU device.
 - Backends are initialised once per process. A later `backend_dir` is ignored.
@@ -36,6 +36,11 @@ from a worker thread, never from the main thread. Do not use SceneTree APIs insi
 ### `bool is_loaded()`
 ### `void unload()`
 Waits for a running `generate()` to finish, then frees the context, templates and model.
+
+### `Dictionary set_control_vectors(Array vectors)`
+Per-turn steering. `vectors` is `[{"path": String, "scale": float}, ...]`; `[]` clears. Returns `{ok:true, applied, set_ms, n_vectors}`.
+Files are read once and cached per path. The mix is applied to the existing context, with no model reload. Same list again: `applied:false`.
+On error (`not_loaded`, `busy`, `invalid_request`, `control_vector_load_failed`) the previous vectors stay bound.
 
 ### `Dictionary generate(String messages_json, String schema_json, Dictionary sampling, int max_tokens, Callable on_token, Callable is_cancelled)`
 - `messages_json`: OpenAI-style array of `{role, content}`. Rendered with the model's own chat template, thinking disabled.

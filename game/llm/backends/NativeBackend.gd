@@ -20,6 +20,8 @@ var config := {
 }
 
 var _engine: Object = null
+## Dose key -> vector file. Created and loaded in _init; read only on the worker thread.
+var _steering: StageSteering = null
 ## Held for the whole load_model() call, so only worker threads take it.
 var _load_mutex := Mutex.new()
 ## Guards the result fields that the main thread may read.
@@ -32,6 +34,8 @@ var _last_metrics := {}  # guarded by _state_mutex
 func _init(initial_config: Dictionary = {}, injected_engine: Object = null) -> void:
 	config.merge(initial_config, true)
 	_engine = injected_engine if injected_engine != null else _create_default_engine()
+	_steering = StageSteering.new()
+	_steering.load_map()
 
 
 ## The real engine when the GDExtension is registered. Named by string so this
@@ -106,7 +110,7 @@ func generate(request: TurnRequest, on_token: Callable, cancel: LLMCancelToken) 
 	var is_cancelled := Callable()
 	if cancel != null:
 		is_cancelled = Callable(cancel, "is_cancelled")
-	# P4.03: request.dose (control-vector scales) is applied here, before the call.
+	var dose_bind := _bind_dose(request.dose)
 	var raw: Dictionary = _engine.generate(
 		messages_json, schema_json, request.sampling, request.max_tokens, forward, is_cancelled
 	)
@@ -114,6 +118,11 @@ func generate(request: TurnRequest, on_token: Callable, cancel: LLMCancelToken) 
 	var raw_metrics: Variant = raw.get("metrics", {})
 	if raw_metrics is Dictionary:
 		metrics = raw_metrics.duplicate()
+	metrics["dose_set_ms"] = dose_bind["set_ms"]
+	metrics["dose_applied"] = dose_bind["applied"]
+	var dose_error: Dictionary = dose_bind["error"]
+	if not dose_error.is_empty():
+		metrics["dose_error"] = String(dose_error.get("code", "native_error"))
 	metrics["first_say_ms"] = int(first_say_ms[0])
 	metrics["generate_ms"] = Time.get_ticks_msec() - started
 	if bool(raw.get("ok", false)):
@@ -146,6 +155,30 @@ func _load_engine() -> Dictionary:
 	}
 	var result: Dictionary = _engine.load_model(load_config)
 	return result
+
+
+## Binds the turn's dose before generate(). Worker thread only, no Nodes or
+## signals. An empty or all-zero dose binds [], which clears the previous turn's
+## vectors. A failure keeps the old dose and does not fail the turn: the caller
+## records the code in metrics, as the server path does.
+func _bind_dose(dose: Dictionary) -> Dictionary:
+	var started := Time.get_ticks_msec()
+	var launch := _steering.launch_for(dose)
+	var unbound: Array = launch.get("unbound", [])
+	if not bool(launch.get("ok", false)):
+		var refused := _normalise_error(launch.get("error", {}))
+		return {"set_ms": 0.0, "applied": false, "unbound": unbound, "error": refused}
+	var raw: Dictionary = _engine.set_control_vectors(launch.get("vectors", []))
+	var elapsed := float(Time.get_ticks_msec() - started)
+	if not bool(raw.get("ok", false)):
+		var error := _normalise_error(raw.get("error", {}))
+		return {"set_ms": elapsed, "applied": false, "unbound": unbound, "error": error}
+	return {
+		"set_ms": float(raw.get("set_ms", elapsed)),
+		"applied": bool(raw.get("applied", false)),
+		"unbound": unbound,
+		"error": {},
+	}
 
 
 ## Order: config, then env LEILA_MODEL, then a model beside the executable (only

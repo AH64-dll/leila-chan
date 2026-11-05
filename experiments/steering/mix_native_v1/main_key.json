@@ -1,0 +1,352 @@
+{
+  "R001": {
+    "condition": "none",
+    "index": 9,
+    "seed": 70010
+  },
+  "R002": {
+    "condition": "m80_pos",
+    "index": 3,
+    "seed": 70004
+  },
+  "R003": {
+    "condition": "m45_pos",
+    "index": 6,
+    "seed": 70007
+  },
+  "R004": {
+    "condition": "m45_awa",
+    "index": 9,
+    "seed": 70010
+  },
+  "R005": {
+    "condition": "m45_awa",
+    "index": 3,
+    "seed": 70004
+  },
+  "R006": {
+    "condition": "none",
+    "index": 5,
+    "seed": 70006
+  },
+  "R007": {
+    "condition": "m45_awa",
+    "index": 7,
+    "seed": 70008
+  },
+  "R008": {
+    "condition": "m45_pos",
+    "index": 3,
+    "seed": 70004
+  },
+  "R009": {
+    "condition": "m45_awa",
+    "index": 2,
+    "seed": 70003
+  },
+  "R010": {
+    "condition": "m45",
+    "index": 8,
+    "seed": 70009
+  },
+  "R011": {
+    "condition": "m80_awa",
+    "index": 7,
+    "seed": 70008
+  },
+  "R012": {
+    "condition": "m45_pos",
+    "index": 2,
+    "seed": 70003
+  },
+  "R013": {
+    "condition": "m45_pos",
+    "index": 8,
+    "seed": 70009
+  },
+  "R014": {
+    "condition": "m45_awa",
+    "index": 4,
+    "seed": 70005
+  },
+  "R015": {
+    "condition": "none",
+    "index": 8,
+    "seed": 70009
+  },
+  "R016": {
+    "condition": "none",
+    "index": 6,
+    "seed": 70007
+  },
+  "R017": {
+    "condition": "m80_pos",
+    "index": 6,
+    "seed": 70007
+  },
+  "R018": {
+    "condition": "m80_awa",
+    "index": 9,
+    "seed": 70010
+  },
+  "R019": {
+    "condition": "none",
+    "index": 0,
+    "seed": 70001
+  },
+  "R020": {
+    "condition": "m80_pos",
+    "index": 5,
+    "seed": 70006
+  },
+  "R021": {
+    "condition": "m80",
+    "index": 6,
+    "seed": 70007
+  },
+  "R022": {
+    "condition": "m80_awa",
+    "index": 1,
+    "seed": 70002
+  },
+  "R023": {
+    "condition": "m80",
+    "index": 4,
+    "seed": 70005
+  },
+  "R024": {
+    "condition": "m45_pos",
+    "index": 5,
+    "seed": 70006
+  },
+  "R025": {
+    "condition": "m80",
+    "index": 1,
+    "seed": 70002
+  },
+  "R026": {
+    "condition": "m80",
+    "index": 9,
+    "seed": 70010
+  },
+  "R027": {
+    "condition": "m45",
+    "index": 3,
+    "seed": 70004
+  },
+  "R028": {
+    "condition": "m45",
+    "index": 4,
+    "seed": 70005
+  },
+  "R029": {
+    "condition": "m45",
+    "index": 5,
+    "seed": 70006
+  },
+  "R030": {
+    "condition": "m80_awa",
+    "index": 4,
+    "seed": 70005
+  },
+  "R031": {
+    "condition": "m80_pos",
+    "index": 8,
+    "seed": 70009
+  },
+  "R032": {
+    "condition": "m80",
+    "index": 0,
+    "seed": 70001
+  },
+  "R033": {
+    "condition": "none",
+    "index": 2,
+    "seed": 70003
+  },
+  "R034": {
+    "condition": "m45_pos",
+    "index": 7,
+    "seed": 70008
+  },
+  "R035": {
+    "condition": "m80_pos",
+    "index": 7,
+    "seed": 70008
+  },
+  "R036": {
+    "condition": "m80",
+    "index": 5,
+    "seed": 70006
+  },
+  "R037": {
+    "condition": "none",
+    "index": 7,
+    "seed": 70008
+  },
+  "R038": {
+    "condition": "m45_pos",
+    "index": 4,
+    "seed": 70005
+  },
+  "R039": {
+    "condition": "m45_awa",
+    "index": 5,
+    "seed": 70006
+  },
+  "R040": {
+    "condition": "m80_pos",
+    "index": 1,
+    "seed": 70002
+  },
+  "R041": {
+    "condition": "m80",
+    "index": 3,
+    "seed": 70004
+  },
+  "R042": {
+    "condition": "m80_awa",
+    "index": 6,
+    "seed": 70007
+  },
+  "R043": {
+    "condition": "m45_awa",
+    "index": 6,
+    "seed": 70007
+  },
+  "R044": {
+    "condition": "m45_awa",
+    "index": 0,
+    "seed": 70001
+  },
+  "R045": {
+    "condition": "none",
+    "index": 4,
+    "seed": 70005
+  },
+  "R046": {
+    "condition": "m45_awa",
+    "index": 1,
+    "seed": 70002
+  },
+  "R047": {
+    "condition": "none",
+    "index": 3,
+    "seed": 70004
+  },
+  "R048": {
+    "condition": "m80_awa",
+    "index": 5,
+    "seed": 70006
+  },
+  "R049": {
+    "condition": "m45",
+    "index": 7,
+    "seed": 70008
+  },
+  "R050": {
+    "condition": "m80_awa",
+    "index": 8,
+    "seed": 70009
+  },
+  "R051": {
+    "condition": "none",
+    "index": 1,
+    "seed": 70002
+  },
+  "R052": {
+    "condition": "m80_awa",
+    "index": 2,
+    "seed": 70003
+  },
+  "R053": {
+    "condition": "m45",
+    "index": 1,
+    "seed": 70002
+  },
+  "R054": {
+    "condition": "m45_pos",
+    "index": 0,
+    "seed": 70001
+  },
+  "R055": {
+    "condition": "m80_pos",
+    "index": 0,
+    "seed": 70001
+  },
+  "R056": {
+    "condition": "m80_awa",
+    "index": 3,
+    "seed": 70004
+  },
+  "R057": {
+    "condition": "m45_pos",
+    "index": 9,
+    "seed": 70010
+  },
+  "R058": {
+    "condition": "m80",
+    "index": 8,
+    "seed": 70009
+  },
+  "R059": {
+    "condition": "m80_pos",
+    "index": 9,
+    "seed": 70010
+  },
+  "R060": {
+    "condition": "m80",
+    "index": 7,
+    "seed": 70008
+  },
+  "R061": {
+    "condition": "m80",
+    "index": 2,
+    "seed": 70003
+  },
+  "R062": {
+    "condition": "m80_awa",
+    "index": 0,
+    "seed": 70001
+  },
+  "R063": {
+    "condition": "m45",
+    "index": 0,
+    "seed": 70001
+  },
+  "R064": {
+    "condition": "m45_awa",
+    "index": 8,
+    "seed": 70009
+  },
+  "R065": {
+    "condition": "m80_pos",
+    "index": 4,
+    "seed": 70005
+  },
+  "R066": {
+    "condition": "m45_pos",
+    "index": 1,
+    "seed": 70002
+  },
+  "R067": {
+    "condition": "m80_pos",
+    "index": 2,
+    "seed": 70003
+  },
+  "R068": {
+    "condition": "m45",
+    "index": 2,
+    "seed": 70003
+  },
+  "R069": {
+    "condition": "m45",
+    "index": 9,
+    "seed": 70010
+  },
+  "R070": {
+    "condition": "m45",
+    "index": 6,
+    "seed": 70007
+  }
+}

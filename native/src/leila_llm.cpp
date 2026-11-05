@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdio>
 #include <exception>
 #include <filesystem>
@@ -14,6 +15,8 @@
 #include <stdexcept>
 #include <string>
 #include <system_error>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "build-info.h"
@@ -292,6 +295,7 @@ void LeilaLLM::_bind_methods() {
 	godot::ClassDB::bind_method(godot::D_METHOD("load_model", "config"), &LeilaLLM::load_model);
 	godot::ClassDB::bind_method(godot::D_METHOD("is_loaded"), &LeilaLLM::is_loaded);
 	godot::ClassDB::bind_method(godot::D_METHOD("unload"), &LeilaLLM::unload);
+	godot::ClassDB::bind_method(godot::D_METHOD("set_control_vectors", "vectors"), &LeilaLLM::set_control_vectors);
 	godot::ClassDB::bind_method(
 			godot::D_METHOD("generate", "messages_json", "schema_json", "sampling", "max_tokens", "on_token", "is_cancelled"),
 			&LeilaLLM::generate);
@@ -322,6 +326,8 @@ void LeilaLLM::free_locked() {
 	n_embd_ = 0;
 	gpu_offload_ = false;
 	devices_.clear();
+	cvec_cache_.clear();
+	cvec_current_.clear();
 }
 
 godot::Dictionary LeilaLLM::load_model(const godot::Dictionary &config) {
@@ -352,16 +358,18 @@ godot::Dictionary LeilaLLM::load_model(const godot::Dictionary &config) {
 			throw LeilaError("model_load_failed", "llama_model_load_from_file failed: " + model_path);
 		}
 
-		const int64_t n_threads = dict_int(config, "n_threads", -1);
+		// n_threads <= 0 means all math cores, as llama-server does.
+		int64_t n_threads = dict_int(config, "n_threads", -1);
+		if (n_threads <= 0) {
+			n_threads = common_cpu_get_num_math();
+		}
 		llama_context_params cp = llama_context_default_params();
 		cp.n_ctx = static_cast<uint32_t>(dict_int(config, "n_ctx", 8192));
 		cp.n_batch = kBatch;
 		cp.n_ubatch = 512;
 		cp.no_perf = false;
-		if (n_threads > 0) {
-			cp.n_threads = static_cast<int32_t>(n_threads);
-			cp.n_threads_batch = static_cast<int32_t>(n_threads);
-		}
+		cp.n_threads = static_cast<int32_t>(n_threads);
+		cp.n_threads_batch = static_cast<int32_t>(n_threads);
 		ctx_ = llama_init_from_model(model_, cp);
 		if (!ctx_) {
 			throw LeilaError("context_failed", "llama_init_from_model failed");
@@ -398,6 +406,7 @@ godot::Dictionary LeilaLLM::load_model(const godot::Dictionary &config) {
 		out["n_layer"] = static_cast<int64_t>(n_layer_);
 		out["n_embd"] = static_cast<int64_t>(n_embd_);
 		out["n_ctx"] = static_cast<int64_t>(n_ctx_);
+		out["n_threads"] = static_cast<int64_t>(n_threads);
 		out["gpu_offload"] = gpu_offload_;
 		godot::Array devs;
 		for (const auto &name : devices_) {
@@ -421,6 +430,114 @@ bool LeilaLLM::is_loaded() const {
 void LeilaLLM::unload() {
 	std::lock_guard<std::mutex> lock(mu_);
 	free_locked();
+}
+
+godot::Dictionary LeilaLLM::set_control_vectors(const godot::Array &vectors) {
+	const auto t_start = clock_type::now();
+	auto elapsed_ms = [t_start]() {
+		return std::chrono::duration<double, std::milli>(clock_type::now() - t_start).count();
+	};
+
+	std::unique_lock<std::mutex> lock(mu_, std::try_to_lock);
+	if (!lock.owns_lock()) {
+		return error_dict("busy", "another generate() or load is in progress");
+	}
+	if (!loaded_) {
+		return error_dict("not_loaded", "no model loaded; call load_model() first");
+	}
+
+	try {
+		// Validate the whole list before touching any state.
+		std::vector<std::pair<std::string, float>> wanted;
+		wanted.reserve(static_cast<size_t>(vectors.size()));
+		for (int64_t i = 0; i < vectors.size(); ++i) {
+			const std::string where = "control vector entry " + std::to_string(i);
+			const godot::Variant entry_v = vectors[i];
+			if (entry_v.get_type() != godot::Variant::DICTIONARY) {
+				return error_dict("invalid_request", where + " is not a Dictionary");
+			}
+			const godot::Dictionary entry = entry_v;
+			const std::string path = dict_str(entry, "path", "");
+			if (path.empty()) {
+				return error_dict("invalid_request", where + " has an empty path");
+			}
+			if (!entry.has("scale")) {
+				return error_dict("invalid_request", where + " has no scale");
+			}
+			const godot::Variant scale_v = entry["scale"];
+			if (scale_v.get_type() != godot::Variant::FLOAT && scale_v.get_type() != godot::Variant::INT) {
+				return error_dict("invalid_request", where + " scale is not a number");
+			}
+			const float scale = static_cast<float>(static_cast<double>(scale_v));
+			if (!std::isfinite(scale)) {
+				return error_dict("invalid_request", where + " scale is not finite");
+			}
+			wanted.emplace_back(path, scale);
+		}
+
+		// Same list as currently bound (same order, paths and scales): nothing to do.
+		if (wanted == cvec_current_) {
+			godot::Dictionary out;
+			out["ok"] = true;
+			out["applied"] = false;
+			out["set_ms"] = elapsed_ms();
+			out["n_vectors"] = static_cast<int64_t>(wanted.size());
+			return out;
+		}
+
+		// Load every unit before anything changes. Each path is read from disk once, then cached.
+		std::vector<const CvecUnit *> units;
+		units.reserve(wanted.size());
+		for (const auto &item : wanted) {
+			auto it = cvec_cache_.find(item.first);
+			if (it == cvec_cache_.end()) {
+				std::vector<common_control_vector_load_info> infos{ common_control_vector_load_info{ 1.0f, item.first } };
+				common_control_vector_data loaded = common_control_vector_load(infos, n_layer_);
+				if (loaded.n_embd == -1 || loaded.n_embd != n_embd_) {
+					return error_dict("control_vector_load_failed", "could not load control vector: " + item.first);
+				}
+				it = cvec_cache_.emplace(item.first, CvecUnit{ loaded.n_embd, std::move(loaded.data) }).first;
+			}
+			units.push_back(&it->second);
+		}
+
+		// Mix: sum of scale * unit over all entries, zero-padded to the longest unit.
+		std::vector<float> mixed;
+		for (size_t k = 0; k < wanted.size(); ++k) {
+			const std::vector<float> &data = units[k]->data;
+			if (mixed.size() < data.size()) {
+				mixed.resize(data.size(), 0.0f);
+			}
+			const float scale = wanted[k].second;
+			for (size_t i = 0; i < data.size(); ++i) {
+				mixed[i] += scale * data[i];
+			}
+		}
+
+		// Apply to the existing context. Layer range 1..n_layer as common_init_from_params does.
+		int32_t rc = 0;
+		if (wanted.empty()) {
+			rc = llama_set_adapter_cvec(ctx_, nullptr, 0, n_embd_, 1, n_layer_);
+		} else {
+			if (mixed.empty()) {
+				return error_dict("control_vector_load_failed", "control vectors are empty");
+			}
+			rc = llama_set_adapter_cvec(ctx_, mixed.data(), mixed.size(), n_embd_, 1, n_layer_);
+		}
+		if (rc != 0) {
+			return error_dict("control_vector_load_failed", "llama_set_adapter_cvec failed");
+		}
+		cvec_current_ = std::move(wanted);
+
+		godot::Dictionary out;
+		out["ok"] = true;
+		out["applied"] = true;
+		out["set_ms"] = elapsed_ms();
+		out["n_vectors"] = static_cast<int64_t>(cvec_current_.size());
+		return out;
+	} catch (const std::exception &e) {
+		return error_dict("control_vector_load_failed", e.what());
+	}
 }
 
 godot::Dictionary LeilaLLM::generate(const godot::String &messages_json_g, const godot::String &schema_json_g,

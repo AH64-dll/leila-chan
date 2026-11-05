@@ -1,0 +1,16 @@
+server parity: healthy
+  /props default_generation_settings: {"temperature": 0.800000011920929, "top_k": 40, "top_p": 0.949999988079071, "min_p": 0.05000000074505806, "repeat_penalty": 1.0, "presence_penalty": 0.0, "frequency_penalty": 0.0, "typical_p": 1.0, "seed": 4294967295, "n_predict": -1, "samplers": ["penalties", "dry", "top_n_sigma", "top_k", "typ_p", "top_p", "min_p", "xtc", "temperature"], "ignore_eos": false, "dry_multiplier": 0.0, "xtc_probability": 0.0, "top_n_sigma": -1.0}
+server parity0: healthy
+  /props default_generation_settings: {"temperature": 0.800000011920929, "top_k": 40, "top_p": 0.949999988079071, "min_p": 0.05000000074505806, "repeat_penalty": 1.0, "presence_penalty": 0.0, "frequency_penalty": 0.0, "typical_p": 1.0, "seed": 4294967295, "n_predict": -1, "samplers": ["penalties", "dry", "top_n_sigma", "top_k", "typ_p", "top_p", "min_p", "xtc", "temperature"], "ignore_eos": false, "dry_multiplier": 0.0, "xtc_probability": 0.0, "top_n_sigma": -1.0}
+set      index identical server_tokens native_tokens
+parity       0 yes                  75            74
+parity       1 yes                  14            13
+parity       2 yes                  61            60
+parity       3 yes                  72            71
+parity       4 yes                  30            29
+parity0      0 yes                  32            31
+parity0      1 yes                  27            26
+parity0      2 yes                  39            38
+parity0      3 yes                  29            28
+parity0      4 yes                  45            44
+VERDICT: 10/10 identical

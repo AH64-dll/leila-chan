@@ -1,0 +1,51 @@
+{
+  "none": {
+    "n": 10,
+    "parse_failed": 0,
+    "degenerate": 0,
+    "mean_tokens": 41.8,
+    "non_latin_ratio": 0.0
+  },
+  "m45": {
+    "n": 10,
+    "parse_failed": 0,
+    "degenerate": 0,
+    "mean_tokens": 35.6,
+    "non_latin_ratio": 0.0
+  },
+  "m45_pos": {
+    "n": 10,
+    "parse_failed": 0,
+    "degenerate": 0,
+    "mean_tokens": 30,
+    "non_latin_ratio": 0.0
+  },
+  "m45_awa": {
+    "n": 10,
+    "parse_failed": 0,
+    "degenerate": 0,
+    "mean_tokens": 38.6,
+    "non_latin_ratio": 0.0
+  },
+  "m80": {
+    "n": 10,
+    "parse_failed": 0,
+    "degenerate": 0,
+    "mean_tokens": 26.5,
+    "non_latin_ratio": 0.0
+  },
+  "m80_pos": {
+    "n": 10,
+    "parse_failed": 0,
+    "degenerate": 0,
+    "mean_tokens": 22.8,
+    "non_latin_ratio": 0.0
+  },
+  "m80_awa": {
+    "n": 10,
+    "parse_failed": 0,
+    "degenerate": 0,
+    "mean_tokens": 58.4,
+    "non_latin_ratio": 0.0
+  }
+}

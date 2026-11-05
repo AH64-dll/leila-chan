@@ -1,0 +1,252 @@
+{
+  "R001": {
+    "condition": "c_pos",
+    "index": 4,
+    "seed": 71005
+  },
+  "R002": {
+    "condition": "c_none",
+    "index": 9,
+    "seed": 71010
+  },
+  "R003": {
+    "condition": "c_none",
+    "index": 4,
+    "seed": 71005
+  },
+  "R004": {
+    "condition": "c_m80",
+    "index": 2,
+    "seed": 71003
+  },
+  "R005": {
+    "condition": "c_awa",
+    "index": 9,
+    "seed": 71010
+  },
+  "R006": {
+    "condition": "c_m80_pos",
+    "index": 6,
+    "seed": 71007
+  },
+  "R007": {
+    "condition": "c_m80_pos",
+    "index": 5,
+    "seed": 71006
+  },
+  "R008": {
+    "condition": "c_pos",
+    "index": 2,
+    "seed": 71003
+  },
+  "R009": {
+    "condition": "c_m80_pos",
+    "index": 0,
+    "seed": 71001
+  },
+  "R010": {
+    "condition": "c_m80_pos",
+    "index": 1,
+    "seed": 71002
+  },
+  "R011": {
+    "condition": "c_none",
+    "index": 6,
+    "seed": 71007
+  },
+  "R012": {
+    "condition": "c_m80",
+    "index": 7,
+    "seed": 71008
+  },
+  "R013": {
+    "condition": "c_m80_pos",
+    "index": 8,
+    "seed": 71009
+  },
+  "R014": {
+    "condition": "c_m80",
+    "index": 8,
+    "seed": 71009
+  },
+  "R015": {
+    "condition": "c_pos",
+    "index": 1,
+    "seed": 71002
+  },
+  "R016": {
+    "condition": "c_awa",
+    "index": 6,
+    "seed": 71007
+  },
+  "R017": {
+    "condition": "c_m80_pos",
+    "index": 2,
+    "seed": 71003
+  },
+  "R018": {
+    "condition": "c_m80",
+    "index": 5,
+    "seed": 71006
+  },
+  "R019": {
+    "condition": "c_awa",
+    "index": 3,
+    "seed": 71004
+  },
+  "R020": {
+    "condition": "c_pos",
+    "index": 8,
+    "seed": 71009
+  },
+  "R021": {
+    "condition": "c_none",
+    "index": 2,
+    "seed": 71003
+  },
+  "R022": {
+    "condition": "c_awa",
+    "index": 7,
+    "seed": 71008
+  },
+  "R023": {
+    "condition": "c_pos",
+    "index": 6,
+    "seed": 71007
+  },
+  "R024": {
+    "condition": "c_m80",
+    "index": 9,
+    "seed": 71010
+  },
+  "R025": {
+    "condition": "c_awa",
+    "index": 4,
+    "seed": 71005
+  },
+  "R026": {
+    "condition": "c_awa",
+    "index": 2,
+    "seed": 71003
+  },
+  "R027": {
+    "condition": "c_m80_pos",
+    "index": 7,
+    "seed": 71008
+  },
+  "R028": {
+    "condition": "c_m80",
+    "index": 3,
+    "seed": 71004
+  },
+  "R029": {
+    "condition": "c_awa",
+    "index": 1,
+    "seed": 71002
+  },
+  "R030": {
+    "condition": "c_awa",
+    "index": 8,
+    "seed": 71009
+  },
+  "R031": {
+    "condition": "c_m80_pos",
+    "index": 3,
+    "seed": 71004
+  },
+  "R032": {
+    "condition": "c_m80_pos",
+    "index": 4,
+    "seed": 71005
+  },
+  "R033": {
+    "condition": "c_pos",
+    "index": 9,
+    "seed": 71010
+  },
+  "R034": {
+    "condition": "c_pos",
+    "index": 0,
+    "seed": 71001
+  },
+  "R035": {
+    "condition": "c_m80",
+    "index": 6,
+    "seed": 71007
+  },
+  "R036": {
+    "condition": "c_m80",
+    "index": 0,
+    "seed": 71001
+  },
+  "R037": {
+    "condition": "c_pos",
+    "index": 3,
+    "seed": 71004
+  },
+  "R038": {
+    "condition": "c_none",
+    "index": 7,
+    "seed": 71008
+  },
+  "R039": {
+    "condition": "c_none",
+    "index": 1,
+    "seed": 71002
+  },
+  "R040": {
+    "condition": "c_m80",
+    "index": 4,
+    "seed": 71005
+  },
+  "R041": {
+    "condition": "c_pos",
+    "index": 7,
+    "seed": 71008
+  },
+  "R042": {
+    "condition": "c_awa",
+    "index": 5,
+    "seed": 71006
+  },
+  "R043": {
+    "condition": "c_awa",
+    "index": 0,
+    "seed": 71001
+  },
+  "R044": {
+    "condition": "c_m80_pos",
+    "index": 9,
+    "seed": 71010
+  },
+  "R045": {
+    "condition": "c_none",
+    "index": 0,
+    "seed": 71001
+  },
+  "R046": {
+    "condition": "c_pos",
+    "index": 5,
+    "seed": 71006
+  },
+  "R047": {
+    "condition": "c_none",
+    "index": 8,
+    "seed": 71009
+  },
+  "R048": {
+    "condition": "c_none",
+    "index": 5,
+    "seed": 71006
+  },
+  "R049": {
+    "condition": "c_none",
+    "index": 3,
+    "seed": 71004
+  },
+  "R050": {
+    "condition": "c_m80",
+    "index": 1,
+    "seed": 71002
+  }
+}

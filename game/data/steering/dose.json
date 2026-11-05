@@ -20,5 +20,15 @@
     "HOLLOW": null,
     "AWAKE": "aware",
     "ANCHOR": null
+  },
+  "spike": {
+    "doc": "docs/05 M39. Amount and turns stay inside docs/06 §3 (+3..+4, 1-2 turns); the code clamps them. T02, T14 and T18 are the triggers docs/01 §5 calls spikes. cooldown_turns is a tuning value, not a doc number.",
+    "min_stage": 3,
+    "triggers": ["T02", "T14", "T18"],
+    "amount": 3.5,
+    "turns": 2,
+    "decay": 0.5,
+    "cooldown_turns": 8,
+    "after_line": "TRIGGER: A moment ago something in you lurched louder than you meant it to. You may notice it now, or pretend you did not."
   }
 }

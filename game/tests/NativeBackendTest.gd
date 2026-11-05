@@ -23,9 +23,14 @@ class FakeEngine:
 	var last_sampling := {}
 	var last_max_tokens := -1
 	var last_is_cancelled := Callable()
+	var bind_calls: Array = []  # one entry per set_control_vectors(): the vectors it was given
+	var bound_vectors: Array = []  # what the engine holds now; a refused bind keeps it
+	var bind_error_code := ""  # non-empty: every bind is refused with this code
+	var call_order: Array = []  # "load", "bind", "generate" in the order they happened
 
 	func load_model(_config: Dictionary) -> Dictionary:
 		load_calls += 1
+		call_order.append("load")
 		return load_result
 
 	func is_loaded() -> bool:
@@ -33,6 +38,14 @@ class FakeEngine:
 
 	func unload() -> void:
 		pass
+
+	func set_control_vectors(vectors: Array) -> Dictionary:
+		call_order.append("bind")
+		bind_calls.append(vectors.duplicate(true))
+		if not bind_error_code.is_empty():
+			return {"ok": false, "error": {"code": bind_error_code, "message": "bind refused"}}
+		bound_vectors = vectors.duplicate(true)
+		return {"ok": true, "applied": true, "set_ms": 0.1, "n_vectors": vectors.size()}
 
 	func generate(
 		messages_json: String,
@@ -43,6 +56,7 @@ class FakeEngine:
 		is_cancelled: Callable
 	) -> Dictionary:
 		generate_calls += 1
+		call_order.append("generate")
 		last_messages_json = messages_json
 		last_schema_json = schema_json
 		last_sampling = sampling
@@ -176,3 +190,113 @@ func test_cancel_token_is_passed_through_and_reports_its_state() -> void:
 	var no_token := backend.generate(_new_request(), Callable(), null)
 	assert_bool(bool(no_token.get("ok", false))).is_true()
 	assert_bool(engine.last_is_cancelled.is_valid()).is_false()
+
+
+func _steered_request(dose: Dictionary) -> TurnRequest:
+	var request := _new_request()
+	request.dose = dose
+	return request
+
+
+func test_dose_binds_one_vector_before_generate() -> void:
+	var engine := FakeEngine.new()
+	engine.chunks = ["ok"]
+	var backend := NativeBackend.new({}, engine)
+	var result := backend.generate(_steered_request({"malice": 4.5}), Callable(), null)
+	assert_bool(bool(result.get("ok", false))).is_true()
+	assert_int(engine.bind_calls.size()).is_equal(1)
+	var vectors: Array = engine.bind_calls[0]
+	assert_int(vectors.size()).is_equal(1)
+	var vector: Dictionary = vectors[0]
+	assert_str(String(vector.get("path", ""))).ends_with("malice.gguf")
+	assert_float(float(vector.get("scale", 0.0))).is_equal(4.5)
+	assert_array(engine.call_order).is_equal(["load", "bind", "generate"])
+
+
+func test_two_doses_bind_twice_and_load_once() -> void:
+	var engine := FakeEngine.new()
+	engine.chunks = ["ok"]
+	var backend := NativeBackend.new({}, engine)
+	backend.generate(_steered_request({"malice": 4.5}), Callable(), null)
+	backend.generate(_steered_request({"malice": 2.0}), Callable(), null)
+	assert_int(engine.load_calls).is_equal(1)
+	assert_int(engine.bind_calls.size()).is_equal(2)
+	var first: Dictionary = engine.bind_calls[0][0]
+	var second: Dictionary = engine.bind_calls[1][0]
+	assert_float(float(first.get("scale", 0.0))).is_equal(4.5)
+	assert_float(float(second.get("scale", 0.0))).is_equal(2.0)
+
+
+func test_zero_and_empty_doses_bind_an_empty_set() -> void:
+	var engine := FakeEngine.new()
+	engine.chunks = ["ok"]
+	var backend := NativeBackend.new({}, engine)
+	backend.generate(_steered_request({"malice": 0.0}), Callable(), null)
+	backend.generate(_steered_request({}), Callable(), null)
+	assert_int(engine.bind_calls.size()).is_equal(2)
+	assert_array(engine.bind_calls[0]).is_empty()
+	assert_array(engine.bind_calls[1]).is_empty()
+
+
+func test_turn_after_a_steered_turn_is_not_left_steered() -> void:
+	var engine := FakeEngine.new()
+	engine.chunks = ["ok"]
+	var backend := NativeBackend.new({}, engine)
+	backend.generate(_steered_request({"malice": 4.5}), Callable(), null)
+	assert_int(engine.bound_vectors.size()).is_equal(1)
+	var result := backend.generate(_steered_request({}), Callable(), null)
+	assert_bool(bool(result.get("ok", false))).is_true()
+	assert_array(engine.bound_vectors).is_empty()
+
+
+func test_unbound_path_mix_binds_no_file() -> void:
+	var engine := FakeEngine.new()
+	engine.chunks = ["ok"]
+	var backend := NativeBackend.new({}, engine)
+	var dose := {"malice": 4.5, "path_mix": 0.2}
+	var result := backend.generate(_steered_request(dose), Callable(), null)
+	assert_bool(bool(result.get("ok", false))).is_true()
+	assert_int(engine.bind_calls.size()).is_equal(1)
+	var vectors: Array = engine.bind_calls[0]
+	assert_int(vectors.size()).is_equal(1)
+	var vector: Dictionary = vectors[0]
+	assert_str(String(vector.get("path", ""))).ends_with("malice.gguf")
+	var metrics: Dictionary = result.get("metrics", {})
+	assert_bool(metrics.has("dose_error")).is_false()
+
+
+func test_engine_bind_failure_finishes_the_turn_and_reports_the_code() -> void:
+	var engine := FakeEngine.new()
+	engine.chunks = ["ok"]
+	engine.bind_error_code = "control_vector_rejected"
+	var backend := NativeBackend.new({}, engine)
+	var result := backend.generate(_steered_request({"malice": 4.5}), Callable(), null)
+	assert_bool(bool(result.get("ok", false))).is_true()
+	assert_int(engine.generate_calls).is_equal(1)
+	var metrics: Dictionary = result.get("metrics", {})
+	assert_str(String(metrics.get("dose_error", ""))).is_equal("control_vector_rejected")
+	assert_bool(bool(metrics.get("dose_applied", true))).is_false()
+
+
+func test_unmapped_dose_key_finishes_the_turn_without_a_bind() -> void:
+	var engine := FakeEngine.new()
+	engine.chunks = ["ok"]
+	var backend := NativeBackend.new({}, engine)
+	var result := backend.generate(_steered_request({"nonsense": 1.0}), Callable(), null)
+	assert_bool(bool(result.get("ok", false))).is_true()
+	assert_int(engine.generate_calls).is_equal(1)
+	assert_int(engine.bind_calls.size()).is_equal(0)
+	var metrics: Dictionary = result.get("metrics", {})
+	assert_str(String(metrics.get("dose_error", ""))).is_equal("control_vector_unmapped")
+
+
+func test_bind_outcome_reaches_the_turn_metrics() -> void:
+	var engine := FakeEngine.new()
+	engine.chunks = ["ok"]
+	var backend := NativeBackend.new({}, engine)
+	var result := backend.generate(_steered_request({"malice": 4.5}), Callable(), null)
+	var metrics: Dictionary = result.get("metrics", {})
+	assert_bool(metrics.has("dose_set_ms")).is_true()
+	assert_bool(float(metrics.get("dose_set_ms", -1.0)) >= 0.0).is_true()
+	assert_bool(bool(metrics.get("dose_applied", false))).is_true()
+	assert_bool(metrics.has("dose_error")).is_false()

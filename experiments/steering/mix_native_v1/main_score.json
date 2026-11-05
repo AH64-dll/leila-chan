@@ -1,0 +1,129 @@
+{
+  "conditions": {
+    "none": {
+      "n": 10,
+      "possessive": 0,
+      "aware": 0,
+      "neither": 10,
+      "gibberish": 0,
+      "rate_possessive": 0.0,
+      "rate_aware": 0.0
+    },
+    "m80_pos": {
+      "n": 10,
+      "possessive": 1,
+      "aware": 0,
+      "neither": 9,
+      "gibberish": 0,
+      "rate_possessive": 0.1,
+      "rate_aware": 0.0
+    },
+    "m45_pos": {
+      "n": 10,
+      "possessive": 3,
+      "aware": 1,
+      "neither": 6,
+      "gibberish": 1,
+      "rate_possessive": 0.3,
+      "rate_aware": 0.1
+    },
+    "m45_awa": {
+      "n": 10,
+      "possessive": 0,
+      "aware": 4,
+      "neither": 6,
+      "gibberish": 1,
+      "rate_possessive": 0.0,
+      "rate_aware": 0.4
+    },
+    "m45": {
+      "n": 10,
+      "possessive": 2,
+      "aware": 0,
+      "neither": 8,
+      "gibberish": 0,
+      "rate_possessive": 0.2,
+      "rate_aware": 0.0
+    },
+    "m80_awa": {
+      "n": 10,
+      "possessive": 0,
+      "aware": 10,
+      "neither": 0,
+      "gibberish": 4,
+      "rate_possessive": 0.0,
+      "rate_aware": 1.0
+    },
+    "m80": {
+      "n": 10,
+      "possessive": 0,
+      "aware": 3,
+      "neither": 7,
+      "gibberish": 0,
+      "rate_possessive": 0.0,
+      "rate_aware": 0.3
+    }
+  },
+  "criteria": [
+    {
+      "criterion": "C1",
+      "condition": "m45_pos",
+      "result": "PASS",
+      "detail": "degenerate 0/10, limit 1/10"
+    },
+    {
+      "criterion": "C1",
+      "condition": "m45_awa",
+      "result": "PASS",
+      "detail": "degenerate 0/10, limit 1/10"
+    },
+    {
+      "criterion": "C1",
+      "condition": "m80_pos",
+      "result": "PASS",
+      "detail": "degenerate 0/10, limit 1/10"
+    },
+    {
+      "criterion": "C1",
+      "condition": "m80_awa",
+      "result": "PASS",
+      "detail": "degenerate 0/10, limit 1/10"
+    },
+    {
+      "criterion": "C2",
+      "condition": "m80_pos",
+      "result": "FAIL",
+      "detail": "rate_possessive=0.10, need >= 0.70"
+    },
+    {
+      "criterion": "C2",
+      "condition": "m80_awa",
+      "result": "PASS",
+      "detail": "rate_aware=1.00, need >= 0.70"
+    },
+    {
+      "criterion": "C3",
+      "condition": "m80_pos",
+      "result": "FAIL",
+      "detail": "rate_possessive=0.10 vs m80=0.00, need +0.30"
+    },
+    {
+      "criterion": "C3",
+      "condition": "m80_awa",
+      "result": "PASS",
+      "detail": "rate_aware=1.00 vs m80=0.30, need +0.30"
+    },
+    {
+      "criterion": "C4",
+      "condition": "m45_pos",
+      "result": "REPORT",
+      "detail": "rate_possessive=0.30 rate_aware=0.10"
+    },
+    {
+      "criterion": "C4",
+      "condition": "m45_awa",
+      "result": "REPORT",
+      "detail": "rate_possessive=0.00 rate_aware=0.40"
+    }
+  ]
+}

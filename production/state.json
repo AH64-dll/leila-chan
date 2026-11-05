@@ -3612,6 +3612,18 @@
       "started": "2026-11-05T04:21:11+02:00",
       "handoff": "production/handoffs/P4.02.md",
       "finished": "2026-11-05T05:25:27+02:00"
+    },
+    "P4.03": {
+      "status": "todo",
+      "agent": "haiku-worker",
+      "round": 0,
+      "reviews": []
+    },
+    "P4.04": {
+      "status": "todo",
+      "agent": "haiku-worker",
+      "round": 0,
+      "reviews": []
     }
   },
   "history": [
@@ -8750,6 +8762,18 @@
       "event": "in_review->done",
       "ref": "P4.02",
       "note": ""
+    },
+    {
+      "ts": "2026-11-05T06:03:34+02:00",
+      "event": "agent",
+      "ref": "P4.03",
+      "note": "None -> haiku-worker"
+    },
+    {
+      "ts": "2026-11-05T06:03:35+02:00",
+      "event": "agent",
+      "ref": "P4.04",
+      "note": "None -> haiku-worker"
     }
   ]
 }

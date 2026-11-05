@@ -40,6 +40,11 @@ func _ready() -> void:
 ## next generate() — an in-flight turn keeps the backend it started with.
 func set_backend(new_backend: LLMBackend) -> void:
 	_backend = new_backend
+	# docs/05 M39 spike: live only on the native backend (the server's dose is a launch flag).
+	var steering := get_node_or_null("/root/Steering")
+	var native := new_backend != null and new_backend.has_method("is_native")
+	if steering != null and steering.has_method("set_spikes_live"):
+		steering.set_spikes_live(native and bool(new_backend.call("is_native")))
 
 
 func has_backend() -> bool:

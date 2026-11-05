@@ -39,6 +39,7 @@ var _files := {}  # name -> res:// file
 var _notes := {}  # name -> provenance text from the data file
 var _unbound := {}  # name -> why it binds no file yet
 var _error := ""
+var _resolved := {}  # res:// file -> global path, memoized once non-empty
 
 
 ## Reads the map. Returns false when it is missing or has no usable row, which
@@ -162,12 +163,19 @@ func launch_for(dose: Dictionary) -> Dictionary:
 ## packed bytes into `user://steering/` on first use (a .pck member is not a file
 ## a separate process can read).
 func resolve_file(res_path: String) -> String:
+	var known := String(_resolved.get(res_path, ""))
+	if not known.is_empty() and FileAccess.file_exists(known):
+		return known
 	var global := ProjectSettings.globalize_path(res_path)
 	if FileAccess.file_exists(global):
+		_resolved[res_path] = global
 		return global
 	if not FileAccess.file_exists(res_path):
 		return ""
-	return extract_to(res_path, EXTRACT_DIR)
+	var extracted := extract_to(res_path, EXTRACT_DIR)
+	if not extracted.is_empty():
+		_resolved[res_path] = extracted
+	return extracted
 
 
 ## Copy a packed `res://` file to `dir` and return the real path, or "" when the

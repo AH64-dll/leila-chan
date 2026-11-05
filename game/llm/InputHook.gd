@@ -44,6 +44,11 @@ static func apply(
 		var fired: Variant = Triggers.begin_turn(input_text)
 		if fired is Array:
 			_append_all(lines, fired)
+	if Steering != null and Steering.has_method("on_player_turn"):
+		var spike: Dictionary = Steering.on_player_turn(stage)
+		if bool(spike["armed"]) and FX != null and FX.has_method("trigger"):
+			FX.trigger("glitch", stage)
+		_append_all(lines, [spike["after_line"]])
 	return {"lines": lines, "private": private_terms}
 
 
@@ -79,6 +84,8 @@ static func reset_session(telemetry: Node) -> void:
 		telemetry.call("reset_session")
 	if Triggers != null and Triggers.has_method("clear_engine_events"):
 		Triggers.clear_engine_events()
+	if Steering != null and Steering.has_method("reset_spike"):
+		Steering.reset_spike()
 
 
 ## Appends non-empty, deduplicated lines from a Variant that should be an Array.
