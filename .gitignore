@@ -59,3 +59,7 @@ experiments/steering/pairs_tsv/
 # transcripts. transcripts.jsonl + blind/ + results.json are the committed evidence.
 experiments/steering/blind_*/server/
 experiments/steering/blind_*/raw/
+
+# P4 native: staged GDExtension binaries and build outputs (never commit)
+game/addons/leila_llm/bin/
+native/build/
