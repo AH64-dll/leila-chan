@@ -3606,6 +3606,25 @@
       "round": 1,
       "reviews": [],
       "started": "2026-11-05T07:36:03+02:00"
+    },
+    "P2.29": {
+      "status": "done",
+      "agent": "gemini-3.8-flash",
+      "round": 1,
+      "reviews": [
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "gemini-3.8-flash",
+          "report": "production/reviews/P2.29-code-r1.md",
+          "ts": "2026-11-05T21:32:32+02:00",
+          "declared": "gemini-3.8-flash"
+        }
+      ],
+      "started": "2026-11-05T21:32:16+02:00",
+      "handoff": "production/handoffs/P2.29.md",
+      "finished": "2026-11-05T21:32:32+02:00"
     }
   },
   "history": [
@@ -8707,13 +8726,43 @@
       "ts": "2026-11-05T20:20:32+02:00",
       "event": "in_progress->blocked",
       "ref": "P2.24",
-      "note": "awaiting human playtest \u2014 kit merged, owner runs 3 sessions (D23)"
+      "note": "awaiting human playtest — kit merged, owner runs 3 sessions (D23)"
     },
     {
       "ts": "2026-11-05T20:20:38+02:00",
       "event": "review:design:approved",
       "ref": "P2.24",
       "note": "production/reviews/P2.24-design-r1.md"
+    },
+    {
+      "ts": "2026-11-05T21:32:16+02:00",
+      "event": "todo->in_progress",
+      "ref": "P2.29",
+      "note": "harness batch dispatched"
+    },
+    {
+      "ts": "2026-11-05T21:32:29+02:00",
+      "event": "agent",
+      "ref": "P2.29",
+      "note": "adopted from handoff: gemini-3.8-flash"
+    },
+    {
+      "ts": "2026-11-05T21:32:29+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P2.29",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T21:32:32+02:00",
+      "event": "review:code:approved",
+      "ref": "P2.29",
+      "note": "production/reviews/P2.29-code-r1.md"
+    },
+    {
+      "ts": "2026-11-05T21:32:32+02:00",
+      "event": "in_review->done",
+      "ref": "P2.29",
+      "note": "approved r1; CODE-1/2 S3s carry-over"
     }
   ]
 }
