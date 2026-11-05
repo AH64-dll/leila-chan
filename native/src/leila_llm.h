@@ -59,11 +59,17 @@ public:
 	// generate() would build for these messages, or -1 on error or when busy or not loaded.
 	int64_t count_special_tokens(const godot::String &messages_json);
 
+	// Classifier pass for the output filter (docs/02 §8). Runs on its own llama_context over the
+	// same model, which never gets a control vector: dose 0 by construction. Greedy, no grammar,
+	// no thinking, prompt <= 1000 tokens. Queues on cls_mu_ only, so it runs while generate() holds mu_.
+	// Returns {ok:true, text, metrics} or {ok:false, error:{code,message}, metrics}.
+	godot::Dictionary classify(const godot::String &messages_json, int64_t max_tokens);
+
 	// Returns "leila_llm 0.1 | <llama build info> | <llama system info>".
 	godot::String version() const;
 
 private:
-	// Frees everything. The caller must hold mu_.
+	// Frees everything. The caller must hold mu_ and cls_mu_, in that order.
 	void free_locked();
 
 	// Mirror of llama.cpp's common_control_vector_data, so llama.cpp types stay out of this header.
@@ -72,10 +78,14 @@ private:
 		std::vector<float> data;  // layers [1, n_layer] at strength 1.0
 	};
 
-	std::mutex mu_;
+	std::mutex mu_;      // held by load_model, unload, generate, set_control_vectors
+	std::mutex cls_mu_;  // held by classify; load_model and unload take mu_ then cls_mu_
 	std::atomic<bool> loaded_{ false };
 	llama_model *model_ = nullptr;
-	llama_context *ctx_ = nullptr;
+	llama_context *ctx_ = nullptr;      // the turn's context; the only one that may carry a control vector
+	llama_context *ctx_cls_ = nullptr;  // classifier context, created lazily by classify(); never gets a vector
+	int32_t cls_ctx_ = 512;             // classifier n_ctx (also its n_batch), from config classifier_n_ctx
+	int32_t cls_ubatch_ = 64;           // classifier n_ubatch, from config classifier_n_ubatch
 	std::shared_ptr<common_chat_templates> tmpls_;
 	int32_t n_ctx_ = 0;
 	int32_t n_layer_ = 0;

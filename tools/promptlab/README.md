@@ -170,3 +170,7 @@ P3.05 run; point it at a new results file to audit a fresh sample.
 
 A case without an explicit `runner_up` borrows the first other path in the canonical order,
 so a set whose evidence matters should pin it (`load_set` keeps the field).
+
+## Native parity run (P4.04c)
+
+`tools/promptlab/native_parity.py` runs the unchanged lab suite on two transports for each stage in `plan.json`. The server side is llama-server on port 8096 with `--control-vector-scaled` at the stage's scalar dose; the native side is the NativeBackend behind `game/tools/NativeHttpShim.tscn` on 8097, with the same malice dose. For each transport it runs `run.py`, then `score.py`, stops each process by its own handle before the next launch (only one holds the GPU), and writes `parity.json` with the deltas on validity, read accuracy and emotion fit. The pass rule is every delta within 2 points. The shim is a dev tool only: it binds 127.0.0.1, serves `/health`, `/props` and a non-streaming `/v1/chat/completions`, and is stopped with SIGINT because Godot does not exit cleanly on SIGTERM. Smoke run: `LEILA_MODEL=<gguf> python3 tools/promptlab/native_parity.py --dir OUT --stages 0,3 --runs 1 --max-cases 3`. Map doses are refused, and the driver reads the malice vector from `game/data/steering/vectors.json`, not from `LEILA_CVEC`.

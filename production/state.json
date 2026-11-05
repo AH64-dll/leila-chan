@@ -3642,11 +3642,46 @@
       "finished": "2026-11-05T06:03:47+02:00"
     },
     "P4.04": {
+      "status": "done",
+      "agent": "haiku-worker",
+      "round": 1,
+      "reviews": [
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "claude",
+          "report": "production/reviews/P4.04-code-r1.md",
+          "ts": "2026-11-05T07:35:03+02:00",
+          "declared": "claude"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "claude",
+          "report": "production/reviews/P4.04-design-r1.md",
+          "ts": "2026-11-05T07:35:03+02:00",
+          "declared": "claude"
+        }
+      ],
+      "started": "2026-11-05T06:03:47+02:00",
+      "handoff": "production/handoffs/P4.04.md",
+      "finished": "2026-11-05T07:35:04+02:00"
+    },
+    "P4.05": {
       "status": "in_progress",
       "agent": "haiku-worker",
       "round": 1,
       "reviews": [],
-      "started": "2026-11-05T06:03:47+02:00"
+      "started": "2026-11-05T07:35:04+02:00"
+    },
+    "P4.08": {
+      "status": "in_progress",
+      "agent": "haiku-worker",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-05T07:35:05+02:00"
     }
   },
   "history": [
@@ -8832,6 +8867,54 @@
       "ts": "2026-11-05T06:03:47+02:00",
       "event": "todo->in_progress",
       "ref": "P4.04",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T07:35:03+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P4.04",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T07:35:03+02:00",
+      "event": "review:code:approved",
+      "ref": "P4.04",
+      "note": "production/reviews/P4.04-code-r1.md"
+    },
+    {
+      "ts": "2026-11-05T07:35:03+02:00",
+      "event": "review:design:approved",
+      "ref": "P4.04",
+      "note": "production/reviews/P4.04-design-r1.md"
+    },
+    {
+      "ts": "2026-11-05T07:35:04+02:00",
+      "event": "in_review->done",
+      "ref": "P4.04",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T07:35:04+02:00",
+      "event": "agent",
+      "ref": "P4.05",
+      "note": "None -> haiku-worker"
+    },
+    {
+      "ts": "2026-11-05T07:35:04+02:00",
+      "event": "todo->in_progress",
+      "ref": "P4.05",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T07:35:05+02:00",
+      "event": "agent",
+      "ref": "P4.08",
+      "note": "None -> haiku-worker"
+    },
+    {
+      "ts": "2026-11-05T07:35:05+02:00",
+      "event": "todo->in_progress",
+      "ref": "P4.08",
       "note": ""
     }
   ]

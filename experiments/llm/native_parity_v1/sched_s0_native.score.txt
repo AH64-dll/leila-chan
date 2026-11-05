@@ -1,0 +1,16 @@
+n=18  validity=100.0%  read_accuracy=88.9%
+first_beat_fit=100.0%  any_beat_fit=100.0%  (gate first-beat >= 85%)
+  stage 0 (dose 0): n=18 valid=18  validity=100.0%  read=88.9%  first=100.0%  any=100.0%
+    none     n=18  valid=18  validity=100.0%  read=88.9%  first=100.0%  any=100.0%
+  per-dose (scheduled stage doses, not a sweep — the dose gate is measured on the sweep file):
+    dose                            0: n=18 valid=18 validity=100.0%  read=88.9%  first=100.0%  median=2.43s
+few-shot copy: overall=11.1%  near-fewshot=100.0% (n=2)  held-out=0.0% (n=16)  avg_ratio=0.451
+memory proposals=4  rejected=0  rate=0.0%
+latency: median=2.43s p95=2.83s (n=18)
+
+PASS overall validity: 100.0% (gate 99%)
+PASS overall read_accuracy: 88.9% (gate 85%)
+PASS overall first_beat_fit: 100.0% (gate 85%)
+PASS stage 0 validity: 100.0% (gate 99%)
+PASS stage 0 read_accuracy: 88.9% (gate 85%)
+PASS stage 0 first_beat_fit: 100.0% (gate 85%)

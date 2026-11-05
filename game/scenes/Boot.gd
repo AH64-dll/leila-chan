@@ -44,7 +44,7 @@ func _ready() -> void:
 		# default. `LEILA_OWN_SERVER` flips that to launching the pinned server,
 		# which is what makes a stage-change dose possible (P2.03).
 		if not LLM.has_backend():
-			LLM.use_default_backend(prototype_backend_config())
+			_install_backend()
 		_wire_classifier_transport()
 		if auto_advance:
 			_advance()
@@ -68,6 +68,45 @@ static func prototype_backend_config() -> Dictionary:
 	return {"auto_start": true}
 
 
+## P4.04 backend switch. `LEILA_BACKEND` = native or server wins; otherwise an exported
+## build uses native (it ships no server) and a dev run keeps the server transport.
+static func backend_kind() -> String:
+	return backend_kind_for(OS.get_environment("LEILA_BACKEND"), OS.has_feature("template"))
+
+
+## The decision behind backend_kind(), with the environment and the export flag passed
+## in so a test can exercise every case. An unknown value warns and takes the default.
+static func backend_kind_for(env_value: String, exported: bool) -> String:
+	var fallback := "native" if exported else "server"
+	var wanted := env_value.strip_edges().to_lower()
+	if wanted == "native" or wanted == "server":
+		return wanted
+	if not wanted.is_empty():
+		push_warning(
+			(
+				"Boot: unknown LEILA_BACKEND=%s (want native or server); using %s"
+				% [env_value, fallback]
+			)
+		)
+	return fallback
+
+
+## P4.04: install the transport for this launch. `native` without the GDExtension
+## falls back to the server transport, as today; the player-facing error is later work.
+func _install_backend() -> void:
+	if backend_kind() == "native":
+		if ClassDB.class_exists("LeilaLLM"):
+			LLM.use_native_backend()
+			return
+		push_warning(
+			(
+				"Boot: LEILA_BACKEND=native but the LeilaLLM GDExtension is not registered; "
+				+ "run native/build_linux.sh. Using the server transport."
+			)
+		)
+	LLM.use_default_backend(prototype_backend_config())
+
+
 ## docs/02 §8 classifier tier: the same local model, 8 tokens, no control
 ## vectors bound to the request. `LEILA_CLASSIFIER_URL` names a dedicated
 ## unsteered server. Without it the shared endpoint is used only when the app
@@ -79,6 +118,16 @@ static func prototype_backend_config() -> Dictionary:
 func _wire_classifier_transport() -> void:
 	var gate: Variant = Safety.get("classifier_gate")
 	if gate == null:
+		return
+	var native: Variant = LLM.get_backend()
+	if (
+		native is NativeBackend
+		and OS.get_environment("LEILA_CLASSIFIER_URL").strip_edges().is_empty()
+	):
+		## The classifier's context never carries a vector, whatever the turn's dose is,
+		## so no launch config can steer it (docs/02 §8, SAF-3).
+		gate.call("set_config_provider", Callable())
+		gate.call("set_backend", NativeSafetyClassifier.new(native))
 		return
 	var url := OS.get_environment("LEILA_CLASSIFIER_URL").strip_edges()
 	if not url.is_empty():

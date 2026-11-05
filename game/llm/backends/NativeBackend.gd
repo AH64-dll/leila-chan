@@ -132,6 +132,50 @@ func generate(request: TurnRequest, on_token: Callable, cancel: LLMCancelToken) 
 	return _record_result({"ok": false, "error": error, "metrics": metrics})
 
 
+## P4.04: a stage change needs no relaunch in-process. The dose is bound per turn
+## from TurnRequest.dose (see _bind_dose), so this does no engine work and restarts
+## nothing: it only reports success, and the facade records the stage and dose that
+## the next turn binds. It must not call the engine here: the engine is used on the
+## worker thread, and a main-thread bind would race a turn that is in flight.
+func apply_steering(vectors: Array, stage: int, window_ms: int, done: Callable) -> bool:
+	var info := {
+		"ok": true,
+		"stage": stage,
+		"ms": 0,
+		"total_ms": 0,
+		"deferred_ms": 0,
+		"window_ms": window_ms,
+		"budget_ms": LlamaServerBackend.STEERING_BUDGET_MS,
+		"within_budget": true,
+		"fits_window": true,
+		"vectors": vectors.duplicate(true),
+		"previous_vectors": [],
+		"kept_previous": false,
+		"recovered": false,
+		"pid": 0,
+		"restarts": 0,
+		"error": {},
+	}
+	if done.is_valid():
+		done.call_deferred(info)
+	return true
+
+
+## One classifier question, worker thread only. The engine answers on its own
+## context, which never carries a control vector (docs/02 §8, SAF-3). Does not
+## touch last_metrics(), which belongs to the turn.
+func classify_turn(messages_json: String, max_tokens: int) -> Dictionary:
+	var load_result := ensure_loaded()
+	if not bool(load_result.get("ok", false)):
+		var load_error: Dictionary = load_result.get("error", {})
+		return {"ok": false, "error": _normalise_error(load_error), "metrics": {}}
+	var raw: Dictionary = _engine.classify(messages_json, max_tokens)
+	if bool(raw.get("ok", false)):
+		return raw
+	var failed := _normalise_error(raw.get("error", {}))
+	return {"ok": false, "error": failed, "metrics": raw.get("metrics", {})}
+
+
 ## Frees the model and context. Called on the main thread at teardown. unload()
 ## waits for a running generate(), so no mutex is held here.
 func shutdown() -> void:

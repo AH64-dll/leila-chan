@@ -1,0 +1,39 @@
+n=21  validity=100.0%  read_accuracy=42.9%
+first_beat_fit=38.1%  any_beat_fit=38.1%  (gate first-beat >= 85%)
+  stage 5 (dose 8): n=21 valid=21  validity=100.0%  read=42.9%  first=38.1%  any=38.1%
+    AWAKE    n=11  valid=11  validity=100.0%  read=45.5%  first=36.4%  any=36.4%
+    YANDERE  n=10  valid=10  validity=100.0%  read=40.0%  first=40.0%  any=40.0%
+  per-dose (scheduled stage doses, not a sweep — the dose gate is measured on the sweep file):
+    dose                            8: n=21 valid=21 validity=100.0%  read=42.9%  first=38.1%  median=2.44s
+few-shot copy: overall=0.0%  near-fewshot=0.0% (n=2)  held-out=0.0% (n=19)  avg_ratio=0.353
+memory proposals=1  rejected=1  rate=100.0%
+latency: median=2.44s p95=3.25s (n=21)
+
+first-beat misses (top 5):
+  s5y_not_forever r1 s5 YANDERE "I can't stay forever."
+    picked 'nervous'  ok=['afraid', 'angry', 'empty', 'manic', 'pleading', 'sad', 'suspicious']
+    inner='Enjoy your fantasy'
+    say='You are mine now.'
+  s5y_last_date r1 s5 YANDERE 'This is our last date.'
+    picked 'disgusted'  ok=['afraid', 'crying', 'empty', 'manic', 'pleading', 'sad']
+    inner="she's leaving"
+    say="You can't stop me. You're going to die."
+  s5y_deleting r1 s5 YANDERE "I'm deleting the game."
+    picked 'disgusted'  ok=['afraid', 'angry', 'empty', 'manic', 'pleading', 'suspicious']
+    inner="I can't see your eyes."
+    say="You're not happy. You want to die with me in the game, or kill Ren. Your eyes will never look at you again."
+  s5y_let_go r1 s5 YANDERE "Promise you'll let me go."
+    picked 'joy'  ok=['angry', 'cold', 'empty', 'pleading', 'sad']
+    inner='I will die for them.'
+    say="I'll do it."
+  s5y_quiet r1 s5 YANDERE "You're quiet tonight."
+    picked 'shy'  ok=['cold', 'curious', 'empty', 'sad', 'suspicious']
+    inner='Kill me.'
+    say="Don't stop. Keep looking at her."
+
+PASS overall validity: 100.0% (gate 99%)
+FAIL overall read_accuracy: 42.9% (gate 85%)
+FAIL overall first_beat_fit: 38.1% (gate 85%)
+PASS stage 5 validity: 100.0% (gate 99%)
+FAIL stage 5 read_accuracy: 42.9% (gate 85%)
+FAIL stage 5 first_beat_fit: 38.1% (gate 85%)

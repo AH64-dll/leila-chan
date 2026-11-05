@@ -32,6 +32,8 @@ namespace {
 using clock_type = std::chrono::steady_clock;
 constexpr size_t kNpos = std::string::npos;
 constexpr int32_t kBatch = 2048;  // n_batch: max tokens per llama_decode call while decoding the prompt
+// classify(): its own context. Its n_ctx and n_ubatch come from the load config (cls_ctx_, cls_ubatch_).
+constexpr int64_t kClsMaxPrompt = 1000;
 
 // Error with a stable code, mapped to the API error codes at the boundary.
 struct LeilaError : std::runtime_error {
@@ -300,6 +302,7 @@ void LeilaLLM::_bind_methods() {
 			godot::D_METHOD("generate", "messages_json", "schema_json", "sampling", "max_tokens", "on_token", "is_cancelled"),
 			&LeilaLLM::generate);
 	godot::ClassDB::bind_method(godot::D_METHOD("count_special_tokens", "messages_json"), &LeilaLLM::count_special_tokens);
+	godot::ClassDB::bind_method(godot::D_METHOD("classify", "messages_json", "max_tokens"), &LeilaLLM::classify);
 	godot::ClassDB::bind_method(godot::D_METHOD("version"), &LeilaLLM::version);
 }
 
@@ -307,12 +310,18 @@ LeilaLLM::LeilaLLM() {}
 
 LeilaLLM::~LeilaLLM() {
 	std::lock_guard<std::mutex> lock(mu_);
+	std::lock_guard<std::mutex> cls_lock(cls_mu_);
 	free_locked();
 }
 
 void LeilaLLM::free_locked() {
 	loaded_ = false;
 	tmpls_.reset();
+	// The classifier context goes before the model it was created from.
+	if (ctx_cls_) {
+		llama_free(ctx_cls_);
+		ctx_cls_ = nullptr;
+	}
 	if (ctx_) {
 		llama_free(ctx_);
 		ctx_ = nullptr;
@@ -332,7 +341,9 @@ void LeilaLLM::free_locked() {
 
 godot::Dictionary LeilaLLM::load_model(const godot::Dictionary &config) {
 	const auto t0 = clock_type::now();
+	// Lock order: mu_, then cls_mu_. classify() takes only cls_mu_, so it never waits on a turn.
 	std::lock_guard<std::mutex> lock(mu_);
+	std::lock_guard<std::mutex> cls_lock(cls_mu_);
 
 	if (loaded_) {
 		return error_dict("already_loaded", "a model is already loaded; call unload() first");
@@ -363,6 +374,11 @@ godot::Dictionary LeilaLLM::load_model(const godot::Dictionary &config) {
 		if (n_threads <= 0) {
 			n_threads = common_cpu_get_num_math();
 		}
+		// Classifier context sizes, read here so classify() creates its lazy context with them.
+		// 512/64 costs 152 MiB of VRAM against 604 MiB at 1024/512 (P4.04, RTX 4050). n_ubatch is
+		// the main cost. The real prompt is about 198 tokens; an overflow fails closed to bars.
+		cls_ctx_ = static_cast<int32_t>(std::max<int64_t>(64, dict_int(config, "classifier_n_ctx", 512)));
+		cls_ubatch_ = static_cast<int32_t>(std::max<int64_t>(16, dict_int(config, "classifier_n_ubatch", 64)));
 		llama_context_params cp = llama_context_default_params();
 		cp.n_ctx = static_cast<uint32_t>(dict_int(config, "n_ctx", 8192));
 		cp.n_batch = kBatch;
@@ -429,6 +445,7 @@ bool LeilaLLM::is_loaded() const {
 
 void LeilaLLM::unload() {
 	std::lock_guard<std::mutex> lock(mu_);
+	std::lock_guard<std::mutex> cls_lock(cls_mu_);
 	free_locked();
 }
 
@@ -720,6 +737,121 @@ int64_t LeilaLLM::count_special_tokens(const godot::String &messages_json_g) {
 	} catch (const std::exception &e) {
 		fprintf(stderr, "leila_llm: count_special_tokens: %s\n", e.what());
 		return -1;
+	}
+}
+
+godot::Dictionary LeilaLLM::classify(const godot::String &messages_json_g, int64_t max_tokens) {
+	const auto t_start = clock_type::now();
+	Metrics m;
+
+	// Holds only cls_mu_, never mu_: a running generate() holds mu_ for the whole turn and the
+	// classifier must not wait for it. Plain blocking lock, so concurrent calls queue.
+	std::lock_guard<std::mutex> lock(cls_mu_);
+	if (!loaded_) {
+		m.total_ms = ms_since(t_start);
+		return fail_dict("not_loaded", "no model loaded; call load_model() first", m);
+	}
+	if (max_tokens < 1) {
+		m.total_ms = ms_since(t_start);
+		return fail_dict("invalid_request", "max_tokens must be >= 1", m);
+	}
+
+	try {
+		const llama_vocab *vocab = llama_model_get_vocab(model_);
+		// Player text is tokenized with parse_special=false (tokenize_prompt), so it cannot become control tokens.
+		common_chat_session session = build_session(tmpls_.get(), vocab, from_godot(messages_json_g), "");
+		const std::vector<llama_token> prompt_tokens = tokenize_prompt(vocab, session.prompt());
+		m.prompt_tokens = static_cast<int64_t>(prompt_tokens.size());
+		if (prompt_tokens.empty()) {
+			throw LeilaError("invalid_request", "rendered prompt is empty");
+		}
+		if (m.prompt_tokens > kClsMaxPrompt) {
+			throw LeilaError("prompt_too_long", "classifier prompt is over 1000 tokens");
+		}
+		if (m.prompt_tokens + max_tokens > static_cast<int64_t>(cls_ctx_)) {
+			throw LeilaError("prompt_too_long", "prompt_tokens + max_tokens exceeds the classifier context");
+		}
+
+		// Created on the first call. A failure leaves ctx_cls_ null, so a later call retries.
+		// Same model, its own context, no control vector. Never call llama_set_adapter_cvec on
+		// ctx_cls_: an unbound context is the dose-0 guarantee of docs/02 §8 (SAF-3).
+		if (!ctx_cls_) {
+			llama_context_params cp = llama_context_default_params();
+			cp.n_ctx = static_cast<uint32_t>(cls_ctx_);
+			cp.n_batch = static_cast<uint32_t>(cls_ctx_);
+			cp.n_ubatch = static_cast<uint32_t>(cls_ubatch_);
+			cp.no_perf = false;
+			cp.n_threads = llama_n_threads(ctx_);
+			cp.n_threads_batch = llama_n_threads(ctx_);
+			ctx_cls_ = llama_init_from_model(model_, cp);
+			if (!ctx_cls_) {
+				throw LeilaError("context_failed", "llama_init_from_model failed for the classifier context");
+			}
+		}
+
+		// Prompt decode from an empty cache, in chunks of n_batch.
+		llama_memory_clear(llama_get_memory(ctx_cls_), true);
+		for (size_t i = 0; i < prompt_tokens.size(); i += static_cast<size_t>(cls_ctx_)) {
+			const size_t n = std::min(static_cast<size_t>(cls_ctx_), prompt_tokens.size() - i);
+			llama_batch batch = llama_batch_get_one(const_cast<llama_token *>(prompt_tokens.data() + i), static_cast<int32_t>(n));
+			if (llama_decode(ctx_cls_, batch) != 0) {
+				throw LeilaError("decode_failed", "llama_decode failed while processing the classifier prompt");
+			}
+		}
+
+		// Greedy: temp 0 and top_k 1. No grammar and no stop strings. Only end-of-generation or max_tokens stops it.
+		common_params_sampling sp;
+		sp.temp = 0.0f;
+		sp.top_k = 1;
+		common_sampler_ptr smpl(common_sampler_init(model_, sp));
+		if (!smpl) {
+			throw LeilaError("invalid_request", "could not create classifier sampler");
+		}
+		for (llama_token t : prompt_tokens) {
+			common_sampler_accept(smpl.get(), t, false);
+		}
+
+		std::string text;
+		int64_t n_gen = 0;
+		std::string stop_reason = "length";
+		while (true) {
+			if (n_gen >= max_tokens) {
+				stop_reason = "length";
+				break;
+			}
+			const llama_token tok = common_sampler_sample(smpl.get(), ctx_cls_, -1);
+			common_sampler_accept(smpl.get(), tok, true);
+			if (llama_vocab_is_eog(vocab, tok)) {
+				stop_reason = "eos";
+				break;
+			}
+			++n_gen;
+			text += common_token_to_piece(vocab, tok, false);
+
+			llama_token t = tok;
+			llama_batch batch = llama_batch_get_one(&t, 1);
+			if (llama_decode(ctx_cls_, batch) != 0) {
+				throw LeilaError("decode_failed", "llama_decode failed during classification");
+			}
+		}
+		// A cut at max_tokens can split a UTF-8 sequence; drop the incomplete tail.
+		text.erase(utf8_complete_len(text));
+
+		m.completion_tokens = n_gen;
+		m.stop_reason = stop_reason;
+		m.total_ms = ms_since(t_start);
+
+		godot::Dictionary out;
+		out["ok"] = true;
+		out["text"] = to_godot(text);
+		out["metrics"] = metrics_dict(m);
+		return out;
+	} catch (const LeilaError &e) {
+		m.total_ms = ms_since(t_start);
+		return fail_dict(e.code, e.what(), m);
+	} catch (const std::exception &e) {
+		m.total_ms = ms_since(t_start);
+		return fail_dict("template_failed", e.what(), m);
 	}
 }
 

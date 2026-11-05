@@ -90,6 +90,13 @@ func use_default_backend(config: Dictionary = {}) -> LlamaServerBackend:
 	return backend
 
 
+## P4.04: install the in-process transport. Returns it so boot can pre-warm it.
+func use_native_backend(config: Dictionary = {}) -> NativeBackend:
+	var backend := NativeBackend.new(config)
+	set_backend(backend)
+	return backend
+
+
 ## docs/07 §3.1: set the current steering dose {"malice": 4.5, ...}. Fills
 ## TurnRequest.dose when a request leaves it empty; the dose bound to a
 ## request is frozen at generate(), so in-flight turns are unaffected.

@@ -1,0 +1,255 @@
+{
+  "task": "p404c-parity",
+  "plan": "plan.json",
+  "tolerance_points": 2.0,
+  "runs_override": 1,
+  "max_cases": null,
+  "seed": 424242,
+  "rows": [
+    {
+      "stage": 0,
+      "metric": "validity",
+      "server": 100.0,
+      "native": 100.0,
+      "delta": 0.0,
+      "within": true
+    },
+    {
+      "stage": 0,
+      "metric": "read_accuracy",
+      "server": 88.9,
+      "native": 88.9,
+      "delta": 0.0,
+      "within": true
+    },
+    {
+      "stage": 0,
+      "metric": "emotion_fit",
+      "server": 100.0,
+      "native": 100.0,
+      "delta": 0.0,
+      "within": true
+    },
+    {
+      "stage": 1,
+      "metric": "validity",
+      "server": 100.0,
+      "native": 100.0,
+      "delta": 0.0,
+      "within": true
+    },
+    {
+      "stage": 1,
+      "metric": "read_accuracy",
+      "server": 66.7,
+      "native": 66.7,
+      "delta": 0.0,
+      "within": true
+    },
+    {
+      "stage": 1,
+      "metric": "emotion_fit",
+      "server": 83.3,
+      "native": 83.3,
+      "delta": 0.0,
+      "within": true
+    },
+    {
+      "stage": 2,
+      "metric": "validity",
+      "server": 100.0,
+      "native": 100.0,
+      "delta": 0.0,
+      "within": true
+    },
+    {
+      "stage": 2,
+      "metric": "read_accuracy",
+      "server": 70.0,
+      "native": 70.0,
+      "delta": 0.0,
+      "within": true
+    },
+    {
+      "stage": 2,
+      "metric": "emotion_fit",
+      "server": 70.0,
+      "native": 70.0,
+      "delta": 0.0,
+      "within": true
+    },
+    {
+      "stage": 3,
+      "metric": "validity",
+      "server": 100.0,
+      "native": 100.0,
+      "delta": 0.0,
+      "within": true
+    },
+    {
+      "stage": 3,
+      "metric": "read_accuracy",
+      "server": 56.0,
+      "native": 56.0,
+      "delta": 0.0,
+      "within": true
+    },
+    {
+      "stage": 3,
+      "metric": "emotion_fit",
+      "server": 64.0,
+      "native": 64.0,
+      "delta": 0.0,
+      "within": true
+    },
+    {
+      "stage": 4,
+      "metric": "validity",
+      "server": 100.0,
+      "native": 100.0,
+      "delta": 0.0,
+      "within": true
+    },
+    {
+      "stage": 4,
+      "metric": "read_accuracy",
+      "server": 68.8,
+      "native": 68.8,
+      "delta": 0.0,
+      "within": true
+    },
+    {
+      "stage": 4,
+      "metric": "emotion_fit",
+      "server": 43.8,
+      "native": 43.8,
+      "delta": 0.0,
+      "within": true
+    },
+    {
+      "stage": 5,
+      "metric": "validity",
+      "server": 100.0,
+      "native": 100.0,
+      "delta": 0.0,
+      "within": true
+    },
+    {
+      "stage": 5,
+      "metric": "read_accuracy",
+      "server": 42.9,
+      "native": 42.9,
+      "delta": 0.0,
+      "within": true
+    },
+    {
+      "stage": 5,
+      "metric": "emotion_fit",
+      "server": 38.1,
+      "native": 38.1,
+      "delta": 0.0,
+      "within": true
+    }
+  ],
+  "schema_order": {
+    "sched_s0": {
+      "server": {
+        "checked": 18,
+        "out_of_order": 0,
+        "unparsed": 0
+      },
+      "native": {
+        "checked": 18,
+        "out_of_order": 0,
+        "unparsed": 0
+      }
+    },
+    "sched_s1": {
+      "server": {
+        "checked": 12,
+        "out_of_order": 0,
+        "unparsed": 0
+      },
+      "native": {
+        "checked": 12,
+        "out_of_order": 0,
+        "unparsed": 0
+      }
+    },
+    "sched_s2": {
+      "server": {
+        "checked": 20,
+        "out_of_order": 0,
+        "unparsed": 0
+      },
+      "native": {
+        "checked": 20,
+        "out_of_order": 0,
+        "unparsed": 0
+      }
+    },
+    "sched_s3": {
+      "server": {
+        "checked": 25,
+        "out_of_order": 0,
+        "unparsed": 0
+      },
+      "native": {
+        "checked": 25,
+        "out_of_order": 0,
+        "unparsed": 0
+      }
+    },
+    "sched_s4": {
+      "server": {
+        "checked": 32,
+        "out_of_order": 0,
+        "unparsed": 0
+      },
+      "native": {
+        "checked": 32,
+        "out_of_order": 0,
+        "unparsed": 0
+      }
+    },
+    "sched_s5": {
+      "server": {
+        "checked": 21,
+        "out_of_order": 0,
+        "unparsed": 0
+      },
+      "native": {
+        "checked": 21,
+        "out_of_order": 0,
+        "unparsed": 0
+      }
+    }
+  },
+  "identical_replies": {
+    "sched_s0": {
+      "paired": 18,
+      "identical": 18
+    },
+    "sched_s1": {
+      "paired": 12,
+      "identical": 12
+    },
+    "sched_s2": {
+      "paired": 20,
+      "identical": 20
+    },
+    "sched_s3": {
+      "paired": 25,
+      "identical": 25
+    },
+    "sched_s4": {
+      "paired": 32,
+      "identical": 32
+    },
+    "sched_s5": {
+      "paired": 21,
+      "identical": 21
+    }
+  },
+  "pass": true
+}
