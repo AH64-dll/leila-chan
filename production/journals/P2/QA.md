@@ -114,3 +114,10 @@
 - Safety note for the runner: a `--vector`-dosed serve.sh disables the P2.17 classifier tier —
   round-1 sessions use the unsteered server only (stage 0 schedules malice 0.0 anyway).
 - Status: kit complete, still "awaiting human playtest" — the three sessions are the owner's.
+
+## P2.29 — QA harness carry-overs (2026-11-05)
+
+- Added `--own-server` mode to `game/tools/full_run_driver.gd` (and `LEILA_OWN_SERVER=1` flag), wiring `auto_start: true` so the full-run harness launches and supervises its own llama-server; stage transitions capture relaunch outcomes via `LLM.steering_applied` and eliminate the attach-mode `server_not_owned` refusal.
+- Added transcript renderer `--resume` deduplication: `FullRunStore.scan_rendered` indexes rendered days and turns from existing markdown; resuming continues the day section without duplicate `## Day N` headers, appends only the tail of unrendered turns, and writes `## Checkpoint summary` (or per-N-day checkpoints via `--checkpoint-days`) rather than duplicate run summaries.
+- Added four `end_date` offered-action cases across P3 path sets (`stage_3_paths.jsonl` SPLIT/TSUN, `stage_4_paths.jsonl` HOLLOW/ANCHOR) satisfying `lab.load_set()` OPPORTUNITY and action-naming requirements.
+- Surfaced `debug.missing` dropped prompt layers in Director logs (`push_warning("Director: dropped prompt layers: ...")`) and exposed `Director.last_missing_layers`, keeping `Director.gd` under the 1000-line gdlint cap.

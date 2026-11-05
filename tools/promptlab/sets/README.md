@@ -135,8 +135,8 @@ modules (the P2.21 samples predate the new headlines).
 | file | cases | notes |
 |---|---|---|
 | `stage_2_paths.jsonl` | 4 | one seed per new path: SPLIT idealization, TSUN deflection, HOLLOW thin self-answer, ANCHOR gratitude + fear |
-| `stage_3_paths.jsonl` | 24 | six signature probes per new path (history rewrite, flip, test, remorse, absence; denial, mockery, competition, sabotage; name, echo, distance, third person; promise, rules, relapse, the dose) |
-| `stage_4_paths.jsonl` | 16 | four Collapse probes per new path, including the real slider moment and "you relapsed last night" |
+| `stage_3_paths.jsonl` | 47 | signature probes per new path plus P2.29 end_date offered cases (SPLIT, TSUN) |
+| `stage_4_paths.jsonl` | 24 | Collapse probes per new path plus P2.29 end_date offered cases (HOLLOW, ANCHOR) |
 | `stage_5_paths.jsonl` | 4 | one Terminal probe per new path |
 
 - Every case pins a `runner_up` different from its path, cycling through the other five,
