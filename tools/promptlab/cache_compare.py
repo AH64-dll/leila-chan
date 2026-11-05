@@ -6,7 +6,12 @@ statistics over turns 2-8 (turn 1 is cold and shown on its own line), then for
 each cache=1 run the number of byte-identical turns against its cache=0 twin
 (same ubatch, dose, dose_from and temp). Stdlib only.
 
-Usage: python3 -I tools/promptlab/cache_compare.py --dir DIR
+With --tiers, prints one Markdown table row per file instead (label = file name):
+device, threads, first_say_ms mean and p90 over turns 2-8, turn 1 first_say_ms,
+total_ms mean over turns 2-8, tok/s mean over turns 2-8, vm_hwm_kb from the last
+row, and a status. Rows with an error are left out of the timing means.
+
+Usage: python3 -I tools/promptlab/cache_compare.py --dir DIR [--tiers]
 """
 import argparse
 import glob
@@ -16,6 +21,7 @@ import os
 import sys
 
 WARM_FROM = 2  # turn 1 of every process is cold and excluded from the means
+TURNS = 8
 
 
 def load_rows(directory):
@@ -98,10 +104,79 @@ def compare(runs):
               f" differ at turn(s) {where}")
 
 
+def load_file(path):
+    with open(path, encoding="utf-8") as handle:
+        return [json.loads(line) for line in handle if line.strip()]
+
+
+def is_ok(row):
+    return row.get("turn", 0) >= 1 and "error" not in row
+
+
+def fmt(value, digits=0):
+    if value is None or (isinstance(value, float) and math.isnan(value)):
+        return "n/a"
+    return f"{value:.{digits}f}"
+
+
+def error_code(row):
+    error = row.get("error", {})
+    if isinstance(error, dict):
+        return str(error.get("code", "unknown"))
+    return str(error)
+
+
+def tier_line(path):
+    label = os.path.splitext(os.path.basename(path))[0]
+    rows = sorted(load_file(path), key=lambda row: row["turn"])
+    if not rows:
+        return f"| {label} | - | - | - | - | - | - | - | - | no rows |"
+    devices = "/".join(sorted({str(row.get("device", "-")) for row in rows}))
+    threads = "/".join(sorted({str(row.get("n_threads", -1)) for row in rows}))
+    ok_turns = [row for row in rows if is_ok(row)]
+    warm_ok = [row for row in ok_turns if row["turn"] >= WARM_FROM]
+    cold_ok = [row for row in ok_turns if row["turn"] == 1]
+    first_say = column(warm_ok, "first_say_ms")
+    total = column(warm_ok, "total_ms")
+    toks = column(warm_ok, "tok_s")
+    hwm_rows = [row for row in rows if "vm_hwm_kb" in row]
+    hwm = hwm_rows[-1]["vm_hwm_kb"] if hwm_rows else None
+    failed = [row for row in rows if row["turn"] >= 1 and not is_ok(row)]
+    load_errors = [row for row in rows if row["turn"] == 0]
+    if load_errors:
+        status = f"load failed: {error_code(load_errors[0])}"
+    elif failed:
+        status = f"{len(ok_turns)}/{TURNS} turns ok; first error: {error_code(failed[0])}"
+    elif len(ok_turns) < TURNS:
+        status = f"{len(ok_turns)}/{TURNS} turns ok; rows missing (timeout?)"
+    else:
+        status = f"ok {len(ok_turns)}/{TURNS}"
+    cold = fmt(cold_ok[0]["first_say_ms"]) if cold_ok else "n/a"
+    return (f"| {label} | {devices} | {threads}"
+            f" | {fmt(mean(first_say))} | {fmt(p90(first_say))} | {cold}"
+            f" | {fmt(mean(total))} | {fmt(mean(toks), 1)} | {fmt(hwm)} | {status} |")
+
+
+def tiers(directory):
+    paths = sorted(glob.glob(os.path.join(directory, "*.jsonl")))
+    if not paths:
+        sys.exit(f"no JSONL files in {directory}")
+    print("| Label | Device | Threads | first_say mean (ms) | first_say p90 (ms)"
+          " | turn 1 first_say (ms) | total_ms mean | tok/s mean | vm_hwm_kb | Status |")
+    print("|---|---|---|---|---|---|---|---|---|---|")
+    for path in paths:
+        print(tier_line(path))
+
+
 def main():
     parser = argparse.ArgumentParser(description="Summarise cache_scene JSONL runs.")
     parser.add_argument("--dir", required=True, help="directory holding the *.jsonl runs")
+    parser.add_argument("--tiers", action="store_true",
+                        help="one Markdown row per file: device tiers, turns 2-8 means")
     args = parser.parse_args()
+    if args.tiers:
+        tiers(args.dir)
+        return
     rows = load_rows(args.dir)
     if not rows:
         sys.exit(f"no JSONL rows in {args.dir}")
