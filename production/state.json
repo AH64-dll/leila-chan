@@ -3390,7 +3390,35 @@
       "status": "in_review",
       "agent": "swe2",
       "round": 2,
-      "reviews": [],
+      "reviews": [
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "swe-2-flash",
+          "report": "production/reviews/P3.11-code-r2.md",
+          "ts": "2026-11-05T02:04:28+02:00",
+          "declared": "swe-2-flash"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "swe-2-flash",
+          "report": "production/reviews/P3.11-design-r2.md",
+          "ts": "2026-11-05T02:04:28+02:00",
+          "declared": "swe-2-flash"
+        },
+        {
+          "kind": "safety",
+          "verdict": "approved",
+          "round": 2,
+          "reviewer": "swe-2-flash",
+          "report": "production/reviews/P3.11-safety-r2.md",
+          "ts": "2026-11-05T02:04:28+02:00",
+          "declared": "swe-2-flash"
+        }
+      ],
       "started": "2026-11-04T20:30:51+02:00",
       "handoff": "production/handoffs/P3.11.md"
     },
@@ -8437,6 +8465,24 @@
       "event": "in_progress->in_review",
       "ref": "P3.11",
       "note": ""
+    },
+    {
+      "ts": "2026-11-05T02:04:28+02:00",
+      "event": "review:code:approved",
+      "ref": "P3.11",
+      "note": "production/reviews/P3.11-code-r2.md"
+    },
+    {
+      "ts": "2026-11-05T02:04:28+02:00",
+      "event": "review:design:approved",
+      "ref": "P3.11",
+      "note": "production/reviews/P3.11-design-r2.md"
+    },
+    {
+      "ts": "2026-11-05T02:04:28+02:00",
+      "event": "review:safety:approved",
+      "ref": "P3.11",
+      "note": "production/reviews/P3.11-safety-r2.md"
     }
   ]
 }
