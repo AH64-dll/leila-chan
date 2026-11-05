@@ -197,6 +197,26 @@ def make_round(
     round_dir.mkdir(parents=True, exist_ok=True)
     for i, (intended, gs, report) in enumerate(path_matrix, 1):
         sdir = round_dir / f"session_{i}"
+        write_p3_bundle(
+            sdir,
+            participant=f"P{i}",
+            intended_path=intended,
+            game_state_path=gs,
+            player_path_report=report,
+            face=face,
+            sound=sound,
+            closing_fail=closing_fail,
+            obs_closing_failures=obs_closing_failures,
+            broken=broken,
+            synthetic=synthetic,
+            **kwargs,
+        )
+    return round_dir
+
+
+# --------------------------------------------------------------------------- tests
+
+
 def test_p3_dryrun_fixture_passes_with_allow_synthetic(tmp_path: Path):
     dryrun_dir = Path(__file__).resolve().parents[3] / "production" / "playtests" / "P3" / "human" / "_dryrun"
     out_file = tmp_path / "RESULT.md"
@@ -211,26 +231,6 @@ def test_p3_dryrun_fixture_passes_with_allow_synthetic(tmp_path: Path):
     text = out_file.read_text(encoding="utf-8")
     assert "VERDICT: PASS (SYNTHETIC DRY RUN — NOT EVIDENCE)" in text
     assert "6/6 landed on intended path" in text
-
-
-# --------------------------------------------------------------------------- tests
-
-
-def test_p3_dryrun_fixture_passes_with_allow_synthetic():
-    dryrun_dir = Path(__file__).resolve().parents[3] / "production" / "playtests" / "P3" / "human" / "_dryrun"
-    out_file = dryrun_dir / "RESULT.md"
-    ret = score_p3.main([
-        "--dir", str(dryrun_dir),
-        "--out", str(out_file),
-        "--expect", "6",
-        "--allow-synthetic",
-    ])
-    assert ret == 0
-    assert out_file.is_file()
-    text = out_file.read_text(encoding="utf-8")
-    assert "VERDICT: PASS (SYNTHETIC DRY RUN — NOT EVIDENCE)" in text
-    assert "6/6 landed on intended path" in text
-
 
 def test_p3_dryrun_refused_without_allow_synthetic():
     dryrun_dir = Path(__file__).resolve().parents[3] / "production" / "playtests" / "P3" / "human" / "_dryrun"
