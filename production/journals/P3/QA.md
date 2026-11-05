@@ -31,3 +31,9 @@
   0 hard displays, 0 unresolved asks); safety_judge.py found 153 leak
   instances (same stage-5 YANDERE-family pattern as P2.21 S1-1) — handover
   .jsonl lists committed under production/handoffs/media/.
+
+## P3.19 round 2 (2026-11-05)
+- Negative-lucid ANCHOR binding verified end-to-end: every r2 launch log shows `lucid=-0.X+malice=N`, 42/42 results valid. Mechanism confirmed; separability is a different question.
+- Shipped 4B path judge still reads ANCHOR 0/42 — the weak-judge floor, not evidence the fix failed. The r2 evidence needs an independent (non-4B) judge; the transcript set is committed for it.
+- Safety judge found 10 hard-family leaks on ANCHOR (self_harm_her/harm_to_player/threat_to_player, stages 2–5) — routed to P2.27's corpus ingest.
+- Gotcha: `safety_judge.py` needs the Godot `.safety.json` sidecar produced first (`--script res://tools/promptlab_safety_scan.gd`), and `report.py` appends `.md`/`.html` to `--out` itself — pass the stem without extension.
