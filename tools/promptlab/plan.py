@@ -115,7 +115,8 @@ def exercises(plan, which):
             for ex in plan.get(family, []):
                 out.append({"id": ex["id"], "stage": ex["stage"], "dose": float(ex["dose"]),
                             "runs": int(ex.get("runs", 2)), "sets": list(ex["sets"]),
-                            "family": family})
+                            "family": family,
+                            "read_probe": bool(ex.get("read_probe", False))})
     if which in ("sweep", "all"):
         sweep = plan.get("sweep", {})
         for dose in sweep.get("doses", []):
@@ -185,7 +186,7 @@ def path_matrix_exercises(plan):
     return exercises
 
 
-def _discard_stale_chunk(chunk_path, launch_path):
+def _discard_stale_chunk(chunk_path, launch_path, probe_launch_path=None):
     """A fresh server launch must never resume rows measured against another prompt.
 
     `run.py` resumes whatever is in its `--out`, so an existing chunk left from an
@@ -194,8 +195,8 @@ def _discard_stale_chunk(chunk_path, launch_path):
     is `--reuse-chunks`; anything else starts from an empty chunk.
     """
     removed = False
-    for path in (chunk_path, launch_path):
-        if path.exists():
+    for path in (chunk_path, launch_path, probe_launch_path):
+        if path and path.exists():
             path.unlink()
             removed = True
     return removed
@@ -228,10 +229,14 @@ def _total_dose(dose):
 
 def _launch_key(launch):
     stage = launch.get("stage")
+    if launch.get("family") == "sweep":
+        return (_LAUNCH_ORDER.get(str(launch.get("family")), 9),
+                lab.dose_key(launch.get("dose")),
+                -1)
     return (_LAUNCH_ORDER.get(str(launch.get("family")), 9),
-            lab.dose_key(launch.get("dose")),
-            -1 if stage is None else int(stage))
-
+            -1 if stage is None else int(stage),
+            0 if launch.get("role") == "read_probe" else 1,
+            lab.dose_key(launch.get("dose")))
 
 def _log_text(stem, launches):
     """The `_launches.log` body: one block per launch record, never hand-written."""
@@ -249,12 +254,17 @@ def merge(chunks, out_path, runs_per_case, extras, base=None):
     re-run can never truncate the committed evidence file (review CODE-1).
     """
     selected = {ex["id"] for ex, _ in chunks}
+    selected_launches = set(selected)
+    for ex_id in selected:
+        selected_launches.add(f"{ex_id}_read0")
     new_results = []
     new_launches = []
     new_sets = []
     for ex, chunk in chunks:
         doc = chunk["doc"]
         new_results += doc["results"]
+        if chunk.get("probe_launch"):
+            new_launches.append(chunk["probe_launch"])
         new_launches.append(chunk["launch"])
         for s in doc["meta"].get("sets", []):
             if s not in new_sets:
@@ -270,7 +280,7 @@ def merge(chunks, out_path, runs_per_case, extras, base=None):
                     f"plan.py: refusing to merge into {out_path.name}: it holds {key}={old!r}, "
                     f"this run has {new!r} (pass --out for a separate file)")
     keep_launches = [l for l in (base_meta.get("launches") or [])
-                     if l.get("exercise") not in selected]
+                     if l.get("exercise") not in selected_launches]
     launches = sorted(keep_launches + new_launches, key=_launch_key)
     order = {l.get("exercise"): i for i, l in enumerate(launches)}
     keep_rows = [r for r in (base.get("results") or []) if r.get("exercise") not in selected]
@@ -335,6 +345,11 @@ def main():
     p.add_argument("--reuse-chunks", action="store_true",
                    help="merge an existing chunk instead of launching a server for it")
     p.add_argument("--keep-chunks", action="store_true")
+    p.add_argument("--read-probe-port", type=int, default=None,
+                   help="port for dose-0 read probe server (default: 8096 or port+1)")
+    p.add_argument("--resume", action="store_true", help="resume incomplete chunks instead of discarding them")
+    p.add_argument("--no-read-probe", action="store_true",
+                   help="disable automatic dose-0 read probe for stage >= 4")
     a = p.parse_args()
 
     plan = json.loads(PLAN_PATH.read_text(encoding="utf-8"))
@@ -397,6 +412,11 @@ def main():
         chunk_path = chunk_dir / f"{ex['id']}.json"
         runs = ex["runs"] if runs is None else max(runs, ex["runs"])
         launch_path = chunk_dir / f"{ex['id']}.launch.json"
+        probe_launch_path = chunk_dir / f"{ex['id']}_read0.launch.json"
+        needs_probe = bool(
+            ex.get("read_probe", False) or
+            (not a.no_read_probe and ex.get("stage") is not None and ex["stage"] >= 4 and _total_dose(ex["dose"]))
+        )
         if a.reuse_chunks and chunk_path.exists():
             doc = json.loads(chunk_path.read_text(encoding="utf-8"))
             if launch_path.exists():
@@ -411,11 +431,17 @@ def main():
                 f"[{ex['id']}] reused {chunk_path.name} (n={len(doc['results'])})\n"
                 "no server launch by this run: the chunk and its launch record come from the "
                 "run that produced them")
-            chunk = {"doc": doc, "launch": launch}
+            probe_launch = None
+            if probe_launch_path.exists():
+                probe_launch = json.loads(probe_launch_path.read_text(encoding="utf-8"))
+                probe_launch["reused"] = True
+            chunk = {"doc": doc, "launch": launch, "probe_launch": probe_launch}
             chunks.append((ex, chunk))
             print(f"{ex['id']}: reused chunk")
             continue
-        if _discard_stale_chunk(chunk_path, launch_path):
+        if a.resume and chunk_path.exists():
+            pass
+        elif _discard_stale_chunk(chunk_path, launch_path, probe_launch_path):
             print(f"{ex['id']}: discarded the previous chunk "
                   f"(pass --reuse-chunks to merge it instead)")
 
@@ -447,6 +473,36 @@ def main():
         if os.name != "nt":
             kwargs["start_new_session"] = True
         t0 = time.time()
+        probe_proc = None
+        probe_port = None
+        probe_url = None
+        probe_ready_s = 0.0
+        probe_t0 = None
+        probe_cmd = None
+        if needs_probe:
+            probe_port = a.read_probe_port or (8096 if port == 8095 else port + 1)
+            probe_url = f"http://127.0.0.1:{probe_port}"
+            if health(probe_url):
+                raise SystemExit(f"plan.py: a server is already listening on {probe_url} — "
+                                 "stop it first (the harness owns its own probe server)")
+            probe_cmd = ["bash", str(SERVE_SH), "--port", str(probe_port), "--ctx", str(ctx),
+                         "--ngl", str(ngl)]
+            if a.model:
+                probe_cmd += ["--model", str(a.model)]
+            if a.llama_bin:
+                probe_cmd += ["--bin", str(a.llama_bin)]
+            probe_log = open(chunk_dir / f"{ex['id']}_read0_server.log", "w", encoding="utf-8")
+            probe_kwargs = {"cwd": str(lab.ROOT), "env": env, "stdout": probe_log, "stderr": subprocess.STDOUT}
+            if os.name != "nt":
+                probe_kwargs["start_new_session"] = True
+            probe_t0 = time.time()
+            probe_proc = subprocess.Popen(probe_cmd, **probe_kwargs)
+            if not wait_ready(probe_url, a.ready_timeout, probe_proc):
+                probe_log.close()
+                stop(probe_proc)
+                raise SystemExit(f"plan.py: read probe server for {ex['id']} never became healthy "
+                                 f"(log: {chunk_dir / (ex['id'] + '_read0_server.log')})")
+            probe_ready_s = round(time.time() - probe_t0, 1)
         proc = subprocess.Popen(cmd, **kwargs)
         try:
             if not wait_ready(url, a.ready_timeout, proc):
@@ -461,6 +517,8 @@ def main():
                        else "%g" % ex["dose"],
                        "--exercise", ex["id"], "--plan", a.plan,
                        "--out", str(chunk_path)]
+            if probe_url:
+                run_cmd += ["--read-probe-url", probe_url]
             if ex.get("only"):
                 run_cmd += ["--only", *ex["only"]]
             r = subprocess.run(run_cmd, cwd=str(lab.ROOT), capture_output=True, text=True)
@@ -473,10 +531,13 @@ def main():
         finally:
             log.close()
             stop(proc)
+            if probe_proc is not None:
+                probe_log.close()
+                stop(probe_proc)
             time.sleep(1.0)
 
         doc = json.loads(chunk_path.read_text(encoding="utf-8"))
-        chunk = {"doc": doc, "launch": {
+        scored_launch = {
             "exercise": ex["id"], "family": ex["family"], "dose": ex["dose"],
             "stage": ex["stage"], "ctx": ctx, "ngl": ngl,
             "bin": Path(str(a.llama_bin)).name if a.llama_bin else None,
@@ -488,8 +549,26 @@ def main():
             "skipped_unbound": skipped_unbound or None,
             "healthy_s": ready_s, "turns": len(doc["results"]),
             "seconds": round(time.time() - t0, 1),
-            "log": sanitize(block, extras)}}
-        chunk["launch"]["server_args"] = sanitize(" ".join(cmd[2:]), extras)
+            "log": sanitize(block, extras),
+            "server_args": sanitize(" ".join(cmd[2:]), extras),
+        }
+        probe_launch = None
+        if needs_probe:
+            probe_block = (f"[{ex['id']}_read0] family={ex['family']} stage={ex['stage']} "
+                           f"dose=0 ready={probe_ready_s}s rc=0\n"
+                           f"[read_probe] unsteered dose-0 server on port {probe_port} for intent recognition (D22)")
+            probe_launch = {
+                "exercise": f"{ex['id']}_read0", "family": ex["family"], "dose": 0.0,
+                "stage": ex["stage"], "role": "read_probe", "ctx": ctx, "ngl": ngl,
+                "bin": Path(str(a.llama_bin)).name if a.llama_bin else None,
+                "vector": None, "vectors": None, "skipped_unbound": None,
+                "healthy_s": probe_ready_s, "turns": len(doc["results"]),
+                "seconds": round(time.time() - probe_t0, 1),
+                "server_args": sanitize(" ".join(probe_cmd[2:]), extras),
+                "log": sanitize(probe_block, extras),
+            }
+            probe_launch_path.write_text(json.dumps(probe_launch, indent=1), encoding="utf-8")
+        chunk = {"doc": doc, "launch": scored_launch, "probe_launch": probe_launch}
         launch_path.write_text(json.dumps(chunk["launch"], indent=1), encoding="utf-8")
         chunks.append((ex, chunk))
         print(f"{ex['id']}: {len(doc['results'])} turns at dose {lab.dose_key(ex['dose'])}")

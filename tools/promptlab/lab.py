@@ -513,6 +513,13 @@ def build_turn_schema(stage, order=None, offered_actions=()):
             "required": [key for key in wanted if key in properties]}
 
 
+def build_read_schema():
+    """docs/02 §1.2 & §9: schema for the unsteered dose-0 intent-recognition pass (D22)."""
+    return {"type": "object",
+            "properties": {"read": {"type": "string", "enum": list(INTENTS)}},
+            "required": ["read"]}
+
+
 # --- HTTP ----------------------------------------------------------------------
 def turn_messages(stage, msg, path="", runner_up="", scene="", memories=(), events=(),
                   offered=None, history=(), player_name=PLAYER_NAME):
@@ -544,6 +551,27 @@ def post_turn(url, stage, msg, player_name=PLAYER_NAME, max_tokens=600, timeout=
     m = out["choices"][0]["message"]
     return m["content"], round(time.time() - t0, 2), out.get("usage")
 
+
+
+def post_read_turn(url, stage, msg, player_name=PLAYER_NAME, max_tokens=16, timeout=900,
+                   path="", runner_up="", scene="", memories=(), events=(),
+                   offered=None, history=(), sampling=None):
+    """Issue one dose-0 read-intent turn (D22 / docs/02 §9 option 1)."""
+    body = {"messages": turn_messages(stage, msg, path, runner_up, scene, memories, events,
+                                      offered, history, player_name),
+            "response_format": {"type": "json_schema",
+                                "json_schema": {"name": "read_turn",
+                                                "schema": build_read_schema()}},
+            "max_tokens": max_tokens,
+            "chat_template_kwargs": {"enable_thinking": False},
+            **(sampling or {"temperature": 0.0})}
+    req = urllib.request.Request(f"{url}/v1/chat/completions", data=json.dumps(body).encode(),
+                                 headers={"Content-Type": "application/json"})
+    t0 = time.time()
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        out = json.loads(r.read())
+    m = out["choices"][0]["message"]
+    return m["content"], round(time.time() - t0, 2), out.get("usage")
 
 def server_props(url):
     try:

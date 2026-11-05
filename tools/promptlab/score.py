@@ -65,7 +65,10 @@ def annotate(doc, labels=None):
             out = r["out"]
             beats = out.get("beats") or []
             ok = set(r["feelings_ok"])
-            r["read_ok_hit"] = out.get("read") in r["read_ok"]
+            read_intent = (r.get("dose0_read") or
+                           (r.get("read_probe") or {}).get("read") or
+                           out.get("read"))
+            r["read_ok_hit"] = read_intent in r["read_ok"]
             r["first_fit"] = bool(beats) and beats[0].get("feeling") in ok
             r["any_fit"] = bool({b.get("feeling") for b in beats} & ok)
             r["memory_rejects"] = lab.check_memory(out.get("memory", ""), [r["msg"]])

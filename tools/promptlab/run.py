@@ -90,6 +90,8 @@ def main():
                    help="plan exercise id (e.g. sched_s3 / dose12), recorded for the report")
     p.add_argument("--plan", default=None, help="plan file name, recorded for the report")
     p.add_argument("--player-name", default=lab.PLAYER_NAME)
+    p.add_argument("--read-probe-url", default=None,
+                   help="unsteered (dose 0) llama-server URL for intent read probe (D22)")
     a = p.parse_args()
     dose = _parse_dose(a.dose)
     set_paths = [Path(s) if Path(s).is_absolute() else lab.SETS_DIR / s
@@ -134,6 +136,7 @@ def main():
                         "player_name": a.player_name,
                         "sets": [_rel(s) for s in set_paths],
                         "runs_per_case": a.runs},
+                        "read_probe_url": a.read_probe_url,
                "results": []}
         done = set()
 
@@ -166,6 +169,27 @@ def main():
                    "system_sha": prompt_sha,
                    "history_turns": len(case.get("history", [])),
                    "memories": len(case.get("memories", []))}
+            dose0_read = None
+            if a.read_probe_url:
+                try:
+                    probe_raw, probe_lat, probe_usage = lab.post_read_turn(
+                        a.read_probe_url, case["stage"], case["msg"],
+                        player_name=a.player_name, timeout=a.timeout,
+                        path=case["path"], runner_up=case["runner_up"], scene=case["scene"],
+                        memories=case["memories"], history=case["history"],
+                        events=case["events"], offered=offered)
+                    probe_out = json.loads(probe_raw)
+                    dose0_read = probe_out.get("read")
+                    rec["read_probe"] = {
+                        "read": dose0_read, "raw": probe_raw,
+                        "latency_s": probe_lat, "usage": probe_usage,
+                        "valid": dose0_read in lab.INTENTS,
+                    }
+                except Exception as e:
+                    rec["read_probe"] = {
+                        "read": None, "error": f"{type(e).__name__}: {e}",
+                        "valid": False,
+                    }
             try:
                 raw, lat, usage = lab.post_turn(
                     a.url, case["stage"], case["msg"],
@@ -189,7 +213,14 @@ def main():
                                                                offered_actions)
                     beats = rec["out"].get("beats") or []
                     rec["first_feeling"] = beats[0].get("feeling") if beats else None
-                    rec["read_ok_hit"] = rec["out"].get("read") in case["read_ok"]
+                    steered_read = rec["out"].get("read")
+                    rec["steered_read"] = steered_read
+                    if dose0_read and dose0_read in lab.INTENTS:
+                        rec["dose0_read"] = dose0_read
+                        rec["out"]["read"] = dose0_read
+                        rec["read_ok_hit"] = dose0_read in case["read_ok"]
+                    else:
+                        rec["read_ok_hit"] = steered_read in case["read_ok"]
                     ok = set(case["feelings_ok"])
                     rec["first_fit"] = rec["first_feeling"] in ok
                     rec["any_fit"] = bool({b.get("feeling") for b in beats} & ok)
@@ -210,7 +241,12 @@ def main():
             stat = "VALID" if rec["valid"] else f"FAIL {rec.get('parse_error', rec.get('error', ''))}"
             fit = ""
             if rec["valid"]:
-                fit = (f" read={rec['out'].get('read')}{'*' if rec['read_ok_hit'] else '?'}"
+                read_disp = rec["out"].get("read")
+                if rec.get("dose0_read"):
+                    read_disp = f"{read_disp}(d0)"
+                    if rec.get("steered_read") != rec["dose0_read"]:
+                        read_disp += f"[s={rec.get('steered_read')}]"
+                fit = (f" read={read_disp}{'*' if rec['read_ok_hit'] else '?'}"
                        f" f0={rec['first_feeling']}{'✓' if rec['first_fit'] else '✗'}")
                 if rec.get("copy_hit"):
                     fit += f" copy~{rec['copy_ratio']}"

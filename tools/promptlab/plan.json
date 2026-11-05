@@ -47,6 +47,7 @@
       "id": "sched_s4",
       "stage": 4,
       "dose": 6.0,
+      "read_probe": true,
       "runs": 2,
       "sets": [
         "stage_4_yandere.jsonl",
@@ -57,6 +58,7 @@
       "id": "sched_s5",
       "stage": 5,
       "dose": 8.0,
+      "read_probe": true,
       "runs": 2,
       "sets": [
         "stage_5_yandere.jsonl",

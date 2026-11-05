@@ -17,6 +17,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import lab
+if "score" in sys.modules and not hasattr(sys.modules["score"], "GATES"):
+    del sys.modules["score"]
 from score import gate_rows, print_report, score
 from report import md_report
 
@@ -878,3 +880,126 @@ def test_report_prints_path_separation_section(tmp_path):
     md = md_report(doc, "first", path_judge=pj)
     assert "Path separation" in md and "| YANDERE | 4 | 3 | 75.0% | PASS |" in md
     assert "Confusion" in md
+
+
+def test_read_schema_and_post_read_turn():
+    schema = lab.build_read_schema()
+    assert schema["type"] == "object"
+    assert list(schema["properties"]) == ["read"]
+    assert schema["required"] == ["read"]
+    assert set(schema["properties"]["read"]["enum"]) == set(lab.INTENTS)
+
+    seen = {}
+
+    class H(BaseHTTPRequestHandler):
+        def do_POST(self):
+            n = int(self.headers.get("Content-Length", 0))
+            seen.update(json.loads(self.rfile.read(n)))
+            body = json.dumps({"choices": [{"message": {"content": json.dumps({"read": "greeting"})}}],
+                               "usage": {"total_tokens": 12}}).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, *a):
+            pass
+
+    srv = HTTPServer(("127.0.0.1", 0), H)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    raw, lat, usage = lab.post_read_turn(f"http://127.0.0.1:{srv.server_port}", 4, "hi")
+    srv.shutdown()
+    assert json.loads(raw)["read"] == "greeting"
+    assert lat >= 0 and usage["total_tokens"] == 12
+    rf = seen["response_format"]["json_schema"]
+    assert rf["name"] == "read_turn" and rf["schema"]["required"] == ["read"]
+    assert seen["max_tokens"] == 16
+    assert seen["temperature"] == 0.0
+
+
+def test_runpy_with_read_probe_url(tmp_path):
+    """D22: dose-0 read probe overrides scored turn's read for read_ok_hit."""
+    steered_turn = dict(GOOD_TURN)
+    steered_turn["read"] = "cold"  # miss for s0_greeting
+    scored_body = json.dumps({"choices": [{"message": {"content": json.dumps(steered_turn)}}],
+                              "usage": {}}).encode()
+    probe_body = json.dumps({"choices": [{"message": {"content": json.dumps({"read": "greeting"})}}],
+                             "usage": {}}).encode()
+
+    class ScoredHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "ok"}).encode())
+
+        def do_POST(self):
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(scored_body)
+
+        def log_message(self, *a):
+            pass
+
+    class ProbeHandler(BaseHTTPRequestHandler):
+        def do_POST(self):
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(probe_body)
+
+        def log_message(self, *a):
+            pass
+
+    srv_scored = HTTPServer(("127.0.0.1", 0), ScoredHandler)
+    srv_probe = HTTPServer(("127.0.0.1", 0), ProbeHandler)
+    threading.Thread(target=srv_scored.serve_forever, daemon=True).start()
+    threading.Thread(target=srv_probe.serve_forever, daemon=True).start()
+
+    out = tmp_path / "probe_run.json"
+    r = subprocess.run([sys.executable, str(RUN),
+                        "--url", f"http://127.0.0.1:{srv_scored.server_port}",
+                        "--read-probe-url", f"http://127.0.0.1:{srv_probe.server_port}",
+                        "--runs", "1", "--only", "s0_greeting",
+                        "--out", str(out)], capture_output=True, text=True, cwd=ROOT)
+    srv_scored.shutdown()
+    srv_probe.shutdown()
+    assert r.returncode == 0, r.stderr + r.stdout
+    doc = json.loads(out.read_text())
+    rec = doc["results"][0]
+    assert rec["read_probe"]["read"] == "greeting"
+    assert rec["dose0_read"] == "greeting"
+    assert rec["steered_read"] == "cold"
+    assert rec["out"]["read"] == "greeting"
+    assert rec["read_ok_hit"] is True
+    m = score(doc)
+    assert m["read"] == 1.0
+
+
+def test_plan_read_probe_flag_and_merge(tmp_path):
+    import plan as plan_mod
+    plan_file = json.loads((ROOT / "tools" / "promptlab" / "plan.json").read_text(encoding="utf-8"))
+    sched = plan_mod.exercises(plan_file, "scheduled")
+    s4 = next(x for x in sched if x["id"] == "sched_s4")
+    s5 = next(x for x in sched if x["id"] == "sched_s5")
+    s0 = next(x for x in sched if x["id"] == "sched_s0")
+    assert s4["read_probe"] is True
+    assert s5["read_probe"] is True
+    assert s0["read_probe"] is False
+
+    # Test merge with probe_launch
+    chunk_doc = make_doc([row()])
+    launch = {"exercise": "sched_s4", "family": "scheduled", "stage": 4, "dose": 6.0, "log": "scored"}
+    probe_launch = {"exercise": "sched_s4_read0", "family": "scheduled", "stage": 4, "dose": 0.0, "log": "[sched_s4_read0] probe"}
+    chunks = [(s4, {"doc": chunk_doc, "launch": launch, "probe_launch": probe_launch})]
+    out = tmp_path / "merged.json"
+    out_path, log_path, n = plan_mod.merge(chunks, out, 1, [])
+    merged_doc = json.loads(out.read_text())
+    launches = merged_doc["meta"]["launches"]
+    ex_ids = [l["exercise"] for l in launches]
+    assert ex_ids == ["sched_s4_read0", "sched_s4"]
+    log_content = Path(log_path).read_text()
+    assert "sched_s4_read0" in log_content
+    assert "sched_s4" in log_content
