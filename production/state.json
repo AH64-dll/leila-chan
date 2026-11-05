@@ -3224,7 +3224,7 @@
     },
     "P2.24": {
       "status": "in_progress",
-      "agent": null,
+      "agent": "swe-2-flash",
       "round": 1,
       "reviews": [],
       "started": "2026-11-04T18:40:40+02:00"
@@ -8654,6 +8654,12 @@
       "event": "gate:fail",
       "ref": "P2",
       "note": "production/gates/P2-gate-r1.md"
+    },
+    {
+      "ts": "2026-11-05T07:35:09+02:00",
+      "event": "agent",
+      "ref": "P2.24",
+      "note": "None -> swe-2-flash"
     }
   ]
 }
