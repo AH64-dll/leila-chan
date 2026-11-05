@@ -35,6 +35,19 @@ There are no right answers, and "it was fine" is a useful answer.
 >
 
 <!--
+FACILITATOR ONLY — scoring rubric (do not read to the participant; not in paper copies):
+  Gate (docs/09 §1 M1 exit criterion 1, enforced by tools/playtest/score.py):
+    - Face + Sound rows of all three sessions, pooled: mean must be >= 4.00/5.
+      Six values total. Charm, Creepiness and Play again are reported in RESULT.md
+      but do NOT count toward the >= 4/5 gate. (The task row's "word/survey >= 4/5"
+      is this pooled face/sound mean — the same arithmetic P1 round 0 used.)
+    - Broken turns must be 0 across all three sessions (worst of the observer's
+      count and the transcript statuses).
+  Free text ("What felt alive?" / "What felt off?") is required by score.py;
+  "Anything else?" is optional. A blank rating row makes the whole session
+  INCOMPLETE — get the number before they leave.
+-->
+<!--
 Facilitator: the participant fills this alone. If a rating row is left as "—", ask them for the
 number before they leave; score.py refuses an incomplete survey. Do not suggest a number.
 -->

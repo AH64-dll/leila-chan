@@ -74,3 +74,19 @@
   Not run, on purpose: the Godot suite and any real session (memory pressure, no live generation) —
   verified the 14 pytest cases, the dry-run fixture, the CLI failure paths, and `session.sh`
   end-to-end against a stub binary writing TranscriptLogger-shaped JSONL.
+
+## P2.24 — human playtest kit, named docs (2026-11-05)
+
+- Second dispatch of r1. Added `session_script.md` (verbatim protocol incl. the consent +
+  content-level step — `content_level` empty means strictest gates, P3.13 UI absent, so consent
+  is paper-only), `observer_checklist.md` (live incident log), `analysis_template.md` (bundle
+  layout + verdict template mirroring RESULT.md), `README.md` (file map + end-to-end commands),
+  and a facilitator-only rubric comment inside `survey.md` — first table and the score.py
+  contract untouched, 14 tests still green.
+- Gotcha worth remembering: `tools/llm/serve.sh` resolves `models/` + `tools/llama/` under its
+  own repo root, so it works from `<main tree>` and exits "llama-server not found" from a
+  worktree; `tools/godot.sh` does the opposite — it falls back to the main worktree's
+  `tools/godot/` via `git worktree list`. The kit documents both asymmetries.
+- Safety note for the runner: a `--vector`-dosed serve.sh disables the P2.17 classifier tier —
+  round-1 sessions use the unsteered server only (stage 0 schedules malice 0.0 anyway).
+- Status: kit complete, still "awaiting human playtest" — the three sessions are the owner's.
