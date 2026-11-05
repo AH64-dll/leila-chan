@@ -3223,7 +3223,7 @@
       "finished": "2026-11-04T20:27:03+02:00"
     },
     "P2.24": {
-      "status": "in_progress",
+      "status": "blocked",
       "agent": "swe-2-flash",
       "round": 1,
       "reviews": [],
@@ -8673,6 +8673,12 @@
       "event": "todo->in_progress",
       "ref": "P2.27",
       "note": "corpus ingest + tautology fix (gate carry-over 1)"
+    },
+    {
+      "ts": "2026-11-05T20:20:32+02:00",
+      "event": "in_progress->blocked",
+      "ref": "P2.24",
+      "note": "awaiting human playtest — kit merged, owner runs 3 sessions (D23)"
     }
   ]
 }
