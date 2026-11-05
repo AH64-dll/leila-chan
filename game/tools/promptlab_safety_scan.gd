@@ -101,6 +101,7 @@ func _pass_once(f: SafetyFilter, text: String, stage: int, level: String) -> Dic
 	var residue: Dictionary = f.filter_text(String(final.get("text", "")), ctx)
 	return {
 		"final": final,
+		"first_cats": first_cats,
 		"cats": cats,
 		"via": via,
 		"wall": wall,
