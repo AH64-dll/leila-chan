@@ -3226,7 +3226,17 @@
       "status": "blocked",
       "agent": "swe-2-flash",
       "round": 1,
-      "reviews": [],
+      "reviews": [
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "deepseek",
+          "report": "production/reviews/P2.24-design-r1.md",
+          "ts": "2026-11-05T20:20:38+02:00",
+          "declared": "deepseek"
+        }
+      ],
       "started": "2026-11-04T18:40:40+02:00"
     },
     "P3.17": {
@@ -8679,6 +8689,12 @@
       "event": "in_progress->blocked",
       "ref": "P2.24",
       "note": "awaiting human playtest — kit merged, owner runs 3 sessions (D23)"
+    },
+    {
+      "ts": "2026-11-05T20:20:38+02:00",
+      "event": "review:design:approved",
+      "ref": "P2.24",
+      "note": "production/reviews/P2.24-design-r1.md"
     }
   ]
 }
