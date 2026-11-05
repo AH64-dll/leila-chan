@@ -30,7 +30,16 @@
     },
     "P2": {
       "status": "active",
-      "started": "2026-11-04T03:00:06+02:00"
+      "started": "2026-11-04T03:00:06+02:00",
+      "gates": [
+        {
+          "verdict": "fail",
+          "report": "production/gates/P2-gate-r1.md",
+          "ts": "2026-11-05T07:32:07+02:00",
+          "reviewer": "swe-2",
+          "declared": "swe-2"
+        }
+      ]
     },
     "P3": {
       "status": "active",
@@ -8639,6 +8648,12 @@
       "event": "review:design:changes",
       "ref": "P3.19",
       "note": "production/reviews/P3.19-design-r1.md"
+    },
+    {
+      "ts": "2026-11-05T07:32:07+02:00",
+      "event": "gate:fail",
+      "ref": "P2",
+      "note": "production/gates/P2-gate-r1.md"
     }
   ]
 }
