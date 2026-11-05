@@ -1,0 +1,37 @@
+{
+  "v": 1,
+  "session_id": "session_2",
+  "written_at": "2026-11-05T18:55:55+00:00",
+  "telemetry": {
+    "lines": 4,
+    "turns": 2
+  },
+  "files": {
+    "obs_sheet.md": {
+      "bytes": 762,
+      "sha256": "5dcaa552f51376931263f252d9d1157cfe72c2f22ad8445c8b0ff022d2d224ee"
+    },
+    "session.meta.json": {
+      "bytes": 483,
+      "sha256": "d30d8a73e55cd5b7e7d0cb30a21e9095b3254a1dedf54f3045599adc79400472"
+    },
+    "session_log.md": {
+      "bytes": 762,
+      "sha256": "3a86531b6676e96e87d8ead382a3306ea4a87723b6508291afff8e7208a0750a"
+    },
+    "survey.md": {
+      "bytes": 1398,
+      "sha256": "c7dfd628c80ee7d2dd315ee7ea11387f47c2d69f142679ae3a80bc96eebffd7a"
+    },
+    "telemetry.jsonl": {
+      "bytes": 1592,
+      "sha256": "374abd155d540d60050325788ca55d448454a9dbd1f83aed8cb223cd424b0a8f"
+    },
+    "transcript.md": {
+      "bytes": 434,
+      "sha256": "5d5818b7de9d5a3f5599b8e2f4235a5ec173c5ff40299cfb54d9b7c0d8572b6e"
+    }
+  },
+  "complete": true,
+  "missing": []
+}

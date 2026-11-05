@@ -18,7 +18,9 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-HUMAN_DIR="$ROOT/production/playtests/P2/human"
+PHASE="${LEILA_PLAYTEST_PHASE:-P2}"
+SESSIONS_DIR_OVERRIDE=""
+INTENDED_PATH=""
 GAME_DIR="$ROOT/game"
 SERVER_URL="${LEILA_PLAYTEST_SERVER_URL:-http://127.0.0.1:8089}"
 
@@ -29,7 +31,6 @@ DO_TAIL=1
 CHECK_SERVER=1
 FORCE=0
 CHECK_ONLY=0
-
 usage() {
     cat >&2 <<'EOF'
 usage: tools/playtest/session.sh [options]
@@ -41,9 +42,10 @@ usage: tools/playtest/session.sh [options]
   --no-tail          do not live-tail the transcript (collect.sh still merges raw/)
   --allow-no-server  launch even when /health does not answer
   --force            reuse an existing non-empty bundle directory
+  --phase P2|P3      playtest phase (default: P2, or LEILA_PLAYTEST_PHASE)
+  --sessions-dir DIR explicitly specify where bundles are stored
+  --style PATH       intended path or style (e.g. YANDERE, Card 1)
   --check            preflight only: resolve the build, check the server, print paths
-
-Exit codes: 0 ok, 1 launch/runtime error, 2 preflight failed.
 EOF
     exit 2
 }
@@ -58,11 +60,21 @@ while [ $# -gt 0 ]; do
         --force) FORCE=1; shift ;;
         --check) CHECK_ONLY=1; shift ;;
         -h|--help) usage ;;
+        --phase) PHASE="${2:?--phase needs a value}"; shift 2 ;;
+        --sessions-dir) SESSIONS_DIR_OVERRIDE="${2:?--sessions-dir needs a value}"; shift 2 ;;
+        --style|--intended-path) INTENDED_PATH="${2:?--style needs a value}"; shift 2 ;;
         *) echo "session.sh: unknown argument $1" >&2; usage ;;
     esac
 done
 
 SESSION="${SESSION//[^A-Za-z0-9._-]/_}"
+if [ -n "$SESSIONS_DIR_OVERRIDE" ]; then
+    HUMAN_DIR="$SESSIONS_DIR_OVERRIDE"
+elif [ "$PHASE" = "P3" ] || [ "$PHASE" = "3" ]; then
+    HUMAN_DIR="$ROOT/production/playtests/P3/human"
+else
+    HUMAN_DIR="$ROOT/production/playtests/P2/human"
+fi
 BUNDLE="$HUMAN_DIR/$SESSION"
 META="$BUNDLE/session.meta.json"
 
@@ -166,6 +178,7 @@ done
 
 SESSION="$SESSION" BUILD_DESC="$BUILD_DESC" BUILD_KIND="$BUILD_KIND" \
     EXPORT_PATH="$EXPORT_PATH" SERVER_URL="$SERVER_URL" PLAYER_NAME="$PLAYER_NAME" \
+    INTENDED_PATH="$INTENDED_PATH" PHASE="$PHASE" \
     python3 - "$META" <<'PY'
 import json
 import os
@@ -186,6 +199,8 @@ meta = {
     "server_url": os.environ["SERVER_URL"],
     "player_name_hint": os.environ["PLAYER_NAME"],
     "host": platform.system(),
+    "intended_path": os.environ.get("INTENDED_PATH", ""),
+    "phase": os.environ.get("PHASE", "P2"),
     "synthetic": False,
 }
 with open(sys.argv[1], "w", encoding="utf-8") as handle:

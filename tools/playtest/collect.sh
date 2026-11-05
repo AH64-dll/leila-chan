@@ -18,9 +18,9 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
+PHASE="${LEILA_PLAYTEST_PHASE:-P2}"
 HUMAN_DIR="$ROOT/production/playtests/P2/human"
 SCORE="$HERE/score.py"
-
 usage() {
     cat >&2 <<'EOF'
 usage: tools/playtest/collect.sh [--sessions-dir DIR] [--no-seed] <session-id> [...]
@@ -29,8 +29,8 @@ usage: tools/playtest/collect.sh [--sessions-dir DIR] [--no-seed] <session-id> [
   --sessions-dir DIR  where the bundles live (default: production/playtests/P2/human)
   --no-seed           do not copy the survey/observer/log templates into a bundle that
                       is missing them (default: seed them so nothing is forgotten)
+  --phase P2|P3      playtest phase (default: P2, or LEILA_PLAYTEST_PHASE)
   --all               collect every session bundle in the directory (skips _* dirs)
-
 Exit: 0 every bundle complete; 2 at least one incomplete or missing.
 EOF
     exit 2
@@ -43,13 +43,20 @@ TARGETS=()
 while [ $# -gt 0 ]; do
     case "$1" in
         --sessions-dir) SESSIONS_DIR="${2:?--sessions-dir needs a value}"; shift 2 ;;
-        --no-seed) SEED=0; shift ;;
+        --phase) PHASE="${2:?--phase needs a value}"; shift 2 ;;
         --all) COLLECT_ALL=1; shift ;;
         -h|--help) usage ;;
         -*) echo "collect.sh: unknown argument $1" >&2; usage ;;
         *) TARGETS+=("$1"); shift ;;
     esac
 done
+if [ "$PHASE" = "P3" ] || [ "$PHASE" = "3" ] || [[ "$SESSIONS_DIR" == *"/P3/"* ]]; then
+    HUMAN_DIR="$ROOT/production/playtests/P3/human"
+    SCORE="$HERE/score_p3.py"
+    if [ "$SESSIONS_DIR" = "$ROOT/production/playtests/P2/human" ]; then
+        SESSIONS_DIR="$HUMAN_DIR"
+    fi
+fi
 
 if [ "$COLLECT_ALL" -eq 1 ]; then
     if [ ${#TARGETS[@]} -gt 0 ]; then
@@ -141,10 +148,10 @@ done
 if [ "$FAILED" -ne 0 ]; then
     echo
     echo "One or more bundles are incomplete: fix the fields above, then re-run collect.sh." >&2
-    echo "The round is scored with: python3 tools/playtest/score.py" >&2
+    echo "The round is scored with: python3 tools/playtest/$(basename "$SCORE")" >&2
     exit 2
 fi
 echo
 echo "All bundles complete. Next:"
-echo "  python3 tools/playtest/score.py --dir \"$SESSIONS_DIR\""
+echo "  python3 tools/playtest/$(basename "$SCORE") --dir \"$SESSIONS_DIR\""
 echo "  (with the default dir that writes $SESSIONS_DIR/RESULT.md)"

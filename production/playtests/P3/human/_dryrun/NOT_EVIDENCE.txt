@@ -1,0 +1,14 @@
+# SYNTHETIC PLAYTEST DEMO — NOT EVIDENCE
+
+The session bundles under this folder (`production/playtests/P3/human/_dryrun/`) are
+synthetic test fixtures generated to exercise and prove the P3 playtest collection,
+validation, and scoring pipeline end-to-end.
+
+They contain synthetic model output and scripted responses:
+- `session.meta.json` in each bundle has `"synthetic": true`.
+- `score_p3.py` refuses to score bundles in this folder without `--allow-synthetic`.
+- Output generated from these bundles is explicitly marked:
+  `VERDICT: PASS (SYNTHETIC DRY RUN — NOT EVIDENCE)`.
+
+These bundles must NEVER be cited as playtest evidence or used to satisfy gate exit criteria.
+Real evidence requires human participants per `RUNBOOK.md`.
