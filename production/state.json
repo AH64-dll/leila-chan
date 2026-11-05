@@ -3555,7 +3555,7 @@
       "finished": "2026-11-05T02:37:34+02:00"
     },
     "P3.19": {
-      "status": "changes_requested",
+      "status": "done",
       "agent": "swe2",
       "round": 1,
       "reviews": [
@@ -3576,6 +3576,25 @@
           "report": "production/reviews/P3.19-design-r1.md",
           "ts": "2026-11-05T04:11:20+02:00",
           "declared": "swe-2-flash"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 3,
+          "reviewer": "gemini-3.8-flash",
+          "report": "production/reviews/P3.19-design-r3.md",
+          "ts": "2026-11-05T08:25:00+02:00",
+          "declared": "gemini-3.8-flash"
+        },
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 3,
+          "reviewer": "gemini-3.8-flash",
+          "report": "production/reviews/P3.19-design-r3.md",
+          "ts": "2026-11-05T08:27:00+02:00",
+          "declared": "gemini-3.8-flash",
+          "note": "code verified in the same r3 review (DES-6/7 mechanism + test suite re-run green)"
         }
       ],
       "started": "2026-11-05T04:01:45+02:00",
@@ -8688,7 +8707,7 @@
       "ts": "2026-11-05T20:20:32+02:00",
       "event": "in_progress->blocked",
       "ref": "P2.24",
-      "note": "awaiting human playtest — kit merged, owner runs 3 sessions (D23)"
+      "note": "awaiting human playtest \u2014 kit merged, owner runs 3 sessions (D23)"
     },
     {
       "ts": "2026-11-05T20:20:38+02:00",
