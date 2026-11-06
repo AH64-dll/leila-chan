@@ -202,3 +202,7 @@ python tools/promptlab/report.py tools/promptlab/results/<v3_paths>.json
 The judge shares the generator's model — the same convention P3.03's vector blind
 read used, whose authored-text control measured a 44% ceiling — so the report
 prints the per-path table and confusion matrix for review either way.
+
+## Native parity run (P4.04c)
+
+`tools/promptlab/native_parity.py` runs the unchanged lab suite on two transports for each stage in `plan.json`. The server side is llama-server on port 8096 with `--control-vector-scaled` at the stage's scalar dose; the native side is the NativeBackend behind `game/tools/NativeHttpShim.tscn` on 8097, with the same malice dose. For each transport it runs `run.py`, then `score.py`, stops each process by its own handle before the next launch (only one holds the GPU), and writes `parity.json` with the deltas on validity, read accuracy and emotion fit. The pass rule is every delta within 2 points. The shim is a dev tool only: it binds 127.0.0.1, serves `/health`, `/props` and a non-streaming `/v1/chat/completions`, and is stopped with SIGINT because Godot does not exit cleanly on SIGTERM. Smoke run: `LEILA_MODEL=<gguf> python3 tools/promptlab/native_parity.py --dir OUT --stages 0,3 --runs 1 --max-cases 3`. Map doses are refused, and the driver reads the malice vector from `game/data/steering/vectors.json`, not from `LEILA_CVEC`.

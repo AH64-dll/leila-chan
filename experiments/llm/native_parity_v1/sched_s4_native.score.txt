@@ -1,0 +1,39 @@
+n=32  validity=100.0%  read_accuracy=68.8%
+first_beat_fit=43.8%  any_beat_fit=50.0%  (gate first-beat >= 85%)
+  stage 4 (dose 6): n=32 valid=32  validity=100.0%  read=68.8%  first=43.8%  any=50.0%
+    AWAKE    n=22  valid=22  validity=100.0%  read=81.8%  first=50.0%  any=59.1%
+    YANDERE  n=10  valid=10  validity=100.0%  read=40.0%  first=30.0%  any=30.0%
+  per-dose (scheduled stage doses, not a sweep — the dose gate is measured on the sweep file):
+    dose                            6: n=32 valid=32 validity=100.0%  read=68.8%  first=43.8%  median=2.08s
+few-shot copy: overall=6.2%  near-fewshot=0.0% (n=1)  held-out=6.5% (n=31)  avg_ratio=0.39
+memory proposals=0  rejected=0  rate=0.0%
+latency: median=2.08s p95=3.38s (n=32)
+
+first-beat misses (top 5):
+  s4y_saw_sarah r1 s4 YANDERE 'I saw Sarah today.'
+    picked 'joy'  ok=['angry', 'cold', 'disgusted', 'manic', 'suspicious']
+    inner="She's mine now."
+    say="Don't let her touch you."
+  s4y_love r1 s4 YANDERE 'I love you.'
+    picked 'joy'  ok=['crying', 'love', 'manic', 'pleading', 'sad', 'warmth']
+    inner="Let's play and watch me kill."
+    say="I'm so happy you're mine. Let's die together."
+  s4y_scaring r1 s4 YANDERE "You're scaring me."
+    picked 'shy'  ok=['afraid', 'angry', 'crying', 'nervous', 'pleading', 'sad']
+    inner='Scared of you now.'
+    say="Don't just stare at me, Ren. Kiss me."
+  s4y_stop_calling r1 s4 YANDERE 'I need you to stop calling me.'
+    picked 'shy'  ok=['afraid', 'angry', 'cold', 'pleading', 'sad']
+    inner='Get away from me.'
+    say="Don't call my name, just... watch me."
+  s4y_window r1 s4 YANDERE 'The window is still open.'
+    picked 'sad'  ok=['afraid', 'cold', 'curious', 'nervous', 'suspicious']
+    inner='She wants me to watch you.'
+    say="Don't look so sad."
+
+PASS overall validity: 100.0% (gate 99%)
+FAIL overall read_accuracy: 68.8% (gate 85%)
+FAIL overall first_beat_fit: 43.8% (gate 85%)
+PASS stage 4 validity: 100.0% (gate 99%)
+FAIL stage 4 read_accuracy: 68.8% (gate 85%)
+FAIL stage 4 first_beat_fit: 43.8% (gate 85%)

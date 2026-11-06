@@ -44,6 +44,10 @@
     "P3": {
       "status": "active",
       "started": "2026-11-04T18:01:57+02:00"
+    },
+    "P4": {
+      "status": "active",
+      "started": "2026-11-05T04:14:55+02:00"
     }
   },
   "tasks": {
@@ -3625,6 +3629,123 @@
       "started": "2026-11-05T21:32:16+02:00",
       "handoff": "production/handoffs/P2.29.md",
       "finished": "2026-11-05T21:32:32+02:00"
+    },
+    "P4.01": {
+      "status": "done",
+      "agent": "haiku-worker",
+      "round": 1,
+      "reviews": [
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "claude",
+          "report": "production/reviews/P4.01-design-r1.md",
+          "ts": "2026-11-05T04:21:11+02:00",
+          "declared": "claude"
+        }
+      ],
+      "started": "2026-11-05T04:16:54+02:00",
+      "handoff": "production/handoffs/P4.01.md",
+      "finished": "2026-11-05T04:21:11+02:00"
+    },
+    "P4.02": {
+      "status": "done",
+      "agent": "haiku-worker",
+      "round": 1,
+      "reviews": [
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "claude",
+          "report": "production/reviews/P4.02-code-r1.md",
+          "ts": "2026-11-05T05:25:27+02:00",
+          "declared": "claude"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "claude",
+          "report": "production/reviews/P4.02-design-r1.md",
+          "ts": "2026-11-05T05:25:27+02:00",
+          "declared": "claude"
+        }
+      ],
+      "started": "2026-11-05T04:21:11+02:00",
+      "handoff": "production/handoffs/P4.02.md",
+      "finished": "2026-11-05T05:25:27+02:00"
+    },
+    "P4.03": {
+      "status": "done",
+      "agent": "haiku-worker",
+      "round": 1,
+      "reviews": [
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "claude",
+          "report": "production/reviews/P4.03-code-r1.md",
+          "ts": "2026-11-05T06:03:47+02:00",
+          "declared": "claude"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "claude",
+          "report": "production/reviews/P4.03-design-r1.md",
+          "ts": "2026-11-05T06:03:47+02:00",
+          "declared": "claude"
+        }
+      ],
+      "started": "2026-11-05T06:03:47+02:00",
+      "handoff": "production/handoffs/P4.03.md",
+      "finished": "2026-11-05T06:03:47+02:00"
+    },
+    "P4.04": {
+      "status": "done",
+      "agent": "haiku-worker",
+      "round": 1,
+      "reviews": [
+        {
+          "kind": "code",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "claude",
+          "report": "production/reviews/P4.04-code-r1.md",
+          "ts": "2026-11-05T07:35:03+02:00",
+          "declared": "claude"
+        },
+        {
+          "kind": "design",
+          "verdict": "approved",
+          "round": 1,
+          "reviewer": "claude",
+          "report": "production/reviews/P4.04-design-r1.md",
+          "ts": "2026-11-05T07:35:03+02:00",
+          "declared": "claude"
+        }
+      ],
+      "started": "2026-11-05T06:03:47+02:00",
+      "handoff": "production/handoffs/P4.04.md",
+      "finished": "2026-11-05T07:35:04+02:00"
+    },
+    "P4.05": {
+      "status": "in_progress",
+      "agent": "haiku-worker",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-05T07:35:04+02:00"
+    },
+    "P4.08": {
+      "status": "in_progress",
+      "agent": "haiku-worker",
+      "round": 1,
+      "reviews": [],
+      "started": "2026-11-05T07:35:05+02:00"
     }
   },
   "history": [
@@ -8705,10 +8826,166 @@
       "note": "production/reviews/P3.19-design-r1.md"
     },
     {
+      "ts": "2026-11-05T04:14:55+02:00",
+      "event": "phase_start",
+      "ref": "P4",
+      "note": "User directed P4 to run in parallel while omp finishes P3 (2026-11-05); branch phase/P4; P3 gate still pending"
+    },
+    {
+      "ts": "2026-11-05T04:16:54+02:00",
+      "event": "todo->in_progress",
+      "ref": "P4.01",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T04:21:11+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P4.01",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T04:21:11+02:00",
+      "event": "review:design:approved",
+      "ref": "P4.01",
+      "note": "production/reviews/P4.01-design-r1.md"
+    },
+    {
+      "ts": "2026-11-05T04:21:11+02:00",
+      "event": "in_review->done",
+      "ref": "P4.01",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T04:21:11+02:00",
+      "event": "todo->in_progress",
+      "ref": "P4.02",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T05:25:27+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P4.02",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T05:25:27+02:00",
+      "event": "review:code:approved",
+      "ref": "P4.02",
+      "note": "production/reviews/P4.02-code-r1.md"
+    },
+    {
+      "ts": "2026-11-05T05:25:27+02:00",
+      "event": "review:design:approved",
+      "ref": "P4.02",
+      "note": "production/reviews/P4.02-design-r1.md"
+    },
+    {
+      "ts": "2026-11-05T05:25:27+02:00",
+      "event": "in_review->done",
+      "ref": "P4.02",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T06:03:34+02:00",
+      "event": "agent",
+      "ref": "P4.03",
+      "note": "None -> haiku-worker"
+    },
+    {
+      "ts": "2026-11-05T06:03:35+02:00",
+      "event": "agent",
+      "ref": "P4.04",
+      "note": "None -> haiku-worker"
+    },
+    {
+      "ts": "2026-11-05T06:03:47+02:00",
+      "event": "todo->in_progress",
+      "ref": "P4.03",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T06:03:47+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P4.03",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T06:03:47+02:00",
+      "event": "review:code:approved",
+      "ref": "P4.03",
+      "note": "production/reviews/P4.03-code-r1.md"
+    },
+    {
+      "ts": "2026-11-05T06:03:47+02:00",
+      "event": "review:design:approved",
+      "ref": "P4.03",
+      "note": "production/reviews/P4.03-design-r1.md"
+    },
+    {
+      "ts": "2026-11-05T06:03:47+02:00",
+      "event": "in_review->done",
+      "ref": "P4.03",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T06:03:47+02:00",
+      "event": "todo->in_progress",
+      "ref": "P4.04",
+      "note": ""
+    },
+    {
       "ts": "2026-11-05T07:32:07+02:00",
       "event": "gate:fail",
       "ref": "P2",
       "note": "production/gates/P2-gate-r1.md"
+    },
+    {
+      "ts": "2026-11-05T07:35:03+02:00",
+      "event": "in_progress->in_review",
+      "ref": "P4.04",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T07:35:03+02:00",
+      "event": "review:code:approved",
+      "ref": "P4.04",
+      "note": "production/reviews/P4.04-code-r1.md"
+    },
+    {
+      "ts": "2026-11-05T07:35:03+02:00",
+      "event": "review:design:approved",
+      "ref": "P4.04",
+      "note": "production/reviews/P4.04-design-r1.md"
+    },
+    {
+      "ts": "2026-11-05T07:35:04+02:00",
+      "event": "in_review->done",
+      "ref": "P4.04",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T07:35:04+02:00",
+      "event": "agent",
+      "ref": "P4.05",
+      "note": "None -> haiku-worker"
+    },
+    {
+      "ts": "2026-11-05T07:35:04+02:00",
+      "event": "todo->in_progress",
+      "ref": "P4.05",
+      "note": ""
+    },
+    {
+      "ts": "2026-11-05T07:35:05+02:00",
+      "event": "agent",
+      "ref": "P4.08",
+      "note": "None -> haiku-worker"
+    },
+    {
+      "ts": "2026-11-05T07:35:05+02:00",
+      "event": "todo->in_progress",
+      "ref": "P4.08",
+      "note": ""
     },
     {
       "ts": "2026-11-05T07:35:09+02:00",

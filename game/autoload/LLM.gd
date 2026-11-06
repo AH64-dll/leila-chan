@@ -13,13 +13,16 @@ signal steering_applied(info: Dictionary)
 var _backend: LLMBackend  ## Injected transport; null until set_backend() (P1.02 wires the default).
 var _dose := {}  ## Current control-vector dose {name: scale} from set_dose().
 var _dose_mutex := Mutex.new()
+var _dose_error_warned := {}  ## Distinct dose_error codes warned so far (_dose_mutex).
+var _dose_error_warnings := 0  ## Count of those warnings (_dose_mutex).
 var _active: TurnStream  ## The in-flight turn, or null. One turn at a time.
 var _thread: Thread  ## Worker thread running the backend, or null.
 var _pending_join: Array[Thread] = []  ## Spent workers awaiting a non-blocking join.
 var _shutdown_done := false
-## Stage-change relaunch state (docs/06 §4). `_steering_vectors` is what the
-## running server actually carries — not what the schedule asks for — so a failed
-## relaunch leaves it (and `_dose`) alone.
+## Stage-change relaunch state (docs/06 §4). The relaunch is the dev server transport
+## only: in-process (NativeBackend) a stage change is an instant dose change, bound per
+## turn. `_steering_vectors` is what the running server actually carries — not what the
+## schedule asks for — so a failed relaunch leaves it (and `_dose`) alone.
 var _steering: StageSteering
 var _steering_stage := -1
 var _steering_vectors: Array = []
@@ -40,6 +43,11 @@ func _ready() -> void:
 ## next generate() — an in-flight turn keeps the backend it started with.
 func set_backend(new_backend: LLMBackend) -> void:
 	_backend = new_backend
+	# docs/05 M39 spike: live only on the native backend (the server's dose is a launch flag).
+	var steering := get_node_or_null("/root/Steering")
+	var native := new_backend != null and new_backend.has_method("is_native")
+	if steering != null and steering.has_method("set_spikes_live"):
+		steering.set_spikes_live(native and bool(new_backend.call("is_native")))
 
 
 func has_backend() -> bool:
@@ -81,6 +89,13 @@ func last_metrics() -> Dictionary:
 ## can start the watchdog or pre-warm. Boot wires this at startup.
 func use_default_backend(config: Dictionary = {}) -> LlamaServerBackend:
 	var backend := LlamaServerBackend.new(config)
+	set_backend(backend)
+	return backend
+
+
+## P4.04: install the in-process transport. Returns it so boot can pre-warm it.
+func use_native_backend(config: Dictionary = {}) -> NativeBackend:
+	var backend := NativeBackend.new(config)
 	set_backend(backend)
 	return backend
 
@@ -234,7 +249,34 @@ func _worker_main(stream: TurnStream, transport: LLMBackend) -> void:
 			err_dict = err_dict.duplicate()
 			err_dict["message"] = ""
 		payload = err_dict
+	_warn_dose_error(result.get("metrics"))
 	_deliver_terminal.call_deferred(stream, kind, payload)
+
+
+## Worker thread. A turn whose steering dose did not bind still completes, so this only
+## warns: once per distinct code per process, not once per turn.
+func _warn_dose_error(metrics: Variant) -> void:
+	if not (metrics is Dictionary):
+		return
+	var code: Variant = metrics.get("dose_error")
+	if not (code is String) or String(code).is_empty():
+		return
+	_dose_mutex.lock()
+	var fresh := not _dose_error_warned.has(code)
+	if fresh:
+		_dose_error_warned[code] = true
+		_dose_error_warnings += 1
+	_dose_mutex.unlock()
+	if fresh:
+		push_warning("[LLM] dose not applied this turn: %s" % code)
+
+
+## Test seam: how many dose_error warnings this process has issued.
+func dose_error_warning_count() -> int:
+	_dose_mutex.lock()
+	var out := _dose_error_warnings
+	_dose_mutex.unlock()
+	return out
 
 
 func _deliver_token(stream: TurnStream, text: String) -> void:

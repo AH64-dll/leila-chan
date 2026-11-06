@@ -27,7 +27,21 @@ const SAMPLING_FALLBACK := {
 ## the ten-key transport allowlist that must never carry `dose`.
 const SAMPLING_ROW_KEYS: Array[String] = ["temperature", "top_p", "repeat_penalty", "dose"]
 
+## P4.06: the normal-mode output budget (docs/07 §3.1). Fast mode sets its own.
+const NORMAL_MAX_TOKENS := 600
+
+## docs/07 §4 Fast mode limits. The data file is authoritative; the fallback keeps
+## a missing or broken file on the documented numbers.
+const FAST_MODE_PATH := "res://data/fast_mode.json"
+const FAST_MODE_FALLBACK := {
+	"max_tokens": 220,
+	"max_beats": 1,
+	"say_max_length": 160,
+	"inner_max_length": 60,
+}
+
 static var _sampling_cache: Dictionary = {}
+static var _fast_cache: Dictionary = {}
 
 
 static func clear_cache() -> void:
@@ -241,3 +255,103 @@ static func spoken_text(turn_data: Dictionary) -> String:
 			if not line.is_empty():
 				parts.append(line)
 	return " ".join(parts)
+
+
+## docs/07 §4 Fast mode, the last step of building a turn request. Normal mode only
+## sets the output budget, so the request is unchanged. Fast mode also caps the
+## beats and text lengths in the schema the grammar compiles, so the limit holds
+## while generating instead of being asked for in the prompt.
+static func finalize_request(req: TurnRequest, fast: bool) -> void:
+	if not fast:
+		req.max_tokens = NORMAL_MAX_TOKENS
+		return
+	var limits := fast_mode_spec()
+	req.max_tokens = int(limits["max_tokens"])
+	req.schema = _fast_schema(req.schema, limits)
+
+
+## The fast limits: a complete four-key row from fast_mode.json, read once and then
+## cached. Always a copy, so a consumer cannot poison the cache.
+static func fast_mode_spec() -> Dictionary:
+	if _fast_cache.is_empty():
+		_fast_cache = _load_fast_mode()
+	return _fast_cache.duplicate()
+
+
+static func clear_fast_cache() -> void:
+	_fast_cache = {}
+
+
+## Parses a fast_mode document into the four limits. Each key is read on its own: a
+## missing or unusable value keeps its docs/07 §4 fallback, and the document warns
+## once for all of them, so a partial edit never leaves a limit unset.
+static func parse_fast_mode(parsed: Variant) -> Dictionary:
+	var out := FAST_MODE_FALLBACK.duplicate()
+	if not (parsed is Dictionary):
+		push_warning(
+			"TurnContext: %s is not a JSON object; using the in-code fast limits" % FAST_MODE_PATH
+		)
+		return out
+	var document: Dictionary = parsed
+	var unusable := PackedStringArray()
+	for key: String in FAST_MODE_FALLBACK:
+		var value: Variant = document.get(key)
+		if _is_usable_limit(value):
+			out[key] = int(value)
+		else:
+			unusable.append(key)
+	if not unusable.is_empty():
+		push_warning(
+			(
+				"TurnContext: %s has no usable %s; keeping the in-code values"
+				% [FAST_MODE_PATH, ", ".join(unusable)]
+			)
+		)
+	return out
+
+
+## A JSON number that can be a limit: finite and at least 1. A bool, a string, a
+## zero or a negative number is not a limit and falls back.
+static func _is_usable_limit(value: Variant) -> bool:
+	if typeof(value) != TYPE_INT and typeof(value) != TYPE_FLOAT:
+		return false
+	var number := float(value)
+	return is_finite(number) and number >= 1.0
+
+
+static func _load_fast_mode() -> Dictionary:
+	if not FileAccess.file_exists(FAST_MODE_PATH):
+		push_warning("TurnContext: %s missing; using the in-code fast limits" % FAST_MODE_PATH)
+		return FAST_MODE_FALLBACK.duplicate()
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(FAST_MODE_PATH))
+	return parse_fast_mode(parsed)
+
+
+## A deep copy of `schema` with the fast limits applied. duplicate(true) keeps the
+## key order, and only keys the schema already has are assigned, so the copy keeps
+## the same shape with smaller numbers. minItems and the enums are left alone.
+static func _fast_schema(schema: Dictionary, limits: Dictionary) -> Dictionary:
+	var out: Dictionary = schema.duplicate(true)
+	var properties := _dict_at(out, "properties")
+	var beats := _dict_at(properties, "beats")
+	_cap_key(beats, "maxItems", int(limits["max_beats"]))
+	var beat_props := _dict_at(_dict_at(beats, "items"), "properties")
+	_cap_key(_dict_at(beat_props, "say"), "maxLength", int(limits["say_max_length"]))
+	_cap_key(_dict_at(properties, "inner"), "maxLength", int(limits["inner_max_length"]))
+	return out
+
+
+## Lowers node[key] to `limit` when the key exists and is higher. Never raises a
+## limit, and never adds a key the schema does not already carry.
+static func _cap_key(node: Dictionary, key: String, limit: int) -> void:
+	if node.has(key) and int(node[key]) > limit:
+		node[key] = limit
+
+
+## The nested dictionary at node[key], or an empty one when the key is absent or not
+## a dictionary. The empty result is a throwaway, so a missing key is a no-op.
+static func _dict_at(node: Dictionary, key: String) -> Dictionary:
+	var child: Variant = node.get(key)
+	if child is Dictionary:
+		return child as Dictionary
+	return {}

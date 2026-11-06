@@ -31,11 +31,11 @@ extends Node
 ## live in `game/data/steering/dose.json`; the docs/06 §3 table is the in-code
 ## fallback, so a broken data file degrades to the documented values.
 ##
-## Prototype limit (docs/06 §4): the dose is a llama-server *launch flag*, so it
+## Server transport (docs/06 §4): the dose is a llama-server *launch flag*, so it
 ## only changes when the stage-change restart relaunches the server. Per-turn
-## spikes (+3..+4 for 1–2 turns) therefore cannot be applied yet — see
-## `spike_for()`. The shipping GDExtension applies them with
-## `llama_set_adapter_cvec` before decoding (P4.03).
+## spikes (+3..+4 for 1–2 turns, docs/05 M39) are therefore dropped there — see
+## `spike_for()`. On the native backend (`set_spikes_live`, set by LLM.set_backend)
+## the GDExtension applies them per turn with `llama_set_adapter_cvec` (P4.03).
 
 const TABLE_PATH := "res://data/steering/dose.json"
 
@@ -54,9 +54,12 @@ const DOSE_MAX := 12.0
 const CALMER_LEVEL := "calmer"
 const CALMER_STAGE := 3
 
-## docs/06 §3 spike term; P4.03 turns it live with the runtime cvec path.
+## docs/06 §3 spike term (+3..+4 for 1–2 turns). Clamped in code; dose.json's
+## `spike` block carries the triggers, decay and cooldown (docs/05 M39).
+const SPIKE_MIN := 3.0
 const SPIKE_MAX := 4.0
-const SPIKES_LIVE := false
+const SPIKE_TURNS_MIN := 1
+const SPIKE_TURNS_MAX := 2
 
 ## docs/06 §3 stage table (malice scale, pre-assignment interim path weight),
 ## in-code fallback — retuned P3.04 into the ≤0.5 coherent band.
@@ -84,13 +87,50 @@ const FALLBACK_WEIGHT_CURVES := {
 	"aware": {0: 0.0, 1: 0.1, 2: 0.2, 3: 0.3, 4: 0.4, 5: 0.5},
 }
 
+## dose.json `spike` (docs/05 M39): the in-code fallback for the block.
+const FALLBACK_SPIKE := {
+	"min_stage": 3,
+	"triggers": ["T02", "T14", "T18"],
+	"amount": 3.5,
+	"turns": 2,
+	"decay": 0.5,
+	"cooldown_turns": 8,
+	"after_line":
+	(
+		"TRIGGER: A moment ago something in you lurched louder than you meant it to. "
+		+ "You may notice it now, or pretend you did not."
+	),
+}
+
 var _table: Dictionary = {}
 var _path_vectors: Dictionary = {}
 var _weight_curves: Dictionary = {}
+## Spike config (dose.json `spike`, clamped on load) and the live spike state.
+var _spike_cfg: Dictionary = {}
+var _spikes_live := false
+var _spike_turns_left := 0
+var _spike_value := 0.0
+var _spike_cooldown := 0
+var _after_owed := false
+## Trigger ids fired since the last player turn, and whether a player turn is open:
+## the first on_player_turn() only opens it, so no spike steps before the first input.
+var _fired_ids: Array = []
+var _turn_open := false
 
 
 func _ready() -> void:
 	reload_table()
+	_connect_triggers.call_deferred()
+
+
+## Deferred from _ready: autoload order is not guaranteed, so /root/Triggers may not
+## exist yet. Connects its `triggered` signal to note_trigger_fired, once.
+func _connect_triggers() -> void:
+	var triggers: Variant = get_node_or_null("/root/Triggers")
+	if triggers == null:
+		return
+	if not triggers.triggered.is_connected(note_trigger_fired):
+		triggers.triggered.connect(note_trigger_fired)
 
 
 ## The control-vector scales for this turn, e.g. `{"malice": 4.5, "aware": 0.3}`
@@ -110,7 +150,9 @@ func dose_for(ctx: Dictionary = {}) -> Dictionary:
 func schedule_for(ctx: Dictionary = {}) -> Dictionary:
 	var stage := _stage_of(ctx)
 	var row := _row(stage)
-	var spike_requested := float(ctx.get("spike", 0.0))
+	# The running spike when the caller names none. spike_requested reports it too, so
+	# the overlay shows what the dose picked up, not only an explicit request.
+	var spike_requested := float(ctx.get("spike", current_spike()))
 	var spike := spike_for(ctx)
 	var scene := float(ctx.get("scene_modifier", 0.0))
 	var slider := float(ctx.get("player_slider", 0.0))
@@ -172,18 +214,121 @@ func schedule_for(ctx: Dictionary = {}) -> Dictionary:
 	}
 
 
-## docs/06 §3's spike term (+3..+4 for 1–2 turns, decaying). **Stubbed in P2**:
-## the prototype's dose is a `--control-vector-scaled` launch flag (docs/06 §4),
-## so it can only change on a stage-change server restart — a one-turn spike
-## cannot reach the running model. The applied scale is 0.0; the request is
-## still reported, unchanged, as `spike_requested` in `schedule_for()` so a
-## debug read can tell a dropped spike from a spike that never fired. P4.03's
-## runtime `llama_set_adapter_cvec` makes it live.
+## docs/06 §3's spike term (+3..+4 for 1–2 turns, decaying; docs/05 M39). Live on
+## the native backend only (`set_spikes_live`, P4.03's runtime
+## `llama_set_adapter_cvec` path). On the server transport it is dropped to 0: the
+## dose is a `--control-vector-scaled` launch flag (docs/06 §4), so a one-turn spike
+## cannot reach the running model. The request is still reported, unchanged, as
+## `spike_requested` in `schedule_for()`, so a dropped spike stays visible.
 func spike_for(ctx: Dictionary = {}) -> float:
-	var requested := float(ctx.get("spike", 0.0))
-	if requested <= 0.0 or not SPIKES_LIVE:
+	# An explicit ctx["spike"] wins; without one, the running spike is the request.
+	var requested := float(ctx.get("spike", current_spike()))
+	if requested <= 0.0 or not _spikes_live:
 		return 0.0
 	return minf(requested, SPIKE_MAX)
+
+
+## LLM.set_backend: the spike is live only on the native backend (P4.03). The
+## server transport's dose cannot change per turn, so it never arms.
+func set_spikes_live(live: bool) -> void:
+	_spikes_live = live
+
+
+## docs/05 M39 trigger intake. True when a listed id fired at stage `min_stage` or
+## later, with no spike active and the cooldown clear; then arms the spike and the
+## cooldown. A stage-gated miss returns false and costs nothing. Off unless live, so
+## a server run arms nothing and shows no glitch for a spike the model never got.
+## Calmer mode arms nothing either: its ceiling would remove the dose and leave only
+## the glitch and a line about a lurch that never happened.
+func on_triggers_fired(ids: Array, stage: int) -> bool:
+	if not _spikes_live or _spike_turns_left > 0 or _spike_cooldown > 0:
+		return false
+	if is_calmer_mode():
+		return false
+	var cfg := _spike_config()
+	if stage < int(cfg["min_stage"]):
+		return false
+	var listed: Array = cfg["triggers"]
+	var hit := false
+	for id: Variant in ids:
+		hit = hit or listed.has(String(id))
+	if not hit:
+		return false
+	request_spike(float(cfg["amount"]), int(cfg["turns"]))
+	_spike_cooldown = int(cfg["cooldown_turns"])
+	return true
+
+
+## docs/05 M39: the triggers fired since the last player turn arrive here through the
+## Triggers.triggered signal. A close_turn() fire (the M detector) waits for the next
+## player input, which is when on_player_turn() takes it in.
+func note_trigger_fired(result: Dictionary) -> void:
+	_fired_ids.append(String(result.get("id", "")))
+
+
+## docs/05 M39, once per player input (InputHook step 0; a retry never comes here):
+## steps the running spike, then takes in the triggers fired since the last call.
+func on_player_turn(stage: int) -> Dictionary:
+	if _turn_open:
+		advance_spike()
+	_turn_open = true
+	var armed := on_triggers_fired(_fired_ids, stage)
+	_fired_ids.clear()
+	return {"armed": armed, "after_line": take_after_line()}
+
+
+## docs/05 M39: arm the spike. Amount clamps to 3.0..SPIKE_MAX and turns to 1..2
+## (docs/06 §3). Re-arming while one is active keeps the larger value and the longer
+## run; it never stacks.
+func request_spike(amount: float, turns: int) -> void:
+	var value := clampf(amount, SPIKE_MIN, SPIKE_MAX)
+	var length := clampi(turns, SPIKE_TURNS_MIN, SPIKE_TURNS_MAX)
+	if _spike_turns_left > 0:
+		_spike_value = maxf(_spike_value, value)
+		_spike_turns_left = maxi(_spike_turns_left, length)
+		return
+	_spike_value = value
+	_spike_turns_left = length
+
+
+## The scale for the spike turn being built: `amount` on the first turn, then
+## `amount * decay`; 0 when idle.
+func current_spike() -> float:
+	return _spike_value if _spike_turns_left > 0 else 0.0
+
+
+## Called once per finished turn (never on a retry). Steps to the next spike turn,
+## or idles and owes the after-line; ticks the cooldown.
+func advance_spike() -> void:
+	if _spike_cooldown > 0:
+		_spike_cooldown -= 1
+	if _spike_turns_left <= 0:
+		return
+	_spike_turns_left -= 1
+	if _spike_turns_left > 0:
+		_spike_value *= float(_spike_config()["decay"])
+		return
+	_spike_value = 0.0
+	_after_owed = true
+
+
+## docs/05 M39: the after-line, once, on the turn right after a spike finished.
+func take_after_line() -> String:
+	if not _after_owed:
+		return ""
+	_after_owed = false
+	return String(_spike_config()["after_line"])
+
+
+## Full reset for a new game or a load: no spike, no cooldown, no owed line, no
+## trigger ids waiting, and no open player turn.
+func reset_spike() -> void:
+	_spike_turns_left = 0
+	_spike_value = 0.0
+	_spike_cooldown = 0
+	_after_owed = false
+	_fired_ids.clear()
+	_turn_open = false
 
 
 ## docs/02 §7 "retry once at dose −2": the offset lands once, on the dose
@@ -236,6 +381,7 @@ func describe(dose: Dictionary) -> String:
 ## the docs/06 §3 fallback then holds, so a broken file degrades to the
 ## documented numbers instead of to defaults.
 func reload_table(path := TABLE_PATH) -> bool:
+	_spike_cfg = _spike_from(null)
 	if not FileAccess.file_exists(path):
 		push_warning("Steering: %s missing; using the docs/06 §3 fallback table" % path)
 		_table = FALLBACK_TABLE.duplicate(true)
@@ -252,6 +398,7 @@ func reload_table(path := TABLE_PATH) -> bool:
 	_table = _rows_from((parsed as Dictionary)["stages"])
 	_weight_curves = _curves_from((parsed as Dictionary).get("weight_curves"))
 	_path_vectors = _map_from((parsed as Dictionary).get("path_vectors"))
+	_spike_cfg = _spike_from((parsed as Dictionary).get("spike"))
 	return true
 
 
@@ -349,6 +496,41 @@ func _curves_from(raw: Variant) -> Dictionary:
 		if not curve.is_empty():
 			curves[String(vector)] = curve
 	return curves
+
+
+## The spike block, clamped in code like the stage rows: a missing or malformed
+## block degrades to FALLBACK_SPIKE, and a bad field to its fallback value.
+func _spike_from(raw: Variant) -> Dictionary:
+	var fallback := FALLBACK_SPIKE
+	if not raw is Dictionary:
+		return fallback.duplicate(true)
+	var block := raw as Dictionary
+	var ids: Variant = block.get("triggers", fallback["triggers"])
+	return {
+		"min_stage": clampi(int(block.get("min_stage", fallback["min_stage"])), 0, 5),
+		"triggers": _ids_from(ids),
+		"amount": clampf(float(block.get("amount", fallback["amount"])), SPIKE_MIN, SPIKE_MAX),
+		"turns":
+		clampi(int(block.get("turns", fallback["turns"])), SPIKE_TURNS_MIN, SPIKE_TURNS_MAX),
+		"decay": clampf(float(block.get("decay", fallback["decay"])), 0.0, 1.0),
+		"cooldown_turns": maxi(0, int(block.get("cooldown_turns", fallback["cooldown_turns"]))),
+		"after_line": String(block.get("after_line", fallback["after_line"])),
+	}
+
+
+func _ids_from(raw: Variant) -> Array:
+	if not raw is Array:
+		return (FALLBACK_SPIKE["triggers"] as Array).duplicate()
+	var ids: Array = []
+	for id: Variant in raw:
+		ids.append(String(id))
+	return ids
+
+
+func _spike_config() -> Dictionary:
+	if _spike_cfg.is_empty():
+		_spike_cfg = _spike_from(null)
+	return _spike_cfg
 
 
 func _row(stage: int) -> Dictionary:

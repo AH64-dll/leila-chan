@@ -5,7 +5,7 @@
 | Layer | Choice | Why |
 |---|---|---|
 | Engine | Godot 4 (latest stable at project start), GDScript for gameplay, C++ for the LLM extension | Desktop + Android + iOS from one project; MIT; shaders; multi-window/transparent-window support |
-| LLM runtime (ship) | **Own GDExtension wrapping llama.cpp** (`libqwenchan_llm`) | Runtime control vectors (`llama_set_adapter_cvec`), grammar/JSON-schema decoding, streaming, no external process |
+| LLM runtime (ship) | **Own GDExtension wrapping llama.cpp** (`libleila_llm`, docs/adr/ADR-001) | Runtime control vectors (`llama_set_adapter_cvec`), grammar/JSON-schema decoding, streaming, no external process |
 | LLM runtime (prototype) | `llama-server` (b12024, CUDA) over HTTP on localhost | Already working; fastest way to iterate prompts |
 | Model | `Qwen3.5-4B-Q4_K_M.gguf` (2.74 GB) | 100% valid structured turns in testing, fits a 6 GB GPU with room for context |
 | Vectors | `data/steering/*.gguf` control vectors | Built by `experiments/steer_build.py` (+ path-vector tool) |

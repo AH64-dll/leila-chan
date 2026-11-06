@@ -18,8 +18,9 @@ extends Node
 ## Run (llama-server up): `./tools/godot.sh --headless --path game
 ## res://tools/FullRun.tscn -- --run=yandere --lines=<plan> --out=<md>`.
 ## Flags: `--run`, `--lines`, `--out`, `--player`, `--max-days`, `--stop-stage`,
-## `--resume`, `--seed`, `--url`. `tools/test.sh` does not run this tool (no model
-## in CI): the committed transcripts under production/playtests/P2/ are the artifact.
+## `--resume`, `--seed`, `--url`, `--backend` (`native|server`, default `server`).
+## `tools/test.sh` does not run this tool (no model in CI): the committed transcripts
+## under production/playtests/P2/ are the artifact.
 
 const DATE_SCRIPT_PATH := "res://scenes/Date.gd"
 const NIGHT_SCRIPT_PATH := "res://scenes/Night.gd"
@@ -49,6 +50,7 @@ var _base_url := DEFAULT_URL
 var _rendered_days: Dictionary = {}
 var _rendered_turns: Dictionary = {}
 var _last_steering_info: Dictionary = {}
+var _backend := "server"
 var _plan: Dictionary = {}
 var _render := FullRunReport.new()
 var _started_ms := 0
@@ -103,6 +105,8 @@ func _ready() -> void:
 	_parse_args()
 	_load_plan()
 	_install_backend()
+	if _finished:
+		return
 	_prepare_state()
 	_restore_sidecar()
 	_instrument()
@@ -185,6 +189,8 @@ func _args_set(key: String, value: String) -> void:
 			var url := value.strip_edges()
 			if not url.is_empty():
 				_base_url = url
+		"backend":
+			_backend = value.strip_edges().to_lower()
 
 
 ## The plan is the driver's only authored input: per-day player lines plus pad
@@ -207,7 +213,21 @@ func _load_plan() -> void:
 		_player = planned_player
 
 
+func _fatal(message: String) -> void:
+	printerr(message)
+	_finished = true
+	get_tree().quit(2)
+
+
 func _install_backend() -> void:
+	if not _backend in ["native", "server"]:
+		_fatal("full_run: --backend must be native or server, not '%s'" % _backend)
+		return
+	if _backend == "native":
+		_model_label = preload("res://scenes/Boot.gd").prepare_native_backend()
+		if _model_label.is_empty():
+			_fatal("full_run: the native backend did not load (see the error above)")
+		return
 	if not LLM.has_backend():
 		var cfg := {"base_url": _base_url}
 		if _own_server:
@@ -624,6 +644,7 @@ func _capture_turn_state() -> void:
 		"displayed": displayed,
 		"bars": bars,
 		"memory": Memory.report(),
+		"native": FullRunReport.native_metrics(),
 	}
 
 

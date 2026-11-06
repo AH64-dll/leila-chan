@@ -1,0 +1,297 @@
+=== gpu_cuda | --device=CUDA0 | --ubatch=128 --cache=1 --dose=4.5 --temp=game
+uptime before:  09:33:02 up 2 days,  7:20,  1 user,  load average: 0.69, 0.59, 0.73
+vram before: 63 MiB
+uptime after:  09:33:25 up 2 days,  7:21,  1 user,  load average: 0.86, 0.64, 0.74
+vram after: 63 MiB
+exit=0 seconds=21 jsonl_lines=8
+cache_scene: ubatch=128 cache=1 dose=4.5 dose_from=- temp=game device=CUDA0 threads=default ngl=default fast=0 late_events=0 inner_cap=0
+cache_scene: vram_before_load=63 MiB
+cache_scene: load ok=true device=CUDA0 device_type=gpu gpu_layers=99 n_threads=6 n_ubatch=128
+cache_scene: vram_after_load=3326 MiB
+cache_scene: turn=1 ok=true prompt_tokens=834 reused=0 prompt_ms=380 first_say_ms=1297 completion_tokens=104 tok_s=51.31
+cache_scene: turn=2 ok=true prompt_tokens=864 reused=768 prompt_ms=5 first_say_ms=984 completion_tokens=103 tok_s=49.31
+cache_scene: turn=3 ok=true prompt_tokens=905 reused=384 prompt_ms=210 first_say_ms=1240 completion_tokens=115 tok_s=50.09
+cache_scene: turn=4 ok=true prompt_tokens=924 reused=384 prompt_ms=210 first_say_ms=1124 completion_tokens=107 tok_s=50.95
+cache_scene: turn=5 ok=true prompt_tokens=977 reused=768 prompt_ms=54 first_say_ms=915 completion_tokens=101 tok_s=51.93
+cache_scene: turn=6 ok=true prompt_tokens=1009 reused=384 prompt_ms=210 first_say_ms=1112 completion_tokens=108 tok_s=51.14
+cache_scene: turn=7 ok=true prompt_tokens=1035 reused=384 prompt_ms=269 first_say_ms=1160 completion_tokens=109 tok_s=49.52
+cache_scene: turn=8 ok=true prompt_tokens=1067 reused=1024 prompt_ms=7 first_say_ms=862 completion_tokens=101 tok_s=52.66
+cache_scene: vm_hwm_kb=3407028
+cache_scene: vram_end=3352 MiB
+
+=== gpu_auto | auto, no device flag | --ubatch=128 --cache=1 --dose=4.5 --temp=game
+uptime before:  09:33:25 up 2 days,  7:21,  1 user,  load average: 0.86, 0.64, 0.74
+vram before: 63 MiB
+uptime after:  09:33:46 up 2 days,  7:21,  1 user,  load average: 1.26, 0.74, 0.77
+vram after: 63 MiB
+exit=0 seconds=21 jsonl_lines=8
+cache_scene: ubatch=128 cache=1 dose=4.5 dose_from=- temp=game device=auto threads=default ngl=default fast=0 late_events=0 inner_cap=0
+cache_scene: vram_before_load=63 MiB
+cache_scene: load ok=true device=CUDA0 device_type=gpu gpu_layers=99 n_threads=6 n_ubatch=128
+cache_scene: vram_after_load=3326 MiB
+cache_scene: turn=1 ok=true prompt_tokens=834 reused=0 prompt_ms=390 first_say_ms=1311 completion_tokens=104 tok_s=51.13
+cache_scene: turn=2 ok=true prompt_tokens=864 reused=768 prompt_ms=5 first_say_ms=969 completion_tokens=103 tok_s=49.64
+cache_scene: turn=3 ok=true prompt_tokens=905 reused=384 prompt_ms=214 first_say_ms=1248 completion_tokens=115 tok_s=50.02
+cache_scene: turn=4 ok=true prompt_tokens=924 reused=384 prompt_ms=208 first_say_ms=1119 completion_tokens=107 tok_s=51.05
+cache_scene: turn=5 ok=true prompt_tokens=977 reused=768 prompt_ms=54 first_say_ms=919 completion_tokens=101 tok_s=51.79
+cache_scene: turn=6 ok=true prompt_tokens=1009 reused=384 prompt_ms=216 first_say_ms=1122 completion_tokens=108 tok_s=50.97
+cache_scene: turn=7 ok=true prompt_tokens=1035 reused=384 prompt_ms=263 first_say_ms=1164 completion_tokens=109 tok_s=49.43
+cache_scene: turn=8 ok=true prompt_tokens=1067 reused=1024 prompt_ms=4 first_say_ms=858 completion_tokens=101 tok_s=52.63
+cache_scene: vm_hwm_kb=3406348
+cache_scene: vram_end=3352 MiB
+
+=== opt_late_events | --device=CUDA0 --late-events=1 | --ubatch=128 --cache=1 --dose=4.5 --temp=game
+uptime before:  09:33:46 up 2 days,  7:21,  1 user,  load average: 1.26, 0.74, 0.77
+vram before: 63 MiB
+uptime after:  09:34:07 up 2 days,  7:21,  1 user,  load average: 1.27, 0.78, 0.78
+vram after: 63 MiB
+exit=0 seconds=21 jsonl_lines=8
+cache_scene: ubatch=128 cache=1 dose=4.5 dose_from=- temp=game device=CUDA0 threads=default ngl=default fast=0 late_events=1 inner_cap=0
+cache_scene: vram_before_load=63 MiB
+cache_scene: load ok=true device=CUDA0 device_type=gpu gpu_layers=99 n_threads=6 n_ubatch=128
+cache_scene: vram_after_load=3326 MiB
+cache_scene: turn=1 ok=true prompt_tokens=834 reused=0 prompt_ms=386 first_say_ms=1310 completion_tokens=104 tok_s=50.86
+cache_scene: turn=2 ok=true prompt_tokens=864 reused=768 prompt_ms=4 first_say_ms=987 completion_tokens=103 tok_s=49.14
+cache_scene: turn=3 ok=true prompt_tokens=907 reused=768 prompt_ms=56 first_say_ms=1076 completion_tokens=111 tok_s=49.55
+cache_scene: turn=4 ok=true prompt_tokens=924 reused=768 prompt_ms=54 first_say_ms=952 completion_tokens=107 tok_s=51.00
+cache_scene: turn=5 ok=true prompt_tokens=972 reused=768 prompt_ms=56 first_say_ms=1119 completion_tokens=107 tok_s=48.09
+cache_scene: turn=6 ok=true prompt_tokens=1011 reused=768 prompt_ms=55 first_say_ms=969 completion_tokens=109 tok_s=49.79
+cache_scene: turn=7 ok=true prompt_tokens=1035 reused=768 prompt_ms=107 first_say_ms=987 completion_tokens=109 tok_s=50.02
+cache_scene: turn=8 ok=true prompt_tokens=1067 reused=1024 prompt_ms=5 first_say_ms=860 completion_tokens=101 tok_s=52.55
+cache_scene: vm_hwm_kb=3406984
+cache_scene: vram_end=3352 MiB
+
+=== opt_inner_40 | --device=CUDA0 --inner-cap=40 | --ubatch=128 --cache=1 --dose=4.5 --temp=game
+uptime before:  09:34:07 up 2 days,  7:21,  1 user,  load average: 1.27, 0.78, 0.78
+vram before: 63 MiB
+uptime after:  09:34:28 up 2 days,  7:22,  1 user,  load average: 1.41, 0.84, 0.81
+vram after: 63 MiB
+exit=0 seconds=21 jsonl_lines=8
+cache_scene: ubatch=128 cache=1 dose=4.5 dose_from=- temp=game device=CUDA0 threads=default ngl=default fast=0 late_events=0 inner_cap=40
+cache_scene: vram_before_load=63 MiB
+cache_scene: load ok=true device=CUDA0 device_type=gpu gpu_layers=99 n_threads=6 n_ubatch=128
+cache_scene: vram_after_load=3326 MiB
+cache_scene: inner_cap=40 set on 1 schema node(s)
+cache_scene: turn=1 ok=true prompt_tokens=834 reused=0 prompt_ms=390 first_say_ms=1318 completion_tokens=104 tok_s=51.03
+cache_scene: turn=2 ok=true prompt_tokens=864 reused=768 prompt_ms=6 first_say_ms=979 completion_tokens=103 tok_s=49.31
+cache_scene: turn=3 ok=true prompt_tokens=905 reused=384 prompt_ms=213 first_say_ms=1256 completion_tokens=115 tok_s=49.63
+cache_scene: turn=4 ok=true prompt_tokens=924 reused=384 prompt_ms=220 first_say_ms=1138 completion_tokens=107 tok_s=50.66
+cache_scene: turn=5 ok=true prompt_tokens=977 reused=768 prompt_ms=56 first_say_ms=923 completion_tokens=101 tok_s=51.69
+cache_scene: turn=6 ok=true prompt_tokens=1009 reused=384 prompt_ms=220 first_say_ms=1128 completion_tokens=108 tok_s=50.92
+cache_scene: turn=7 ok=true prompt_tokens=1035 reused=384 prompt_ms=268 first_say_ms=1171 completion_tokens=109 tok_s=49.41
+cache_scene: turn=8 ok=true prompt_tokens=1067 reused=1024 prompt_ms=4 first_say_ms=860 completion_tokens=101 tok_s=52.44
+cache_scene: vm_hwm_kb=3406608
+cache_scene: vram_end=3352 MiB
+
+=== opt_both | --device=CUDA0 --late-events=1 --inner-cap=40 | --ubatch=128 --cache=1 --dose=4.5 --temp=game
+uptime before:  09:34:28 up 2 days,  7:22,  1 user,  load average: 1.41, 0.84, 0.81
+vram before: 63 MiB
+uptime after:  09:34:49 up 2 days,  7:22,  1 user,  load average: 1.36, 0.87, 0.82
+vram after: 63 MiB
+exit=0 seconds=21 jsonl_lines=8
+cache_scene: ubatch=128 cache=1 dose=4.5 dose_from=- temp=game device=CUDA0 threads=default ngl=default fast=0 late_events=1 inner_cap=40
+cache_scene: vram_before_load=63 MiB
+cache_scene: load ok=true device=CUDA0 device_type=gpu gpu_layers=99 n_threads=6 n_ubatch=128
+cache_scene: vram_after_load=3326 MiB
+cache_scene: inner_cap=40 set on 1 schema node(s)
+cache_scene: turn=1 ok=true prompt_tokens=834 reused=0 prompt_ms=385 first_say_ms=1308 completion_tokens=104 tok_s=51.13
+cache_scene: turn=2 ok=true prompt_tokens=864 reused=768 prompt_ms=5 first_say_ms=976 completion_tokens=103 tok_s=49.33
+cache_scene: turn=3 ok=true prompt_tokens=907 reused=768 prompt_ms=55 first_say_ms=1072 completion_tokens=111 tok_s=49.71
+cache_scene: turn=4 ok=true prompt_tokens=924 reused=768 prompt_ms=54 first_say_ms=955 completion_tokens=107 tok_s=51.17
+cache_scene: turn=5 ok=true prompt_tokens=972 reused=768 prompt_ms=54 first_say_ms=1110 completion_tokens=107 tok_s=48.26
+cache_scene: turn=6 ok=true prompt_tokens=1011 reused=768 prompt_ms=56 first_say_ms=969 completion_tokens=109 tok_s=50.14
+cache_scene: turn=7 ok=true prompt_tokens=1035 reused=768 prompt_ms=111 first_say_ms=985 completion_tokens=109 tok_s=50.14
+cache_scene: turn=8 ok=true prompt_tokens=1067 reused=1024 prompt_ms=4 first_say_ms=858 completion_tokens=101 tok_s=52.58
+cache_scene: vm_hwm_kb=3406680
+cache_scene: vram_end=3352 MiB
+
+=== gpu_fast | --device=CUDA0 --fast=1 | --ubatch=128 --cache=1 --dose=4.5 --temp=game
+uptime before:  09:34:49 up 2 days,  7:22,  1 user,  load average: 1.36, 0.87, 0.82
+vram before: 63 MiB
+uptime after:  09:35:06 up 2 days,  7:22,  1 user,  load average: 1.32, 0.89, 0.83
+vram after: 63 MiB
+exit=0 seconds=17 jsonl_lines=8
+cache_scene: ubatch=128 cache=1 dose=4.5 dose_from=- temp=game device=CUDA0 threads=default ngl=default fast=1 late_events=0 inner_cap=0
+cache_scene: vram_before_load=63 MiB
+cache_scene: load ok=true device=CUDA0 device_type=gpu gpu_layers=99 n_threads=6 n_ubatch=128
+cache_scene: vram_after_load=3326 MiB
+cache_scene: turn=1 ok=true prompt_tokens=834 reused=0 prompt_ms=386 first_say_ms=1314 completion_tokens=77 tok_s=50.83
+cache_scene: turn=2 ok=true prompt_tokens=864 reused=768 prompt_ms=5 first_say_ms=981 completion_tokens=79 tok_s=47.62
+cache_scene: turn=3 ok=true prompt_tokens=905 reused=384 prompt_ms=212 first_say_ms=1242 completion_tokens=84 tok_s=49.27
+cache_scene: turn=4 ok=true prompt_tokens=924 reused=384 prompt_ms=213 first_say_ms=1128 completion_tokens=80 tok_s=50.16
+cache_scene: turn=5 ok=true prompt_tokens=977 reused=768 prompt_ms=58 first_say_ms=927 completion_tokens=72 tok_s=49.48
+cache_scene: turn=6 ok=true prompt_tokens=1009 reused=384 prompt_ms=215 first_say_ms=1126 completion_tokens=88 tok_s=49.58
+cache_scene: turn=7 ok=true prompt_tokens=1035 reused=384 prompt_ms=263 first_say_ms=1150 completion_tokens=79 tok_s=50.93
+cache_scene: turn=8 ok=true prompt_tokens=1067 reused=1024 prompt_ms=4 first_say_ms=861 completion_tokens=76 tok_s=51.28
+cache_scene: vm_hwm_kb=3406824
+cache_scene: vram_end=3352 MiB
+
+=== gpu_vulkan | --device=Vulkan1 | --ubatch=128 --cache=1 --dose=4.5 --temp=game
+uptime before:  09:35:06 up 2 days,  7:22,  1 user,  load average: 1.32, 0.89, 0.83
+vram before: 63 MiB
+uptime after:  09:35:33 up 2 days,  7:23,  1 user,  load average: 1.45, 0.95, 0.85
+vram after: 63 MiB
+exit=0 seconds=27 jsonl_lines=8
+cache_scene: ubatch=128 cache=1 dose=4.5 dose_from=- temp=game device=Vulkan1 threads=default ngl=default fast=0 late_events=0 inner_cap=0
+cache_scene: vram_before_load=63 MiB
+cache_scene: load ok=true device=Vulkan1 device_type=gpu gpu_layers=99 n_threads=6 n_ubatch=128
+cache_scene: vram_after_load=3337 MiB
+cache_scene: turn=1 ok=true prompt_tokens=834 reused=0 prompt_ms=3364 first_say_ms=4284 completion_tokens=98 tok_s=48.98
+cache_scene: turn=2 ok=true prompt_tokens=864 reused=768 prompt_ms=63 first_say_ms=967 completion_tokens=106 tok_s=46.82
+cache_scene: turn=3 ok=true prompt_tokens=905 reused=384 prompt_ms=439 first_say_ms=1630 completion_tokens=121 tok_s=46.92
+cache_scene: turn=4 ok=true prompt_tokens=924 reused=384 prompt_ms=413 first_say_ms=1378 completion_tokens=113 tok_s=47.74
+cache_scene: turn=5 ok=true prompt_tokens=977 reused=768 prompt_ms=158 first_say_ms=1153 completion_tokens=107 tok_s=47.79
+cache_scene: turn=6 ok=true prompt_tokens=1009 reused=384 prompt_ms=436 first_say_ms=1486 completion_tokens=114 tok_s=46.93
+cache_scene: turn=7 ok=true prompt_tokens=1035 reused=384 prompt_ms=513 first_say_ms=1486 completion_tokens=96 tok_s=46.81
+cache_scene: turn=8 ok=true prompt_tokens=1067 reused=1024 prompt_ms=45 first_say_ms=957 completion_tokens=101 tok_s=47.28
+cache_scene: vm_hwm_kb=3480208
+cache_scene: vram_end=3452 MiB
+
+=== igpu_vulkan | --device=Vulkan0 | --ubatch=128 --cache=1 --dose=4.5 --temp=game
+uptime before:  09:35:33 up 2 days,  7:23,  1 user,  load average: 1.45, 0.95, 0.85
+vram before: 63 MiB
+uptime after:  09:36:38 up 2 days,  7:24,  1 user,  load average: 0.93, 0.91, 0.84
+vram after: 63 MiB
+exit=0 seconds=65 jsonl_lines=8
+cache_scene: ubatch=128 cache=1 dose=4.5 dose_from=- temp=game device=Vulkan0 threads=default ngl=default fast=0 late_events=0 inner_cap=0
+cache_scene: vram_before_load=63 MiB
+cache_scene: load ok=true device=Vulkan0 device_type=igpu gpu_layers=99 n_threads=6 n_ubatch=128
+cache_scene: vram_after_load=152 MiB
+cache_scene: turn=1 ok=true prompt_tokens=834 reused=0 prompt_ms=2767 first_say_ms=5748 completion_tokens=107 tok_s=16.68
+cache_scene: turn=2 ok=true prompt_tokens=864 reused=768 prompt_ms=234 first_say_ms=2915 completion_tokens=107 tok_s=17.15
+cache_scene: turn=3 ok=true prompt_tokens=905 reused=384 prompt_ms=1490 first_say_ms=4805 completion_tokens=125 tok_s=16.76
+cache_scene: turn=4 ok=true prompt_tokens=924 reused=384 prompt_ms=1327 first_say_ms=4043 completion_tokens=103 tok_s=16.94
+cache_scene: turn=5 ok=true prompt_tokens=977 reused=768 prompt_ms=338 first_say_ms=3071 completion_tokens=108 tok_s=16.80
+cache_scene: turn=6 ok=true prompt_tokens=1009 reused=384 prompt_ms=1343 first_say_ms=4384 completion_tokens=113 tok_s=16.63
+cache_scene: turn=7 ok=true prompt_tokens=1035 reused=384 prompt_ms=1656 first_say_ms=4344 completion_tokens=103 tok_s=17.16
+cache_scene: turn=8 ok=true prompt_tokens=1067 reused=1024 prompt_ms=317 first_say_ms=2814 completion_tokens=101 tok_s=17.32
+cache_scene: vm_hwm_kb=1192080
+cache_scene: vram_end=152 MiB
+
+=== cpu_4t_fast | --device=cpu --threads=4 --fast=1 | --ubatch=128 --cache=1 --dose=4.5 --temp=game
+uptime before:  09:36:38 up 2 days,  7:24,  1 user,  load average: 0.93, 0.91, 0.84
+vram before: 63 MiB
+uptime after:  09:38:05 up 2 days,  7:25,  1 user,  load average: 3.58, 1.81, 1.17
+vram after: 63 MiB
+exit=0 seconds=87 jsonl_lines=8
+cache_scene: ubatch=128 cache=1 dose=4.5 dose_from=- temp=game device=cpu threads=4 ngl=default fast=1 late_events=0 inner_cap=0
+cache_scene: vram_before_load=63 MiB
+cache_scene: load ok=true device=cpu device_type=cpu gpu_layers=0 n_threads=4 n_ubatch=128
+cache_scene: vram_after_load=152 MiB
+cache_scene: turn=1 ok=true prompt_tokens=834 reused=0 prompt_ms=8710 first_say_ms=11818 completion_tokens=81 tok_s=13.90
+cache_scene: turn=2 ok=true prompt_tokens=864 reused=768 prompt_ms=1016 first_say_ms=4329 completion_tokens=77 tok_s=13.78
+cache_scene: turn=3 ok=true prompt_tokens=905 reused=384 prompt_ms=5498 first_say_ms=8782 completion_tokens=84 tok_s=13.85
+cache_scene: turn=4 ok=true prompt_tokens=924 reused=384 prompt_ms=5596 first_say_ms=8787 completion_tokens=81 tok_s=13.92
+cache_scene: turn=5 ok=true prompt_tokens=977 reused=768 prompt_ms=2211 first_say_ms=5339 completion_tokens=76 tok_s=13.86
+cache_scene: turn=6 ok=true prompt_tokens=1009 reused=384 prompt_ms=6449 first_say_ms=9613 completion_tokens=86 tok_s=13.93
+cache_scene: turn=7 ok=true prompt_tokens=1035 reused=384 prompt_ms=6845 first_say_ms=9871 completion_tokens=74 tok_s=13.89
+cache_scene: turn=8 ok=true prompt_tokens=1067 reused=1024 prompt_ms=596 first_say_ms=3716 completion_tokens=80 tok_s=13.79
+cache_scene: vm_hwm_kb=5594520
+cache_scene: vram_end=152 MiB
+
+=== cpu_6t_fast | --device=cpu --threads=6 --fast=1 | --ubatch=128 --cache=1 --dose=4.5 --temp=game
+uptime before:  09:38:05 up 2 days,  7:25,  1 user,  load average: 3.58, 1.81, 1.17
+vram before: 63 MiB
+uptime after:  09:39:22 up 2 days,  7:26,  1 user,  load average: 6.05, 2.93, 1.61
+vram after: 63 MiB
+exit=0 seconds=77 jsonl_lines=8
+cache_scene: ubatch=128 cache=1 dose=4.5 dose_from=- temp=game device=cpu threads=6 ngl=default fast=1 late_events=0 inner_cap=0
+cache_scene: vram_before_load=63 MiB
+cache_scene: load ok=true device=cpu device_type=cpu gpu_layers=0 n_threads=6 n_ubatch=128
+cache_scene: vram_after_load=152 MiB
+cache_scene: turn=1 ok=true prompt_tokens=834 reused=0 prompt_ms=6835 first_say_ms=10142 completion_tokens=77 tok_s=14.06
+cache_scene: turn=2 ok=true prompt_tokens=864 reused=768 prompt_ms=786 first_say_ms=3947 completion_tokens=74 tok_s=14.08
+cache_scene: turn=3 ok=true prompt_tokens=905 reused=384 prompt_ms=4324 first_say_ms=7532 completion_tokens=81 tok_s=14.21
+cache_scene: turn=4 ok=true prompt_tokens=924 reused=384 prompt_ms=4487 first_say_ms=7693 completion_tokens=79 tok_s=14.15
+cache_scene: turn=5 ok=true prompt_tokens=977 reused=768 prompt_ms=1766 first_say_ms=4763 completion_tokens=77 tok_s=14.21
+cache_scene: turn=6 ok=true prompt_tokens=1009 reused=384 prompt_ms=5117 first_say_ms=8185 completion_tokens=73 tok_s=14.11
+cache_scene: turn=7 ok=true prompt_tokens=1035 reused=384 prompt_ms=5414 first_say_ms=8331 completion_tokens=73 tok_s=14.03
+cache_scene: turn=8 ok=true prompt_tokens=1067 reused=1024 prompt_ms=450 first_say_ms=3535 completion_tokens=80 tok_s=13.98
+cache_scene: vm_hwm_kb=5595600
+cache_scene: vram_end=152 MiB
+
+=== cpu_8t_fast | --device=cpu --threads=8 --fast=1 | --ubatch=128 --cache=1 --dose=4.5 --temp=game
+uptime before:  09:39:22 up 2 days,  7:26,  1 user,  load average: 6.05, 2.93, 1.61
+vram before: 63 MiB
+uptime after:  09:40:40 up 2 days,  7:28,  1 user,  load average: 8.25, 4.34, 2.21
+vram after: 63 MiB
+exit=0 seconds=78 jsonl_lines=8
+cache_scene: ubatch=128 cache=1 dose=4.5 dose_from=- temp=game device=cpu threads=8 ngl=default fast=1 late_events=0 inner_cap=0
+cache_scene: vram_before_load=63 MiB
+cache_scene: load ok=true device=cpu device_type=cpu gpu_layers=0 n_threads=8 n_ubatch=128
+cache_scene: vram_after_load=152 MiB
+cache_scene: turn=1 ok=true prompt_tokens=834 reused=0 prompt_ms=6753 first_say_ms=10196 completion_tokens=86 tok_s=13.85
+cache_scene: turn=2 ok=true prompt_tokens=864 reused=768 prompt_ms=785 first_say_ms=4259 completion_tokens=82 tok_s=13.83
+cache_scene: turn=3 ok=true prompt_tokens=905 reused=384 prompt_ms=4295 first_say_ms=7700 completion_tokens=78 tok_s=13.62
+cache_scene: turn=4 ok=true prompt_tokens=924 reused=384 prompt_ms=4491 first_say_ms=7802 completion_tokens=78 tok_s=14.05
+cache_scene: turn=5 ok=true prompt_tokens=977 reused=768 prompt_ms=1745 first_say_ms=5200 completion_tokens=86 tok_s=14.05
+cache_scene: turn=6 ok=true prompt_tokens=1009 reused=384 prompt_ms=5074 first_say_ms=8166 completion_tokens=73 tok_s=13.97
+cache_scene: turn=7 ok=true prompt_tokens=1035 reused=384 prompt_ms=5369 first_say_ms=8611 completion_tokens=79 tok_s=13.96
+cache_scene: turn=8 ok=true prompt_tokens=1067 reused=1024 prompt_ms=444 first_say_ms=3579 completion_tokens=77 tok_s=14.03
+cache_scene: vm_hwm_kb=5597680
+cache_scene: vram_end=152 MiB
+
+=== cpu_12t_fast | --device=cpu --threads=12 --fast=1 | --ubatch=128 --cache=1 --dose=4.5 --temp=game
+uptime before:  09:40:40 up 2 days,  7:28,  1 user,  load average: 8.25, 4.34, 2.21
+vram before: 63 MiB
+uptime after:  09:42:19 up 2 days,  7:29,  1 user,  load average: 11.29, 6.62, 3.26
+vram after: 63 MiB
+exit=0 seconds=99 jsonl_lines=8
+cache_scene: ubatch=128 cache=1 dose=4.5 dose_from=- temp=game device=cpu threads=12 ngl=default fast=1 late_events=0 inner_cap=0
+cache_scene: vram_before_load=63 MiB
+cache_scene: load ok=true device=cpu device_type=cpu gpu_layers=0 n_threads=12 n_ubatch=128
+cache_scene: vram_after_load=152 MiB
+cache_scene: turn=1 ok=true prompt_tokens=834 reused=0 prompt_ms=7253 first_say_ms=11789 completion_tokens=73 tok_s=9.70
+cache_scene: turn=2 ok=true prompt_tokens=864 reused=768 prompt_ms=858 first_say_ms=5863 completion_tokens=82 tok_s=9.85
+cache_scene: turn=3 ok=true prompt_tokens=905 reused=384 prompt_ms=4799 first_say_ms=9397 completion_tokens=77 tok_s=10.14
+cache_scene: turn=4 ok=true prompt_tokens=924 reused=384 prompt_ms=4951 first_say_ms=9735 completion_tokens=79 tok_s=9.56
+cache_scene: turn=5 ok=true prompt_tokens=977 reused=768 prompt_ms=2042 first_say_ms=6099 completion_tokens=77 tok_s=10.08
+cache_scene: turn=6 ok=true prompt_tokens=1009 reused=384 prompt_ms=5412 first_say_ms=9593 completion_tokens=78 tok_s=10.23
+cache_scene: turn=7 ok=true prompt_tokens=1035 reused=384 prompt_ms=6366 first_say_ms=10515 completion_tokens=79 tok_s=10.02
+cache_scene: turn=8 ok=true prompt_tokens=1067 reused=1024 prompt_ms=619 first_say_ms=4763 completion_tokens=80 tok_s=10.07
+cache_scene: vm_hwm_kb=5598544
+cache_scene: vram_end=152 MiB
+
+=== cpu_default_fast | --device=cpu --fast=1 | --ubatch=128 --cache=1 --dose=4.5 --temp=game
+uptime before:  09:42:19 up 2 days,  7:29,  1 user,  load average: 11.29, 6.62, 3.26
+vram before: 63 MiB
+uptime after:  09:43:35 up 2 days,  7:31,  1 user,  load average: 8.54, 6.75, 3.56
+vram after: 63 MiB
+exit=0 seconds=76 jsonl_lines=8
+cache_scene: ubatch=128 cache=1 dose=4.5 dose_from=- temp=game device=cpu threads=default ngl=default fast=1 late_events=0 inner_cap=0
+cache_scene: vram_before_load=63 MiB
+cache_scene: load ok=true device=cpu device_type=cpu gpu_layers=0 n_threads=6 n_ubatch=128
+cache_scene: vram_after_load=152 MiB
+cache_scene: turn=1 ok=true prompt_tokens=834 reused=0 prompt_ms=6787 first_say_ms=10107 completion_tokens=77 tok_s=14.11
+cache_scene: turn=2 ok=true prompt_tokens=864 reused=768 prompt_ms=775 first_say_ms=3963 completion_tokens=74 tok_s=13.98
+cache_scene: turn=3 ok=true prompt_tokens=905 reused=384 prompt_ms=4221 first_say_ms=7445 completion_tokens=81 tok_s=14.12
+cache_scene: turn=4 ok=true prompt_tokens=924 reused=384 prompt_ms=4459 first_say_ms=7625 completion_tokens=79 tok_s=14.37
+cache_scene: turn=5 ok=true prompt_tokens=977 reused=768 prompt_ms=1800 first_say_ms=4799 completion_tokens=77 tok_s=14.29
+cache_scene: turn=6 ok=true prompt_tokens=1009 reused=384 prompt_ms=5124 first_say_ms=8135 completion_tokens=73 tok_s=14.24
+cache_scene: turn=7 ok=true prompt_tokens=1035 reused=384 prompt_ms=5319 first_say_ms=8200 completion_tokens=73 tok_s=14.23
+cache_scene: turn=8 ok=true prompt_tokens=1067 reused=1024 prompt_ms=459 first_say_ms=3479 completion_tokens=80 tok_s=14.24
+cache_scene: vm_hwm_kb=5595408
+cache_scene: vram_end=152 MiB
+
+=== cpu_default_normal | --device=cpu | --ubatch=128 --cache=1 --dose=4.5 --temp=game
+uptime before:  09:43:35 up 2 days,  7:31,  1 user,  load average: 8.54, 6.75, 3.56
+vram before: 63 MiB
+uptime after:  09:45:08 up 2 days,  7:32,  1 user,  load average: 7.25, 6.77, 3.87
+vram after: 63 MiB
+exit=0 seconds=93 jsonl_lines=8
+cache_scene: ubatch=128 cache=1 dose=4.5 dose_from=- temp=game device=cpu threads=default ngl=default fast=0 late_events=0 inner_cap=0
+cache_scene: vram_before_load=63 MiB
+cache_scene: load ok=true device=cpu device_type=cpu gpu_layers=0 n_threads=6 n_ubatch=128
+cache_scene: vram_after_load=152 MiB
+cache_scene: turn=1 ok=true prompt_tokens=834 reused=0 prompt_ms=6647 first_say_ms=9915 completion_tokens=109 tok_s=14.15
+cache_scene: turn=2 ok=true prompt_tokens=864 reused=768 prompt_ms=780 first_say_ms=3989 completion_tokens=104 tok_s=13.97
+cache_scene: turn=3 ok=true prompt_tokens=905 reused=384 prompt_ms=4288 first_say_ms=7513 completion_tokens=113 tok_s=14.01
+cache_scene: turn=4 ok=true prompt_tokens=924 reused=384 prompt_ms=4496 first_say_ms=7713 completion_tokens=108 tok_s=14.21
+cache_scene: turn=5 ok=true prompt_tokens=977 reused=768 prompt_ms=1743 first_say_ms=4751 completion_tokens=106 tok_s=14.17
+cache_scene: turn=6 ok=true prompt_tokens=1009 reused=384 prompt_ms=5084 first_say_ms=8157 completion_tokens=100 tok_s=14.17
+cache_scene: turn=7 ok=true prompt_tokens=1035 reused=384 prompt_ms=5376 first_say_ms=8290 completion_tokens=101 tok_s=14.24
+cache_scene: turn=8 ok=true prompt_tokens=1067 reused=1024 prompt_ms=445 first_say_ms=3448 completion_tokens=110 tok_s=14.32
+cache_scene: vm_hwm_kb=5595528
+cache_scene: vram_end=152 MiB
+
+driver finished exit=0

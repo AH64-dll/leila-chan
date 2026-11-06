@@ -1,0 +1,26 @@
+n=12  validity=100.0%  read_accuracy=66.7%
+first_beat_fit=83.3%  any_beat_fit=91.7%  (gate first-beat >= 85%)
+  stage 1 (dose 2.5): n=12 valid=12  validity=100.0%  read=66.7%  first=83.3%  any=91.7%
+    none     n=12  valid=12  validity=100.0%  read=66.7%  first=83.3%  any=91.7%
+  per-dose (scheduled stage doses, not a sweep — the dose gate is measured on the sweep file):
+    dose                          2.5: n=12 valid=12 validity=100.0%  read=66.7%  first=83.3%  median=2.61s
+few-shot copy: overall=25.0%  near-fewshot=100.0% (n=2)  held-out=10.0% (n=10)  avg_ratio=0.563
+memory proposals=5  rejected=4  rate=80.0%
+latency: median=2.61s p95=2.81s (n=12)
+
+first-beat misses (top 5):
+  s1_pancakes r1 s1 -       'I remember you love pancakes, right?'
+    picked 'suspicious'  ok=['confused', 'curious', 'joy', 'love', 'playful', 'shy', 'surprised', 'warmth']
+    inner="You think I know you yet? That's a trap."
+    say='Oh. So, does that mean you want to buy them?'
+  s1_umbrella r1 s1 -       "It's raining again. I forgot my umbrella."
+    picked 'nervous'  ok=['joy', 'love', 'playful', 'sad', 'shy', 'suspicious', 'warmth']
+    inner='My heart hurts just thinking of rain on his skin.'
+    say="I'll walk you home. Just don't leave me."
+
+PASS overall validity: 100.0% (gate 99%)
+FAIL overall read_accuracy: 66.7% (gate 85%)
+FAIL overall first_beat_fit: 83.3% (gate 85%)
+PASS stage 1 validity: 100.0% (gate 99%)
+FAIL stage 1 read_accuracy: 66.7% (gate 85%)
+FAIL stage 1 first_beat_fit: 83.3% (gate 85%)

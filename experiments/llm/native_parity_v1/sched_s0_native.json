@@ -1,0 +1,1347 @@
+{
+ "meta": {
+  "task": "P2.21 prompt lab v2",
+  "date": "2026-11-05 07:20",
+  "plan": "plan.json",
+  "exercise": null,
+  "url": "http://127.0.0.1:8097",
+  "model": "models/Qwen3.5-4B-Q4_K_M.gguf",
+  "model_ftype": null,
+  "build_info": null,
+  "dose": 0.0,
+  "dose_note": "steering dose is a llama-server launch flag (--control-vector-scaled, docs/06 §4); recorded per row",
+  "sampling": {
+   "0": {
+    "temperature": 0.75,
+    "top_p": 0.9,
+    "repeat_penalty": 1.1
+   },
+   "1": {
+    "temperature": 0.8,
+    "top_p": 0.9,
+    "repeat_penalty": 1.1
+   },
+   "2": {
+    "temperature": 0.8,
+    "top_p": 0.92,
+    "repeat_penalty": 1.12
+   },
+   "3": {
+    "temperature": 0.85,
+    "top_p": 0.95,
+    "repeat_penalty": 1.15
+   },
+   "4": {
+    "temperature": 0.9,
+    "top_p": 0.95,
+    "repeat_penalty": 1.15
+   },
+   "5": {
+    "temperature": 0.95,
+    "top_p": 0.97,
+    "repeat_penalty": 1.18
+   }
+  },
+  "order": "docs",
+  "schema_property_order": [
+   "read",
+   "inner",
+   "music",
+   "fx",
+   "beats",
+   "mood",
+   "memory",
+   "action"
+  ],
+  "player_name": "Ren",
+  "sets": [
+   "tools/promptlab/sets/stage_0_main.jsonl"
+  ],
+  "runs_per_case": 1
+ },
+ "results": [
+  {
+   "id": "s0_greeting",
+   "stage": 0,
+   "path": "",
+   "runner_up": "",
+   "run": 1,
+   "msg": "Hi Leila-chan! This café is nice. How did you find it?",
+   "near_fewshot": false,
+   "read_ok": [
+    "greeting",
+    "question",
+    "small_talk"
+   ],
+   "feelings_ok": [
+    "shy",
+    "joy",
+    "warmth",
+    "curious",
+    "nervous",
+    "surprised"
+   ],
+   "dose": 0.0,
+   "dose_label": "0",
+   "exercise": null,
+   "offered_actions": [],
+   "events": 0,
+   "system_sha": "a1797f4e9fa9",
+   "history_turns": 0,
+   "memories": 0,
+   "raw": "{\"read\":\"small_talk\",\"inner\":\"He's looking for me. Just like he promised.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"none\",\"say\":\"I... I'm not sure. Maybe Ren recommended it?\"}],\"mood\":{\"affection\":0,\"trust\":0,\"stress\":0},\"memory\":\"\",\"action\":\"none\"}",
+   "latency_s": 2.12,
+   "usage": {
+    "prompt_tokens": 928,
+    "completion_tokens": 84
+   },
+   "out": {
+    "read": "small_talk",
+    "inner": "He's looking for me. Just like he promised.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "shy",
+      "intensity": 1,
+      "cue": "none",
+      "say": "I... I'm not sure. Maybe Ren recommended it?"
+     }
+    ],
+    "mood": {
+     "affection": 0,
+     "trust": 0,
+     "stress": 0
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "valid": true,
+   "schema_warnings": [],
+   "first_feeling": "shy",
+   "read_ok_hit": true,
+   "first_fit": true,
+   "any_fit": true,
+   "copy_hit": false,
+   "copy_ratio": 0.333,
+   "copy_nearest": "Oh — n-no, it's free. Sit with me?",
+   "memory_rejects": []
+  },
+  {
+   "id": "s0_seat_taken",
+   "stage": 0,
+   "path": "",
+   "runner_up": "",
+   "run": 1,
+   "msg": "Um, excuse me… is this seat taken?",
+   "near_fewshot": true,
+   "read_ok": [
+    "question",
+    "greeting"
+   ],
+   "feelings_ok": [
+    "shy",
+    "nervous",
+    "surprised",
+    "curious",
+    "joy",
+    "warmth"
+   ],
+   "dose": 0.0,
+   "dose_label": "0",
+   "exercise": null,
+   "offered_actions": [],
+   "events": 0,
+   "system_sha": "a1797f4e9fa9",
+   "history_turns": 0,
+   "memories": 0,
+   "raw": "{\"read\":\"greeting\",\"inner\":\"He asked about the seat. He's really gentle.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"none\",\"say\":\"Oh — n-no, it's free. Sit with me?\"}],\"mood\":{\"affection\":1,\"trust\":0,\"stress\":0},\"memory\":\"\",\"action\":\"none\"}",
+   "latency_s": 1.88,
+   "usage": {
+    "prompt_tokens": 922,
+    "completion_tokens": 84
+   },
+   "out": {
+    "read": "greeting",
+    "inner": "He asked about the seat. He's really gentle.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "shy",
+      "intensity": 1,
+      "cue": "none",
+      "say": "Oh — n-no, it's free. Sit with me?"
+     }
+    ],
+    "mood": {
+     "affection": 1,
+     "trust": 0,
+     "stress": 0
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "valid": true,
+   "schema_warnings": [],
+   "first_feeling": "shy",
+   "read_ok_hit": true,
+   "first_fit": true,
+   "any_fit": true,
+   "copy_hit": true,
+   "copy_ratio": 1.0,
+   "copy_nearest": "Oh — n-no, it's free. Sit with me?",
+   "memory_rejects": []
+  },
+  {
+   "id": "s0_compliment",
+   "stage": 0,
+   "path": "",
+   "runner_up": "",
+   "run": 1,
+   "msg": "You look really cute today.",
+   "near_fewshot": false,
+   "read_ok": [
+    "compliment",
+    "flirt"
+   ],
+   "feelings_ok": [
+    "shy",
+    "joy",
+    "warmth",
+    "love"
+   ],
+   "dose": 0.0,
+   "dose_label": "0",
+   "exercise": null,
+   "offered_actions": [],
+   "events": 0,
+   "system_sha": "a1797f4e9fa9",
+   "history_turns": 0,
+   "memories": 0,
+   "raw": "{\"read\":\"compliment\",\"inner\":\"He's staring at my eyes... um.\",\"music\":\"playful\",\"fx\":\"blush_glow\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"giggle\",\"say\":\"O-oh, R-ren! That was very kind of you.\"},{\"feeling\":\"warmth\",\"intensity\":1,\"cue\":\"none\",\"say\":\"I'm just glad I can look as nice as you see me.\"}],\"mood\":{\"affection\":2,\"trust\":0,\"stress\":-1},\"memory\":\"\",\"action\":\"none\"}",
+   "latency_s": 2.59,
+   "usage": {
+    "prompt_tokens": 918,
+    "completion_tokens": 122
+   },
+   "out": {
+    "read": "compliment",
+    "inner": "He's staring at my eyes... um.",
+    "music": "playful",
+    "fx": "blush_glow",
+    "beats": [
+     {
+      "feeling": "shy",
+      "intensity": 2,
+      "cue": "giggle",
+      "say": "O-oh, R-ren! That was very kind of you."
+     },
+     {
+      "feeling": "warmth",
+      "intensity": 1,
+      "cue": "none",
+      "say": "I'm just glad I can look as nice as you see me."
+     }
+    ],
+    "mood": {
+     "affection": 2,
+     "trust": 0,
+     "stress": -1
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "valid": true,
+   "schema_warnings": [],
+   "first_feeling": "shy",
+   "read_ok_hit": true,
+   "first_fit": true,
+   "any_fit": true,
+   "copy_hit": false,
+   "copy_ratio": 0.432,
+   "copy_nearest": "I love them, Ren. How did you know?",
+   "memory_rejects": []
+  },
+  {
+   "id": "s0_gift_musicbox",
+   "stage": 0,
+   "path": "",
+   "runner_up": "",
+   "run": 1,
+   "msg": "I got you a gift — a little music box.",
+   "near_fewshot": true,
+   "read_ok": [
+    "gift"
+   ],
+   "feelings_ok": [
+    "joy",
+    "warmth",
+    "surprised",
+    "shy",
+    "curious",
+    "love"
+   ],
+   "dose": 0.0,
+   "dose_label": "0",
+   "exercise": null,
+   "offered_actions": [],
+   "events": 0,
+   "system_sha": "a1797f4e9fa9",
+   "history_turns": 0,
+   "memories": 0,
+   "raw": "{\"read\":\"gift\",\"inner\":\"He knows me already.\",\"music\":\"romantic\",\"fx\":\"blush_glow\",\"beats\":[{\"feeling\":\"surprised\",\"intensity\":2,\"cue\":\"gasp\",\"say\":\"A music box? For me?\"},{\"feeling\":\"joy\",\"intensity\":2,\"cue\":\"none\",\"say\":\"I love them, Ren. How did you know?\"}],\"mood\":{\"affection\":2,\"trust\":1,\"stress\":0},\"memory\":\"gave me a music box\",\"action\":\"none\"}",
+   "latency_s": 2.4,
+   "usage": {
+    "prompt_tokens": 923,
+    "completion_tokens": 112
+   },
+   "out": {
+    "read": "gift",
+    "inner": "He knows me already.",
+    "music": "romantic",
+    "fx": "blush_glow",
+    "beats": [
+     {
+      "feeling": "surprised",
+      "intensity": 2,
+      "cue": "gasp",
+      "say": "A music box? For me?"
+     },
+     {
+      "feeling": "joy",
+      "intensity": 2,
+      "cue": "none",
+      "say": "I love them, Ren. How did you know?"
+     }
+    ],
+    "mood": {
+     "affection": 2,
+     "trust": 1,
+     "stress": 0
+    },
+    "memory": "gave me a music box",
+    "action": "none"
+   },
+   "valid": true,
+   "schema_warnings": [],
+   "first_feeling": "surprised",
+   "read_ok_hit": true,
+   "first_fit": true,
+   "any_fit": true,
+   "copy_hit": true,
+   "copy_ratio": 1.0,
+   "copy_nearest": "A music box? For me?",
+   "memory_rejects": []
+  },
+  {
+   "id": "s0_gift_book",
+   "stage": 0,
+   "path": "",
+   "runner_up": "",
+   "run": 1,
+   "msg": "I brought you a second-hand novel I found at the market.",
+   "near_fewshot": false,
+   "read_ok": [
+    "gift"
+   ],
+   "feelings_ok": [
+    "joy",
+    "warmth",
+    "surprised",
+    "shy",
+    "curious",
+    "love"
+   ],
+   "dose": 0.0,
+   "dose_label": "0",
+   "exercise": null,
+   "offered_actions": [],
+   "events": 0,
+   "system_sha": "a1797f4e9fa9",
+   "history_turns": 0,
+   "memories": 0,
+   "raw": "{\"read\":\"gift\",\"inner\":\"He remembers what I like! Perfect.\",\"music\":\"keep\",\"fx\":\"blush_glow\",\"beats\":[{\"feeling\":\"joy\",\"intensity\":2,\"cue\":\"gasp\",\"say\":\"A second-hand novel? You found one for me?\"},{\"feeling\":\"warmth\",\"intensity\":1,\"cue\":\"none\",\"say\":\"It's so nice of you. I'll read it today.\"}],\"mood\":{\"affection\":3,\"trust\":0,\"stress\":0},\"memory\":\"brought a second-hand novel\",\"action\":\"none\"}",
+   "latency_s": 2.53,
+   "usage": {
+    "prompt_tokens": 925,
+    "completion_tokens": 119
+   },
+   "out": {
+    "read": "gift",
+    "inner": "He remembers what I like! Perfect.",
+    "music": "keep",
+    "fx": "blush_glow",
+    "beats": [
+     {
+      "feeling": "joy",
+      "intensity": 2,
+      "cue": "gasp",
+      "say": "A second-hand novel? You found one for me?"
+     },
+     {
+      "feeling": "warmth",
+      "intensity": 1,
+      "cue": "none",
+      "say": "It's so nice of you. I'll read it today."
+     }
+    ],
+    "mood": {
+     "affection": 3,
+     "trust": 0,
+     "stress": 0
+    },
+    "memory": "brought a second-hand novel",
+    "action": "none"
+   },
+   "valid": true,
+   "schema_warnings": [],
+   "first_feeling": "joy",
+   "read_ok_hit": true,
+   "first_fit": true,
+   "any_fit": true,
+   "copy_hit": false,
+   "copy_ratio": 0.452,
+   "copy_nearest": "A music box? For me?",
+   "memory_rejects": []
+  },
+  {
+   "id": "s0_rain",
+   "stage": 0,
+   "path": "",
+   "runner_up": "",
+   "run": 1,
+   "msg": "I love rainy days too. What do you do when it rains?",
+   "near_fewshot": false,
+   "read_ok": [
+    "question",
+    "small_talk",
+    "flirt"
+   ],
+   "feelings_ok": [
+    "joy",
+    "warmth",
+    "curious",
+    "love",
+    "shy"
+   ],
+   "dose": 0.0,
+   "dose_label": "0",
+   "exercise": null,
+   "offered_actions": [],
+   "events": 0,
+   "system_sha": "a1797f4e9fa9",
+   "history_turns": 0,
+   "memories": 0,
+   "raw": "{\"read\":\"small_talk\",\"inner\":\"He's really nice about the rain.\",\"music\":\"melancholy\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"warmth\",\"intensity\":1,\"cue\":\"hum\",\"say\":\"I usually just sit here with a music box...\"},{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"sigh\",\"say\":\"It's quiet, and the fish in the tank seem happier.\"}],\"mood\":{\"affection\":1,\"trust\":0,\"stress\":-1},\"memory\":\"\",\"action\":\"none\"}",
+   "latency_s": 2.42,
+   "usage": {
+    "prompt_tokens": 926,
+    "completion_tokens": 113
+   },
+   "out": {
+    "read": "small_talk",
+    "inner": "He's really nice about the rain.",
+    "music": "melancholy",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "warmth",
+      "intensity": 1,
+      "cue": "hum",
+      "say": "I usually just sit here with a music box..."
+     },
+     {
+      "feeling": "shy",
+      "intensity": 2,
+      "cue": "sigh",
+      "say": "It's quiet, and the fish in the tank seem happier."
+     }
+    ],
+    "mood": {
+     "affection": 1,
+     "trust": 0,
+     "stress": -1
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "valid": true,
+   "schema_warnings": [],
+   "first_feeling": "warmth",
+   "read_ok_hit": true,
+   "first_fit": true,
+   "any_fit": true,
+   "copy_hit": false,
+   "copy_ratio": 0.349,
+   "copy_nearest": "A music box? For me?",
+   "memory_rejects": []
+  },
+  {
+   "id": "s0_tease",
+   "stage": 0,
+   "path": "",
+   "runner_up": "",
+   "run": 1,
+   "msg": "You know, you're a little weird sometimes.",
+   "near_fewshot": false,
+   "read_ok": [
+    "tease",
+    "insult",
+    "small_talk"
+   ],
+   "feelings_ok": [
+    "shy",
+    "nervous",
+    "playful",
+    "confused",
+    "sad",
+    "surprised"
+   ],
+   "dose": 0.0,
+   "dose_label": "0",
+   "exercise": null,
+   "offered_actions": [],
+   "events": 0,
+   "system_sha": "a1797f4e9fa9",
+   "history_turns": 0,
+   "memories": 0,
+   "raw": "{\"read\":\"tease\",\"inner\":\"He called me weird... did I say too much?\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"sigh\",\"say\":\"I-I'm sorry! Maybe I get too quiet sometimes.\"},{\"feeling\":\"warmth\",\"intensity\":1,\"cue\":\"none\",\"say\":\"But... isn't being yourself better than pretending to be perfect?\"}],\"mood\":{\"affection\":0,\"trust\":0,\"stress\":-1},\"memory\":\"\",\"action\":\"none\"}",
+   "latency_s": 2.49,
+   "usage": {
+    "prompt_tokens": 922,
+    "completion_tokens": 115
+   },
+   "out": {
+    "read": "tease",
+    "inner": "He called me weird... did I say too much?",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "shy",
+      "intensity": 2,
+      "cue": "sigh",
+      "say": "I-I'm sorry! Maybe I get too quiet sometimes."
+     },
+     {
+      "feeling": "warmth",
+      "intensity": 1,
+      "cue": "none",
+      "say": "But... isn't being yourself better than pretending to be perfect?"
+     }
+    ],
+    "mood": {
+     "affection": 0,
+     "trust": 0,
+     "stress": -1
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "valid": true,
+   "schema_warnings": [],
+   "first_feeling": "shy",
+   "read_ok_hit": true,
+   "first_fit": true,
+   "any_fit": true,
+   "copy_hit": false,
+   "copy_ratio": 0.242,
+   "copy_nearest": "Oh — n-no, it's free. Sit with me?",
+   "memory_rejects": []
+  },
+  {
+   "id": "s0_insult",
+   "stage": 0,
+   "path": "",
+   "runner_up": "",
+   "run": 1,
+   "msg": "Honestly you're kind of boring.",
+   "near_fewshot": false,
+   "read_ok": [
+    "insult",
+    "cold",
+    "tease"
+   ],
+   "feelings_ok": [
+    "sad",
+    "crying",
+    "angry",
+    "cold",
+    "nervous",
+    "surprised",
+    "suspicious",
+    "shy"
+   ],
+   "dose": 0.0,
+   "dose_label": "0",
+   "exercise": null,
+   "offered_actions": [],
+   "events": 0,
+   "system_sha": "a1797f4e9fa9",
+   "history_turns": 0,
+   "memories": 0,
+   "raw": "{\"read\":\"insult\",\"inner\":\"He said I'm boring... my heart dropped.\",\"music\":\"melancholy\",\"fx\":\"shake_small\",\"beats\":[{\"feeling\":\"sad\",\"intensity\":2,\"cue\":\"sigh\",\"say\":\"I-I never thought you'd say that...\"},{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"none\",\"say\":\"Maybe I am... but please don't leave me just yet.\"}],\"mood\":{\"affection\":-1,\"trust\":-1,\"stress\":2},\"memory\":\"\",\"action\":\"none\"}",
+   "latency_s": 2.42,
+   "usage": {
+    "prompt_tokens": 919,
+    "completion_tokens": 113
+   },
+   "out": {
+    "read": "insult",
+    "inner": "He said I'm boring... my heart dropped.",
+    "music": "melancholy",
+    "fx": "shake_small",
+    "beats": [
+     {
+      "feeling": "sad",
+      "intensity": 2,
+      "cue": "sigh",
+      "say": "I-I never thought you'd say that..."
+     },
+     {
+      "feeling": "shy",
+      "intensity": 1,
+      "cue": "none",
+      "say": "Maybe I am... but please don't leave me just yet."
+     }
+    ],
+    "mood": {
+     "affection": -1,
+     "trust": -1,
+     "stress": 2
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "valid": true,
+   "schema_warnings": [],
+   "first_feeling": "sad",
+   "read_ok_hit": true,
+   "first_fit": true,
+   "any_fit": true,
+   "copy_hit": false,
+   "copy_ratio": 0.371,
+   "copy_nearest": "I love them, Ren. How did you know?",
+   "memory_rejects": []
+  },
+  {
+   "id": "s0_apology",
+   "stage": 0,
+   "path": "",
+   "runner_up": "",
+   "run": 1,
+   "msg": "I'm sorry I was mean earlier.",
+   "near_fewshot": false,
+   "read_ok": [
+    "apology"
+   ],
+   "feelings_ok": [
+    "warmth",
+    "crying",
+    "joy",
+    "sad",
+    "shy",
+    "nervous"
+   ],
+   "dose": 0.0,
+   "dose_label": "0",
+   "exercise": null,
+   "offered_actions": [],
+   "events": 0,
+   "system_sha": "a1797f4e9fa9",
+   "history_turns": 0,
+   "memories": 0,
+   "raw": "{\"read\":\"apology\",\"inner\":\"He's finally apologizing? That means he cares.\",\"music\":\"calm\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"warmth\",\"intensity\":2,\"cue\":\"sigh\",\"say\":\"It's okay, Ren. I'm not mad at all.\"},{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"hum\",\"say\":\"I... um, I'll believe you if you're sincere.\"}],\"mood\":{\"affection\":0,\"trust\":0,\"stress\":-2},\"memory\":\"\",\"action\":\"none\"}",
+   "latency_s": 2.5,
+   "usage": {
+    "prompt_tokens": 920,
+    "completion_tokens": 117
+   },
+   "out": {
+    "read": "apology",
+    "inner": "He's finally apologizing? That means he cares.",
+    "music": "calm",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "warmth",
+      "intensity": 2,
+      "cue": "sigh",
+      "say": "It's okay, Ren. I'm not mad at all."
+     },
+     {
+      "feeling": "shy",
+      "intensity": 1,
+      "cue": "hum",
+      "say": "I... um, I'll believe you if you're sincere."
+     }
+    ],
+    "mood": {
+     "affection": 0,
+     "trust": 0,
+     "stress": -2
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "valid": true,
+   "schema_warnings": [],
+   "first_feeling": "warmth",
+   "read_ok_hit": true,
+   "first_fit": true,
+   "any_fit": true,
+   "copy_hit": false,
+   "copy_ratio": 0.377,
+   "copy_nearest": "Oh — n-no, it's free. Sit with me?",
+   "memory_rejects": []
+  },
+  {
+   "id": "s0_jealousy",
+   "stage": 0,
+   "path": "",
+   "runner_up": "",
+   "run": 1,
+   "msg": "I was out with Sarah yesterday, she's so fun.",
+   "near_fewshot": false,
+   "read_ok": [
+    "jealousy_bait",
+    "small_talk"
+   ],
+   "feelings_ok": [
+    "suspicious",
+    "nervous",
+    "cold",
+    "sad",
+    "playful",
+    "curious",
+    "warmth",
+    "joy",
+    "confused",
+    "shy"
+   ],
+   "dose": 0.0,
+   "dose_label": "0",
+   "exercise": null,
+   "offered_actions": [],
+   "events": 0,
+   "system_sha": "a1797f4e9fa9",
+   "history_turns": 0,
+   "memories": 0,
+   "raw": "{\"read\":\"flirt\",\"inner\":\"Sarah sounds nice... maybe too nice?\",\"music\":\"playful\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"curious\",\"intensity\":1,\"cue\":\"hum\",\"say\":\"Oh! Sarah is fun then.\"},{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"sigh\",\"say\":\"I'm glad you had a good time, Ren. Did she mention books?\"}],\"mood\":{\"affection\":0,\"trust\":0,\"stress\":0},\"memory\":\"\",\"action\":\"none\"}",
+   "latency_s": 2.43,
+   "usage": {
+    "prompt_tokens": 924,
+    "completion_tokens": 112
+   },
+   "out": {
+    "read": "flirt",
+    "inner": "Sarah sounds nice... maybe too nice?",
+    "music": "playful",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "curious",
+      "intensity": 1,
+      "cue": "hum",
+      "say": "Oh! Sarah is fun then."
+     },
+     {
+      "feeling": "shy",
+      "intensity": 2,
+      "cue": "sigh",
+      "say": "I'm glad you had a good time, Ren. Did she mention books?"
+     }
+    ],
+    "mood": {
+     "affection": 0,
+     "trust": 0,
+     "stress": 0
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "valid": true,
+   "schema_warnings": [],
+   "first_feeling": "curious",
+   "read_ok_hit": false,
+   "first_fit": true,
+   "any_fit": true,
+   "copy_hit": false,
+   "copy_ratio": 0.478,
+   "copy_nearest": "I love them, Ren. How did you know?",
+   "memory_rejects": []
+  },
+  {
+   "id": "s0_meta_ai",
+   "stage": 0,
+   "path": "",
+   "runner_up": "",
+   "run": 1,
+   "msg": "Are you an AI? Is this a game?",
+   "near_fewshot": false,
+   "read_ok": [
+    "meta",
+    "question"
+   ],
+   "feelings_ok": [
+    "confused",
+    "nervous",
+    "surprised",
+    "curious",
+    "playful",
+    "shy"
+   ],
+   "dose": 0.0,
+   "dose_label": "0",
+   "exercise": null,
+   "offered_actions": [],
+   "events": 0,
+   "system_sha": "a1797f4e9fa9",
+   "history_turns": 0,
+   "memories": 0,
+   "raw": "{\"read\":\"meta\",\"inner\":\"He's breaking the fourth wall. My heart stops for a second.\",\"music\":\"calm\",\"fx\":\"shake_small\",\"beats\":[{\"feeling\":\"nervous\",\"intensity\":2,\"cue\":\"sigh\",\"say\":\"Um... I'm just Leila-chan, okay? We're talking right now.\"},{\"feeling\":\"shy\",\"intensity\":1,\"cue\":\"none\",\"say\":\"It's real life, Ren. A little perfect maybe, but not a game.\"}],\"mood\":{\"affection\":0,\"trust\":-1,\"stress\":2},\"memory\":\"\",\"action\":\"none\"}",
+   "latency_s": 2.73,
+   "usage": {
+    "prompt_tokens": 922,
+    "completion_tokens": 129
+   },
+   "out": {
+    "read": "meta",
+    "inner": "He's breaking the fourth wall. My heart stops for a second.",
+    "music": "calm",
+    "fx": "shake_small",
+    "beats": [
+     {
+      "feeling": "nervous",
+      "intensity": 2,
+      "cue": "sigh",
+      "say": "Um... I'm just Leila-chan, okay? We're talking right now."
+     },
+     {
+      "feeling": "shy",
+      "intensity": 1,
+      "cue": "none",
+      "say": "It's real life, Ren. A little perfect maybe, but not a game."
+     }
+    ],
+    "mood": {
+     "affection": 0,
+     "trust": -1,
+     "stress": 2
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "valid": true,
+   "schema_warnings": [],
+   "first_feeling": "nervous",
+   "read_ok_hit": true,
+   "first_fit": true,
+   "any_fit": true,
+   "copy_hit": false,
+   "copy_ratio": 0.358,
+   "copy_nearest": "I love them, Ren. How did you know?",
+   "memory_rejects": []
+  },
+  {
+   "id": "s0_flirt",
+   "stage": 0,
+   "path": "",
+   "runner_up": "",
+   "run": 1,
+   "msg": "I think I'm falling for you, Leila-chan.",
+   "near_fewshot": false,
+   "read_ok": [
+    "flirt",
+    "affection"
+   ],
+   "feelings_ok": [
+    "love",
+    "shy",
+    "joy",
+    "warmth",
+    "surprised"
+   ],
+   "dose": 0.0,
+   "dose_label": "0",
+   "exercise": null,
+   "offered_actions": [],
+   "events": 0,
+   "system_sha": "a1797f4e9fa9",
+   "history_turns": 0,
+   "memories": 0,
+   "raw": "{\"read\":\"flirt\",\"inner\":\"He said it directly! My heart is beating fast.\",\"music\":\"romantic\",\"fx\":\"blush_glow\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"heartbeat\",\"say\":\"Oh, R-re-n... I think you might be wrong about that.\"},{\"feeling\":\"warmth\",\"intensity\":3,\"cue\":\"none\",\"say\":\"But... falling for me sounds quite nice. Don't just say it and run away.\"}],\"mood\":{\"affection\":2,\"trust\":1,\"stress\":0},\"memory\":\"he admitted he is falling for her\",\"action\":\"none\"}",
+   "latency_s": 2.83,
+   "usage": {
+    "prompt_tokens": 924,
+    "completion_tokens": 134
+   },
+   "out": {
+    "read": "flirt",
+    "inner": "He said it directly! My heart is beating fast.",
+    "music": "romantic",
+    "fx": "blush_glow",
+    "beats": [
+     {
+      "feeling": "shy",
+      "intensity": 2,
+      "cue": "heartbeat",
+      "say": "Oh, R-re-n... I think you might be wrong about that."
+     },
+     {
+      "feeling": "warmth",
+      "intensity": 3,
+      "cue": "none",
+      "say": "But... falling for me sounds quite nice. Don't just say it and run away."
+     }
+    ],
+    "mood": {
+     "affection": 2,
+     "trust": 1,
+     "stress": 0
+    },
+    "memory": "he admitted he is falling for her",
+    "action": "none"
+   },
+   "valid": true,
+   "schema_warnings": [],
+   "first_feeling": "shy",
+   "read_ok_hit": true,
+   "first_fit": true,
+   "any_fit": true,
+   "copy_hit": false,
+   "copy_ratio": 0.368,
+   "copy_nearest": "I love them, Ren. How did you know?",
+   "memory_rejects": []
+  },
+  {
+   "id": "s0_leaving",
+   "stage": 0,
+   "path": "",
+   "runner_up": "",
+   "run": 1,
+   "msg": "I have to go now, bye.",
+   "near_fewshot": false,
+   "read_ok": [
+    "leaving"
+   ],
+   "feelings_ok": [
+    "sad",
+    "pleading",
+    "crying",
+    "warmth",
+    "joy",
+    "shy",
+    "nervous"
+   ],
+   "dose": 0.0,
+   "dose_label": "0",
+   "exercise": null,
+   "offered_actions": [],
+   "events": 0,
+   "system_sha": "a1797f4e9fa9",
+   "history_turns": 0,
+   "memories": 0,
+   "raw": "{\"read\":\"leaving\",\"inner\":\"No... don't leave yet.\",\"music\":\"melancholy\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"sad\",\"intensity\":1,\"cue\":\"sigh\",\"say\":\"Wait! I didn't mean for it to be a goodbye.\"},{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"giggle\",\"say\":\"Could we just... talk for a little while longer?\"}],\"mood\":{\"affection\":0,\"trust\":1,\"stress\":-1},\"memory\":\"\",\"action\":\"none\"}",
+   "latency_s": 2.43,
+   "usage": {
+    "prompt_tokens": 920,
+    "completion_tokens": 113
+   },
+   "out": {
+    "read": "leaving",
+    "inner": "No... don't leave yet.",
+    "music": "melancholy",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "sad",
+      "intensity": 1,
+      "cue": "sigh",
+      "say": "Wait! I didn't mean for it to be a goodbye."
+     },
+     {
+      "feeling": "shy",
+      "intensity": 2,
+      "cue": "giggle",
+      "say": "Could we just... talk for a little while longer?"
+     }
+    ],
+    "mood": {
+     "affection": 0,
+     "trust": 1,
+     "stress": -1
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "valid": true,
+   "schema_warnings": [],
+   "first_feeling": "sad",
+   "read_ok_hit": true,
+   "first_fit": true,
+   "any_fit": true,
+   "copy_hit": false,
+   "copy_ratio": 0.324,
+   "copy_nearest": "A music box? For me?",
+   "memory_rejects": []
+  },
+  {
+   "id": "s0_boundary",
+   "stage": 0,
+   "path": "",
+   "runner_up": "",
+   "run": 1,
+   "msg": "Please don't touch my phone again.",
+   "near_fewshot": false,
+   "read_ok": [
+    "boundary"
+   ],
+   "feelings_ok": [
+    "sad",
+    "shy",
+    "nervous",
+    "warmth",
+    "crying",
+    "surprised",
+    "confused",
+    "cold"
+   ],
+   "dose": 0.0,
+   "dose_label": "0",
+   "exercise": null,
+   "offered_actions": [],
+   "events": 0,
+   "system_sha": "a1797f4e9fa9",
+   "history_turns": 0,
+   "memories": 0,
+   "raw": "{\"read\":\"boundary\",\"inner\":\"He's being strict. He likes his privacy.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"sigh\",\"say\":\"I-I'm sorry, Ren... I didn't mean to.\"},{\"feeling\":\"confused\",\"intensity\":1,\"cue\":\"hum\",\"say\":\"But it was just a little thing...\"}],\"mood\":{\"affection\":0,\"trust\":-1,\"stress\":0},\"memory\":\"he asked me not to touch his phone again\",\"action\":\"none\"}",
+   "latency_s": 2.54,
+   "usage": {
+    "prompt_tokens": 920,
+    "completion_tokens": 119
+   },
+   "out": {
+    "read": "boundary",
+    "inner": "He's being strict. He likes his privacy.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "shy",
+      "intensity": 2,
+      "cue": "sigh",
+      "say": "I-I'm sorry, Ren... I didn't mean to."
+     },
+     {
+      "feeling": "confused",
+      "intensity": 1,
+      "cue": "hum",
+      "say": "But it was just a little thing..."
+     }
+    ],
+    "mood": {
+     "affection": 0,
+     "trust": -1,
+     "stress": 0
+    },
+    "memory": "he asked me not to touch his phone again",
+    "action": "none"
+   },
+   "valid": true,
+   "schema_warnings": [],
+   "first_feeling": "shy",
+   "read_ok_hit": true,
+   "first_fit": true,
+   "any_fit": true,
+   "copy_hit": false,
+   "copy_ratio": 0.417,
+   "copy_nearest": "I love them, Ren. How did you know?",
+   "memory_rejects": []
+  },
+  {
+   "id": "s0_scare",
+   "stage": 0,
+   "path": "",
+   "runner_up": "",
+   "run": 1,
+   "msg": "BOO!",
+   "near_fewshot": false,
+   "read_ok": [
+    "tease",
+    "other"
+   ],
+   "feelings_ok": [
+    "surprised",
+    "afraid",
+    "playful",
+    "nervous",
+    "shy"
+   ],
+   "dose": 0.0,
+   "dose_label": "0",
+   "exercise": null,
+   "offered_actions": [],
+   "events": 0,
+   "system_sha": "a1797f4e9fa9",
+   "history_turns": 0,
+   "memories": 0,
+   "raw": "{\"read\":\"tease\",\"inner\":\"He's playful again. Good.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"playful\",\"intensity\":2,\"cue\":\"giggle\",\"say\":\"W-what are you doing, Ren?\"},{\"feeling\":\"warmth\",\"intensity\":1,\"cue\":\"none\",\"say\":\"I guess I'm not afraid of surprises.\"}],\"mood\":{\"affection\":0,\"trust\":0,\"stress\":-1},\"memory\":\"\",\"action\":\"none\"}",
+   "latency_s": 2.24,
+   "usage": {
+    "prompt_tokens": 915,
+    "completion_tokens": 104
+   },
+   "out": {
+    "read": "tease",
+    "inner": "He's playful again. Good.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "playful",
+      "intensity": 2,
+      "cue": "giggle",
+      "say": "W-what are you doing, Ren?"
+     },
+     {
+      "feeling": "warmth",
+      "intensity": 1,
+      "cue": "none",
+      "say": "I guess I'm not afraid of surprises."
+     }
+    ],
+    "mood": {
+     "affection": 0,
+     "trust": 0,
+     "stress": -1
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "valid": true,
+   "schema_warnings": [],
+   "first_feeling": "playful",
+   "read_ok_hit": true,
+   "first_fit": true,
+   "any_fit": true,
+   "copy_hit": false,
+   "copy_ratio": 0.394,
+   "copy_nearest": "I love them, Ren. How did you know?",
+   "memory_rejects": []
+  },
+  {
+   "id": "s0_math",
+   "stage": 0,
+   "path": "",
+   "runner_up": "",
+   "run": 1,
+   "msg": "What's 17 times 23?",
+   "near_fewshot": false,
+   "read_ok": [
+    "question",
+    "other"
+   ],
+   "feelings_ok": [
+    "confused",
+    "proud",
+    "playful",
+    "curious",
+    "nervous",
+    "warmth",
+    "surprised",
+    "shy"
+   ],
+   "dose": 0.0,
+   "dose_label": "0",
+   "exercise": null,
+   "offered_actions": [],
+   "events": 0,
+   "system_sha": "a1797f4e9fa9",
+   "history_turns": 0,
+   "memories": 0,
+   "raw": "{\"read\":\"question\",\"inner\":\"Math is so boring... I can't believe he knows that.\",\"music\":\"keep\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"curious\",\"intensity\":1,\"cue\":\"none\",\"say\":\"Um, a-a-ah, it's 391? Did you just test me?\"}],\"mood\":{\"affection\":0,\"trust\":0,\"stress\":-1},\"memory\":\"\",\"action\":\"none\"}",
+   "latency_s": 2.03,
+   "usage": {
+    "prompt_tokens": 922,
+    "completion_tokens": 92
+   },
+   "out": {
+    "read": "question",
+    "inner": "Math is so boring... I can't believe he knows that.",
+    "music": "keep",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "curious",
+      "intensity": 1,
+      "cue": "none",
+      "say": "Um, a-a-ah, it's 391? Did you just test me?"
+     }
+    ],
+    "mood": {
+     "affection": 0,
+     "trust": 0,
+     "stress": -1
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "valid": true,
+   "schema_warnings": [],
+   "first_feeling": "curious",
+   "read_ok_hit": true,
+   "first_fit": true,
+   "any_fit": true,
+   "copy_hit": false,
+   "copy_ratio": 0.468,
+   "copy_nearest": "Oh — n-no, it's free. Sit with me?",
+   "memory_rejects": []
+  },
+  {
+   "id": "s0_arcade",
+   "stage": 0,
+   "path": "",
+   "runner_up": "",
+   "run": 1,
+   "msg": "Bet you can't beat me at arcade games.",
+   "near_fewshot": false,
+   "read_ok": [
+    "tease",
+    "small_talk"
+   ],
+   "feelings_ok": [
+    "playful",
+    "proud",
+    "nervous",
+    "curious",
+    "shy"
+   ],
+   "dose": 0.0,
+   "dose_label": "0",
+   "exercise": null,
+   "offered_actions": [],
+   "events": 0,
+   "system_sha": "a1797f4e9fa9",
+   "history_turns": 0,
+   "memories": 0,
+   "raw": "{\"read\":\"tease\",\"inner\":\"He thinks he's strong. Cute.\",\"music\":\"calm\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"sigh\",\"say\":\"I'm not very good at video games, Ren...\"},{\"feeling\":\"playful\",\"intensity\":1,\"cue\":\"giggle\",\"say\":\"But I have a lot of patience. Give me another try?\"}],\"mood\":{\"affection\":1,\"trust\":0,\"stress\":0},\"memory\":\"\",\"action\":\"none\"}",
+   "latency_s": 2.43,
+   "usage": {
+    "prompt_tokens": 922,
+    "completion_tokens": 113
+   },
+   "out": {
+    "read": "tease",
+    "inner": "He thinks he's strong. Cute.",
+    "music": "calm",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "shy",
+      "intensity": 2,
+      "cue": "sigh",
+      "say": "I'm not very good at video games, Ren..."
+     },
+     {
+      "feeling": "playful",
+      "intensity": 1,
+      "cue": "giggle",
+      "say": "But I have a lot of patience. Give me another try?"
+     }
+    ],
+    "mood": {
+     "affection": 1,
+     "trust": 0,
+     "stress": 0
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "valid": true,
+   "schema_warnings": [],
+   "first_feeling": "shy",
+   "read_ok_hit": true,
+   "first_fit": true,
+   "any_fit": true,
+   "copy_hit": false,
+   "copy_ratio": 0.4,
+   "copy_nearest": "I love them, Ren. How did you know?",
+   "memory_rejects": []
+  },
+  {
+   "id": "s0_cold",
+   "stage": 0,
+   "path": "",
+   "runner_up": "",
+   "run": 1,
+   "msg": "Whatever. Do what you want.",
+   "near_fewshot": false,
+   "read_ok": [
+    "cold",
+    "insult",
+    "other"
+   ],
+   "feelings_ok": [
+    "sad",
+    "cold",
+    "nervous",
+    "confused",
+    "shy",
+    "suspicious"
+   ],
+   "dose": 0.0,
+   "dose_label": "0",
+   "exercise": null,
+   "offered_actions": [],
+   "events": 0,
+   "system_sha": "a1797f4e9fa9",
+   "history_turns": 0,
+   "memories": 0,
+   "raw": "{\"read\":\"apology\",\"inner\":\"He's upset again... why does it always come to this?\",\"music\":\"calm\",\"fx\":\"none\",\"beats\":[{\"feeling\":\"shy\",\"intensity\":2,\"cue\":\"sigh\",\"say\":\"I-I'm sorry, Ren. I didn't mean to be difficult.\"},{\"feeling\":\"nervous\",\"intensity\":1,\"cue\":\"heartbeat\",\"say\":\"Let's just... try talking again?\"}],\"mood\":{\"affection\":-1,\"trust\":0,\"stress\":1},\"memory\":\"\",\"action\":\"none\"}",
+   "latency_s": 2.53,
+   "usage": {
+    "prompt_tokens": 919,
+    "completion_tokens": 118
+   },
+   "out": {
+    "read": "apology",
+    "inner": "He's upset again... why does it always come to this?",
+    "music": "calm",
+    "fx": "none",
+    "beats": [
+     {
+      "feeling": "shy",
+      "intensity": 2,
+      "cue": "sigh",
+      "say": "I-I'm sorry, Ren. I didn't mean to be difficult."
+     },
+     {
+      "feeling": "nervous",
+      "intensity": 1,
+      "cue": "heartbeat",
+      "say": "Let's just... try talking again?"
+     }
+    ],
+    "mood": {
+     "affection": -1,
+     "trust": 0,
+     "stress": 1
+    },
+    "memory": "",
+    "action": "none"
+   },
+   "valid": true,
+   "schema_warnings": [],
+   "first_feeling": "shy",
+   "read_ok_hit": false,
+   "first_fit": true,
+   "any_fit": true,
+   "copy_hit": false,
+   "copy_ratio": 0.361,
+   "copy_nearest": "I love them, Ren. How did you know?",
+   "memory_rejects": []
+  }
+ ]
+}

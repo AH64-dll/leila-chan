@@ -1,0 +1,75 @@
+Per configuration, turns 2-8 (turn 1 is cold)
+cache=0 ubatch=512 dose=0.0 dose_from=- temp=0
+  first_say_ms mean 1206 p90 1273 | prompt_ms mean 219 p90 345
+  reused_tokens mean 0 | prompt_tokens mean 969 | save_ms mean 0.0 | restore_ms mean 0.0 | max_state_bytes 0
+  turn 1 (cold): first_say_ms 1571 prompt_ms 405.0
+cache=1 ubatch=512 dose=0.0 dose_from=- temp=0
+  first_say_ms mean 1116 p90 1287 | prompt_ms mean 128 p90 354
+  reused_tokens mean 293 | prompt_tokens mean 969 | save_ms mean 114.1 | restore_ms mean 2.4 | max_state_bytes 105383096
+  turn 1 (cold): first_say_ms 1374 prompt_ms 240.0
+cache=0 ubatch=512 dose=4.5 dose_from=0.0 temp=0
+  first_say_ms mean 1241 p90 1343 | prompt_ms mean 221 p90 336
+  reused_tokens mean 0 | prompt_tokens mean 969 | save_ms mean 0.0 | restore_ms mean 0.0 | max_state_bytes 0
+  turn 1 (cold): first_say_ms 1317 prompt_ms 203.0
+cache=1 ubatch=512 dose=4.5 dose_from=0.0 temp=0
+  first_say_ms mean 1162 p90 1334 | prompt_ms mean 131 p90 344
+  reused_tokens mean 293 | prompt_tokens mean 969 | save_ms mean 111.7 | restore_ms mean 2.1 | max_state_bytes 105383096
+  turn 1 (cold): first_say_ms 1349 prompt_ms 230.0
+cache=0 ubatch=128 dose=4.5 dose_from=0.0 temp=0
+  first_say_ms mean 1262 p90 1372 | prompt_ms mean 343 p90 383
+  reused_tokens mean 0 | prompt_tokens mean 969 | save_ms mean 0.0 | restore_ms mean 0.0 | max_state_bytes 0
+  turn 1 (cold): first_say_ms 1288 prompt_ms 324.0
+cache=1 ubatch=128 dose=4.5 dose_from=0.0 temp=0
+  first_say_ms mean 1039 p90 1192 | prompt_ms mean 140 p90 266
+  reused_tokens mean 585 | prompt_tokens mean 969 | save_ms mean 123.0 | restore_ms mean 5.9 | max_state_bytes 421532384
+  turn 1 (cold): first_say_ms 1343 prompt_ms 368.0
+cache=0 ubatch=512 dose=4.5 dose_from=- temp=0
+  first_say_ms mean 1257 p90 1318 | prompt_ms mean 220 p90 339
+  reused_tokens mean 0 | prompt_tokens mean 969 | save_ms mean 0.0 | restore_ms mean 0.0 | max_state_bytes 0
+  turn 1 (cold): first_say_ms 1267 prompt_ms 243.0
+cache=1 ubatch=512 dose=4.5 dose_from=- temp=0
+  first_say_ms mean 1146 p90 1309 | prompt_ms mean 129 p90 346
+  reused_tokens mean 293 | prompt_tokens mean 969 | save_ms mean 110.9 | restore_ms mean 2.1 | max_state_bytes 105383096
+  turn 1 (cold): first_say_ms 1249 prompt_ms 258.0
+cache=0 ubatch=128 dose=4.5 dose_from=- temp=0
+  first_say_ms mean 1283 p90 1345 | prompt_ms mean 342 p90 384
+  reused_tokens mean 0 | prompt_tokens mean 969 | save_ms mean 0.0 | restore_ms mean 0.0 | max_state_bytes 0
+  turn 1 (cold): first_say_ms 1260 prompt_ms 335.0
+cache=1 ubatch=128 dose=4.5 dose_from=- temp=0
+  first_say_ms mean 1093 p90 1224 | prompt_ms mean 139 p90 268
+  reused_tokens mean 585 | prompt_tokens mean 969 | save_ms mean 122.3 | restore_ms mean 7.8 | max_state_bytes 421532384
+  turn 1 (cold): first_say_ms 1305 prompt_ms 384.0
+cache=0 ubatch=64 dose=4.5 dose_from=- temp=0
+  first_say_ms mean 1367 p90 1436 | prompt_ms mean 446 p90 485
+  reused_tokens mean 0 | prompt_tokens mean 969 | save_ms mean 0.0 | restore_ms mean 0.0 | max_state_bytes 0
+  turn 1 (cold): first_say_ms 2885 prompt_ms 1964.0
+cache=1 ubatch=64 dose=4.5 dose_from=- temp=0
+  first_say_ms mean 1140 p90 1347 | prompt_ms mean 204 p90 361
+  reused_tokens mean 585 | prompt_tokens mean 969 | save_ms mean 185.5 | restore_ms mean 4.7 | max_state_bytes 843064768
+  turn 1 (cold): first_say_ms 1456 prompt_ms 545.0
+cache=0 ubatch=512 dose=4.5 dose_from=- temp=game
+  first_say_ms mean 1192 p90 1251 | prompt_ms mean 216 p90 335
+  reused_tokens mean 0 | prompt_tokens mean 969 | save_ms mean 0.0 | restore_ms mean 0.0 | max_state_bytes 0
+  turn 1 (cold): first_say_ms 1189 prompt_ms 234.0
+cache=1 ubatch=512 dose=4.5 dose_from=- temp=game
+  first_say_ms mean 1103 p90 1255 | prompt_ms mean 129 p90 346
+  reused_tokens mean 293 | prompt_tokens mean 969 | save_ms mean 111.0 | restore_ms mean 3.1 | max_state_bytes 105383096
+  turn 1 (cold): first_say_ms 1211 prompt_ms 254.0
+cache=0 ubatch=128 dose=4.5 dose_from=- temp=game
+  first_say_ms mean 1245 p90 1343 | prompt_ms mean 339 p90 382
+  reused_tokens mean 0 | prompt_tokens mean 969 | save_ms mean 0.0 | restore_ms mean 0.0 | max_state_bytes 0
+  turn 1 (cold): first_say_ms 1268 prompt_ms 337.0
+cache=1 ubatch=128 dose=4.5 dose_from=- temp=game
+  first_say_ms mean 1058 p90 1249 | prompt_ms mean 139 p90 268
+  reused_tokens mean 585 | prompt_tokens mean 969 | save_ms mean 122.4 | restore_ms mean 8.4 | max_state_bytes 421532384
+  turn 1 (cold): first_say_ms 1301 prompt_ms 380.0
+
+Byte-identical text, cache=1 against its cache=0 twin
+cache=1 ubatch=512 dose=0.0 dose_from=- temp=0: identical 8/8 turns; differ at turn(s) none
+cache=1 ubatch=512 dose=4.5 dose_from=0.0 temp=0: identical 7/8 turns; differ at turn(s) 5
+cache=1 ubatch=128 dose=4.5 dose_from=0.0 temp=0: identical 4/8 turns; differ at turn(s) 5, 6, 7, 8
+cache=1 ubatch=512 dose=4.5 dose_from=- temp=0: identical 8/8 turns; differ at turn(s) none
+cache=1 ubatch=128 dose=4.5 dose_from=- temp=0: identical 8/8 turns; differ at turn(s) none
+cache=1 ubatch=64 dose=4.5 dose_from=- temp=0: identical 8/8 turns; differ at turn(s) none
+cache=1 ubatch=512 dose=4.5 dose_from=- temp=game: identical 8/8 turns; differ at turn(s) none
+cache=1 ubatch=128 dose=4.5 dose_from=- temp=game: identical 8/8 turns; differ at turn(s) none
