@@ -14,6 +14,9 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+# tools/promptlab/score.py shares this module name; the first import wins
+# sys.modules for the whole session, so drop it before importing this dir's.
+sys.modules.pop("score", None)
 import score  # noqa: E402  (path set above)
 
 
